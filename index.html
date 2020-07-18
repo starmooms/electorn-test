@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Hello World!</title>
+  <!-- https://electronjs.org/docs/tutorial/security#csp-meta-tag -->
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+</head>
+
+<body>
+  <button>33</button>
+  <h1>Hello Electron!</h1>
+
+  <script>
+    var HID = require('node-hid');
+    var devices = HID.devices();
+    console.log(devices)
+    // var usbDetect = require('usb-detection');
+
+    // usbDetect.startMonitoring();
+
+    // // Detect add/insert
+    // usbDetect.on('add', function (device) { alert('add', device); });
+    // usbDetect.on('add:vid', function (device) { alert('add', device); });
+    // usbDetect.on('add:vid:pid', function (device) { alert('add', device); });
+
+    // // Detect remove
+    // usbDetect.on('remove', function (device) { alert('remove', device); });
+    // usbDetect.on('remove:vid', function (device) { alert('remove', device); });
+    // usbDetect.on('remove:vid:pid', function (device) { alert('remove', device); });
+
+    // // Detect add or remove (change)
+    // usbDetect.on('change', function (device) { alert('change', device); });
+    // usbDetect.on('change:vid', function (device) { alert('change', device); });
+    // usbDetect.on('change:vid:pid', function (device) { alert('change', device); });
+  </script>
+</body>
+
+</html>

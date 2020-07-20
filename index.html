@@ -15,6 +15,7 @@
   <script>
     const { ipcRenderer } = require('electron')
     ipcRenderer.send("serialPort", "getList")
+
     ipcRenderer.on('serialPort', (event, data) => {
       console.log(event, data)
       if (data && data.type) {
@@ -29,6 +30,7 @@
         alert("serialPort send Error no type")
       }
     })
+
   </script>
 </body>
 

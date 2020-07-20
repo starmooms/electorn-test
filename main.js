@@ -1,25 +1,39 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const SerialPort = require('serialport')
 
-app.allowRendererProcessReuse = true
+require('./serialPortMock')
+
+// app.allowRendererProcessReuse = true
 
 function createSerialPort(win) {
-  ipcMain.on("serialPort", (event, msg) => {
-    console.log(msg)
-    if (msg === 'getList') {
-      SerialPort.list().then((ports) => {
-        win.webContents.send("serialPort", {
-          type: 'list',
-          ports
-        })
-        ports.forEach((port) => {
-          console.log(port.path);
-        });
-      }).catch(err => {
-        console.error(err)
+
+  const getList = () => {
+    SerialPort.list().then((ports) => {
+      win.webContents.send("serialPort", {
+        type: 'list',
+        ports
       })
+      ports.forEach((port) => {
+        console.log(port.path);
+      });
+    }).catch(err => {
+      console.error(err)
+    })
+  }
+
+  ipcMain.on("serialPort", (event, msg) => {
+    if (msg === 'getList') {
+      getList()
     }
   })
+
+
+  var usbDetect = require('usb-detection');
+  usbDetect.startMonitoring();
+  usbDetect.on('change', function (device) {
+    console.log('c')
+    getList()
+  });
 
   // //开启串口，并发送到渲染线程中
   // const port = new SerialPort('COM16');

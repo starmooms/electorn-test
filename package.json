@@ -2,163 +2,32 @@
   "name": "c",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "e_rebuild": "electron-rebuild",
     "start": "electron main.js",
-    "build": "electron-packager main app --all",
-    "pack": "electron-builder install-app-deps",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pack": "electron-builder --win --x64",
+    "postinstall": "electron-builder install-app-deps"
   },
   "author": "",
   "license": "ISC",
   "build": {
-    "productName": "Motrix",
-    "appId": "net.agalwood.Motrix",
-    "fileAssociations": [
-      {
-        "ext": "torrent",
-        "mimeType": "application/x-bittorrent",
-        "name": "Torrent",
-        "role": "Viewer"
-      }
-    ],
-    "asar": true,
-    "directories": {
-      "output": "release"
+    "electronDownload": {
+      "mirror": "https://npm.taobao.org/mirrors/electron/"
     },
-    "files": [
-      "dist/electron/**/*"
-    ],
-    "protocols": [
-      {
-        "name": "Motrix Protocol",
-        "schemes": [
-          "mo",
-          "motrix"
-        ]
-      },
-      {
-        "name": "Magnet Protocol",
-        "schemes": [
-          "magnet"
-        ]
-      },
-      {
-        "name": "Thunder Protocol",
-        "schemes": [
-          "thunder"
-        ]
-      }
-    ],
-    "dmg": {
-      "window": {
-        "width": 540,
-        "height": 380
-      },
-      "contents": [
-        {
-          "x": 410,
-          "y": 230,
-          "type": "link",
-          "path": "/Applications"
-        },
-        {
-          "x": 130,
-          "y": 230,
-          "type": "file"
-        }
-      ]
-    },
+    "appId": "com.xxx.app",
     "mac": {
       "target": [
         "dmg",
         "zip"
-      ],
-      "type": "distribution",
-      "darkModeSupport": true,
-      "hardenedRuntime": true,
-      "extraResources": {
-        "from": "./extra/darwin/",
-        "to": "./",
-        "filter": [
-          "**/*"
-        ]
-      },
-      "category": "public.app-category.utilities"
+      ]
     },
     "win": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        }
-      ],
-      "extraResources": {
-        "from": "./extra/win32/",
-        "to": "./",
-        "filter": [
-          "**/*"
-        ]
-      }
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    },
-    "linux": {
-      "category": "Network",
-      "target": [
-        "AppImage",
-        "deb",
-        "rpm",
-        "snap"
-      ],
-      "extraResources": {
-        "from": "./extra/linux/",
-        "to": "./",
-        "filter": [
-          "**/*"
-        ]
-      }
-    },
-    "snap": {
-      "publish": [
-        {
-          "provider": "github"
-        },
-        {
-          "provider": "snapStore",
-          "channel": "edge"
-        }
+        "nsis",
+        "zip"
       ]
-    },
-    "publish": [
-      {
-        "provider": "generic",
-        "url": "https://dl.motrix.app/release/"
-      },
-      {
-        "provider": "github"
-      }
-    ]
+    }
   },
   "dependencies": {
     "serialport": "^9.0.0",

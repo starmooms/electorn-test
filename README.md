@@ -1,4 +1,4 @@
-# electron-test
+# e-ts
 
 ## Project setup
 ```

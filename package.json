@@ -1,42 +1,52 @@
 {
-  "name": "c",
-  "version": "1.0.0",
-  "description": "",
-  "main": "main.js",
+  "name": "electron-test",
+  "version": "0.1.2",
+  "private": true,
   "scripts": {
-    "e_rebuild": "electron-rebuild",
-    "start": "electron main.js",
-    "pack": "electron-builder --win --x64",
-    "postinstall": "electron-builder install-app-deps"
+    "lint": "vue-cli-service lint",
+    "build": "vue-cli-service electron:build",
+    "serve": "vue-cli-service electron:serve",
+    "postinstall": "electron-builder install-app-deps",
+    "postuninstall": "electron-builder install-app-deps"
   },
-  "author": "",
-  "license": "ISC",
-  "build": {
-    "electronDownload": {
-      "mirror": "https://npm.taobao.org/mirrors/electron/"
-    },
-    "appId": "com.xxx.app",
-    "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ]
-    },
-    "win": {
-      "target": [
-        "nsis",
-        "zip"
-      ]
-    }
-  },
+  "main": "background.js",
   "dependencies": {
+    "core-js": "^3.6.5",
+    "electron-updater": "^4.3.1",
+    "element-ui": "^2.13.2",
     "serialport": "^9.0.0",
-    "usb": "^1.6.3",
-    "usb-detection": "^4.9.0"
+    "usb-detection": "^4.9.0",
+    "vue": "^2.6.11"
   },
   "devDependencies": {
-    "electron": "^8.3.4",
-    "electron-builder": "^22.7.0",
-    "electron-rebuild": "^1.11.0"
-  }
+    "@vue/cli-plugin-babel": "~4.4.0",
+    "@vue/cli-plugin-eslint": "~4.4.0",
+    "@vue/cli-service": "~4.4.0",
+    "babel-eslint": "^10.1.0",
+    "electron": "8.3.4",
+    "electron-devtools-installer": "^3.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^6.2.2",
+    "vue-cli-plugin-electron-builder": "~2.0.0-rc.4",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
 }

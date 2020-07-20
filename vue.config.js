@@ -1,5 +1,7 @@
-process.env.VUE_APP_VERSION = require('./package.json').version
-process.env.VUE_APP_UPLOADURL = "http://192.168.0.139:8081/"
+// process.env.VUE_APP_VERSION = require('./package.json').version
+// process.env.VUE_APP_UPLOADURL = "http://192.168.2.234:8080/"
+
+console.log(process.env.VUE_APP_UPLOADURL, "??")
 
 module.exports = {
   configureWebpack: {
@@ -19,17 +21,17 @@ module.exports = {
             "zip"
           ]
         },
-        "win": {
-          "target": [
-            "nsis",
-            "zip"
-          ]
-        },
-        "nsis": {
-          "oneClick": false,
-          "allowToChangeInstallationDirectory": true,
-          "perMachine": true
-        },
+        // "win": {
+        //   "target": [
+        //     "nsis",
+        //     "zip"
+        //   ]
+        // },
+        // "nsis": {
+        //   "oneClick": false,
+        //   "allowToChangeInstallationDirectory": true,
+        //   "perMachine": true
+        // },
         // 软件更新地址
         "publish": {
           "provider": "generic",

@@ -5,12 +5,8 @@ let mainWindow = null
 
 export const startCheck = () => {
   //执行自动更新检查
-  try {
-    mainWindow.webContents.send('startCheck')
-    autoUpdater.checkForUpdates();
-  } catch (err) {
-    mainWindow.webContents.send(err)
-  }
+  mainWindow.webContents.send('startCheck')
+  autoUpdater.checkForUpdates();
 }
 
 // 检测更新，在你想要检查更新的时候执行，renderer事件触发后的操作自行编写

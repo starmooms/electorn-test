@@ -25,7 +25,6 @@ const setMenu = () => {
         {
           label: `当前版本${APP_VERSON}`,
           click() {
-            console.log("22")
             startCheck()
           }
         }
@@ -87,7 +86,6 @@ function createWindow() {
     createProtocol('app')
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
-    autoUpdater.checkForUpdatesAndNotify()
   }
 
   win.on('closed', () => {

@@ -3,7 +3,17 @@
 import { app, protocol, BrowserWindow } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 // import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
+import Update from "./Update";
+import MenuManager from "./MenuManager";
+import winManager from './core/WinManager';
+import USBManager from "./core/USBManager"
+
 const isDevelopment = process.env.NODE_ENV !== "production";
+app.allowRendererProcessReuse = true;
+
+const update = new Update();
+new USBManager()
+new MenuManager(update);
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -26,7 +36,7 @@ function createWindow() {
         .ELECTRON_NODE_INTEGRATION as unknown) as boolean
     }
   });
-
+  console.log(process.env.WEBPACK_DEV_SERVER_URL);
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string);
@@ -36,6 +46,9 @@ function createWindow() {
     // Load the index.html when not in development
     win.loadURL("app://./index.html");
   }
+
+  winManager.setWin(win as BrowserWindow);
+  update.setWin(win as BrowserWindow);
 
   win.on("closed", () => {
     win = null;

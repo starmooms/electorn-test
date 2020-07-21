@@ -1,8 +1,8 @@
 <template>
   <div class="home">
     <ul>
-      <li v-for="item in list">
-        {{item.path}}
+      <li v-for="(item, index) in list" :key="index">
+        {{ item.path }}
         <span style="display:inline-block;">
           <el-input v-model.trim="item.value" />
         </span>

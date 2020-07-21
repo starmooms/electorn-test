@@ -1,22 +1,19 @@
-import { BrowserWindow } from 'electron';
-
+import { BrowserWindow } from "electron";
 
 class WinManager {
   win: BrowserWindow | null = null;
 
-  constructor() {
-
-  }
+  constructor() {}
 
   setWin(win: BrowserWindow) {
-    this.win = win
+    this.win = win;
   }
 
   getWin() {
-    return this.win
+    return this.win;
   }
 }
 
-const winManager = new WinManager()
+const winManager = new WinManager();
 
-export default winManager
+export default winManager;

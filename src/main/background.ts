@@ -5,14 +5,14 @@ import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 // import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Update from "./Update";
 import MenuManager from "./MenuManager";
-import winManager from './core/WinManager';
-import USBManager from "./core/USBManager"
+import winManager from "./core/WinManager";
+import USBManager from "./core/USBManager";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 app.allowRendererProcessReuse = true;
 
 const update = new Update();
-new USBManager()
+new USBManager();
 new MenuManager(update);
 
 // Keep a global reference of the window object, if you don't, the window will

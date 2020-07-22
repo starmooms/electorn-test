@@ -2,16 +2,17 @@ import { ipcMain } from 'electron'
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
 import winManager from './WinManager'
+import { Port } from '@/types/Port'
 
 const Readline = SerialPort.parsers.Readline
 
-interface PortItem {
-  port: SerialPort
-  parser: typeof Readline
-}
+// interface PortItem {
+//   port: SerialPort
+//   parser: typeof Readline
+// }
 
 export default class USBManager {
-  cache: any = {}
+  cache = new Map<string, Port.Item>()
   hasEvent = false
 
   constructor() {
@@ -47,7 +48,7 @@ export default class USBManager {
   destory() {
     usbDetection.stopMonitoring()
     ipcMain.removeHandler('writePort')
-    this.cache = {}
+    this.cache.clear()
     this.hasEvent = false
   }
 
@@ -56,6 +57,15 @@ export default class USBManager {
     const win = winManager.getWin()
     if (win) {
       const list = await SerialPort.list()
+      const keys = Object.keys(this.cache)
+      if (keys.length > 0) {
+        keys.forEach(key => {
+          const has = list.find(item => item.path === key)
+          if (!has) {
+            this.cache.delete(key)
+          }
+        })
+      }
       win.webContents.send('usbData', {
         type: 'list',
         list
@@ -66,15 +76,14 @@ export default class USBManager {
   /** USB端口监听 */
   addEventUSBChange() {
     usbDetection.startMonitoring()
-    usbDetection.on('change', device => {
-      console.log('触发 change')
+    usbDetection.on('change', () => {
       this.sendList()
     })
   }
 
   writePort() {
     ipcMain.handle('writePort', async (event, { path, data }) => {
-      let portData = this.cache[path]
+      let portData = this.cache.get(path)
       if (!portData) {
         const port = new SerialPort(path, {
           baudRate: 115200
@@ -82,13 +91,15 @@ export default class USBManager {
         const parser = new Readline({ delimiter: '\n' })
         port.pipe(parser)
         parser.on('data', msg => {
-          // console.log(msg)
           console.log(msg.toString())
         })
         portData = { port, parser }
-        this.cache[path] = portData
+        this.cache.set(path, portData)
       }
-      const status = (portData as PortItem).port.write(data)
+      const status = portData.port.write(data, (s, d) => {
+        console.log(s)
+        console.log(d)
+      })
       return status
     })
   }

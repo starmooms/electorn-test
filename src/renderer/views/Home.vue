@@ -39,13 +39,10 @@ export default class Home extends Vue {
   }
 
   mounted() {
-    let i = 1
     ipcRenderer.on('usbData', (event, data) => {
-      console.log(data, i, '===>')
-      i += 1
-      console.log(data)
       if (data) {
         if (data.type === 'list') {
+          console.log(data)
           this.list = data.list.map((device: any) => {
             device.value = ''
             return device

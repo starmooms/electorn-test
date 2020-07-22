@@ -14,50 +14,50 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import { ipcRenderer } from "electron";
+import { Component, Vue } from 'vue-property-decorator'
+import { ipcRenderer } from 'electron'
 
 @Component
 export default class Home extends Vue {
-  list: any[] = [];
+  list: any[] = []
 
-  pre = "334";
+  pre = '33433'
 
   sendData(device: any) {
     ipcRenderer
-      .invoke("writePort", {
+      .invoke('writePort', {
         path: device.path,
         data: device.value
       })
       .then((data: any) => {
-        this.pre += `${data}\n`;
+        this.pre += `${data}\n`
       })
       .catch(err => {
-        console.log(err);
-        this.$message.error(err.message);
-      });
+        console.log(err)
+        this.$message.error(err.message)
+      })
   }
 
   mounted() {
-    let i = 1;
-    ipcRenderer.on("usbData", (event, data) => {
-      console.log(data, i, "===>");
-      i += 1;
-      console.log(data);
+    let i = 1
+    ipcRenderer.on('usbData', (event, data) => {
+      console.log(data, i, '===>')
+      i += 1
+      console.log(data)
       if (data) {
-        if (data.type === "list") {
+        if (data.type === 'list') {
           this.list = data.list.map((device: any) => {
-            device.value = "";
-            return device;
-          });
+            device.value = ''
+            return device
+          })
         }
       }
-    });
-    ipcRenderer.send("usbDetection", true);
+    })
+    ipcRenderer.send('usbDetection', true)
   }
 
   destroy() {
-    ipcRenderer.send("usbDetection", false);
+    ipcRenderer.send('usbDetection', false)
   }
 }
 </script>

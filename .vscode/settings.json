@@ -1,20 +1,19 @@
 {
-  // cnblogs.com/mspeer/p/12055962.html
   "editor.formatOnSave": false,
   "path-intellisense.mappings": {
     "@": "${workspaceRoot}/src"
   },
+  "eslint.enable": true,
+  "eslint.quiet": false, // 安静模式忽略警告
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
-  "eslint.enable": true,
   "eslint.validate": [
     "javascript",
-    {
-      "language": "vue",
-      "autoFix": true
-    },
+    "typescript",
     "html",
     "vue"
-  ]
+  ],
+  //  #让prettier使用eslint的代码格式进行校验
+  "prettier.eslintIntegration": true
 }

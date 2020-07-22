@@ -1,31 +1,31 @@
-const isDev = process.env.NODE_ENV === "development";
+const isDev = process.env.NODE_ENV === 'development'
 module.exports = {
-  lintOnSave: false,
+  lintOnSave: isDev,
   configureWebpack: {
-    devtool: isDev ? "source-map" : "none"
+    devtool: isDev ? 'source-map' : 'none'
   },
   chainWebpack: config => {
     config
-      .entry("app")
+      .entry('app')
       .clear()
-      .add("./src/renderer/main.ts");
+      .add('./src/renderer/main.ts')
   },
   pluginOptions: {
     electronBuilder: {
       nodeIntegration: true,
-      mainProcessFile: "src/main/background.ts",
-      mainProcessWatch: ["src/main"],
-      externals: ["serialport", "usb-detection"],
+      mainProcessFile: 'src/main/background.ts',
+      mainProcessWatch: ['src/main'],
+      externals: ['serialport', 'usb-detection'],
       builderOptions: {
         electronDownload: {
-          mirror: "https://npm.taobao.org/mirrors/electron/"
+          mirror: 'https://npm.taobao.org/mirrors/electron/'
         },
-        appId: "com.xxx.app",
+        appId: 'com.xxx.app',
         mac: {
-          target: ["dmg", "zip"]
+          target: ['dmg', 'zip']
         },
         win: {
-          target: ["nsis", "zip"]
+          target: ['nsis', 'zip']
         },
         nsis: {
           oneClick: false,
@@ -34,10 +34,10 @@ module.exports = {
         },
         // 软件更新地址
         publish: {
-          provider: "generic",
+          provider: 'generic',
           url: process.env.VUE_APP_UPLOADURL
         }
       }
     }
   }
-};
+}

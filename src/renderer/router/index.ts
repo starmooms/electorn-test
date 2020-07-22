@@ -1,13 +1,13 @@
-import Vue from "vue";
-import VueRouter, { RouteConfig } from "vue-router";
-import Home from "../views/Home.vue";
+import Vue from 'vue'
+import VueRouter, { RouteConfig } from 'vue-router'
+import Home from '../views/Home.vue'
 
-Vue.use(VueRouter);
+Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
   {
-    path: "/",
-    name: "Home",
+    path: '/',
+    name: 'Home',
     component: Home
   }
   // {
@@ -16,11 +16,11 @@ const routes: Array<RouteConfig> = [
   //   // component: () =>
   //   //   import(/* webpackChunkName: "about" */ "../views/About.vue")
   // }
-];
+]
 
 const router = new VueRouter({
-  mode: "hash",
+  mode: 'hash',
   routes
-});
+})
 
-export default router;
+export default router

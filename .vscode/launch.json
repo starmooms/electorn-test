@@ -10,6 +10,7 @@
       "windows": {
         "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
       },
+      "console": "integratedTerminal",
       "preLaunchTask": "electron-debug",
       "args": [
         "--remote-debugging-port=9223",

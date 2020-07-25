@@ -13,7 +13,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import { ipcMain, ipcRenderer } from 'electron'
+import { ipcRenderer } from 'electron'
 
 @Component
 export default class App extends Vue {
@@ -54,20 +54,8 @@ export default class App extends Vue {
 }
 </script>
 
-<style>
+<style lang="scss">
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-}
-
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
+  background: $cl1;
 }
 </style>

@@ -3,6 +3,7 @@
     <ul>
       <li v-for="(item, index) in list" :key="index">
         {{ item.path }}
+        <el-button @click="openPort(item)">打开串口</el-button>
         <span style="display:inline-block;">
           <el-input v-model.trim="item.value" />
         </span>
@@ -36,6 +37,13 @@ export default class Home extends Vue {
         console.log(err)
         this.$message.error(err.message)
       })
+  }
+
+  openPort(device: any) {
+    ipcRenderer.send('createdWin', {
+      type: 'portWin',
+      path: device.path
+    })
   }
 
   mounted() {

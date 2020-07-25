@@ -2,9 +2,15 @@ import { ipcMain } from 'electron'
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
 import winManager from './WinManager'
-import { Port } from '@/types/Port'
+import * as iconv from 'iconv-lite'
+import logger from './Logger'
 
-const Readline = SerialPort.parsers.Readline
+const Delimiter = SerialPort.parsers.Delimiter
+
+export interface PortItem {
+  port: SerialPort
+  parser: SerialPort.parsers.Delimiter
+}
 
 // interface PortItem {
 //   port: SerialPort
@@ -12,7 +18,7 @@ const Readline = SerialPort.parsers.Readline
 // }
 
 export default class USBManager {
-  cache = new Map<string, Port.Item>()
+  cache = new Map<string, PortItem>()
   hasEvent = false
 
   constructor() {
@@ -22,12 +28,6 @@ export default class USBManager {
   init() {
     ipcMain.on('usbDetection', (event, data) => {
       console.log('usbDetection', data, this.hasEvent)
-      if (data === this.hasEvent) {
-        if (this.hasEvent === true) {
-          this.sendList()
-        }
-        return
-      }
       if (data) {
         this.start()
       } else {
@@ -38,38 +38,46 @@ export default class USBManager {
 
   /** 开始监测USB */
   start() {
-    this.hasEvent = true
-    this.addEventUSBChange()
-    this.writePort()
     this.sendList()
+    if (this.hasEvent === false) {
+      this.writePort()
+      this.addEventUSBChange()
+      this.hasEvent = true
+    }
   }
 
   /** 结束监测USB */
   destory() {
-    usbDetection.stopMonitoring()
-    ipcMain.removeHandler('writePort')
-    this.cache.clear()
-    this.hasEvent = false
+    if (this.hasEvent === true) {
+      this.cache.clear()
+      usbDetection.stopMonitoring()
+      ipcMain.removeHandler('writePort')
+      this.hasEvent = false
+    }
   }
 
   /** 发送列表 */
   async sendList() {
     const win = winManager.getWin()
     if (win) {
-      const list = await SerialPort.list()
-      const keys = Object.keys(this.cache)
-      if (keys.length > 0) {
-        keys.forEach(key => {
-          const has = list.find(item => item.path === key)
-          if (!has) {
-            this.cache.delete(key)
-          }
+      try {
+        const list = await SerialPort.list()
+        const keys = Object.keys(this.cache)
+        if (keys.length > 0) {
+          keys.forEach(key => {
+            const has = list.find(item => item.path === key)
+            if (!has) {
+              this.cache.delete(key)
+            }
+          })
+        }
+        win.webContents.send('usbData', {
+          type: 'list',
+          list
         })
+      } catch (err) {
+        console.error(err)
       }
-      win.webContents.send('usbData', {
-        type: 'list',
-        list
-      })
     }
   }
 
@@ -84,15 +92,20 @@ export default class USBManager {
   writePort() {
     ipcMain.handle('writePort', async (event, { path, data }) => {
       let portData = this.cache.get(path)
+      console.log(3)
       if (!portData) {
         const port = new SerialPort(path, {
           baudRate: 115200
         })
-        const parser = new Readline({ delimiter: '\n' })
+        const parser = new Delimiter({
+          delimiter: '\n'
+        })
+
         port.pipe(parser)
         parser.on('data', msg => {
-          console.log(msg.toString())
+          logger.info(iconv.decode(msg, 'GBK'))
         })
+
         portData = { port, parser }
         this.cache.set(path, portData)
       }
@@ -102,5 +115,21 @@ export default class USBManager {
       })
       return status
     })
+  }
+
+  getPortData(path: string) {
+    let portData = this.cache.get(path)
+    if (!portData) {
+      const port = new SerialPort(path, {
+        baudRate: 115200
+      })
+      const parser = new Delimiter({
+        delimiter: '\n'
+      })
+      port.pipe(parser)
+      portData = { port, parser }
+      this.cache.set(path, portData)
+    }
+    return portData
   }
 }

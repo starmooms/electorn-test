@@ -1,9 +1,11 @@
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, BrowserView } from 'electron'
 import is from 'electron-is'
 import USBManager from './core/USBManager'
 import Update from './Update'
 import MenuManager from './MenuManager'
 import winManager from './core/WinManager'
+import PortWindow from './window/portWindow'
+import createWindow from './core/createdWinow'
 
 /** 页面链接加载方法 */
 declare type loadFun = (win: BrowserWindow) => void
@@ -11,11 +13,10 @@ declare type loadFun = (win: BrowserWindow) => void
 export default class Launcher {
   win: BrowserWindow | null = null
   update: Update | null = null
-  loadFun: loadFun
+  usbManager: USBManager | null = null
 
-  constructor(setload: loadFun) {
+  constructor() {
     this.beforeWin()
-    this.loadFun = setload
     this.makeSingleInstance(() => {
       this.init()
     })
@@ -61,24 +62,21 @@ export default class Launcher {
 
   /** 创建窗口 */
   createWindow() {
-    this.win = new BrowserWindow({
-      width: 800,
-      height: 600,
-      webPreferences: {
-        nodeIntegration: (process.env
-          .ELECTRON_NODE_INTEGRATION as unknown) as boolean
-      }
-    })
-
-    if (this.loadFun) {
-      this.loadFun(this.win)
-    }
-
-    this.afterWin()
-
-    this.win.on('closed', () => {
-      this.win = null
-    })
+    // this.win = new BrowserWindow({
+    //   width: 800,
+    //   height: 600,
+    //   webPreferences: {
+    //     nodeIntegration: (process.env
+    //       .ELECTRON_NODE_INTEGRATION as unknown) as boolean
+    //   }
+    // })
+    // if (this.loadFun) {
+    //   this.loadFun(this.win)
+    // }
+    // this.afterWin()
+    // this.win.on('closed', () => {
+    //   this.win = null
+    // })
   }
 
   /** 设置app开启相关回调并创建窗口 */
@@ -92,8 +90,8 @@ export default class Launcher {
       //     console.error('Vue Devtools failed to install:', e.toString())
       //   }
       // }
-
-      this.createWindow()
+      this.win = createWindow()
+      this.afterWin()
     })
 
     app.on('activate', () => {
@@ -119,12 +117,21 @@ export default class Launcher {
   }
 
   afterWin() {
-    new USBManager()
+    this.usbManager = new USBManager()
     if (this.win) {
       winManager.setWin(this.win)
       if (this.update) {
         this.update.setWin(this.win)
       }
+      ipcMain.on('createdWin', (event, data: any) => {
+        if (data && data.type) {
+          if (data.type === 'portWin') {
+            if (data.path) {
+              new PortWindow(this.usbManager as USBManager, data.path)
+            }
+          }
+        }
+      })
     }
   }
 }

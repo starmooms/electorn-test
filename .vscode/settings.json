@@ -1,4 +1,5 @@
 {
+  "files.autoSaveDelay": 20000,
   "editor.formatOnSave": false,
   "path-intellisense.mappings": {
     "@": "${workspaceRoot}/src"
@@ -14,6 +15,11 @@
     "html",
     "vue"
   ],
+  // "terminal.integrated.shellArgs.windows": [
+  //   "-NoExit",
+  //   "/c",
+  //   "chcp 65001"
+  // ],
   //  #让prettier使用eslint的代码格式进行校验
   "prettier.eslintIntegration": true
 }

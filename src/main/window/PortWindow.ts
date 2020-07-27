@@ -23,20 +23,27 @@ export default class PortWindow {
   }
 
   initWin() {
-    ipcMain.on('write', (event, data: string) => {
+    const portPath = this.portItem.port.path
+    const writeEvent = `write:${portPath}`
+    const getPortEvent = `getPort:${portPath}`
+    const portDataEvent = `portData:${portPath}`
+    ipcMain.on(writeEvent, (event, data: string) => {
       this.portItem.port.write(data)
     })
-    ipcMain.handle('getPort', event => {
-      return this.portItem.port
+    ipcMain.handle(getPortEvent, () => {
+      const prot = this.portItem.port
+      return {
+        path: prot.path
+      }
     })
-    const win = createWindow(
-      `portItem/${encodeURIComponent(this.portItem.port.path)}`
-    )
+    const win = createWindow(`portItem/${encodeURIComponent(portPath)}`)
     this.portItem.parser.on('data', buf => {
-      win.webContents.send('data', iconv.decode(buf, 'GBK'))
+      console.log(iconv.decode(buf, 'GBK'))
+      win.webContents.send(portDataEvent, iconv.decode(buf, 'GBK'))
     })
     win.on('close', () => {
-      ipcMain.removeHandler('getPort')
+      ipcMain.removeHandler(getPortEvent)
+      ipcMain.removeAllListeners(writeEvent)
     })
     return win
   }

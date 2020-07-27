@@ -127,6 +127,10 @@ export default class USBManager {
         delimiter: '\n'
       })
       port.pipe(parser)
+      parser.on('data', msg => {
+        logger.info(iconv.decode(msg, 'GBK'))
+      })
+
       portData = { port, parser }
       this.cache.set(path, portData)
     }

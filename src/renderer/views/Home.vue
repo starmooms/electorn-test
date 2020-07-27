@@ -10,6 +10,7 @@
         <el-button @click="sendData(item)">发送消息</el-button>
       </li>
     </ul>
+    <button @click="to">跳转</button>
     <pre v-html="pre"></pre>
   </div>
 </template>
@@ -23,6 +24,12 @@ export default class Home extends Vue {
   list: any[] = []
 
   pre = '33433'
+
+  to() {
+    this.$router.push({
+      name: 'About'
+    })
+  }
 
   sendData(device: any) {
     ipcRenderer
@@ -47,6 +54,8 @@ export default class Home extends Vue {
   }
 
   mounted() {
+    console.log(this.$route)
+    console.log(this.$router)
     ipcRenderer.on('usbData', (event, data) => {
       if (data) {
         if (data.type === 'list') {

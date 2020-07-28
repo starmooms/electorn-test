@@ -3,35 +3,6 @@
     <nav>
       <ul class="nav-list">
         <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
-        <li class="nav-item">串口调试</li>
       </ul>
     </nav>
   </div>

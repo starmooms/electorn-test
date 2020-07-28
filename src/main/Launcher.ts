@@ -6,15 +6,19 @@ import MenuManager from './MenuManager'
 import winManager from './core/WinManager'
 import PortWindow from './window/portWindow'
 
-/** 页面链接加载方法 */
-declare type loadFun = (win: BrowserWindow) => void
+/** mainWin生成后执行 */
+declare type afterMainWin = () => void
 
 export default class Launcher {
   win: BrowserWindow | null = null
   update: Update | null = null
   usbManager: USBManager | null = null
+  afterMainWin: afterMainWin | null = null
 
-  constructor() {
+  constructor(afterMainWin?: afterMainWin) {
+    if (afterMainWin) {
+      this.afterMainWin = afterMainWin
+    }
     this.beforeWin()
     this.makeSingleInstance(() => {
       this.init()
@@ -61,9 +65,12 @@ export default class Launcher {
 
   /** 创建窗口 */
   createWindow() {
-    this.win = winManager.createdWin('mainWin')
+    this.win = winManager.createdWin('mainWin', '', this.afterMainWin)
     this.win.on('closed', () => {
       this.win = null
+      if (this.usbManager) {
+        this.usbManager.destory()
+      }
     })
     return this.win
   }

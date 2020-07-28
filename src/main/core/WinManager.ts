@@ -22,17 +22,18 @@ class WinManager {
    * @param name 窗口名
    * @param path 路由
    */
-  createdWin(name: string, path = '') {
+  createdWin(name: string, path = '', beforeLoad?: any) {
     const hasWin = this.getWin(name, true)
     if (hasWin) {
       return hasWin
     }
-    const winListLength = this.winList.size
+
     const devUrl = process.env.WEBPACK_DEV_SERVER_URL
     if (path) {
-      path += `#${path}`
-    } else if (!devUrl) {
-      path = 'index.html'
+      path = `#/${path}`
+    }
+    if (!devUrl) {
+      path = `index.html${path}`
     }
 
     const opts: Electron.BrowserWindowConstructorOptions = {}
@@ -61,6 +62,7 @@ class WinManager {
     }
 
     this.winList.set(name, win)
+    if (beforeLoad) beforeLoad();
     win.loadURL(`${protocolPath}${path}`)
     win.on('close', () => {
       this.winList.delete(name)

@@ -13,7 +13,7 @@ import NavBar from './components/NavBar.vue'
 
 @Component({
   components: {
-    [NavBar.name]: NavBar
+    NavBar
   }
 })
 export default class Main extends Vue {}
@@ -27,5 +27,6 @@ export default class Main extends Vue {}
 .nav-left {
   flex: 1;
   overflow: auto;
+  padding: 10px 20px;
 }
 </style>

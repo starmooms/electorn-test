@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 // import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Launcher from './Launcher'
@@ -8,6 +8,13 @@ import Launcher from './Launcher'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 app.allowRendererProcessReuse = true
 
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { secure: true, standard: true } }
+])
+
+let afterMainWin: any = () => {
+  createProtocol('app')
+}
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
@@ -22,10 +29,15 @@ if (isDevelopment) {
     })
   }
 
+  afterMainWin = null
   app.whenReady().then(async () => {
     if (isDevelopment && !process.env.IS_TEST) {
       // 下载Vue调试工具
       try {
+        console.log(process.env.VUE_DEV_TOOL)
+        if (process.env.DEV_TOOL) {
+          BrowserWindow.addDevToolsExtension(process.env.DEV_TOOL)
+        }
         // await installExtension(VUEJS_DEVTOOLS);
       } catch (e) {
         console.error('Vue Devtools failed to install:', e.toString())
@@ -33,7 +45,9 @@ if (isDevelopment) {
     }
   })
 } else {
-  createProtocol('app')
+  // app.whenReady().then(() => {
+  //   createProtocol('app')
+  // })
 }
 
-new Launcher()
+new Launcher(afterMainWin)

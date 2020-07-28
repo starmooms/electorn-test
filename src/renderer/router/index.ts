@@ -2,24 +2,35 @@ import Vue from 'vue'
 import VueRouter, { RouteConfig } from 'vue-router'
 import Home from '../views/Home.vue'
 import About from '../views/About.vue'
+import Main from '@/renderer/layout/Main/index.vue'
+import Default from '@/renderer/layout/Default.vue'
 
 Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    name: 'Main',
+    component: Main,
+    children: [
+      {
+        path: '',
+        name: 'Home',
+        component: () => import('@/renderer/views/Home.vue')
+      }
+    ]
   },
   {
-    path: '/portItem/:path',
-    name: 'About',
-    component: About
-  },
-  {
-    path: '*',
-    name: '',
-    component: About
+    path: '/',
+    name: 'Default',
+    component: Default,
+    children: [
+      {
+        path: '/portItem/:path',
+        name: 'portItem',
+        component: () => import('@/renderer/views/About.vue')
+      }
+    ]
   }
 ]
 

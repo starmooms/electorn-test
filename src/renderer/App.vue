@@ -1,12 +1,5 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <h1>Electron TEST333</h1>
-      <el-dialog title="更新弹框" :visible.sync="dialogVisible" width="30%">
-        <p>{{ tips }}</p>
-        <p>更新进度 {{ downloadPercent }}</p>
-      </el-dialog>
-    </div>
     <router-view />
   </div>
 </template>
@@ -55,7 +48,7 @@ export default class App extends Vue {
 </script>
 
 <style lang="scss">
-#app {
+/* #app {
   background: $cl1;
-}
+} */
 </style>

@@ -12,6 +12,7 @@
     </ul>
     <button @click="to">跳转</button>
     <pre v-html="pre"></pre>
+    <div style="height:900px;"></div>
   </div>
 </template>
 

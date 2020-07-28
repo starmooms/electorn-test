@@ -1,7 +1,8 @@
-import { BrowserView, BrowserWindow, ipcMain } from 'electron'
+import { BrowserWindow, ipcMain } from 'electron'
 import USBManager, { PortItem } from '../core/USBManager'
 import iconv from 'iconv-lite'
 import createWindow from '../core/createdWinow'
+import winManager from '../core/WinManager'
 
 export default class PortWindow {
   usbManager: USBManager
@@ -36,7 +37,11 @@ export default class PortWindow {
         path: prot.path
       }
     })
-    const win = createWindow(`portItem/${encodeURIComponent(portPath)}`)
+
+    const win = winManager.createdWin(
+      `portItem/${portPath}`,
+      `portItem/${encodeURIComponent(portPath)}`
+    )
     this.portItem.parser.on('data', buf => {
       console.log(iconv.decode(buf, 'GBK'))
       win.webContents.send(portDataEvent, iconv.decode(buf, 'GBK'))

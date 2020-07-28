@@ -12,11 +12,6 @@ export interface PortItem {
   parser: SerialPort.parsers.Delimiter
 }
 
-// interface PortItem {
-//   port: SerialPort
-//   parser: typeof Readline
-// }
-
 export default class USBManager {
   cache = new Map<string, PortItem>()
   hasEvent = false
@@ -58,7 +53,7 @@ export default class USBManager {
 
   /** 发送列表 */
   async sendList() {
-    const win = winManager.getWin()
+    const win = winManager.getWin('mainWin')
     if (win) {
       try {
         const list = await SerialPort.list()

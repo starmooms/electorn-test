@@ -7,17 +7,17 @@ import winManager from './core/WinManager'
 import PortWindow from './window/portWindow'
 
 /** mainWin生成后执行 */
-declare type afterMainWin = () => void
+declare type beforeMainWin = () => void
 
 export default class Launcher {
   win: BrowserWindow | null = null
   update: Update | null = null
   usbManager: USBManager | null = null
-  afterMainWin: afterMainWin | null = null
+  beforeMainWin: beforeMainWin | null = null
 
-  constructor(afterMainWin?: afterMainWin) {
-    if (afterMainWin) {
-      this.afterMainWin = afterMainWin
+  constructor(beforeMainWin?: beforeMainWin) {
+    if (beforeMainWin) {
+      this.beforeMainWin = beforeMainWin
     }
     this.beforeWin()
     this.makeSingleInstance(() => {
@@ -65,7 +65,10 @@ export default class Launcher {
 
   /** 创建窗口 */
   createWindow() {
-    this.win = winManager.createdWin('mainWin', '', this.afterMainWin)
+    if (this.beforeMainWin) {
+      this.beforeMainWin()
+    }
+    this.win = winManager.createdWin('mainWin')
     this.win.on('closed', () => {
       this.win = null
       if (this.usbManager) {

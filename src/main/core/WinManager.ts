@@ -22,7 +22,7 @@ class WinManager {
    * @param name 窗口名
    * @param path 路由
    */
-  createdWin(name: string, path = '', beforeLoad?: any) {
+  createdWin(name: string, path = '') {
     const hasWin = this.getWin(name, true)
     if (hasWin) {
       return hasWin
@@ -45,8 +45,8 @@ class WinManager {
     }
 
     const win = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: 1200,
+      height: 800,
       // backgroundColor: '#2e2c29',
       webPreferences: {
         nodeIntegration: (process.env
@@ -62,7 +62,6 @@ class WinManager {
     }
 
     this.winList.set(name, win)
-    if (beforeLoad) beforeLoad();
     win.loadURL(`${protocolPath}${path}`)
     win.on('close', () => {
       this.winList.delete(name)

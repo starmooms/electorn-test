@@ -19,7 +19,10 @@
       "outFiles": [
         "${workspaceFolder}/dist_electron/**/*.js"
       ],
-      "sourceMaps": true
+      "sourceMaps": true,
+      "env": {
+        "VUE_DEV_TOOL": "C:\\Users\\Administrator\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Extensions\\nhdogjmejiglipccpnnnanhbledajbpd\\5.3.3_0"
+      }
     },
     {
       "name": "Electron: Renderer",

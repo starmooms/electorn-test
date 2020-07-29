@@ -16,7 +16,12 @@
       <el-table-column prop="address" label="地址"></el-table-column> -->
     </el-table>
 
-    <el-dialog title="编辑工步" :visible.sync="stepsDialog">
+    <el-dialog
+      title="编辑工步"
+      custom-class="stepsAdd-dialog"
+      :close-on-click-modal="false"
+      :visible.sync="stepsDialog"
+    >
       <el-button type="text" @click="stepsAdd">添加工步</el-button>
 
       <el-table :data="stepsList">
@@ -46,7 +51,7 @@
       </el-table>
 
       <div slot="footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button @click="stepsDialog = false">取 消</el-button>
         <el-button type="primary" @click="stepsSave">
           确 定
         </el-button>
@@ -151,3 +156,9 @@ export default class Home extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+.stepsAdd-dialog {
+  min-width: 800px;
+}
+</style>

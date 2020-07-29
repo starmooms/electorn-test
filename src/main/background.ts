@@ -12,7 +12,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
-let afterMainWin: any = () => {
+let beforeMainWin: any = () => {
   createProtocol('app')
 }
 // Exit cleanly on request from parent process in development mode.
@@ -29,14 +29,14 @@ if (isDevelopment) {
     })
   }
 
-  afterMainWin = null
+  beforeMainWin = null
   app.whenReady().then(async () => {
     if (isDevelopment && !process.env.IS_TEST) {
       // 下载Vue调试工具
       try {
         console.log(process.env.VUE_DEV_TOOL)
-        if (process.env.DEV_TOOL) {
-          BrowserWindow.addDevToolsExtension(process.env.DEV_TOOL)
+        if (process.env.VUE_DEV_TOOL) {
+          BrowserWindow.addDevToolsExtension(process.env.VUE_DEV_TOOL)
         }
         // await installExtension(VUEJS_DEVTOOLS);
       } catch (e) {
@@ -50,4 +50,4 @@ if (isDevelopment) {
   // })
 }
 
-new Launcher(afterMainWin)
+new Launcher(beforeMainWin)

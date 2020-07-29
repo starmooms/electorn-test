@@ -7,6 +7,8 @@ import Element from 'element-ui'
 import '@/renderer/style/index.scss'
 import 'element-ui/lib/theme-chalk/index.css'
 
+import '@/renderer/Ipc'
+
 Vue.use(Element, {
   size: 'mini'
 })

@@ -1,9 +1,10 @@
-import { ipcMain } from 'electron'
+import { ipcMain, ipcRenderer } from 'electron'
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
 import winManager from './WinManager'
 import * as iconv from 'iconv-lite'
 import logger from './Logger'
+import ipcManage from './IpcManage'
 
 const Delimiter = SerialPort.parsers.Delimiter
 
@@ -22,13 +23,13 @@ export default class USBManager {
 
   init() {
     ipcMain.on('usbDetection', (event, data) => {
-      console.log('usbDetection', data, this.hasEvent)
       if (data) {
         this.start()
       } else {
         this.destory()
       }
     })
+    this.portWrite()
   }
 
   /** 开始监测USB */
@@ -71,7 +72,7 @@ export default class USBManager {
           list
         })
       } catch (err) {
-        console.error(err)
+        ipcManage.ipcError(err)
       }
     }
   }
@@ -115,20 +116,35 @@ export default class USBManager {
   getPortData(path: string) {
     let portData = this.cache.get(path)
     if (!portData) {
-      const port = new SerialPort(path, {
-        baudRate: 115200
-      })
-      const parser = new Delimiter({
-        delimiter: '\n'
-      })
-      port.pipe(parser)
-      parser.on('data', msg => {
-        logger.info(iconv.decode(msg, 'GBK'))
-      })
+      try {
+        const port = new SerialPort(path, {
+          baudRate: 115200
+        })
+        const parser = new Delimiter({
+          delimiter: '\n'
+        })
+        port.pipe(parser)
+        parser.on('data', buf => {
+          const msg = iconv.decode(buf, 'GBK')
+          logger.info(msg)
+          ipcManage.setSend(`portData:${path}`, msg)
+        })
 
-      portData = { port, parser }
-      this.cache.set(path, portData)
+        portData = { port, parser }
+        this.cache.set(path, portData)
+      } catch (err) {
+        ipcManage.ipcError(err)
+      }
     }
     return portData
+  }
+
+  portWrite() {
+    ipcManage.setEmit('portWrite', (path: string, data: string) => {
+      const portData = this.getPortData(path)
+      if (portData) {
+        portData.port.write(data)
+      }
+    })
   }
 }

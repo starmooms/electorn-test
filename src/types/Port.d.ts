@@ -1,1 +1,0 @@
-import SerialPort from 'serialport'

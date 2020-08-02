@@ -1,0 +1,6 @@
+const buf1 = Buffer.from('0616', 'hex')
+const buf3 = Buffer.alloc(10)
+console.log(buf1)
+console.log(buf3)
+// buf1.writeIntLE(0x18, )
+// console.log(buf1)

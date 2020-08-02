@@ -45,8 +45,8 @@ class WinManager {
     }
 
     const win = new BrowserWindow({
-      width: 1200,
-      height: 800,
+      width: 800,
+      height: 600,
       // backgroundColor: '#2e2c29',
       webPreferences: {
         nodeIntegration: (process.env

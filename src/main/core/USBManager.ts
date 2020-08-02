@@ -5,6 +5,8 @@ import winManager from './WinManager'
 import * as iconv from 'iconv-lite'
 import logger from './Logger'
 import ipcManage from './IpcManage'
+import { workSteps, controlCode } from '../byt/port'
+import agreement from './Agreement'
 
 const Delimiter = SerialPort.parsers.Delimiter
 
@@ -16,19 +18,21 @@ export interface PortItem {
 export default class USBManager {
   cache = new Map<string, PortItem>()
   hasEvent = false
+  stepList: any[] | null = null
 
   constructor() {
     this.init()
   }
 
   init() {
-    ipcMain.on('usbDetection', (event, data) => {
+    ipcManage.setEmit('usbDetection', data => {
       if (data) {
         this.start()
       } else {
         this.destory()
       }
     })
+    this.getSetpsList()
     this.portWrite()
   }
 
@@ -67,7 +71,7 @@ export default class USBManager {
             }
           })
         }
-        win.webContents.send('usbData', {
+        ipcManage.setSend('usbData', {
           type: 'list',
           list
         })
@@ -85,10 +89,26 @@ export default class USBManager {
     })
   }
 
+  /** 获取选择工步列表 */
+  getSetpsList() {
+    ipcManage.setHandle('/port/setpsList', async () => {
+      if (!this.stepList) {
+        this.stepList = Object.keys(workSteps).map(key => {
+          const step = workSteps[key]
+          return {
+            label: step.name,
+            value: key,
+            input: step.input || []
+          }
+        })
+      }
+      return this.stepList
+    })
+  }
+
   writePort() {
     ipcMain.handle('writePort', async (event, { path, data }) => {
       let portData = this.cache.get(path)
-      console.log(3)
       if (!portData) {
         const port = new SerialPort(path, {
           baudRate: 115200
@@ -145,6 +165,16 @@ export default class USBManager {
       if (portData) {
         portData.port.write(data)
       }
+    })
+  }
+
+  /** 写工步 */
+  writeWorkSteps() {
+    ipcManage.setEmit('/port/writeWorkSteps', (path: string, data: any) => {
+      const protItem = this.getPortData(path)
+      if (!protItem) return
+
+      protItem.port.write(agreement.setData(data, controlCode.writeWorkSteps))
     })
   }
 }

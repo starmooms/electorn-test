@@ -2,7 +2,9 @@
   <div id="nav-bar">
     <nav>
       <ul class="nav-list">
-        <li class="nav-item">串口调试</li>
+        <li class="nav-item">
+          <router-link :to="{ name: 'portList' }">端口调试</router-link>
+        </li>
       </ul>
     </nav>
   </div>
@@ -29,7 +31,12 @@ $subnav-fontCl: #fff;
 
   .nav-item {
     line-height: 40px;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #797979;
+    color: #fff;
+    a {
+      display: block;
+      padding-left: 10px;
+    }
   }
 }
 </style>

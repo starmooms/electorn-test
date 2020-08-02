@@ -1,10 +1,19 @@
-import { app, protocol, BrowserWindow, ipcMain, BrowserView } from 'electron'
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  ipcMain,
+  BrowserView,
+  ipcRenderer
+} from 'electron'
 import is from 'electron-is'
 import USBManager from './core/USBManager'
 import Update from './Update'
 import MenuManager from './MenuManager'
 import winManager from './core/WinManager'
 import PortWindow from './window/portWindow'
+import ipcManage from './core/IpcManage'
+import WorkStepSee from './window/WorkStepSee'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -110,6 +119,16 @@ export default class Launcher {
   afterWin() {
     this.usbManager = new USBManager()
     if (this.win) {
+      ipcManage.setEmit(
+        '/createdWin/port/workerSee',
+        ({ path }: { path: string }) => {
+          if (!path) {
+            throw new Error('NO Path')
+          }
+          new WorkStepSee(path)
+        }
+      )
+
       ipcMain.on('createdWin', (event, data: any) => {
         if (!data || !data.type) return
         switch (data.type) {

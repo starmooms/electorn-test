@@ -7,13 +7,15 @@ import Element from 'element-ui'
 import '@/renderer/style/index.scss'
 import 'element-ui/lib/theme-chalk/index.css'
 
-import '@/renderer/Ipc'
+import command from '@/renderer/command'
+
+Vue.config.productionTip = false
 
 Vue.use(Element, {
   size: 'mini'
 })
 
-Vue.config.productionTip = false
+Vue.use(command)
 
 new Vue({
   router,

@@ -5,8 +5,9 @@ import winManager from './WinManager'
 import * as iconv from 'iconv-lite'
 import logger from './Logger'
 import ipcManage from './IpcManage'
-import { workSteps, controlCode } from '../byt/port'
+import { workSteps, controlCode, workStepsInput } from '../byt/port'
 import agreement from './Agreement'
+import { FixZero, toHex, bytFull, typedKeys } from '../utils'
 
 const Delimiter = SerialPort.parsers.Delimiter
 
@@ -33,6 +34,7 @@ export default class USBManager {
       }
     })
     this.getSetpsList()
+    this.writeWorkSteps()
     this.portWrite()
   }
 
@@ -93,7 +95,7 @@ export default class USBManager {
   getSetpsList() {
     ipcManage.setHandle('/port/setpsList', async () => {
       if (!this.stepList) {
-        this.stepList = Object.keys(workSteps).map(key => {
+        this.stepList = typedKeys(workSteps).map(key => {
           const step = workSteps[key]
           return {
             label: step.name,
@@ -170,11 +172,35 @@ export default class USBManager {
 
   /** 写工步 */
   writeWorkSteps() {
-    ipcManage.setEmit('/port/writeWorkSteps', (path: string, data: any) => {
-      const protItem = this.getPortData(path)
+    ipcManage.setEmit('/port/writeWorkSteps', (data: any) => {
+      const protItem = this.getPortData(data.path)
       if (!protItem) return
+      let writeArr = [
+        '00',
+        'ff',
+        '0000000000000000',
+        FixZero(data.list.length.toString('16'), 2)
+      ]
 
-      protItem.port.write(agreement.setData(data, controlCode.writeWorkSteps))
+      data.list.forEach((item: any, index: number) => {
+        const step = workSteps[item.setId]
+        if (step && step.input) {
+          const stepByt = [
+            ...['00', 'ff', '00', toHex(index, 1), toHex(0, 1), step.value],
+            ...bytFull(2, 2, 4, 4, 4, 4, 1, 1)
+          ]
+          step.input.forEach((type: string) => {
+            const inputMap = workStepsInput[type]
+            if (inputMap) {
+              stepByt[inputMap.serial] = toHex(item[type], inputMap.len)
+            }
+          })
+          writeArr = writeArr.concat(stepByt)
+        }
+      })
+      const write = writeArr.join('')
+      console.log(agreement.setData(write, controlCode.writeWorkSteps))
+      protItem.port.write(agreement.setData(write, controlCode.writeWorkSteps))
     })
   }
 }

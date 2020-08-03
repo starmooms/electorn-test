@@ -10,4 +10,8 @@ declare global {
       [elem: string]: any
     }
   }
+
+  interface ObjectConstructor {
+    typedKeys<T>(o: T): Array<keyof T>
+  }
 }

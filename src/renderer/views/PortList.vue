@@ -14,7 +14,7 @@
           <el-button type="text" @click="nowStepShow(row)">
             查看当前工步
           </el-button>
-          <el-button type="text" @click="stepsShow">
+          <el-button type="text" @click="stepsShow(row)">
             编辑工步
           </el-button>
         </template>
@@ -47,7 +47,7 @@
         </el-table-column>
         <el-table-column
           width="100"
-          v-for="item in setsInputList"
+          v-for="item in stepsInputList"
           :key="item.keys"
           :label="item.name"
         >
@@ -85,25 +85,24 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import { ipcRenderer } from 'electron'
+import { Port } from '../../types/Port'
 
 @Component
 export default class PortList extends Vue {
-  list: any[] = []
+  list: Port.Item[] = []
 
-  // 1
-  setsInputList = [
+  nowPort: Port.Item | null = null
+  stepsInputList = [
     { name: '时间(秒)', key: 'time' },
     { name: '电压(mV)', key: 'U' },
     { name: '电流(mA)', key: 'I' },
     { name: '功率(W)', key: 'P' },
-    { name: '电阻(mΩ)', key: 'M' }
+    { name: '电阻(mΩ)', key: 'R' }
   ]
   stepsDialog = false
   stepsList: any[] = []
   stepsSelectList: any[] = []
-  stepsSelectInput: any = {
-    ICi: ['U', 'I']
-  }
+  stepsSelectInput: any = {}
   stepsId = 0
 
   nowStepShow(portItem: any) {
@@ -113,23 +112,32 @@ export default class PortList extends Vue {
   }
 
   stepsSave() {
-    const list = this.stepsList.filter(item => {
-      if (item.setId) {
-        const input = this.stepsSelectInput[item.setId]
-        if (input.length > 0) {
-          const hasNull = input.find(i => !item[i])
-          return !hasNull
+    if (this.nowPort) {
+      const list = this.stepsList.filter(item => {
+        if (item.setId) {
+          const input = this.stepsSelectInput[item.setId]
+          if (input.length > 0) {
+            const hasNull = input.find(i => !item[i])
+            return !hasNull
+          }
         }
+        return false
+      })
+      if (list.length === 0) {
+        this.$message.error('请正确设置工步')
+        return
       }
-      return false
-    })
-    if (list.length === 0) {
-      this.$message.error('请正确设置工步')
+      this.$message.info(JSON.stringify(list))
+
+      this.$command.send('/port/writeWorkSteps', {
+        path: this.nowPort.path,
+        list
+      })
     }
-    this.$message.info(JSON.stringify(list))
   }
 
-  stepsShow() {
+  stepsShow(portItem: Port.Item) {
+    this.nowPort = portItem
     this.stepsList = []
     this.stepsAdd()
     this.stepsDialog = true
@@ -140,7 +148,7 @@ export default class PortList extends Vue {
       id: ++this.stepsId,
       setId: null
     }
-    this.setsInputList.forEach(item => {
+    this.stepsInputList.forEach(item => {
       return (obj[item.key] = null)
     })
     this.stepsList.push(obj)
@@ -178,6 +186,7 @@ export default class PortList extends Vue {
         if (data) {
           if (data.type === 'list') {
             this.list = data.list
+            console.log(this.list)
           }
         }
       },

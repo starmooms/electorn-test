@@ -1,5 +1,5 @@
 const buf1 = Buffer.from('0616', 'hex')
-const buf3 = Buffer.alloc(10)
+const buf3 = Buffer.from([12, 255])
 console.log(buf1)
 console.log(buf3)
 // buf1.writeIntLE(0x18, )

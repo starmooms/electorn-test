@@ -5,10 +5,10 @@ export default class WorkStepSee {
 
   constructor(path: string) {
     this.path = path
-    this.createdWin(path)
+    this.createdWin()
   }
 
-  createdWin(path) {
+  createdWin() {
     const winName = `port/WorkerSee/${encodeURIComponent(this.path)}`
     if (winManager.getWin(winName, true)) {
       return true

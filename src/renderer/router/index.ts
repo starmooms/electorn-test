@@ -17,6 +17,11 @@ const routes: Array<RouteConfig> = [
         path: '',
         name: 'Home',
         component: () => import('@/renderer/views/Home.vue')
+      },
+      {
+        path: '/protList',
+        name: 'portList',
+        component: () => import('@/renderer/views/PortList.vue')
       }
     ]
   },
@@ -29,6 +34,11 @@ const routes: Array<RouteConfig> = [
         path: '/portItem/:path',
         name: 'portItem',
         component: () => import('@/renderer/views/About.vue')
+      },
+      {
+        path: '/port/WorkerSee/:path',
+        name: 'WorkerSee',
+        component: () => import('@/renderer/views/WorkerSee.vue')
       }
     ]
   }

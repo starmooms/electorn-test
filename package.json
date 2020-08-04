@@ -23,6 +23,7 @@
     "iconv-lite": "^0.6.2",
     "normalize.css": "^8.0.1",
     "serialport": "^9.0.0",
+    "svg-sprite-loader": "^5.0.0",
     "usb-detection": "^4.10.0",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",

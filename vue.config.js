@@ -1,4 +1,13 @@
+/* eslint-disable */
+const path = require('path')
+/* eslint-enable */
+
 const isDev = process.env.NODE_ENV === 'development'
+
+function resolve(dir) {
+  return path.join(__dirname, './', dir)
+}
+
 module.exports = {
   lintOnSave: isDev,
   configureWebpack: {
@@ -15,6 +24,21 @@ module.exports = {
     }
   },
   chainWebpack: config => {
+    config.module
+      .rule('svg')
+      .exclude.add(resolve('src/renderer/icons'))
+      .end()
+    config.module
+      .rule('icons')
+      .test(/\.svg$/)
+      .include.add(resolve('src/renderer/icons'))
+      .end()
+      .use('svg-sprite-loader')
+      .loader('svg-sprite-loader')
+      .options({
+        symbolId: 'icon-[name]'
+      })
+      .end()
     config
       .entry('app')
       .clear()

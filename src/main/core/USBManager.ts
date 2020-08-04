@@ -7,7 +7,8 @@ import logger from './Logger'
 import ipcManage from './IpcManage'
 import { workSteps, controlCode, workStepsInput } from '../byt/port'
 import agreement from './Agreement'
-import { FixZero, toHex, bytFull, typedKeys } from '../utils'
+import { FixZero, toHex, bytFull } from '../utils'
+import { typedKeys } from '@/shared/utils/index'
 
 const Delimiter = SerialPort.parsers.Delimiter
 
@@ -147,9 +148,10 @@ export default class USBManager {
         })
         port.pipe(parser)
         parser.on('data', buf => {
-          const msg = iconv.decode(buf, 'GBK')
-          logger.info(msg)
-          ipcManage.setSend(`portData:${path}`, msg)
+          console.log(buf)
+          // const msg = iconv.decode(buf, 'GBK')
+          // logger.info(msg)
+          // ipcManage.setSend(`portData:${path}`, msg)
         })
 
         portData = { port, parser }

@@ -21,7 +21,7 @@ const routes: Array<RouteConfig> = [
       {
         path: '/protList',
         name: 'portList',
-        component: () => import('@/renderer/views/PortList.vue')
+        component: () => import('@/renderer/views/PortList/index.vue')
       }
     ]
   },

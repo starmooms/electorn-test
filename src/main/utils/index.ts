@@ -1,5 +1,3 @@
-import { type } from 'os'
-
 /**
  * @param num： 被操作数
  * @param n： 固定的总位数
@@ -28,7 +26,3 @@ export function bytFull(...args: number[]) {
   }
   return result
 }
-
-declare type typedKeys = <T>(o: T) => Array<keyof T>
-/** 可以返回类型的 Object.keys */
-export const typedKeys = Object.keys as typedKeys

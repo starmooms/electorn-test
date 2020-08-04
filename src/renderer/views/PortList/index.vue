@@ -8,9 +8,6 @@
       ></el-table-column>
       <el-table-column fixed="right" label="操作" width="200">
         <template slot-scope="{ row }">
-          <!-- <el-button @click="openPort(scope.row)" type="text">
-            打开串口
-          </el-button> -->
           <el-button type="text" @click="nowStepShow(row)">
             查看当前工步
           </el-button>
@@ -25,7 +22,7 @@
 
     <el-dialog
       title="编辑工步"
-      custom-class="stepsAdd-dialog"
+      custom-class="steps-add-dialog"
       :close-on-click-modal="false"
       :visible.sync="stepsDialog"
     >
@@ -33,7 +30,7 @@
 
       <el-table :data="stepsList" height="40vh">
         <el-table-column type="index" label="步次" width="50"></el-table-column>
-        <el-table-column label="工步类型" min-width="150">
+        <el-table-column label="工步类型" width="150">
           <template slot-scope="{ row }">
             <el-select v-model="row.setId" placeholder="请选择">
               <el-option
@@ -45,23 +42,20 @@
             </el-select>
           </template>
         </el-table-column>
-        <el-table-column
-          width="100"
-          v-for="item in stepsInputList"
-          :key="item.keys"
-          :label="item.name"
-        >
-          <template slot-scope="{ row }">
-            <div>
-              <el-input
-                type="text"
-                v-model.number="row[item.key]"
-                :disabled="
-                  stepsSelectInput[row.setId]
-                    ? !stepsSelectInput[row.setId].includes(item.key)
-                    : true
-                "
-              />
+        <el-table-column label="设置" min-width="400">
+          <template
+            slot-scope="{ row }"
+            v-if="row.setId && stepsSelectMap[row.setId]"
+          >
+            <div class="input-box">
+              <div
+                v-for="item in stepsSelectMap[row.setId].input"
+                :key="item"
+                class="input-item"
+              >
+                {{ stepsInputMap[item].name }}：
+                <el-input type="text" v-model.number="row[item]" />
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -84,25 +78,19 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import { ipcRenderer } from 'electron'
-import { Port } from '../../types/Port'
+import { Port } from '@/types/Port'
+import { getPortSelectList, getPortInputList } from '@/renderer/utils/getConfig'
 
 @Component
 export default class PortList extends Vue {
   list: Port.Item[] = []
 
   nowPort: Port.Item | null = null
-  stepsInputList = [
-    { name: '时间(秒)', key: 'time' },
-    { name: '电压(mV)', key: 'U' },
-    { name: '电流(mA)', key: 'I' },
-    { name: '功率(W)', key: 'P' },
-    { name: '电阻(mΩ)', key: 'R' }
-  ]
   stepsDialog = false
   stepsList: any[] = []
-  stepsSelectList: any[] = []
-  stepsSelectInput: any = {}
+  stepsSelectList = getPortSelectList()
+  stepsSelectMap: any = {}
+  stepsInputMap: any = {}
   stepsId = 0
 
   nowStepShow(portItem: any) {
@@ -115,7 +103,7 @@ export default class PortList extends Vue {
     if (this.nowPort) {
       const list = this.stepsList.filter(item => {
         if (item.setId) {
-          const input = this.stepsSelectInput[item.setId]
+          const input = this.stepsSelectMap[item.setId].input
           if (input.length > 0) {
             const hasNull = input.find(i => !item[i])
             return !hasNull
@@ -148,35 +136,42 @@ export default class PortList extends Vue {
       id: ++this.stepsId,
       setId: null
     }
-    this.stepsInputList.forEach(item => {
-      return (obj[item.key] = null)
+    Object.keys(this.stepsInputMap).forEach(key => {
+      obj[key] = null
     })
     this.stepsList.push(obj)
   }
 
   stepsDel(index: number) {
-    console.log(index)
     this.stepsList.splice(index, 1)
   }
 
-  openPort(device: any) {
-    ipcRenderer.send('createdWin', {
-      type: 'portWin',
-      path: '/a' + device.path
-    })
-  }
+  // async getStepsList() {
+  //   const data = await this.$command.invoke('/port/setpsList')
+  //   if (data.status) {
+  //     this.stepsSelectList = data.data
+  //     const obj: any = {}
+  //     this.stepsSelectList.forEach(item => {
+  //       obj[item.value] = item.input
+  //     })
+  //     this.stepsSelectInput = obj
+  //     console.log(this.stepsSelectInput)
+  //   }
+  // }
 
-  async getStepsList() {
-    const data = await this.$command.invoke('/port/setpsList')
-    if (data.status) {
-      this.stepsSelectList = data.data
-      const obj: any = {}
-      this.stepsSelectList.forEach(item => {
-        obj[item.value] = item.input
-      })
-      this.stepsSelectInput = obj
-      console.log(this.stepsSelectInput)
-    }
+  getStepsList() {
+    const obj: any = {}
+    this.stepsSelectList.forEach(item => {
+      obj[item.value] = {
+        input: item.input
+      }
+    })
+    this.stepsSelectMap = obj
+    const inputAttr = getPortInputList()
+    this.stepsInputMap = inputAttr.inputList
+    // const inputTypeList = getPortInputList()
+    // this.stepsSelectInput = inputTypeList.inputList
+    // this.stepBase = inputTypeList.stepList
   }
 
   mounted() {
@@ -203,7 +198,19 @@ export default class PortList extends Vue {
 </script>
 
 <style lang="scss">
-.stepsAdd-dialog {
+.steps-add-dialog {
   min-width: 900px;
+  .input-box {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    .input-item {
+      flex: 0 0 33.33%;
+      margin: 10px 0;
+      .el-input {
+        width: 108px;
+      }
+    }
+  }
 }
 </style>

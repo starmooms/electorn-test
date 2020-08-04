@@ -57,7 +57,7 @@ class Agreement {
     end.writeUIntBE(this.crc16(checkData), 0, 2)
     resultBufArr.push(end)
     const resutl = Buffer.concat(resultBufArr)
-    this.showDetails(resutl)
+    this.readData(resutl)
     return resutl
   }
 
@@ -92,7 +92,18 @@ class Agreement {
     console.log('帧结束符：', getResult(result[sIndex + 2]))
   }
 
-  readData(buf: Buffer) {}
+  readData(buf: Buffer) {
+    const dataStart = 12
+    const dataLen = buf.readUInt16BE(10)
+    const dataEndLen = dataLen + dataStart
+    const checkBuf = buf.slice(0, dataEndLen)
+    const crc16Buf = buf.readUInt16BE(dataEndLen)
+    if (this.crc16(checkBuf) !== crc16Buf) {
+      console.log('校验失败')
+    }
+    console.log('数据域内容', buf.slice(dataStart, dataEndLen))
+    return buf.slice(dataStart, dataEndLen)
+  }
 }
 
 const agreement = new Agreement()

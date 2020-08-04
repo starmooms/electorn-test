@@ -23,7 +23,8 @@ function PrefixZero(num, n) {
 
 // console.log(dataLenBuf)
 
-const data = 'hellowhellow'
+const data =
+  'hellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellowhellow'
 const dataBuf = Buffer.from(data, 'ascii')
 // console.log(dataBuf, '数据域')
 
@@ -31,8 +32,9 @@ let dataBufLength = dataBuf.length.toString(16)
 dataBufLength = PrefixZero(dataBufLength, 4)
 const dataLenBuf = Buffer.alloc(2)
 dataLenBuf.writeUIntBE('0x' + dataBufLength, 0, 2)
-// console.log(dataBufLength, "长度")
-// console.log(dataLenBuf, '数据域长度')
+
+console.log(dataBuf.length, '长度')
+console.log(dataLenBuf, '数据域长度')
 
 // function crc16(buf) {
 //   var crc = 0xFFFF;
@@ -66,7 +68,18 @@ function crc16(buf) {
   return crc & 0xff
 }
 
-const buf4 = Buffer.from([0x68, 0x03, 0x01, 0xff, 0xff, 0x68, 0xe1, 0x00])
+const buf4 = Buffer.from([
+  0x68,
+  0x03,
+  0x01,
+  0xff,
+  0xff,
+  0x68,
+  0xe1,
+  0x00,
+  0x00,
+  0x00
+])
 const buf5 = Buffer.concat([buf4, dataLenBuf, dataBuf])
 // console.log('buf5', buf5)
 // console.log(crc16_ty(buf5).toString(16), 'crc16')
@@ -104,16 +117,40 @@ function showDetails(result) {
   console.log('帧起始符：', getResult(result[5]))
   console.log('控制码：', getResult(result[6]))
   console.log('错误码：', getResult(result[7]))
-  console.log('数据域长度', getBufResults([result[8], result[9]]))
-  // console.log(parseInt(`${result[8]}${result[9]}`, 10))
-  const n = parseInt(`${result[8]}${result[9]}`, 10)
-  const sIndex = 10 + n
-  const data = result.slice(10, sIndex)
+  console.log('流水号：', getBufResults([result[8], result[9]]))
+  console.log('数据域长度', getBufResults([result[10], result[11]]))
+  // console.log(parseInt(`${result[10]}${result[11]}`, 10))
+  const n = parseInt(result.slice(10, 12).toString('hex'), 16)
+  const sIndex = 12 + n
+  const data = result.slice(12, sIndex)
   console.log('数据域：', getBufResults(data))
   console.log('校验码：', getBufResults([result[sIndex], result[sIndex + 1]]))
   console.log('帧结束符：', getResult(result[sIndex + 2]))
 }
 showDetails(buf6)
+
+function FixZero(num, n) {
+  return (Array(n).join('0') + num).slice(-n)
+}
+
+function toHex(num, n) {
+  return FixZero(num.toString(16), n * 2)
+}
+
+function readData(buf) {
+  const dataLen = buf.readUInt16BE(10) //parseInt(buf.slice(10, 12).toString('hex'), 16)
+  console.log('read数据域长度', dataLen)
+  const dataEndLen = dataLen + 12
+  const checkBuf = buf.slice(0, dataEndLen)
+  const crc16Buf = buf.readUInt16BE(dataEndLen)
+  console.log('read校验码', toHex(crc16Buf, 2))
+  if (crc16(checkBuf) === crc16Buf) {
+    console.log('校验成功')
+  }
+}
+
+readData(buf6)
+
 // // https://www.yuque.com/u203312/vdb7mr/cqicrx
 // // https://github.com/donvercety/node-crc16
 // console.log(Buffer.from([0x12]))

@@ -1,4 +1,5 @@
 import { toHex, FixZero } from '../utils'
+import { type } from 'os'
 
 class Agreement {
   nowSId = 0
@@ -30,21 +31,17 @@ class Agreement {
   }
 
   getId() {
-    if (this.nowSId >= 65535) {
-      this.nowSId = 0
-    } else {
-      this.nowSId += 1
-    }
-    return this.nowSId
+    const id = this.nowSId
+    this.nowSId = this.nowSId >= 65535 ? 0 : this.nowSId + 1
+    return id
   }
 
-  setData(data: string, code = 0x00) {
-    let dataBuf: Buffer | null = null
-    let dataLen = 0
+  setData(data: string | Buffer, code = 0x00) {
+    let dataBuf: null | Buffer = null
     if (data) {
-      dataBuf = Buffer.from(data, 'hex')
-      dataLen = dataBuf.length
+      dataBuf = typeof data === 'string' ? Buffer.from(data, 'hex') : data
     }
+    const dataLen = dataBuf ? dataBuf.length : 0
     const dataLenByt = toHex(dataLen, 2)
     const dataLenBuf = Buffer.from(dataLenByt, 'hex')
 

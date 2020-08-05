@@ -1,30 +1,35 @@
 <template>
-  <div
-    class="right-mouse-menu"
-    :style="style"
-    style="display: block;"
-    v-show="syncShow"
-    @mousedown.stop
-    @contextmenu.prevent
-  >
+  <div class="content-menu-box" @contextmenu.stop="contextMenuHandler($event)">
     <slot></slot>
+    <div
+      class="right-mouse-menu"
+      @mouseup.stop
+      @contextmenu.stop
+      @click="clickDocumentHandler"
+      :style="style"
+      v-if="show"
+    >
+      <slot name="menu"></slot>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch, PropSync } from 'vue-property-decorator'
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 @Component({
   name: 'context-menu'
 })
 export default class ContextMenu extends Vue {
   @Prop() private target!: null | Element
-  @PropSync('show', { type: Boolean }) private syncShow!: boolean
+  // @Prop({ type: Boolean, default: false }) public show!: boolean
+  // @PropSync('show', { type: Boolean, default: false }) public syncShow!: boolean
 
   private triggerShowFn: any = null
   private triggerHideFn: any = null
   private x = 0
   private y = 0
   private binded = false
+  private show = false
 
   private get style() {
     return {
@@ -35,10 +40,11 @@ export default class ContextMenu extends Vue {
 
   @Watch('show')
   private showChange(v: boolean) {
+    console.log(v)
     if (v) {
       this.bindHideEvents()
     } else {
-      this.unbindHideEvents()
+      // this.unbindHideEvents()
     }
   }
 
@@ -50,12 +56,12 @@ export default class ContextMenu extends Vue {
   private contextMenuHandler(e: MouseEvent) {
     this.x = e.clientX
     this.y = e.clientY
-    this.syncShow = true
-    e.preventDefault()
+    this.show = true
+    // e.preventDefault()
   }
 
   private clickDocumentHandler() {
-    this.syncShow = false
+    this.show = false
   }
 
   private bindEvents() {
@@ -74,18 +80,18 @@ export default class ContextMenu extends Vue {
 
   private bindHideEvents() {
     this.triggerHideFn = this.clickDocumentHandler.bind(this)
-    document.addEventListener('mousedown', this.triggerHideFn)
+    document.addEventListener('mouseup', this.triggerHideFn)
     document.addEventListener('mousewheel', this.triggerHideFn)
   }
 
   private unbindHideEvents() {
-    document.removeEventListener('mousedown', this.triggerHideFn)
+    document.removeEventListener('mouseup', this.triggerHideFn)
     document.removeEventListener('mousewheel', this.triggerHideFn)
   }
 
-  private mounted() {
-    this.bindEvents()
-  }
+  // private mounted() {
+  //   this.bindEvents()
+  // }
 
   private destroy() {
     this.unbindEvents()
@@ -99,6 +105,18 @@ export default class ContextMenu extends Vue {
   border: solid 1px rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   z-index: 999;
-  display: none;
+  background-color: rgba(28, 28, 28, 0.9);
+  color: #fff;
+  a {
+    min-width: 40px;
+    display: block;
+    padding: 4px 12px;
+    line-height: 24px;
+    font-size: 12px;
+    border-bottom: 1px solid hsla(0, 0%, 100%, 0.12);
+    &:hover {
+      background-color: hsla(0, 0%, 100%, 0.12);
+    }
+  }
 }
 </style>

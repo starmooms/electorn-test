@@ -36,6 +36,7 @@ export default class USBManager {
     })
     this.getSetpsList()
     this.writeWorkSteps()
+    this.setSlaverStatus()
     this.portWrite()
   }
 
@@ -189,7 +190,7 @@ export default class USBManager {
         if (step && step.input) {
           const stepByt = [
             ...['00', 'ff', '00', toHex(index, 1), toHex(0, 1), step.value],
-            ...bytFull(2, 2, 4, 4, 4, 4, 1, 1)
+            ...bytFull(2, 2, 4, 4, 4, 4, 1, 1, 4)
           ]
           step.input.forEach((type: string) => {
             const inputMap = workStepsInput[type]
@@ -203,6 +204,19 @@ export default class USBManager {
       const write = writeArr.join('')
       console.log(agreement.setData(write, controlCode.writeWorkSteps))
       protItem.port.write(agreement.setData(write, controlCode.writeWorkSteps))
+    })
+  }
+
+  /** 设置从控状态 */
+  setSlaverStatus() {
+    ipcManage.setEmit('/port/slaver/setStatus', (data: any) => {
+      const protItem = this.getPortData(data.path)
+      if (!protItem) return
+      const buf = Buffer.alloc(3)
+      buf.writeUIntBE(data.slaverId, 1, 1)
+      buf.writeUIntBE(data.channel, 2, 1)
+      const dataBuf = agreement.setData(buf, controlCode.slaver[data.status])
+      protItem.port.write(dataBuf)
     })
   }
 }

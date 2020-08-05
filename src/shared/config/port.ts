@@ -16,8 +16,30 @@ export const workStepsInput = {
   R: { len: 4, serial: 10, name: '电阻(mΩ)' }
 }
 
+/** 通道数据 */
+export const channelList = {}
+for (let i = 0; i < 20; i++) {
+  const slaverObj = {}
+  for (let j = 0; j < 32; j++) {
+    const obj = {}
+    for (let k = 0; k < 8; k++) {
+      obj[k] = {
+        id: k
+      }
+    }
+    slaverObj[`slaver_${j}`] = obj
+  }
+  channelList[`master_${i}`] = slaverObj
+}
+
 /** 控制码 */
 export const controlCode = {
   writeWorkSteps: 0xe3, // 写从控工步参数
-  readWorkSteps: 0xc3 // 读从控工步参数
+  readWorkSteps: 0xc3, // 读从控工步参数
+  slaver: {
+    start: 0xeb,
+    pause: 0xec,
+    continued: 0xed,
+    close: 0xee
+  }
 }

@@ -14,10 +14,10 @@ export default class SvgIcon extends Vue {
   @Prop({ type: String, required: true }) private iconClass!: string
   @Prop({ type: String }) private className!: string
 
-  get iconName() {
+  private get iconName() {
     return `#icon-${this.iconClass}`
   }
-  get svgClass() {
+  private get svgClass() {
     return this.className ? `svg-icon${this.className} ` : 'svg-icon'
   }
 }

@@ -1,7 +1,9 @@
 import { toHex, FixZero } from '../utils'
 
 class Agreement {
-  // constructor() {}
+  nowSId = 0
+  // constructor() {
+  // }
 
   /**
    * 自定义函数名：PrefixZero
@@ -28,9 +30,12 @@ class Agreement {
   }
 
   getId() {
-    const max = 65535
-    const min = 0
-    return Math.floor(Math.random() * (max - min + 1) + min)
+    if (this.nowSId >= 65535) {
+      this.nowSId = 0
+    } else {
+      this.nowSId += 1
+    }
+    return this.nowSId
   }
 
   setData(data: string, code = 0x00) {
@@ -47,7 +52,7 @@ class Agreement {
     const sId = toHex(this.getId(), 2)
     const sIdBuf = Buffer.from(sId, 'hex')
 
-    const header = Buffer.from([0x68, 0x03, 0x01, 0xff, 0xff, 0x68, code, 0x00])
+    const header = Buffer.from([0x68, 0x00, 0x01, 0xff, 0xff, 0x68, code, 0x00])
     const resultBufArr = [header, sIdBuf, dataLenBuf]
     if (dataLen > 0 && dataBuf) {
       resultBufArr.push(dataBuf)

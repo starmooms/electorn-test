@@ -8,6 +8,7 @@ import '@/renderer/style/index.scss'
 import 'element-ui/lib/theme-chalk/index.css'
 
 import command from '@/renderer/command'
+import '@/renderer/icons'
 
 Vue.config.productionTip = false
 

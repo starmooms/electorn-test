@@ -15,32 +15,38 @@
 
     <el-collapse>
       <el-collapse-item
-        v-for="(value, key) in batteryList"
-        :key="key"
-        :title="key"
-        :name="key"
+        v-for="(master, mKey) in batteryList"
+        :key="mKey"
+        :title="mKey"
+        :name="mKey"
       >
-        <el-collapse-item
-          v-for="(value, key) in batteryList"
-          :key="key"
-        >
-          
-        </el-collapse-item>
+        <div class="slaver-item" v-for="(slaver, sKey) in master" :key="sKey">
+          <div class="slaver-item-l">{{ sKey }}</div>
+          <el-row class="channel-list">
+            <el-col
+              class="channel-item"
+              v-for="(channel, ckey) in slaver.list"
+              :span="3"
+              :key="ckey"
+            >
+              <ContextMenu>
+                <svg-icon class="channel-icon" icon-class="batter"></svg-icon>
+                <template v-slot:menu>
+                  <a
+                    href="javascript:;"
+                    v-for="menu in batteryCtxMenu"
+                    :key="menu.action"
+                    @click="changeStatus(menu.action, channel, slaver)"
+                  >
+                    {{ menu.name }}
+                  </a>
+                </template>
+              </ContextMenu>
+            </el-col>
+          </el-row>
+        </div>
       </el-collapse-item>
     </el-collapse>
-    <ContextMenu>
-      <svg-icon icon-class="batter"></svg-icon>
-      <template v-slot:menu>
-        <a
-          href="javascript:;"
-          v-for="menu in batteryCtxMenu"
-          :key="menu.action"
-          @click="changeStatus(menu.action)"
-        >
-          {{ menu.name }}
-        </a>
-      </template>
-    </ContextMenu>
   </div>
 </template>
 
@@ -67,15 +73,15 @@ export default class Home extends Vue {
   portItem: any = null
   portList: any[] = []
 
-  changeStatus(status) {
-    console.log(status)
+  changeStatus(status, channel, slaver) {
+    console.log(status, channel, slaver)
     if (!this.portItem) {
       return this.$message.info('请先选择串口')
     }
     this.$command.send('/port/slaver/setStatus', {
       path: this.portItem.path,
-      slaverId: 0,
-      channel: 1,
+      slaverId: slaver.id,
+      channel: channel.id,
       status
     })
   }
@@ -108,6 +114,32 @@ export default class Home extends Vue {
   width: 324px;
   .el-select {
     width: 270px;
+  }
+}
+
+.slaver-item {
+  display: flex;
+  margin: 20px;
+  align-items: center;
+  .slaver-item-l {
+    flex: 0 0 100px;
+  }
+  .channel-list {
+    flex: 1 0 auto;
+    .channel-item {
+      cursor: pointer;
+      text-align: center;
+      .channel-icon {
+        transition: all 0.2s;
+        color: #606266;
+        font-size: 46px;
+      }
+      &:hover {
+        .channel-icon {
+          transform: translate3d(0, -4px, 0);
+        }
+      }
+    }
   }
 }
 </style>

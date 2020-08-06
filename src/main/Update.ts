@@ -1,6 +1,7 @@
 import { BrowserWindow, NetLog, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
+import winManager from './core/WinManager'
 
 const uploadUrl = process.env.VUE_APP_UPLOADURL
 
@@ -55,8 +56,8 @@ export default class Update {
     })
   }
 
-  setWin(win: BrowserWindow) {
-    this.win = win
+  setWin() {
+    this.win = winManager.getWin('mainWin')
   }
 
   sendUpdateMessage(msg: string, type = 'updateMsg') {
@@ -69,6 +70,7 @@ export default class Update {
   }
 
   checkUpdate() {
+    this.setWin()
     if (this.win) {
       this.updater.checkForUpdates()
     } else {

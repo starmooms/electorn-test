@@ -11,6 +11,11 @@
 // buf2.writeInt16BE(254)
 // console.log(buf2)
 
-const end = Buffer.from([0x00, 0x00, 0x16])
-end.writeUIntBE(256, 0, 2)
-console.log(end, end.readUInt16BE(0))
+// const end = Buffer.from([0x00, 0x00, 0x16])
+// end.writeUIntBE(256, 0, 2)
+// console.log(end, end.readUInt16BE(0))
+
+const buf = Buffer.alloc(3)
+buf.writeUIntBE(3, 1, 1)
+buf.writeUIntBE(6, 2, 1)
+console.log(buf)

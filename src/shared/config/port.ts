@@ -27,7 +27,10 @@ for (let i = 0; i < 20; i++) {
         id: k
       }
     }
-    slaverObj[`slaver_${j}`] = obj
+    slaverObj[`slaver_${j}`] = {
+      id: j,
+      list: obj
+    }
   }
   channelList[`master_${i}`] = slaverObj
 }

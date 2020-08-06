@@ -40,11 +40,10 @@ export default class ContextMenu extends Vue {
 
   @Watch('show')
   private showChange(v: boolean) {
-    console.log(v)
     if (v) {
       this.bindHideEvents()
     } else {
-      // this.unbindHideEvents()
+      this.unbindHideEvents()
     }
   }
 

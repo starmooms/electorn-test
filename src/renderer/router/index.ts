@@ -16,7 +16,7 @@ const routes: Array<RouteConfig> = [
       {
         path: '',
         name: 'Home',
-        component: () => import('@/renderer/views/Home.vue')
+        component: () => import('@/renderer/views/Home/index.vue')
       },
       {
         path: '/protList',

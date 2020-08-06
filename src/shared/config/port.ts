@@ -18,11 +18,11 @@ export const workStepsInput = {
 
 /** 通道数据 */
 export const channelList = {}
-for (let i = 0; i < 20; i++) {
+for (let i = 1; i <= 20; i++) {
   const slaverObj = {}
-  for (let j = 0; j < 32; j++) {
+  for (let j = 1; j <= 32; j++) {
     const obj = {}
-    for (let k = 0; k < 8; k++) {
+    for (let k = 1; k <= 8; k++) {
       obj[k] = {
         id: k
       }

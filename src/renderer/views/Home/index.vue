@@ -42,6 +42,7 @@
                     >
                       {{ menu.name }}
                     </a>
+                    <a href="javascript:;" @click="stepsSetShow">编辑工步</a>
                   </template>
                 </ContextMenu>
               </li>
@@ -77,6 +78,8 @@ export default class Home extends Vue {
   portItem: any = null
   portList: any[] = []
 
+  stepsShow = false
+
   changeStatus(status, channel, slaver) {
     console.log(status, channel, slaver)
     if (!this.portItem) {
@@ -88,6 +91,10 @@ export default class Home extends Vue {
       channel: channel.id,
       status
     })
+  }
+
+  stepsSetShow() {
+    this.stepsShow = true
   }
 
   mounted() {

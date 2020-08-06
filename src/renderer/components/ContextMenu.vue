@@ -1,5 +1,5 @@
 <template>
-  <div class="content-menu-box" @contextmenu.stop="contextMenuHandler($event)">
+  <div class="content-menu-box" @contextmenu="contextMenuHandler($event)">
     <slot></slot>
     <div
       class="right-mouse-menu"
@@ -24,11 +24,15 @@ export default class ContextMenu extends Vue {
   // @Prop({ type: Boolean, default: false }) public show!: boolean
   // @PropSync('show', { type: Boolean, default: false }) public syncShow!: boolean
 
+  static currentContext: any = null
+  static id = 0
+
+  private ctxId = (ContextMenu.id += 1)
   private triggerShowFn: any = null
   private triggerHideFn: any = null
   private x = 0
   private y = 0
-  private binded = false
+  // private binded = false
   private show = false
 
   private get style() {
@@ -47,15 +51,22 @@ export default class ContextMenu extends Vue {
     }
   }
 
-  @Watch('target')
-  private targetChange() {
-    this.bindEvents()
-  }
+  // @Watch('target')
+  // private targetChange() {
+  //   this.bindEvents()
+  // }
 
   private contextMenuHandler(e: MouseEvent) {
+    console.log(ContextMenu.currentContext)
     this.x = e.clientX
     this.y = e.clientY
     this.show = true
+    if (
+      ContextMenu.currentContext &&
+      ContextMenu.currentContext.id !== this.ctxId
+    ) {
+      ContextMenu.currentContext.triggerHideFn()
+    }
     // e.preventDefault()
   }
 
@@ -63,27 +74,38 @@ export default class ContextMenu extends Vue {
     this.show = false
   }
 
-  private bindEvents() {
-    this.$nextTick(() => {
-      if (!this.target || this.binded) return
-      this.triggerShowFn = this.contextMenuHandler.bind(this)
-      this.target.addEventListener('contextmenu', this.triggerShowFn)
-      this.binded = true
-    })
-  }
+  // private bindEvents() {
+  //   this.$nextTick(() => {
+  //     if (!this.target || this.binded) return
+  //     this.triggerShowFn = this.contextMenuHandler.bind(this)
+  //     this.target.addEventListener('contextmenu', this.triggerShowFn)
+  //     this.binded = true
+  //   })
+  // }
 
-  private unbindEvents() {
-    if (!this.target) return
-    this.target.removeEventListener('contextmenu', this.triggerShowFn)
-  }
+  // private unbindEvents() {
+  //   if (!this.target) return
+  //   this.target.removeEventListener('contextmenu', this.triggerShowFn)
+  // }
 
   private bindHideEvents() {
     this.triggerHideFn = this.clickDocumentHandler.bind(this)
+    ContextMenu.currentContext = {
+      id: this.ctxId,
+      triggerHideFn: this.triggerHideFn
+    }
+    console.log('设置', this.ctxId)
     document.addEventListener('mouseup', this.triggerHideFn)
     document.addEventListener('mousewheel', this.triggerHideFn)
   }
 
   private unbindHideEvents() {
+    if (
+      ContextMenu.currentContext &&
+      ContextMenu.currentContext.id === this.ctxId
+    ) {
+      ContextMenu.currentContext = null
+    }
     document.removeEventListener('mouseup', this.triggerHideFn)
     document.removeEventListener('mousewheel', this.triggerHideFn)
   }
@@ -98,6 +120,8 @@ export default class ContextMenu extends Vue {
 }
 </script>
 <style lang="scss" scoped>
+$bcl: hsla(0, 0%, 100%, 0.12);
+
 .right-mouse-menu {
   position: fixed;
   background: #fff;
@@ -112,9 +136,9 @@ export default class ContextMenu extends Vue {
     padding: 4px 12px;
     line-height: 24px;
     font-size: 12px;
-    border-bottom: 1px solid hsla(0, 0%, 100%, 0.12);
+    border-bottom: 1px solid $bcl;
     &:hover {
-      background-color: hsla(0, 0%, 100%, 0.12);
+      background-color: $bcl;
     }
   }
 }

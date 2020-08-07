@@ -13,44 +13,54 @@
       </el-form-item>
     </el-form>
 
-    <el-collapse v-model="batteryShow" v-if="portItem">
-      <el-collapse-item
-        class="master-item"
-        v-for="(master, mKey) in batteryList"
-        :key="mKey"
-        :title="mKey"
-        :name="mKey"
-      >
-        <ul class="slaver-list" v-if="batteryShow.indexOf(mKey) >= 0">
-          <li class="slaver-item" v-for="(slaver, sKey) in master" :key="sKey">
-            <div class="slaver-item-l">{{ sKey }}</div>
-            <ul class="channel-list">
-              <li
-                class="channel-item"
-                v-for="(channel, ckey) in slaver.list"
-                :span="3"
-                :key="ckey"
-              >
-                <ContextMenu>
-                  <svg-icon class="channel-icon" icon-class="batter"></svg-icon>
-                  <template v-slot:menu>
-                    <a
-                      href="javascript:;"
-                      v-for="menu in batteryCtxMenu"
-                      :key="menu.action"
-                      @click="changeStatus(menu.action, channel, slaver)"
-                    >
-                      {{ menu.name }}
-                    </a>
-                    <a href="javascript:;" @click="stepsSetShow">编辑工步</a>
-                  </template>
-                </ContextMenu>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </el-collapse-item>
-    </el-collapse>
+    <ul class="master-list" v-if="portItem">
+      <li class="master-item" v-for="(master, mKey) in batteryList" :key="mKey">
+        <div class="master-box" @click="master.slaverShow = !master.slaverShow">
+          <span>{{ mKey }}</span>
+          <svg-icon class="channel-icon" icon-class="down"></svg-icon>
+        </div>
+        <el-collapse-transition>
+          <ul class="slaver-list" v-if="master.slaverShow">
+            <li
+              class="slaver-item"
+              v-for="(slaver, sKey) in master.slaverList"
+              :key="sKey"
+            >
+              <div class="slaver-item-l">{{ sKey }}</div>
+              <ul class="channel-list">
+                <li
+                  class="channel-item"
+                  v-for="(channel, ckey) in slaver.list"
+                  :span="3"
+                  :key="ckey"
+                  @click="showChannel(channel)"
+                >
+                  <ContextMenu>
+                    <svg-icon
+                      class="channel-icon"
+                      icon-class="batter"
+                    ></svg-icon>
+                    <template v-slot:menu>
+                      <a
+                        href="javascript:;"
+                        v-for="menu in batteryCtxMenu"
+                        :key="menu.action"
+                        @click="changeStatus(menu.action, channel, slaver)"
+                      >
+                        {{ menu.name }}
+                      </a>
+                      <a href="javascript:;" @click="stepsSetShow">编辑工步</a>
+                    </template>
+                  </ContextMenu>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </el-collapse-transition>
+      </li>
+    </ul>
+
+    <StepSetModal :show.sync="stepsShow" :nowPort="portItem"></StepSetModal>
   </div>
 </template>
 
@@ -58,11 +68,14 @@
 import { Component, Vue } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { channelList } from '@/shared/config/port'
+import { typedKeys } from '@/shared/utils'
+import StepSetModal from './components/StepSetModal.vue'
 
 @Component({
   name: 'Home',
   components: {
-    ContextMenu
+    ContextMenu,
+    StepSetModal
   }
 })
 export default class Home extends Vue {
@@ -97,6 +110,12 @@ export default class Home extends Vue {
     this.stepsShow = true
   }
 
+  showChannel() {
+    this.$command.send('/createdWin/port/workerSee', {
+      path: this.portItem.path
+    })
+  }
+
   mounted() {
     this.$command.register({
       eventName: 'usbData',
@@ -111,7 +130,14 @@ export default class Home extends Vue {
       vm: this
     })
     this.$command.send('usbDetection', true)
-    this.batteryList = channelList
+    const obj: any = {}
+    typedKeys(channelList).forEach(masterKey => {
+      obj[masterKey] = {
+        slaverShow: false,
+        slaverList: channelList[masterKey]
+      }
+    })
+    this.batteryList = obj
   }
 
   beforeDestroy() {
@@ -129,12 +155,24 @@ export default class Home extends Vue {
 }
 .master-item {
   max-width: 860px;
+  cursor: pointer;
+  border-bottom: 1px solid #ccc;
+  .master-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 40px;
+    padding: 0 20px;
+  }
 }
 .slaver-item {
   display: flex;
   align-items: center;
   border-bottom: 1px solid #ccc;
-  padding: 16px 10px;
+  padding: 14px 10px;
+  &:last-child {
+    border-bottom: none;
+  }
 
   .slaver-item-l {
     flex: 0 0 100px;
@@ -157,7 +195,7 @@ export default class Home extends Vue {
       .channel-icon {
         transition: all 0.2s;
         color: #606266;
-        font-size: 46px;
+        font-size: 40px;
       }
     }
   }

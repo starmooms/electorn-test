@@ -55,17 +55,21 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue, PropSync, Prop, Watch } from 'vue-property-decorator'
 import { Port } from '@/types/Port'
 import { getPortSelectList, getPortInputList } from '@/renderer/utils/getConfig'
 
 @Component
-/** 工步编辑弹框 */
 export default class StepSetModal extends Vue {
+  @PropSync('show', { type: Boolean, default: false })
+  private stepsDialog!: boolean
+
+  @Prop({ type: Object }) private nowPort!: Port.Item | null
+
   list: Port.Item[] = []
 
-  nowPort: Port.Item | null = null
-  stepsDialog = false
+  // nowPort: Port.Item | null = null
+  // stepsDialog = false
   stepsList: any[] = []
   stepsSelectList = getPortSelectList()
   stepsSelectMap: any = {}
@@ -95,20 +99,29 @@ export default class StepSetModal extends Vue {
         return
       }
       this.$message.info(JSON.stringify(list))
-
       this.$command.send('/port/writeWorkSteps', {
         path: this.nowPort.path,
         list
       })
+    } else {
+      this.$message.error('缺少串口')
     }
   }
 
-  stepsShow(portItem: Port.Item) {
-    this.nowPort = portItem
-    this.stepsList = []
-    this.stepsAdd()
-    this.stepsDialog = true
+  @Watch('stepsDialog')
+  stepsDialogChange(v) {
+    if (v === true) {
+      this.stepsList = []
+      this.stepsAdd()
+    }
   }
+
+  // @Watch('asyncShow')
+  // asyncShowChange(v: boolean) {
+  //   if (v) {
+  //     this.stepsDialog = true
+  //   }
+  // }
 
   stepsAdd() {
     const obj: any = {

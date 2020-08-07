@@ -3,7 +3,7 @@
     <nav>
       <ul class="nav-list">
         <li class="nav-item">
-          <router-link :to="{ name: 'portList' }">端口调试</router-link>
+          <router-link :to="{ name: 'home' }">端口调试</router-link>
         </li>
       </ul>
     </nav>

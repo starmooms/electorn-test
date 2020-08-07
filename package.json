@@ -1,6 +1,6 @@
 {
   "name": "electron-test",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "private": true,
   "engines": {
     "node": ">=12.18.2"
@@ -17,6 +17,7 @@
   "main": "background.js",
   "dependencies": {
     "core-js": "^3.6.5",
+    "echarts": "^4.8.0",
     "electron-is": "^3.0.0",
     "electron-updater": "^4.3.1",
     "element-ui": "^2.13.2",
@@ -27,11 +28,13 @@
     "usb-detection": "^4.10.0",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
+    "vue-echarts": "^5.0.0-beta.0",
     "vue-property-decorator": "^8.4.2",
     "vue-router": "^3.2.0",
     "vuex": "^3.4.0"
   },
   "devDependencies": {
+    "@types/echarts": "^4.6.4",
     "@types/node": "12",
     "@types/serialport": "^8.0.1",
     "@typescript-eslint/eslint-plugin": "^2.33.0",

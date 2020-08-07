@@ -114,9 +114,9 @@ export default class ContextMenu extends Vue {
   //   this.bindEvents()
   // }
 
-  private destroy() {
-    this.unbindEvents()
-  }
+  // private destroy() {
+  //   this.unbindEvents()
+  // }
 }
 </script>
 <style lang="scss" scoped>

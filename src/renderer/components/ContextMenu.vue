@@ -5,7 +5,7 @@
       class="right-mouse-menu"
       @mouseup.stop
       @contextmenu.stop
-      @click="clickDocumentHandler"
+      @click.stop="clickDocumentHandler"
       :style="style"
       v-if="show"
     >
@@ -94,7 +94,6 @@ export default class ContextMenu extends Vue {
       id: this.ctxId,
       triggerHideFn: this.triggerHideFn
     }
-    console.log('设置', this.ctxId)
     document.addEventListener('mouseup', this.triggerHideFn)
     document.addEventListener('mousewheel', this.triggerHideFn)
   }
@@ -136,6 +135,7 @@ $bcl: hsla(0, 0%, 100%, 0.12);
     padding: 4px 12px;
     line-height: 24px;
     font-size: 12px;
+    text-align: left;
     border-bottom: 1px solid $bcl;
     &:hover {
       background-color: $bcl;

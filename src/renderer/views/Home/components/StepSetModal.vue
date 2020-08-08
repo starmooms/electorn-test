@@ -10,13 +10,18 @@
     <el-table :data="stepsList" height="40vh">
       <el-table-column type="index" label="步次" width="50"></el-table-column>
       <el-table-column label="工步类型" width="150">
-        <template slot-scope="{ row }">
-          <el-select v-model="row.setId" placeholder="请选择">
+        <template slot-scope="{ row, $index }">
+          <el-select
+            v-model="row.setId"
+            placeholder="请选择"
+            @change="stepItemIdChange($event, row, $index)"
+          >
             <el-option
               v-for="item in stepsSelectList"
               :key="item.value"
               :label="item.label"
               :value="item.value"
+              :disabled="item.value === 'loop' && hasLoop"
             ></el-option>
           </el-select>
         </template>
@@ -76,6 +81,12 @@ export default class StepSetModal extends Vue {
   stepsInputMap: any = {}
   stepsId = 0
 
+  get hasLoop() {
+    return this.stepsList.find((item: any) => item.setId === 'loop')
+      ? true
+      : false
+  }
+
   nowStepShow(portItem: any) {
     this.$command.send('/createdWin/port/workerSee', {
       path: portItem.path
@@ -131,11 +142,23 @@ export default class StepSetModal extends Vue {
     Object.keys(this.stepsInputMap).forEach(key => {
       obj[key] = null
     })
-    this.stepsList.push(obj)
+    if (this.hasLoop) {
+      this.stepsList.splice(this.stepsList.length - 1, 0, obj)
+    } else {
+      this.stepsList.push(obj)
+    }
   }
 
   stepsDel(index: number) {
     this.stepsList.splice(index, 1)
+  }
+
+  stepItemIdChange(value, row, index) {
+    const lastIndex = this.stepsList.length - 1
+    if (value === 'loop' && index !== lastIndex) {
+      this.stepsList.splice(index, 1)
+      this.stepsList.push(row)
+    }
   }
 
   getStepsList() {

@@ -60,7 +60,7 @@
       </li>
     </ul>
 
-    <StepSetModal :show.sync="stepsShow" :nowPort="portItem"></StepSetModal>
+    <!-- <StepSetModal :show.sync="stepsShow" :nowPort="portItem"></StepSetModal> -->
   </div>
 </template>
 
@@ -69,13 +69,13 @@ import { Component, Vue } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { channelList } from '@/shared/config/port'
 import { typedKeys } from '@/shared/utils'
-import StepSetModal from './components/StepSetModal.vue'
+// import StepSetModal from './components/StepSetModal.vue'
 
 @Component({
   name: 'Home',
   components: {
-    ContextMenu,
-    StepSetModal
+    ContextMenu
+    // StepSetModal
   }
 })
 export default class Home extends Vue {

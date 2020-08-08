@@ -2,11 +2,11 @@
 export const workSteps = {
   ICi: { name: '恒流充电', value: 'A1', input: ['U', 'I'] },
   UCi: { name: '恒压充电', value: 'A2', input: ['U', 'I'] },
+  IUCi: { name: '恒流恒压充电', value: 'A3', input: ['U', 'I', 'IEnd'] },
   IDisCi: { name: '恒流放电', value: 'B0', input: ['U', 'I'] },
   shelve: { name: '搁置', value: '90', input: ['time'] },
-  loop: { name: '循环', value: '70', input: ['loopNum', 'loopStart'] }
+  loop: { name: '循环', value: '70', input: ['loopStart', 'loopNum'] }
   // IPerCi: { name: '恒流预充', value: 'A0', input: null },
-  // IUCi: { name: '恒流恒压充电', value: 'A3', input: null },
   // WCi: { name: '恒功率充电', value: 'A4', input: null }
 }
 
@@ -18,7 +18,8 @@ export const workStepsInput = {
   W: { len: 4, serial: 9, name: '功率(W)' },
   R: { len: 4, serial: 10, name: '电阻(mΩ)' },
   loopNum: { len: 4, serial: 11, name: '循环次数' },
-  loopStart: { len: 1, serial: 12, name: '循环起始' }
+  loopStart: { len: 1, serial: 12, name: '循环起始' },
+  IEnd: { len: 4, serial: 14, name: '截止电流' }
 }
 
 /** 通道数据 */
@@ -37,7 +38,10 @@ for (let i = 1; i <= 20; i++) {
       list: obj
     }
   }
-  channelList[`master_${i}`] = slaverObj
+  channelList[`master_${i}`] = {
+    id: i,
+    slaverList: slaverObj
+  }
 }
 
 /** 控制码 */

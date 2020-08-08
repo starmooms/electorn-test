@@ -39,9 +39,10 @@ class WinManager {
     const opts: Electron.BrowserWindowConstructorOptions = {}
     const nowFous = BrowserWindow.getFocusedWindow()
     if (nowFous) {
+      const offset = this.winList.size * 20
       const [x, y] = nowFous.getPosition()
-      opts.x = x + 20
-      opts.y = y + 20
+      opts.x = x + offset
+      opts.y = y + offset
     }
 
     const win = new BrowserWindow({
@@ -58,11 +59,14 @@ class WinManager {
     let protocolPath = `app://./`
     if (devUrl) {
       protocolPath = devUrl
-      if (!process.env.IS_TEST) win.webContents.openDevTools()
     }
 
     this.winList.set(name, win)
-    win.loadURL(`${protocolPath}${path}`)
+    win.loadURL(`${protocolPath}${path}`).then(() => {
+      if (devUrl && !process.env.IS_TEST) {
+        win.webContents.openDevTools()
+      }
+    })
     win.on('close', () => {
       this.winList.delete(name)
     })

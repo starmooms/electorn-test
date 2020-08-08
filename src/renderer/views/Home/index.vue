@@ -33,7 +33,7 @@
                   v-for="(channel, ckey) in slaver.list"
                   :span="3"
                   :key="ckey"
-                  @click="showChannel(channel)"
+                  @click="showChannel(master, channel, slaver)"
                 >
                   <ContextMenu>
                     <svg-icon
@@ -70,6 +70,7 @@ import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { channelList } from '@/shared/config/port'
 import { typedKeys } from '@/shared/utils'
 import StepSetModal from './components/StepSetModal.vue'
+import { setChannelStatus } from '@/renderer/ipc/channel'
 
 @Component({
   name: 'Home',
@@ -94,11 +95,10 @@ export default class Home extends Vue {
   stepsShow = false
 
   changeStatus(status, channel, slaver) {
-    console.log(status, channel, slaver)
     if (!this.portItem) {
       return this.$message.info('请先选择串口')
     }
-    this.$command.send('/port/slaver/setStatus', {
+    setChannelStatus({
       path: this.portItem.path,
       slaverId: slaver.id,
       channel: channel.id,
@@ -110,9 +110,12 @@ export default class Home extends Vue {
     this.stepsShow = true
   }
 
-  showChannel() {
+  showChannel(master: any, channel: any, slaver: any) {
     this.$command.send('/createdWin/port/workerSee', {
-      path: this.portItem.path
+      path: this.portItem.path,
+      masterId: master.id,
+      slaverId: slaver.id,
+      channelId: channel.id
     })
   }
 
@@ -134,7 +137,7 @@ export default class Home extends Vue {
     typedKeys(channelList).forEach(masterKey => {
       obj[masterKey] = {
         slaverShow: false,
-        slaverList: channelList[masterKey]
+        ...(channelList[masterKey] as any)
       }
     })
     this.batteryList = obj
@@ -189,6 +192,7 @@ export default class Home extends Vue {
       &:hover {
         .channel-icon {
           transform: translate3d(0, -4px, 0);
+          color: #66b1ff;
         }
       }
 

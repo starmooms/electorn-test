@@ -119,15 +119,9 @@ export default class Launcher {
   afterWin() {
     this.usbManager = new USBManager()
     if (this.win) {
-      ipcManage.setEmit(
-        '/createdWin/port/workerSee',
-        ({ path }: { path: string }) => {
-          if (!path) {
-            throw new Error('NO Path')
-          }
-          new WorkStepSee(path)
-        }
-      )
+      ipcManage.setEmit('/createdWin/port/workerSee', (data: any) => {
+        new WorkStepSee(data)
+      })
 
       ipcMain.on('createdWin', (event, data: any) => {
         if (!data || !data.type) return

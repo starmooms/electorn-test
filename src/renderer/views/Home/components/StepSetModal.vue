@@ -33,12 +33,12 @@
         >
           <div class="input-box">
             <div
-              v-for="item in stepsSelectMap[row.setId].input"
-              :key="item"
+              v-for="inputType in stepsSelectMap[row.setId].input"
+              :key="inputType"
               class="input-item"
             >
-              {{ stepsInputMap[item].name }}：
-              <el-input type="text" v-model.number="row[item]" />
+              {{ stepsInputMap[inputType].name }}：
+              <el-input type="text" v-model.number="row[inputType]" />
             </div>
           </div>
         </template>

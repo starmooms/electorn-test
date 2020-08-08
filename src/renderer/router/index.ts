@@ -36,7 +36,7 @@ const routes: Array<RouteConfig> = [
         component: () => import('@/renderer/views/About.vue')
       },
       {
-        path: '/port/WorkerSee/:path',
+        path: '/port/WorkerSee/:path/:slaverId/:channelId',
         name: 'WorkerSee',
         component: () => import('@/renderer/views/WorkerSee.vue')
       }

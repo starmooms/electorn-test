@@ -1,11 +1,4 @@
-import {
-  app,
-  protocol,
-  BrowserWindow,
-  ipcMain,
-  BrowserView,
-  ipcRenderer
-} from 'electron'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import is from 'electron-is'
 import USBManager from './core/USBManager'
 import Update from './Update'
@@ -14,6 +7,7 @@ import winManager from './core/WinManager'
 import PortWindow from './window/portWindow'
 import ipcManage from './core/IpcManage'
 import WorkStepSee from './window/WorkStepSee'
+import UpdateManager from './core/UpdateManager'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -23,6 +17,7 @@ export default class Launcher {
   update: Update | null = null
   usbManager: USBManager | null = null
   beforeMainWin: beforeMainWin | null = null
+  updateManager = this.initUpdaterManager()
 
   constructor(beforeMainWin?: beforeMainWin) {
     if (beforeMainWin) {
@@ -39,6 +34,7 @@ export default class Launcher {
       { scheme: 'app', privileges: { secure: true, standard: true } }
     ])
     this.handleAppEvents()
+    this.handleUpdaterEvents()
   }
 
   /** 绑定app的回调 */
@@ -112,8 +108,12 @@ export default class Launcher {
   }
 
   beforeWin() {
-    this.update = new Update()
-    new MenuManager(this.update)
+    const menu = new MenuManager()
+    menu.on('updateCheck', () => {
+      if (this.updateManager) {
+        this.updateManager.check()
+      }
+    })
   }
 
   afterWin() {
@@ -137,5 +137,60 @@ export default class Launcher {
         }
       })
     }
+  }
+
+  initUpdaterManager() {
+    if (is.mas()) {
+      return
+    }
+
+    // const enabled = this.configManager.getUserConfig('auto-check-update')
+    // const lastTime = this.configManager.getUserConfig('last-check-update-time')
+    const updateManager = new UpdateManager({
+      autoCheck: false
+    })
+    this.handleUpdaterEvents()
+    return updateManager
+  }
+
+  handleUpdaterEvents() {
+    if (!this.updateManager) return
+    // this.updateManager.on('checking', event => {
+    //   this.menuManager.updateMenuItemEnabledState(
+    //     'app.check-for-updates',
+    //     false
+    //   )
+    //   this.trayManager.updateMenuItemEnabledState(
+    //     'app.check-for-updates',
+    //     false
+    //   )
+    //   this.configManager.setUserConfig('last-check-update-time', Date.now())
+    // })
+
+    this.updateManager.on('download-progress', (event: any) => {
+      if (!this.win) return
+      this.win.setProgressBar(event.percent / 100)
+    })
+
+    this.updateManager.on('update-not-available', event => {
+      // this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)
+      // this.trayManager.updateMenuItemEnabledState('app.check-for-updates', true)
+    })
+
+    this.updateManager.on('update-downloaded', event => {
+      // this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)
+      // this.trayManager.updateMenuItemEnabledState('app.check-for-updates', true)
+      if (!this.win) return
+      this.win.setProgressBar(0)
+    })
+
+    this.updateManager.on('will-updated', event => {
+      // this.windowManager.setWillQuit(true)
+    })
+
+    // this.updateManager.on('update-error', event => {
+    //   this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)
+    //   this.trayManager.updateMenuItemEnabledState('app.check-for-updates', true)
+    // })
   }
 }

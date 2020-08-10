@@ -72,6 +72,8 @@ class WinManager {
     })
     return win
   }
+
+  
 }
 
 const winManager = new WinManager()

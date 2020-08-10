@@ -1,12 +1,10 @@
+import { EventEmitter } from 'events'
 import Electron, { app, Menu } from 'electron'
-import Update from './Update'
 const APP_VERSON = app.getVersion()
 
-export default class MenuManager {
-  update: Update
-
-  constructor(update: Update) {
-    this.update = update
+export default class MenuManager extends EventEmitter {
+  constructor() {
+    super()
     this.init()
   }
 
@@ -19,7 +17,7 @@ export default class MenuManager {
             label: '更新',
             accelerator: 'CmdOrCtrl+U',
             click: () => {
-              this.update.checkUpdate()
+              this.updateCheck()
             }
           },
           {
@@ -28,7 +26,7 @@ export default class MenuManager {
           {
             label: `当前版本${APP_VERSON}`,
             click: () => {
-              this.update.checkUpdate()
+              this.updateCheck()
             }
           }
         ]
@@ -53,5 +51,9 @@ export default class MenuManager {
 
     const menu = Menu.buildFromTemplate(template)
     Menu.setApplicationMenu(menu)
+  }
+
+  updateCheck() {
+    this.emit('updateCheck')
   }
 }

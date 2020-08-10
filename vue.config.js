@@ -65,12 +65,12 @@ module.exports = {
           oneClick: false,
           allowToChangeInstallationDirectory: true,
           perMachine: true
-        },
-        // 软件更新地址
-        publish: {
-          provider: 'generic',
-          url: process.env.VUE_APP_UPLOADURL
         }
+        // // 软件更新地址
+        // publish: {
+        //   provider: 'generic',
+        //   url: process.env.VUE_APP_UPLOADURL
+        // }
       }
     }
   }

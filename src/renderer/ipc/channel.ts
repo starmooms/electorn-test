@@ -7,8 +7,20 @@ interface SetStatus {
   status: string
 }
 
+interface SetSteps {
+  path: string
+  slaverId: number
+  channel: number
+  list: any[]
+}
+
 export function setChannelStatus(data: SetStatus) {
   $command.send('/port/slaver/setStatus', data)
+}
+
+/** 写工步 */
+export function setSteps(data: SetSteps) {
+  return $command.invoke('/port/writeWorkSteps', data)
 }
 
 // export default class Ipc {

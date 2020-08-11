@@ -36,7 +36,7 @@ class Agreement {
     return id
   }
 
-  setData(data: string | Buffer, code = 0x00) {
+  setData(data: string | Buffer, code = 0x00, getSId = false) {
     let dataBuf: null | Buffer = null
     if (data) {
       dataBuf = typeof data === 'string' ? Buffer.from(data, 'hex') : data
@@ -58,9 +58,9 @@ class Agreement {
     const end = Buffer.from([0x00, 0x00, 0x16])
     end.writeUIntBE(this.crc16(checkData), 0, 2)
     resultBufArr.push(end)
-    const resutl = Buffer.concat(resultBufArr)
-    this.readData(resutl)
-    return resutl
+    const buf = Buffer.concat(resultBufArr)
+    this.readData(buf)
+    return { buf, sId }
   }
 
   showDetails(result) {
@@ -104,7 +104,11 @@ class Agreement {
       console.log('校验失败')
     }
     console.log('数据域内容', buf.slice(dataStart, dataEndLen))
-    return buf.slice(dataStart, dataEndLen)
+    console.log('流水号', buf.readUInt16BE(8))
+    return {
+      buf: buf.slice(dataStart, dataEndLen),
+      sId: buf.readUInt16BE(8)
+    }
   }
 }
 

@@ -194,6 +194,17 @@ export default class WorkerSee extends Vue {
   destroy() {
     clearInterval(this.setTimer)
   }
+
+  async getWorkStep() {
+    const data = await this.$command.invoke(
+      `getWorkerStep/${this.path}/${this.slaverId}/${this.channelId}`
+    )
+    console.log(data)
+  }
+
+  mounted() {
+    this.getWorkStep()
+  }
 }
 </script>
 

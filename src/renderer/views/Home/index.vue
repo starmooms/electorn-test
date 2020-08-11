@@ -49,7 +49,12 @@
                       >
                         {{ menu.name }}
                       </a>
-                      <a href="javascript:;" @click="stepsSetShow">编辑工步</a>
+                      <a
+                        href="javascript:;"
+                        @click="stepsSetShow(channel, slaver, master)"
+                      >
+                        编辑工步
+                      </a>
                     </template>
                   </ContextMenu>
                 </li>
@@ -60,7 +65,10 @@
       </li>
     </ul>
 
-    <StepSetModal :show.sync="stepsShow" :nowPort="portItem"></StepSetModal>
+    <StepSetModal
+      :show.sync="stepsShow"
+      :showItem="stepsShowItem"
+    ></StepSetModal>
   </div>
 </template>
 
@@ -93,6 +101,11 @@ export default class Home extends Vue {
   portList: any[] = []
 
   stepsShow = false
+  stepsShowItem: any = {
+    masterId: null,
+    slaverId: null,
+    channelId: null
+  }
 
   changeStatus(status, channel, slaver) {
     if (!this.portItem) {
@@ -106,7 +119,13 @@ export default class Home extends Vue {
     })
   }
 
-  stepsSetShow() {
+  stepsSetShow(channel: any, slaver: any, master: any) {
+    this.stepsShowItem = {
+      path: this.portItem.path,
+      masterId: master.id,
+      slaverId: slaver.id,
+      channelId: channel.id
+    }
     this.stepsShow = true
   }
 
@@ -120,19 +139,14 @@ export default class Home extends Vue {
   }
 
   mounted() {
-    this.$command.register({
-      eventName: 'usbData',
+    this.$command.on({
+      eventName: '/port/sendList',
       onEmit: data => {
-        if (data) {
-          if (data.type === 'list') {
-            this.portList = data.list
-            console.log(this.portList)
-          }
-        }
+        this.portList = data.list
       },
       vm: this
     })
-    this.$command.send('usbDetection', true)
+    this.$command.send('/port/getPortList', true)
     const obj: any = {}
     typedKeys(channelList).forEach(masterKey => {
       obj[masterKey] = {
@@ -141,10 +155,6 @@ export default class Home extends Vue {
       }
     })
     this.batteryList = obj
-  }
-
-  beforeDestroy() {
-    this.$command.send('usbDetection', false)
   }
 }
 </script>

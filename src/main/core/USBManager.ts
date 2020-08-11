@@ -1,4 +1,4 @@
-import { ipcMain, ipcRenderer } from 'electron'
+import { ipcMain, ipcRenderer, IpcMainEvent } from 'electron'
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
 import winManager from './WinManager'
@@ -15,6 +15,7 @@ const Delimiter = SerialPort.parsers.Delimiter
 export interface PortItem {
   port: SerialPort
   parser: SerialPort.parsers.Delimiter
+  emitList: any
 }
 
 export default class USBManager {
@@ -27,24 +28,15 @@ export default class USBManager {
   }
 
   init() {
-    ipcManage.setEmit('usbDetection', data => {
-      if (data) {
-        this.start()
-      } else {
-        this.destory()
-      }
-    })
-    this.getSetpsList()
-    this.writeWorkSteps()
+    this.start()
     this.setSlaverStatus()
-    this.portWrite()
+    this.writeSteps()
+    this.getPortList()
   }
 
   /** 开始监测USB */
   start() {
-    this.sendList()
     if (this.hasEvent === false) {
-      this.writePort()
       this.addEventUSBChange()
       this.hasEvent = true
     }
@@ -55,34 +47,32 @@ export default class USBManager {
     if (this.hasEvent === true) {
       this.cache.clear()
       usbDetection.stopMonitoring()
-      ipcMain.removeHandler('writePort')
       this.hasEvent = false
     }
   }
 
+  /** 获取串口列表 */
+  getPortList() {
+    ipcManage.on('/port/getPortList', () => {
+      this.sendList()
+    })
+  }
+
   /** 发送列表 */
-  async sendList() {
-    const win = winManager.getWin('mainWin')
-    if (win) {
-      try {
-        const list = await SerialPort.list()
-        const keys = Object.keys(this.cache)
-        if (keys.length > 0) {
-          keys.forEach(key => {
-            const has = list.find(item => item.path === key)
-            if (!has) {
-              this.cache.delete(key)
-            }
-          })
-        }
-        ipcManage.setSend('usbData', {
-          type: 'list',
-          list
+  sendList() {
+    ipcManage.send('/port/sendList', async () => {
+      const list = await SerialPort.list()
+      const keys = Object.keys(this.cache)
+      if (keys.length > 0) {
+        keys.forEach(key => {
+          const has = list.find(item => item.path === key)
+          if (!has) {
+            this.cache.delete(key)
+          }
         })
-      } catch (err) {
-        ipcManage.ipcError(err)
       }
-    }
+      return { list }
+    })
   }
 
   /** USB端口监听 */
@@ -90,50 +80,6 @@ export default class USBManager {
     usbDetection.startMonitoring()
     usbDetection.on('change', () => {
       this.sendList()
-    })
-  }
-
-  /** 获取选择工步列表 */
-  getSetpsList() {
-    ipcManage.setHandle('/port/setpsList', async () => {
-      if (!this.stepList) {
-        this.stepList = typedKeys(workSteps).map(key => {
-          const step = workSteps[key]
-          return {
-            label: step.name,
-            value: key,
-            input: step.input || []
-          }
-        })
-      }
-      return this.stepList
-    })
-  }
-
-  writePort() {
-    ipcMain.handle('writePort', async (event, { path, data }) => {
-      let portData = this.cache.get(path)
-      if (!portData) {
-        const port = new SerialPort(path, {
-          baudRate: 115200
-        })
-        const parser = new Delimiter({
-          delimiter: '\n'
-        })
-
-        port.pipe(parser)
-        parser.on('data', msg => {
-          logger.info(iconv.decode(msg, 'GBK'))
-        })
-
-        portData = { port, parser }
-        this.cache.set(path, portData)
-      }
-      const status = portData.port.write(data, (s, d) => {
-        console.log(s)
-        console.log(d)
-      })
-      return status
     })
   }
 
@@ -147,15 +93,24 @@ export default class USBManager {
         const parser = new Delimiter({
           delimiter: '\n'
         })
+        portData = {
+          port,
+          parser,
+          emitList: {}
+        }
+
         port.pipe(parser)
         parser.on('data', buf => {
           console.log(buf)
+          const result = agreement.readData(buf)
+          if (portData && portData.emitList[result.sId]) {
+            portData.emitList[result.sId](result)
+          }
           // const msg = iconv.decode(buf, 'GBK')
           // logger.info(msg)
           // ipcManage.setSend(`portData:${path}`, msg)
         })
 
-        portData = { port, parser }
         this.cache.set(path, portData)
       } catch (err) {
         ipcManage.ipcError(err)
@@ -164,18 +119,18 @@ export default class USBManager {
     return portData
   }
 
-  portWrite() {
-    ipcManage.setEmit('portWrite', (path: string, data: string) => {
-      const portData = this.getPortData(path)
-      if (portData) {
-        portData.port.write(data)
-      }
-    })
-  }
+  // portWrite() {
+  //   ipcManage.setEmit('portWrite', (path: string, data: string) => {
+  //     const portData = this.getPortData(path)
+  //     if (portData) {
+  //       portData.port.write(data)
+  //     }
+  //   })
+  // }
 
   /** 写工步 */
-  writeWorkSteps() {
-    ipcManage.setEmit('/port/writeWorkSteps', (data: any) => {
+  writeSteps() {
+    ipcManage.handle('/port/writeWorkSteps', (event, data: any) => {
       const protItem = this.getPortData(data.path)
       if (!protItem) return
       let writeArr = [
@@ -202,21 +157,21 @@ export default class USBManager {
         }
       })
       const write = writeArr.join('')
-      console.log(agreement.setData(write, controlCode.writeWorkSteps))
-      protItem.port.write(agreement.setData(write, controlCode.writeWorkSteps))
+      const result = agreement.setData(write, controlCode.writeWorkSteps)
+      protItem.port.write(result.buf)
     })
   }
 
   /** 设置从控状态 */
   setSlaverStatus() {
-    ipcManage.setEmit('/port/slaver/setStatus', (data: any) => {
+    ipcManage.handle('/port/slaver/setStatus', (data: any) => {
       const protItem = this.getPortData(data.path)
       if (!protItem) return
       const buf = Buffer.alloc(3)
       buf.writeUIntBE(data.slaverId, 1, 1)
       buf.writeUIntBE(data.channel, 2, 1)
-      const dataBuf = agreement.setData(buf, controlCode.slaver[data.status])
-      protItem.port.write(dataBuf)
+      const result = agreement.setData(buf, controlCode.slaver[data.status])
+      protItem.port.write(result.buf)
     })
   }
 }

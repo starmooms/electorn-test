@@ -15,7 +15,7 @@ declare type beforeMainWin = () => void
 export default class Launcher {
   win: BrowserWindow | null = null
   update: Update | null = null
-  usbManager: USBManager | null = null
+  usbManager = this.initUSBManager()
   beforeMainWin: beforeMainWin | null = null
   updateManager = this.initUpdaterManager()
 
@@ -114,15 +114,16 @@ export default class Launcher {
         this.updateManager.check()
       }
     })
+    ipcManage.on('/createdWin/port/workerSee', (event, data: any) => {
+      if (this.usbManager) {
+        new WorkStepSee(data, this.usbManager)
+      }
+    })
   }
 
   afterWin() {
-    this.usbManager = new USBManager()
+    // this.usbManager = new USBManager()
     if (this.win) {
-      ipcManage.setEmit('/createdWin/port/workerSee', (data: any) => {
-        new WorkStepSee(data)
-      })
-
       ipcMain.on('createdWin', (event, data: any) => {
         if (!data || !data.type) return
         switch (data.type) {
@@ -137,6 +138,11 @@ export default class Launcher {
         }
       })
     }
+  }
+
+  initUSBManager() {
+    const usbManager = new USBManager()
+    return usbManager
   }
 
   initUpdaterManager() {

@@ -146,19 +146,6 @@ export default class PortList extends Vue {
     this.stepsList.splice(index, 1)
   }
 
-  // async getStepsList() {
-  //   const data = await this.$command.invoke('/port/setpsList')
-  //   if (data.status) {
-  //     this.stepsSelectList = data.data
-  //     const obj: any = {}
-  //     this.stepsSelectList.forEach(item => {
-  //       obj[item.value] = item.input
-  //     })
-  //     this.stepsSelectInput = obj
-  //     console.log(this.stepsSelectInput)
-  //   }
-  // }
-
   getStepsList() {
     const obj: any = {}
     this.stepsSelectList.forEach(item => {

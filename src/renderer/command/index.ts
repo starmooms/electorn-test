@@ -80,7 +80,7 @@ class Command {
   }
 
   send(eventName: string, ...args: any[]) {
-    ipcRenderer.send('ipcManage:emit', eventName, ...args)
+    ipcRenderer.send(eventName, ...args)
   }
 
   async invoke(name: string, ...args: any[]) {
@@ -89,6 +89,23 @@ class Command {
     } catch (err) {
       this.errorMsg(err)
       return { status: false }
+    }
+  }
+
+  on({ eventName, onEmit, vm }: Register) {
+    ipcRenderer.on(eventName, (event, data) => {
+      onEmit(data, event)
+    })
+    const unRegister = () => {
+      ipcRenderer.removeListener(eventName, onEmit)
+    }
+    if (vm && vm instanceof Vue) {
+      vm.$on('hook:beforeDestroy', () => {
+        unRegister()
+      })
+    }
+    return {
+      unRegister
     }
   }
 

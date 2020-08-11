@@ -59,21 +59,16 @@ class WinManager {
     let protocolPath = `app://./`
     if (devUrl) {
       protocolPath = devUrl
+      if (!process.env.IS_TEST) win.webContents.openDevTools()
     }
 
     this.winList.set(name, win)
-    win.loadURL(`${protocolPath}${path}`).then(() => {
-      if (devUrl && !process.env.IS_TEST) {
-        win.webContents.openDevTools()
-      }
-    })
+    win.loadURL(`${protocolPath}${path}`)
     win.on('close', () => {
       this.winList.delete(name)
     })
     return win
   }
-
-  
 }
 
 const winManager = new WinManager()

@@ -22,6 +22,33 @@ export const workStepsInput = {
   IEnd: { len: 4, serial: 14, name: '截止电流' }
 }
 
+/** 读工步数据 */
+export const workStepsRead = {
+  U: { len: 2, serial: 6, name: '电压(mV)' },
+  I: { len: 4, serial: 7, name: '电流(mA)' },
+  temp: { len: 1, serial: 8, name: '温度(℃)' },
+  time: { len: 2, serial: 9, name: '工步时间(秒)' },
+  Ah: { len: 4, serial: 10, name: '容量(mAh)' },
+  Wh: { len: 4, serial: 11, name: '电量(mWh)' }
+}
+
+export const END_STATUS = {
+  '00': '未结束',
+  '01': '时间到',
+  '02': '电压到',
+  '03': '终止电流到',
+  '04': '-▲V到',
+  '05': '电流异常',
+  '06': '电压异常',
+  '07': '容量异常',
+  '08': '偏离平均电压异常',
+  '09': '提前结束当前工步',
+  '0a': '无电池或电池接触不良',
+  '0b': '不良电池',
+  '0c': '补充电容量到结束',
+  ff: '未知结束'
+}
+
 /** 通道数据 */
 export const channelList = {}
 for (let i = 0; i < 20; i++) {
@@ -52,6 +79,7 @@ export const controlCode = {
     start: 0xeb,
     pause: 0xec,
     continued: 0xed,
-    close: 0xee
+    close: 0xee,
+    stepsRead: 0xc3
   }
 }

@@ -63,13 +63,14 @@
 import { Component, Vue, PropSync, Prop, Watch } from 'vue-property-decorator'
 import { Port } from '@/types/Port'
 import { getPortSelectList, getPortInputList } from '@/renderer/utils/getConfig'
+import { setSteps } from '@/renderer/ipc/channel'
 
 @Component
 export default class StepSetModal extends Vue {
   @PropSync('show', { type: Boolean, default: false })
   private stepsDialog!: boolean
 
-  @Prop({ type: Object }) private nowPort!: Port.Item | null
+  @Prop({ type: Object }) private showItem!: any | null
 
   list: Port.Item[] = []
 
@@ -87,35 +88,32 @@ export default class StepSetModal extends Vue {
       : false
   }
 
-  nowStepShow(portItem: any) {
-    this.$command.send('/createdWin/port/workerSee', {
-      path: portItem.path
-    })
-  }
-
-  stepsSave() {
-    if (this.nowPort) {
-      const list = this.stepsList.filter(item => {
-        if (item.setId) {
-          const input = this.stepsSelectMap[item.setId].input
-          if (input.length > 0) {
-            const hasNull = input.find(i => !item[i])
-            return !hasNull
-          }
+  async stepsSave() {
+    if (!this.showItem) {
+      this.$message.error('参数错误')
+      return
+    }
+    const list = this.stepsList.filter(item => {
+      if (item.setId) {
+        const input = this.stepsSelectMap[item.setId].input
+        if (input.length > 0) {
+          const hasNull = input.find(i => !item[i])
+          return !hasNull
         }
-        return false
-      })
-      if (list.length === 0) {
-        this.$message.error('请正确设置工步')
-        return
       }
-      this.$message.info(JSON.stringify(list))
-      this.$command.send('/port/writeWorkSteps', {
-        path: this.nowPort.path,
-        list
-      })
-    } else {
-      this.$message.error('缺少串口')
+      return false
+    })
+    if (list.length === 0) {
+      this.$message.error('请正确设置工步')
+      return
+    }
+    // this.$message.info(JSON.stringify(list))
+    const data = await setSteps({
+      list,
+      ...this.showItem
+    })
+    if (data.status) {
+      this.$message.success('设置工步成功')
     }
   }
 

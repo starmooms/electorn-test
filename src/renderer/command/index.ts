@@ -1,6 +1,5 @@
 import { ipcRenderer, ipcMain } from 'electron'
 import Vue from 'vue'
-import { eventNames } from 'process'
 
 interface EmitList {
   [eventName: string]: {
@@ -22,7 +21,11 @@ class Command {
     this.init()
   }
 
-  errorMsg(msg: string) {
+  errorMsg(msg: string | Record<string, any>) {
+    if (typeof msg === 'object') {
+      console.log(msg)
+      msg = msg.message || JSON.stringify(msg)
+    }
     Vue.prototype.$message.error(msg)
   }
 
@@ -85,7 +88,11 @@ class Command {
 
   async invoke(name: string, ...args: any[]) {
     try {
-      return await ipcRenderer.invoke(name, ...args)
+      const data = await ipcRenderer.invoke(name, ...args)
+      if (data.status === false && data.error) {
+        throw data.error
+      }
+      return data
     } catch (err) {
       this.errorMsg(err)
       return { status: false }

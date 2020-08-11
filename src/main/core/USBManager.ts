@@ -1,14 +1,11 @@
 import { ipcMain, ipcRenderer, IpcMainEvent } from 'electron'
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
-import winManager from './WinManager'
 import * as iconv from 'iconv-lite'
-import logger from './Logger'
 import ipcManage from './IpcManage'
 import { workSteps, controlCode, workStepsInput } from '@/shared/config/port'
 import agreement from './Agreement'
 import { FixZero, toHex, bytFull } from '../utils'
-import { typedKeys } from '@/shared/utils/index'
 
 const Delimiter = SerialPort.parsers.Delimiter
 
@@ -86,35 +83,31 @@ export default class USBManager {
   getPortData(path: string) {
     let portData = this.cache.get(path)
     if (!portData) {
-      try {
-        const port = new SerialPort(path, {
-          baudRate: 115200
-        })
-        const parser = new Delimiter({
-          delimiter: '\n'
-        })
-        portData = {
-          port,
-          parser,
-          emitList: {}
-        }
-
-        port.pipe(parser)
-        parser.on('data', buf => {
-          console.log(buf)
-          const result = agreement.readData(buf)
-          if (portData && portData.emitList[result.sId]) {
-            portData.emitList[result.sId](result)
-          }
-          // const msg = iconv.decode(buf, 'GBK')
-          // logger.info(msg)
-          // ipcManage.setSend(`portData:${path}`, msg)
-        })
-
-        this.cache.set(path, portData)
-      } catch (err) {
-        ipcManage.ipcError(err)
+      const port = new SerialPort(path, {
+        baudRate: 115200
+      })
+      const parser = new Delimiter({
+        delimiter: '\n'
+      })
+      portData = {
+        port,
+        parser,
+        emitList: {}
       }
+
+      port.pipe(parser)
+      parser.on('data', buf => {
+        console.log(buf)
+        const result = agreement.readData(buf)
+        if (portData && portData.emitList[result.sId]) {
+          portData.emitList[result.sId](result)
+        }
+        // const msg = iconv.decode(buf, 'GBK')
+        // logger.info(msg)
+        // ipcManage.setSend(`portData:${path}`, msg)
+      })
+
+      this.cache.set(path, portData)
     }
     return portData
   }
@@ -164,7 +157,7 @@ export default class USBManager {
 
   /** 设置从控状态 */
   setSlaverStatus() {
-    ipcManage.handle('/port/slaver/setStatus', (data: any) => {
+    ipcManage.handle('/port/slaver/setStatus', (event, data: any) => {
       const protItem = this.getPortData(data.path)
       if (!protItem) return
       const buf = Buffer.alloc(3)

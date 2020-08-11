@@ -94,8 +94,8 @@ class IpcManage {
     })
   }
 
-  handle(eventName: string, listener: handListener) {
-    ipcMain.handle(eventName, async (event, ...args: any[]) => {
+  handle(channel: string, listener: handListener) {
+    ipcMain.handle(channel, async (event, ...args: any[]) => {
       try {
         const data = await listener(event, ...args)
         return {
@@ -103,9 +103,16 @@ class IpcManage {
           data: data || null
         }
       } catch (err) {
-        this.ipcError(err)
+        return {
+          status: false,
+          error: err
+        }
       }
     })
+  }
+
+  removeHandler(channel: string) {
+    ipcMain.removeHandler(channel)
   }
 
   async send(channel: string, cb: any, win?: BrowserWindow) {

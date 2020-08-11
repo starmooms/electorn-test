@@ -27,7 +27,7 @@ class Agreement {
         }
       }
     }
-    return crc & 0xff
+    return crc & 0xffff
   }
 
   getId() {
@@ -57,6 +57,7 @@ class Agreement {
     const checkData = Buffer.concat(resultBufArr)
     const end = Buffer.from([0x00, 0x00, 0x16])
     end.writeUIntBE(this.crc16(checkData), 0, 2)
+    console.log(end, '校验码和结束位')
     resultBufArr.push(end)
     const buf = Buffer.concat(resultBufArr)
     this.readData(buf)

@@ -35,7 +35,10 @@ export default class WorkStepSee {
     }
 
     /** 读工步 */
-    ipcManage.setHandle(`getWorkerStep/${basePath}`, () => {
+    const getStepChannel = `getWorkerStep/${basePath}`
+    console.log(getStepChannel)
+    ipcManage.handle(getStepChannel, () => {
+      console.log(3)
       return new Promise((resolve, reject) => {
         const buf = Buffer.from([
           0x00,
@@ -47,7 +50,7 @@ export default class WorkStepSee {
         let isTimeOut = false
         const timer = setTimeout(() => {
           isTimeOut = true
-          reject(new Error('time out'))
+          reject(new Error('PORT Time Out'))
         }, 2000)
         portItem.emitList[result.sId] = (data: Buffer) => {
           if (isTimeOut) return
@@ -79,6 +82,10 @@ export default class WorkStepSee {
         portItem.port.write(result.buf)
       })
     })
-    winManager.createdWin(winName, winName)
+    const win = winManager.createdWin(winName, winName)
+
+    win.on('closed', () => {
+      ipcManage.removeHandler(getStepChannel)
+    })
   }
 }

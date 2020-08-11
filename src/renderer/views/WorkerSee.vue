@@ -197,8 +197,13 @@ export default class WorkerSee extends Vue {
 
   async getWorkStep() {
     const data = await this.$command.invoke(
-      `getWorkerStep/${this.path}/${this.slaverId}/${this.channelId}`
+      `getWorkerStep/${encodeURIComponent(this.path)}/${this.slaverId}/${
+        this.channelId
+      }`
     )
+    if (data.status) {
+      this.$message.success(JSON.stringify(data.data))
+    }
     console.log(data)
   }
 

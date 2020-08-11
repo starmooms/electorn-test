@@ -114,6 +114,7 @@ export default class StepSetModal extends Vue {
     })
     if (data.status) {
       this.$message.success('设置工步成功')
+      this.stepsDialog = false
     }
   }
 

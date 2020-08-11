@@ -15,7 +15,7 @@ interface SetSteps {
 }
 
 export function setChannelStatus(data: SetStatus) {
-  $command.send('/port/slaver/setStatus', data)
+  $command.invoke('/port/slaver/setStatus', data)
 }
 
 /** 写工步 */

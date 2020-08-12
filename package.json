@@ -1,6 +1,8 @@
 {
-  "name": "electron-test",
-  "version": "0.1.22",
+  "name": "upper-computer",
+  "author": "GXM",
+  "description": "upper computer for battery detection",
+  "version": "0.1.32",
   "private": true,
   "engines": {
     "node": ">=12.18.2"
@@ -18,11 +20,11 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "electron-is": "^3.0.0",
-    "electron-updater": "^4.3.1",
+    "electron-updater": "^4.3.4",
     "element-ui": "^2.13.2",
     "iconv-lite": "^0.6.2",
     "normalize.css": "^8.0.1",
-    "serialport": "^9.0.0",
+    "serialport": "^9.0.1",
     "svg-sprite-loader": "^5.0.0",
     "usb-detection": "^4.10.0",
     "vue": "^2.6.11",

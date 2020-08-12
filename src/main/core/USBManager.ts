@@ -1,11 +1,13 @@
 import { ipcMain, ipcRenderer, IpcMainEvent } from 'electron'
 import SerialPort from 'serialport'
+import a from '@serialport/stream'
 import usbDetection from 'usb-detection'
 import * as iconv from 'iconv-lite'
 import ipcManage from './IpcManage'
 import { workSteps, controlCode, workStepsInput } from '@/shared/config/port'
 import agreement from './Agreement'
 import { FixZero, toHex, bytFull } from '../utils'
+import logger from './Logger'
 
 const Delimiter = SerialPort.parsers.Delimiter
 
@@ -87,7 +89,7 @@ export default class USBManager {
         baudRate: 115200
       })
       const parser = new Delimiter({
-        delimiter: '\n'
+        delimiter: [0x16]
       })
       portData = {
         port,
@@ -97,7 +99,7 @@ export default class USBManager {
 
       port.pipe(parser)
       parser.on('data', buf => {
-        console.log(buf)
+        logger.info('串口返回数据', buf)
         const result = agreement.readData(buf)
         if (portData && portData.emitList[result.sId]) {
           portData.emitList[result.sId](result)
@@ -105,6 +107,16 @@ export default class USBManager {
         // const msg = iconv.decode(buf, 'GBK')
         // logger.info(msg)
         // ipcManage.setSend(`portData:${path}`, msg)
+      })
+
+      // Read data that is available but keep the stream in "paused mode"
+      port.on('readable', () => {
+        logger.info('串口可以读取', port.read())
+      })
+
+      // Switches the port into "flowing mode"
+      port.on('data', data => {
+        logger.info('串口触发data', data)
       })
 
       this.cache.set(path, portData)

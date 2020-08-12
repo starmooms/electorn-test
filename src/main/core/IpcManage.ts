@@ -6,6 +6,7 @@ import {
   IpcMainInvokeEvent,
   BrowserWindow
 } from 'electron'
+import logger from './Logger'
 
 declare type EmitCb = (...args: any[]) => any
 declare type onListener = (event: IpcMainEvent, ...args: any[]) => void
@@ -103,6 +104,7 @@ class IpcManage {
           data: data || null
         }
       } catch (err) {
+        logger.warn('handle错误', err)
         return {
           status: false,
           error: err

@@ -34,30 +34,59 @@
 // const r = spliceBuf(Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05, 0xff]), 1, 2, 3)
 // console.log(r)
 
-function sliceBufFormNum(buf, spliceArr) {
-  const result = []
-  let index = 0
-  for (let i = 0; i < spliceArr.length; i++) {
-    let byte = 0
-    let hasSigned = false
-    const item = spliceArr[i]
-    if (typeof item === 'number') {
-      byte = item
-    } else {
-      byte = item.byte
-      hasSigned = item.hasSigned || false
-    }
-    console.log(index, byte)
-    const data = hasSigned
-      ? buf.readIntBE(index, byte)
-      : buf.readUIntBE(index, byte)
-    result.push(data)
-    index += byte
-  }
-  return result
-}
+// function sliceBufFormNum(buf, spliceArr) {
+//   const result = []
+//   let index = 0
+//   for (let i = 0; i < spliceArr.length; i++) {
+//     let byte = 0
+//     let hasSigned = false
+//     const item = spliceArr[i]
+//     if (typeof item === 'number') {
+//       byte = item
+//     } else {
+//       byte = item.byte
+//       hasSigned = item.hasSigned || false
+//     }
+//     console.log(index, byte)
+//     const data = hasSigned
+//       ? buf.readIntBE(index, byte)
+//       : buf.readUIntBE(index, byte)
+//     result.push(data)
+//     index += byte
+//   }
+//   return result
+// }
 
-const buf = Buffer.from([20, 40, -40, 40])
-console.log(buf)
-const r = sliceBufFormNum(buf, [1, 1, { byte: 1, hasSigned: true }, 1])
-console.log(r)
+// const buf = Buffer.from([20, 40, -40, 40])
+// console.log(buf)
+// const r = sliceBufFormNum(buf, [1, 1, { byte: 1, hasSigned: true }, 1])
+// console.log(r)
+
+const a = Buffer.from([
+  104,
+  1,
+  1,
+  0,
+  0,
+  104,
+  195,
+  0,
+  0,
+  0,
+  11,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  101,
+  81
+])
+console.log(a)

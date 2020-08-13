@@ -2,9 +2,15 @@ import winManager from '../core/WinManager'
 import ipcManage from '../core/IpcManage'
 import USBManager from '../core/USBManager'
 import agreement from '../core/Agreement'
-import { controlCode, END_STATUS } from '@/shared/config/port'
+import {
+  controlCode,
+  END_STATUS,
+  WORKSTEPS,
+  workStepsInput
+} from '@/shared/config/port'
 import { sliceBufFormNum, toHex } from '../utils'
 import logger from '../core/Logger'
+import BufModel, { BufData } from '../utils/ParsBuf'
 
 interface Opts {
   path: string
@@ -22,6 +28,16 @@ export default class WorkStepSee {
     this.createdWin()
   }
 
+  getInputData(bufData: BufData, key: string) {
+    const inputItem = workStepsInput[key]
+    console.log(inputItem)
+    return {
+      data: bufData.getIndex(inputItem.serial),
+      unit: inputItem.unit,
+      name: inputItem.name
+    }
+  }
+
   createdWin() {
     const basePath = `${encodeURIComponent(this.opts.path)}/${
       this.opts.slaverId
@@ -37,65 +53,78 @@ export default class WorkStepSee {
 
     /** 读工步 */
     const getStepChannel = `getWorkerStep/${basePath}`
-    ipcManage.handle(getStepChannel, () => {
-      return new Promise((resolve, reject) => {
-        const buf = Buffer.from([0x00, this.opts.slaverId, this.opts.channelId])
-        const result = agreement.setData(buf, controlCode.slaver.stepsRead)
-        logger.info('读工步发送')
-        logger.info(result.buf.toString('hex'))
-        logger.info(result)
-        let isTimeOut = false
-        const timer = setTimeout(() => {
-          logger.info('超时未返回')
-          isTimeOut = true
-          reject(new Error('PORT Time Out'))
-        }, 2000)
-        portItem.emitList[result.sId] = (data: Buffer) => {
-          if (isTimeOut) return
-          const dataLen = data.readUInt8(10)
-          logger.info('读工步数目', dataLen)
-          const stepsBuf = data.slice(11)
-          const stepsData: any[] = []
-          for (let i = 0; i < dataLen; i++) {
-            const stepBuf = stepsBuf.slice(28 * i, 28)
-            // const bufArr = sliceBuf(stepBuf, [1, 1, 1, 2, 1, 1, 2, 4, 1, 2, 4, 4]) // eslint-disable-line
-            // const bufArr = sliceBufFormNum(stepBuf, [1, 1, 1, 2, 1, 1, 2, 4, { byte: 1, hasSigned: true }, 2, 4, 4]) // eslint-disable-line
-            const bufArr = sliceBufFormNum(stepBuf, [1, 1, 1, 1, 1, 1, 2, 2, 4, 4, 4, 4, 1, 1, 4])// eslint-disable-line
-            stepsData.push({
-              version: bufArr[0],
-              slaverId: bufArr[1],
-              channelId: bufArr[2],
-              workerId: bufArr[3],
-              pattern: bufArr[4],
-              workerCode: toHex(bufArr[5], 1),
-              time: bufArr[6],
-              U: bufArr[7],
-              I: bufArr[8],
-              W: bufArr[9],
-              R: bufArr[10],
-              loopNum: bufArr[11],
-              loopStart: bufArr[12],
-              loopNumNow: bufArr[13],
-              IEnd: bufArr[14]
-              // loopId: bufArr[3],
-              // workId2: bufArr[4],
-              // endStatus: END_STATUS[toHex(bufArr[5], 1)] || 'Error END_STATUS',
-              // U: bufArr[6],
-              // I: bufArr[7],
-              // temp: bufArr[8],
-              // time: bufArr[9],
-              // Ah: bufArr[10],
-              // Wh: bufArr[11]
-            })
-          }
-          clearTimeout(timer)
-          logger.info('读工步数目', stepsData)
-          resolve(stepsData)
-        }
-        portItem.port.write(result.buf)
+    ipcManage.handle(getStepChannel, async () => {
+      const buf = Buffer.from([0x00, this.opts.slaverId, this.opts.channelId])
+      const data = agreement.setData(buf, controlCode.slaver.stepsRead)
+      logger.info('读工步发送', data.buf.toString('hex'))
+      // const a = '00000000000000000000040000010000a10000010002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' // eslint-disable-line
+      // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b00000022b0000029a00000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000009000000000000' // eslint-disable-line
+      // const resultBuf = Buffer.from(a, 'hex')
+
+      const resultBuf = await this.usbManager.post({
+        portItem,
+        data
       })
+      logger.info('结果Buffer', resultBuf)
+      const stepsLen = resultBuf.readUInt8(10)
+      const stepsBuf = resultBuf.slice(11)
+      const stepsList: any[] = []
+      const bufModel = new BufModel([1, 1, 1, 1, 1, 1, 2, 2, 4, 4, 4, 4, 1, 1, 4]) // eslint-disable-line
+      logger.info('读工步数目', stepsLen)
+      for (let i = 0; i < stepsLen; i++) {
+        const start = bufModel.bufLength * i
+        const bufData = bufModel.getBufData(
+          stepsBuf.slice(start, start + bufModel.bufLength)
+        )
+        const workerItem = WORKSTEPS[bufData.getIndexHex(5)]
+        if (workerItem) {
+          const worker = workerItem.input.worker.map(key =>
+            this.getInputData(bufData, key)
+          )
+          const limt = workerItem.input.limt.map(key =>
+            this.getInputData(bufData, key)
+          )
+          stepsList.push({
+            id: bufData.getIndex(3),
+            name: workerItem.name,
+            worker,
+            limt
+          })
+        }
+        // stepsList.push({
+        //   workerId: bufData.getIndex(3),
+
+        // })
+        // stepsList.push({
+        //   version: bufData.getIndex(0),
+        //   slaverId: bufData.getIndex(1),
+        //   channelId: bufData.getIndex(2),
+        //   workerId: bufData.getIndex(3),
+        //   pattern: bufData.getIndex(4),
+        //   workerCode: bufData.getIndexHex(5),
+        //   time: bufData.getIndex(6),
+        //   U: bufData.getIndex(7),
+        //   I: bufData.getIndex(8),
+        //   W: bufData.getIndex(9),
+        //   R: bufData.getIndex(10),
+        //   loopNum: bufData.getIndex(11),
+        //   loopStart: bufData.getIndex(12),
+        //   loopNumNow: bufData.getIndex(13),
+        //   IEnd: bufData.getIndex(14)
+        // })
+      }
+      logger.info('stepsList', stepsList)
+      return stepsList
     })
     const win = winManager.createdWin(winName, winName)
+
+    /** 读采样 */
+    this.usbManager.readSlaverTranslate(
+      portItem,
+      0,
+      this.opts.slaverId,
+      winName
+    )
 
     win.on('closed', () => {
       ipcManage.removeHandler(getStepChannel)

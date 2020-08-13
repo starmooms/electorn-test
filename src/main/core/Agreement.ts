@@ -1,5 +1,6 @@
 import { toHex, FixZero } from '../utils'
 import { type } from 'os'
+import logger from './Logger'
 
 class Agreement {
   nowSId = 0
@@ -13,6 +14,11 @@ class Agreement {
    */
   PrefixZero(num: string | number, n: number) {
     return (Array(n).join('0') + num).slice(-n)
+  }
+
+  /** 获取结束帧 */
+  getEnd() {
+    return Buffer.from('edededed', 'hex')
   }
 
   crc16(buf: Buffer) {
@@ -55,12 +61,13 @@ class Agreement {
       resultBufArr.push(dataBuf)
     }
     const checkData = Buffer.concat(resultBufArr)
-    const end = Buffer.from([0x00, 0x00, 0x16])
-    end.writeUIntBE(this.crc16(checkData), 0, 2)
-    console.log(end, '校验码和结束位')
-    resultBufArr.push(end)
+    const check = Buffer.alloc(2)
+    check.writeUIntBE(this.crc16(checkData), 0, 2)
+    resultBufArr.push(check)
+    resultBufArr.push(this.getEnd())
     const buf = Buffer.concat(resultBufArr)
-    this.readData(buf)
+    console.log('发送', buf)
+    // this.readData(buf)
     return { buf, sId }
   }
 
@@ -92,23 +99,30 @@ class Agreement {
     const data = result.slice(12, sIndex)
     console.log('数据域：', getBufResults(data))
     console.log('校验码：', getBufResults([result[sIndex], result[sIndex + 1]]))
-    console.log('帧结束符：', getResult(result[sIndex + 2]))
+    console.log(
+      '帧结束符：',
+      getBufResults([result[sIndex + 2], result[sIndex + 6]])
+    )
   }
 
   readData(buf: Buffer) {
+    console.log('接收', buf)
     const dataStart = 12
     const dataLen = buf.readUInt16BE(10)
+    // logger.info('readData的buf', buf)
+    // console.log('readData的buf', buf)
+    // logger.info('数据域长度', dataLen)
     const dataEndLen = dataLen + dataStart
     const checkBuf = buf.slice(0, dataEndLen)
     const crc16Buf = buf.readUInt16BE(dataEndLen)
-    if (this.crc16(checkBuf) !== crc16Buf) {
-      console.log('校验失败')
-    }
-    console.log('数据域内容', buf.slice(dataStart, dataEndLen))
-    console.log('流水号', buf.readUInt16BE(8))
+    // if (this.crc16(checkBuf) !== crc16Buf) {
+    //   logger.info('校验失败', crc16Buf.toString(16))
+    // }
+    // logger.info('数据域内容', buf.slice(dataStart, dataEndLen))
+    // logger.info('流水号', toHex(buf.readUInt16BE(8), 2))
     return {
       buf: buf.slice(dataStart, dataEndLen),
-      sId: buf.readUInt16BE(8)
+      sId: toHex(buf.readUInt16BE(8), 2)
     }
   }
 }

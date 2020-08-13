@@ -23,6 +23,11 @@ export function setSteps(data: SetSteps) {
   return $command.invoke('/port/writeWorkSteps', data)
 }
 
+/** 读工步 */
+export function getWorkStep(name: string) {
+  return $command.invoke(name)
+}
+
 // export default class Ipc {
 
 //   install(vue: typeof Vue) {

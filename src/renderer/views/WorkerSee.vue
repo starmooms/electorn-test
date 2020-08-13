@@ -19,10 +19,12 @@
     </div>
 
     <el-divider content-position="left">当前工步</el-divider>
-    <el-table border max-height="40vh" :data="nowStepList">
-      <el-table-column label="工步信息" prop="msg"></el-table-column>
-      <el-table-column label="工步限制条件" prop="limt"></el-table-column>
-    </el-table>
+    <div class="steps-list">
+      <el-table border max-height="40vh" :data="nowStepList">
+        <el-table-column label="工步信息" prop="msg"></el-table-column>
+        <el-table-column label="工步限制条件" prop="limt"></el-table-column>
+      </el-table>
+    </div>
 
     <div class="echart-box">
       <v-chart :options="polar"></v-chart>
@@ -37,7 +39,8 @@ import 'echarts/lib/chart/line'
 import 'echarts/lib/component/tooltip'
 import 'echarts/lib/component/toolbox'
 import 'echarts/lib/component/axisPointer'
-import { setChannelStatus } from '../ipc/channel'
+import { setChannelStatus, getWorkStep } from '../ipc/channel'
+import command from '../command'
 // import { getChartsData } from '../utils/getConfig'
 
 // const chartData = getChartsData()
@@ -67,7 +70,7 @@ export default class WorkerSee extends Vue {
     return Number(this.$route.params.channelId)
   }
 
-  polar = {
+  polar: any = {
     tooltip: {
       // alwaysShowContent: false,
       trigger: 'axis',
@@ -92,10 +95,11 @@ export default class WorkerSee extends Vue {
     //   extraCssText: 'width: 400px'
     // },
     xAxis: {
-      // data: chartData.Timex,
-      splitNumber: 5,
-      min: 0,
-      max: 1000
+      type: 'value',
+      data: [0]
+      // splitNumber: 5,
+      // min: 0,
+      // max: 1000
     },
     grid: {},
     yAxis: [
@@ -110,7 +114,7 @@ export default class WorkerSee extends Vue {
       {
         name: '电流',
         max: 6000,
-        min: -6000,
+        min: 0,
         splitNumber: 24,
         position: 'right',
         splitLine: { show: false }
@@ -119,10 +123,7 @@ export default class WorkerSee extends Vue {
     series: [
       {
         name: '电压',
-        data: [
-          [0.5, 4200],
-          [20, 4800]
-        ],
+        data: [],
         type: 'line',
         yAxisIndex: 0,
         lineStyle: { color: 'green' },
@@ -136,10 +137,7 @@ export default class WorkerSee extends Vue {
       },
       {
         name: '电流',
-        data: [
-          [0.5, 0],
-          [20, 4]
-        ],
+        data: [],
         type: 'line',
         yAxisIndex: 1,
         lineStyle: { color: 'red' },
@@ -180,15 +178,15 @@ export default class WorkerSee extends Vue {
 
   setTimer: any = null
   created() {
-    let i = 0
-    this.setTimer = setInterval(() => {
-      i += 20
-      this.polar.series[0].data.push([
-        i,
-        Math.floor(Math.random() * 1400) + 3600
-      ])
-      this.polar.series[1].data.push([i, Math.floor(Math.random() * 3000)])
-    }, 1000)
+    // let i = 0
+    // this.setTimer = setInterval(() => {
+    //   i += 20
+    //   this.polar.series[0].data.push([
+    //     i,
+    //     Math.floor(Math.random() * 1400) + 3600
+    //   ])
+    //   this.polar.series[1].data.push([i, Math.floor(Math.random() * 3000)])
+    // }, 1000)
   }
 
   destroy() {
@@ -196,29 +194,74 @@ export default class WorkerSee extends Vue {
   }
 
   async getWorkStep() {
-    const data = await this.$command.invoke(
+    // const data = await this.$command.invoke(
+    //   `getWorkerStep/${encodeURIComponent(this.path)}/${this.slaverId}/${
+    //     this.channelId
+    //   }`
+    // )
+
+    const data = await getWorkStep(
       `getWorkerStep/${encodeURIComponent(this.path)}/${this.slaverId}/${
         this.channelId
       }`
     )
     if (data.status) {
-      this.$message.success(JSON.stringify(data.data))
+      this.nowStepList = data.data.map((item: any) => {
+        const sf = (s: any) => {
+          if (item.name === '循环') {
+            return `${s.name}${s.data + 1}${s.unit}`
+          }
+          return `${s.data}${s.unit}`
+        }
+        const worker = item.worker.map(sf)
+        const limt = item.limt.map(sf)
+        return {
+          msg: `${item.id + 1}.${item.name}：${worker.join(' ')}`,
+          limt: limt.join(' ')
+        }
+      })
     }
     console.log(data)
   }
 
   mounted() {
+    let i = 0
+    // setInterval(() => {
+    //   i++
+    //   this.polar.xAxis.data.push(i)
+    //   this.polar.series[0].data.push([
+    //     i,
+    //     Math.floor(Math.random() * 1400) + 3600
+    //   ])
+    //   this.polar.series[1].data.push([i, Math.floor(Math.random() * 3000)])
+    // }, 1000)
+    command.on({
+      eventName: `/port/translate/${this.slaverId}`,
+      onEmit: data => {
+        console.log(data)
+        const item = data.list[this.channelId]
+        console.log(item)
+        i++
+        this.polar.xAxis.data.push(i)
+        this.polar.series[0].data.push([i, item.U])
+        this.polar.series[1].data.push([i, item.I])
+        console.log(data)
+      },
+      vm: this
+    })
     this.getWorkStep()
   }
 }
 </script>
 
 <style lang="scss">
-.stepsAdd-dialog {
-  min-width: 900px;
+.steps-list {
+  max-width: 600px;
+  min-width: 600px;
 }
 
 .echart-box {
+  margin-top: 40px;
   width: 800px;
   height: 600px;
   background-color: #f3f3f3;

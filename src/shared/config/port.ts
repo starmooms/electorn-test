@@ -1,6 +1,6 @@
 /** 工步 */
 export const workSteps = {
-  ICi: { name: '恒流充电', value: 'A1', input: ['U', 'I'] },
+  ICi: { name: '恒流充电', value: 'A1', input: ['U', 'I'], limt: {} },
   UCi: { name: '恒压充电', value: 'A2', input: ['U', 'I'] },
   IUCi: { name: '恒流恒压充电', value: 'A3', input: ['U', 'I', 'IEnd'] },
   IDisCi: { name: '恒流放电', value: 'B0', input: ['U', 'I'] },
@@ -10,16 +10,53 @@ export const workSteps = {
   // WCi: { name: '恒功率充电', value: 'A4', input: null }
 }
 
+/** 工步 */
+export const WORKSTEPS = {
+  a1: {
+    name: '恒流充电',
+    type: 'ICi',
+    input: { worker: ['I'], limt: ['U'] }
+  },
+  a2: {
+    name: '恒压充电',
+    type: 'UCi',
+    input: { worker: ['U'], limt: ['I'] }
+  },
+  a3: {
+    name: '恒流恒压充电',
+    type: 'IUCi',
+    input: { worker: ['I', 'U'], limt: ['IEnd'] }
+  },
+  b0: {
+    name: '恒流放电',
+    type: 'IDisCi',
+    input: { worker: ['I'], limt: ['U'] }
+  },
+  '90': {
+    name: '搁置',
+    type: 'shelve',
+    input: {
+      worker: ['time'],
+      limt: []
+    }
+  },
+  '70': {
+    name: '循环',
+    type: 'loop',
+    input: { worker: ['loopStart'], limt: ['loopNum'] }
+  }
+}
+
 /** 工步input字节序号 */
 export const workStepsInput = {
-  time: { len: 2, serial: 6, name: '时间(秒)' },
-  U: { len: 2, serial: 7, name: '电压(mV)' },
-  I: { len: 4, serial: 8, name: '电流(mA)' },
-  W: { len: 4, serial: 9, name: '功率(W)' },
-  R: { len: 4, serial: 10, name: '电阻(mΩ)' },
-  loopNum: { len: 4, serial: 11, name: '循环次数' },
-  loopStart: { len: 1, serial: 12, name: '循环起始' },
-  IEnd: { len: 4, serial: 14, name: '截止电流' }
+  time: { len: 2, serial: 6, unit: 's', name: '时间(秒)' },
+  U: { len: 2, serial: 7, unit: 'mV', name: '电压(mV)' },
+  I: { len: 4, serial: 8, unit: 'mA', name: '电流(mA)' },
+  W: { len: 4, serial: 9, unit: 'W', name: '功率(W)' },
+  R: { len: 4, serial: 10, unit: 'mΩ', name: '电阻(mΩ)' },
+  loopNum: { len: 4, serial: 11, unit: '', name: '循环次数' },
+  loopStart: { len: 1, serial: 12, unit: '', name: '循环起始' },
+  IEnd: { len: 4, serial: 14, unit: '', name: '截止电流' }
 }
 
 /** 读工步数据 */

@@ -11,7 +11,7 @@ interface SliceData extends SliceItemData {
 
 declare type SliceItem = number | SliceItemData
 
-class BufData {
+export class BufData {
   bufModel: BufModel
   buf: Buffer
   // declare getIndex(index:number, <T>hex:boolean=>T ? String : Boolean
@@ -21,7 +21,7 @@ class BufData {
     this.buf = buf
   }
 
-  getIndex(index: number, hex = false) {
+  getIndex(index: number) {
     const sliceItem = this.bufModel.sliceData[index]
     if (!sliceItem) {
       throw new Error(`BufModel ${index} no defined`)
@@ -30,7 +30,12 @@ class BufData {
     const data = hasSigned
       ? this.buf.readIntBE(offset, byte)
       : this.buf.readUIntBE(offset, byte)
-    return hex ? toHex(data, byte) : data
+    return data
+  }
+
+  getIndexHex(index: number) {
+    const data = this.getIndex(index)
+    return toHex(data, this.bufModel.sliceData[index].byte)
   }
 }
 

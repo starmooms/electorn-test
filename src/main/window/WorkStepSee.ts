@@ -119,7 +119,7 @@ export default class WorkStepSee {
     const win = winManager.createdWin(winName, winName)
 
     /** 读采样 */
-    this.usbManager.readSlaverTranslate(
+    const closeTranslate = this.usbManager.readSlaverTranslate(
       portItem,
       0,
       this.opts.slaverId,
@@ -128,6 +128,7 @@ export default class WorkStepSee {
 
     win.on('closed', () => {
       ipcManage.removeHandler(getStepChannel)
+      closeTranslate()
     })
   }
 }

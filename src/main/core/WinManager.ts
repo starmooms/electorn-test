@@ -1,4 +1,4 @@
-import { BrowserWindow, BrowserWindowProxy } from 'electron'
+import { BrowserWindow } from 'electron'
 
 class WinManager {
   win: BrowserWindow | null = null
@@ -7,14 +7,11 @@ class WinManager {
   // constructor() {}
 
   getWin(name: string, show = false) {
-    const hasWin = this.winList.get(name)
-    if (hasWin) {
-      if (show) {
-        hasWin.show()
-      }
-      return hasWin
+    const hasWin = this.winList.get(name) || null
+    if (hasWin && show) {
+      hasWin.show()
     }
-    return null
+    return hasWin
   }
 
   /**
@@ -24,17 +21,11 @@ class WinManager {
    */
   createdWin(name: string, path = '') {
     const hasWin = this.getWin(name, true)
-    if (hasWin) {
-      return hasWin
-    }
+    if (hasWin) return hasWin
 
     const devUrl = process.env.WEBPACK_DEV_SERVER_URL
-    if (path) {
-      path = `#/${path}`
-    }
-    if (!devUrl) {
-      path = `index.html${path}`
-    }
+    if (path) path = `#/${path}`
+    if (!devUrl) path = `index.html${path}`
 
     const opts: Electron.BrowserWindowConstructorOptions = {}
     const nowFous = BrowserWindow.getFocusedWindow()

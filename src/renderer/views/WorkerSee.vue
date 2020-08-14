@@ -39,6 +39,7 @@ import 'echarts/lib/chart/line'
 import 'echarts/lib/component/tooltip'
 import 'echarts/lib/component/toolbox'
 import 'echarts/lib/component/axisPointer'
+import 'echarts/lib/component/dataZoom'
 import { setChannelStatus, getWorkStep } from '../ipc/channel'
 import command from '../command'
 // import { getChartsData } from '../utils/getConfig'
@@ -70,7 +71,7 @@ export default class WorkerSee extends Vue {
     return Number(this.$route.params.channelId)
   }
 
-  polar: any = {
+  polar = {
     tooltip: {
       // alwaysShowContent: false,
       trigger: 'axis',
@@ -98,10 +99,15 @@ export default class WorkerSee extends Vue {
       type: 'value',
       data: [0]
       // splitNumber: 5,
-      // min: 0,
-      // max: 1000
     },
     grid: {},
+    dataZoom: [
+      {
+        type: 'slider',
+        xAxisIndex: [0],
+        show: true
+      }
+    ],
     yAxis: [
       {
         name: '电压',
@@ -123,7 +129,7 @@ export default class WorkerSee extends Vue {
     series: [
       {
         name: '电压',
-        data: [],
+        data: [] as number[][],
         type: 'line',
         yAxisIndex: 0,
         lineStyle: { color: 'green' },
@@ -137,7 +143,7 @@ export default class WorkerSee extends Vue {
       },
       {
         name: '电流',
-        data: [],
+        data: [] as number[][],
         type: 'line',
         yAxisIndex: 1,
         lineStyle: { color: 'red' },
@@ -206,15 +212,15 @@ export default class WorkerSee extends Vue {
       }`
     )
     if (data.status) {
-      this.nowStepList = data.data.map((item: any) => {
-        const sf = (s: any) => {
-          if (item.name === '循环') {
-            return `${s.name}${s.data + 1}${s.unit}`
-          }
-          return `${s.data}${s.unit}`
+      const setInput = (item: any) => {
+        if (item.name === '循环') {
+          return `${item.name}${item.data + 1}${item.unit}`
         }
-        const worker = item.worker.map(sf)
-        const limt = item.limt.map(sf)
+        return `${item.data}${item.unit}`
+      }
+      this.nowStepList = data.data.map((item: any) => {
+        const worker = item.worker.map(setInput)
+        const limt = item.limt.map(setInput)
         return {
           msg: `${item.id + 1}.${item.name}：${worker.join(' ')}`,
           limt: limt.join(' ')
@@ -238,14 +244,12 @@ export default class WorkerSee extends Vue {
     command.on({
       eventName: `/port/translate/${this.slaverId}`,
       onEmit: data => {
-        console.log(data)
         const item = data.list[this.channelId]
-        console.log(item)
         i++
         this.polar.xAxis.data.push(i)
         this.polar.series[0].data.push([i, item.U])
         this.polar.series[1].data.push([i, item.I])
-        console.log(data)
+        // console.log(data)
       },
       vm: this
     })

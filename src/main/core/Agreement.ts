@@ -1,6 +1,4 @@
 import { toHex, FixZero } from '../utils'
-import { type } from 'os'
-import logger from './Logger'
 
 class Agreement {
   nowSId = 0
@@ -66,7 +64,7 @@ class Agreement {
     resultBufArr.push(check)
     resultBufArr.push(this.getEnd())
     const buf = Buffer.concat(resultBufArr)
-    console.log('发送', buf)
+    // console.log('发送', buf)
     // this.readData(buf)
     return { buf, sId }
   }
@@ -106,7 +104,7 @@ class Agreement {
   }
 
   readData(buf: Buffer) {
-    console.log('接收', buf)
+    // console.log('接收', buf)
     const dataStart = 12
     const dataLen = buf.readUInt16BE(10)
     // logger.info('readData的buf', buf)

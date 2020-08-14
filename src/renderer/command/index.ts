@@ -100,20 +100,12 @@ class Command {
   }
 
   on({ eventName, onEmit, vm }: Register) {
-    ipcRenderer.on(eventName, (event, data) => {
-      onEmit(data, event)
-    })
-    const unRegister = () => {
-      ipcRenderer.removeListener(eventName, onEmit)
-    }
+    ipcRenderer.on(eventName, (event, data) => onEmit(data, event))
+    const unRegister = () => ipcRenderer.removeListener(eventName, onEmit)
     if (vm && vm instanceof Vue) {
-      vm.$on('hook:beforeDestroy', () => {
-        unRegister()
-      })
+      vm.$on('hook:beforeDestroy', () => unRegister())
     }
-    return {
-      unRegister
-    }
+    return { unRegister }
   }
 
   install(vue: typeof Vue) {

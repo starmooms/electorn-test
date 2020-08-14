@@ -1,7 +1,5 @@
-import { ipcMain, ipcRenderer, IpcMainEvent, BrowserWindow } from 'electron'
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
-import * as iconv from 'iconv-lite'
 import ipcManage from './IpcManage'
 import { workSteps, controlCode, workStepsInput } from '@/shared/config/port'
 import agreement from './Agreement'
@@ -9,6 +7,7 @@ import { FixZero, toHex, bytFull } from '../utils'
 import logger from './Logger'
 import BufModel from '../utils/ParsBuf'
 import winManager from './WinManager'
+import translateList from '../utils/mock'
 
 const Delimiter = SerialPort.parsers.Delimiter
 
@@ -209,40 +208,51 @@ export default class USBManager {
     }
     if (!portItem.translate[masterId][slaverId]) {
       const time = setInterval(async () => {
-        const resultBuf = await this.post({
-          portItem,
-          data: agreement.setData(Buffer.from([0x00, toHex(slaverId, 1)]), 0xc5)
-        })
-        const len = resultBuf.readUInt8(2)
-        const dataBuf = resultBuf.slice(3)
-        const list: any[] = []
-        for (let i = 0; i < len; i++) {
-          const start = bufModel.bufLength * i
-          const bufData = bufModel.getBufData(
-            dataBuf.slice(start, start + bufModel.bufLength)
-          )
-          list.push({
-            channelId: bufData.getIndex(0),
-            workerCode: bufData.getIndex(1),
-            I: bufData.getIndex(2),
-            U: bufData.getIndex(3),
-            endStatus: bufData.getIndex(4),
-            errorCode: bufData.getIndex(5)
-          })
-        }
-        // logger.info('列表', list)
-        portItem.translate[masterId][slaverId].winArr.forEach(name => {
-          const win = winManager.getWin(name)
-          if (win) {
-            ipcManage.send(
-              `/port/translate/${slaverId}`,
-              () => {
-                return { list }
-              },
-              win
+        try {
+          const resultBuf = await this.post({
+            portItem,
+            data: agreement.setData(
+              Buffer.from([0x00, toHex(slaverId, 1)]),
+              0xc5
             )
+          })
+
+          const len = resultBuf.readUInt8(2)
+          const dataBuf = resultBuf.slice(3)
+          const list: any[] = []
+          for (let i = 0; i < len; i++) {
+            const start = bufModel.bufLength * i
+            const bufData = bufModel.getBufData(
+              dataBuf.slice(start, start + bufModel.bufLength)
+            )
+            list.push({
+              channelId: bufData.getIndex(0),
+              workerCode: bufData.getIndex(1),
+              I: bufData.getIndex(2),
+              U: bufData.getIndex(3),
+              endStatus: bufData.getIndex(4),
+              errorCode: bufData.getIndex(5)
+            })
           }
-        })
+
+          // const list = translateList()
+
+          portItem.translate[masterId][slaverId].winArr.forEach(name => {
+            const win = winManager.getWin(name)
+            if (win) {
+              ipcManage.send(
+                `/port/translate/${slaverId}`,
+                () => {
+                  return { list }
+                },
+                win
+              )
+            }
+          })
+        } catch (err) {
+          // console.log(err)
+          // throw err
+        }
       }, 1000)
       portItem.translate[masterId][slaverId] = {
         winArr: [],
@@ -252,7 +262,17 @@ export default class USBManager {
         }
       }
     }
-    portItem.translate[masterId][slaverId].winArr.push(winName)
+    const winArr = portItem.translate[masterId][slaverId].winArr
+    winArr.push(winName)
+    const close = () => {
+      const index = winArr.findIndex(item => {
+        return winName === item
+      })
+      if (index >= 0) {
+        winArr.splice(index, 1)
+      }
+    }
+    return close
   }
 
   /** 串口请求 */
@@ -268,7 +288,7 @@ export default class USBManager {
         return
       }
       const timer = setTimeout(() => {
-        logger.info('超时未返回')
+        // logger.info('超时未返回')
         delete portItem!.emitList[data.sId]
         reject(new Error('PORT Time Out'))
       }, 2000)

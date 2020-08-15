@@ -108,6 +108,11 @@ function getBufResults(b) {
   return s
 }
 
+const buf88 = Buffer.from(
+  '680101000068c500002400530000080001010000000000000001020000000000000000020200000000000000000302000000000000000004020000000000000000050200000000000000000602000000000000000007020000000000000000dd44',
+  'hex'
+)
+
 function showDetails(result) {
   console.log('帧起始符：', getResult(result[0]))
   console.log('从机类型：', getResult(result[1]))
@@ -123,11 +128,11 @@ function showDetails(result) {
   const n = parseInt(result.slice(10, 12).toString('hex'), 16)
   const sIndex = 12 + n
   const data = result.slice(12, sIndex)
-  console.log('数据域：', getBufResults(data))
-  console.log('校验码：', getBufResults([result[sIndex], result[sIndex + 1]]))
-  console.log('帧结束符：', getResult(result[sIndex + 2]))
+  console.log('数据域：', getBufResults(data), data.toString('hex'))
+  // console.log('校验码：', getBufResults([result[sIndex], result[sIndex + 1]]))
+  // console.log('帧结束符：', getResult(result[sIndex + 2]))
 }
-showDetails(buf6)
+showDetails(buf88)
 
 function FixZero(num, n) {
   return (Array(n).join('0') + num).slice(-n)

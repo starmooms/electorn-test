@@ -213,10 +213,10 @@ export default class WorkerSee extends Vue {
     )
     if (data.status) {
       const setInput = (item: any) => {
-        if (item.name === '循环') {
-          return `${item.name}${item.data + 1}${item.unit}`
-        }
-        return `${item.data}${item.unit}`
+        // if (item.name === '循环') {
+        //   return `${item.name}${item.data + 1}${item.unit}`
+        // }
+        return `${item.name}：${item.data}${item.unit}`
       }
       this.nowStepList = data.data.map((item: any) => {
         const worker = item.worker.map(setInput)

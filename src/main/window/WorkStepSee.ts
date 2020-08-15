@@ -31,10 +31,17 @@ export default class WorkStepSee {
   getInputData(bufData: BufData, key: string) {
     const inputItem = workStepsInput[key]
     console.log(inputItem)
+    if (['循环次数', '循环起始', '时间(秒)'].indexOf(inputItem.name) >= 0) {
+      console.log('+++++ ' + inputItem.name)
+      console.log(key)
+      console.log('工步帧', bufData.buf)
+      console.log('启动模式', bufData.getIndex(5).toString(16))
+      console.log('参数内容', bufData.getIndex(inputItem.serial).toString(16))
+    }
     return {
       data: bufData.getIndex(inputItem.serial),
       unit: inputItem.unit,
-      name: inputItem.name
+      name: inputItem.name.replace(/\(.+\)/, '')
     }
   }
 
@@ -59,6 +66,8 @@ export default class WorkStepSee {
       logger.info('读工步发送', data.buf.toString('hex'))
       // const a = '00000000000000000000040000010000a10000010002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000' // eslint-disable-line
       // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b00000022b0000029a00000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000009000000000000' // eslint-disable-line
+      // const a =
+      //   '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b0000000370000004200000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000063000000000000'
       // const resultBuf = Buffer.from(a, 'hex')
 
       const resultBuf = await this.usbManager.post({
@@ -69,7 +78,7 @@ export default class WorkStepSee {
       const stepsLen = resultBuf.readUInt8(10)
       const stepsBuf = resultBuf.slice(11)
       const stepsList: any[] = []
-      const bufModel = new BufModel([1, 1, 1, 1, 1, 1, 2, 2, 4, 4, 4, 4, 1, 1, 4]) // eslint-disable-line
+      const bufModel = new BufModel([1, 1, 1, 1, 1, 1, 4, 2, 4, 4, 4, 4, 1, 4, 4]) // eslint-disable-line
       logger.info('读工步数目', stepsLen)
       for (let i = 0; i < stepsLen; i++) {
         const start = bufModel.bufLength * i

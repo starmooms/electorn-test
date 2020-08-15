@@ -11,6 +11,9 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <el-button v-if="portItem" @click="setTranslate(portItem)">
+        {{ portItem.readTranslate ? '关闭采样' : '打开采样' }}
+      </el-button>
     </el-form>
 
     <ul class="master-list" v-if="portItem">
@@ -55,6 +58,12 @@
                       >
                         编辑工步
                       </a>
+                      <a
+                        href="javascript:;"
+                        @click="calOpen(channel, slaver, master)"
+                      >
+                        校准
+                      </a>
                     </template>
                   </ContextMenu>
                 </li>
@@ -78,7 +87,8 @@ import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { channelList } from '@/shared/config/port'
 import { typedKeys } from '@/shared/utils'
 import StepSetModal from './components/StepSetModal.vue'
-import { setChannelStatus } from '@/renderer/ipc/channel'
+import { setChannelStatus, translateSet } from '@/renderer/ipc/channel'
+import { PortItem } from '@/main/core/USBManager'
 
 @Component({
   name: 'Home',
@@ -107,6 +117,13 @@ export default class Home extends Vue {
     channelId: null
   }
 
+  calShow = false
+  calShowItem: any = {
+    masterId: null,
+    slaverId: null,
+    channelId: null
+  }
+
   changeStatus(status, channel, slaver) {
     if (!this.portItem) {
       return this.$message.info('请先选择串口')
@@ -129,6 +146,16 @@ export default class Home extends Vue {
     this.stepsShow = true
   }
 
+  calOpen(channel: any, slaver: any, master: any) {
+    this.calShowItem = {
+      path: this.portItem.path,
+      masterId: master.id,
+      slaverId: slaver.id,
+      channelId: channel.id
+    }
+    this.calShow = true
+  }
+
   showChannel(master: any, channel: any, slaver: any) {
     this.$command.send('/createdWin/port/workerSee', {
       path: this.portItem.path,
@@ -138,11 +165,25 @@ export default class Home extends Vue {
     })
   }
 
+  async setTranslate(portItem: any) {
+    const status = !portItem.readTranslate
+    await translateSet({
+      path: portItem.path,
+      status
+    })
+    portItem.readTranslate = status
+  }
+
   mounted() {
     this.$command.on({
       eventName: '/port/sendList',
       onEmit: data => {
-        this.portList = data.list
+        this.portList = data.list.map(item => {
+          return {
+            readTranslate: false,
+            ...item
+          }
+        })
       },
       vm: this
     })

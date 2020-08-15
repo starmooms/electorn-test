@@ -49,7 +49,7 @@ export const WORKSTEPS = {
 
 /** 工步input字节序号 */
 export const workStepsInput = {
-  time: { len: 2, serial: 6, unit: 's', name: '时间(秒)' },
+  time: { len: 4, serial: 6, unit: 's', name: '时间(秒)' },
   U: { len: 2, serial: 7, unit: 'mV', name: '电压(mV)' },
   I: { len: 4, serial: 8, unit: 'mA', name: '电流(mA)' },
   W: { len: 4, serial: 9, unit: 'W', name: '功率(W)' },
@@ -59,15 +59,15 @@ export const workStepsInput = {
   IEnd: { len: 4, serial: 14, unit: '', name: '截止电流' }
 }
 
-/** 读工步数据 */
-export const workStepsRead = {
-  U: { len: 2, serial: 6, name: '电压(mV)' },
-  I: { len: 4, serial: 7, name: '电流(mA)' },
-  temp: { len: 1, serial: 8, name: '温度(℃)' },
-  time: { len: 2, serial: 9, name: '工步时间(秒)' },
-  Ah: { len: 4, serial: 10, name: '容量(mAh)' },
-  Wh: { len: 4, serial: 11, name: '电量(mWh)' }
-}
+// /** 读工步数据 */
+// export const workStepsRead = {
+//   U: { len: 2, serial: 6, name: '电压(mV)' },
+//   I: { len: 4, serial: 7, name: '电流(mA)' },
+//   temp: { len: 1, serial: 8, name: '温度(℃)' },
+//   time: { len: 4, serial: 9, name: '工步时间(秒)' },
+//   Ah: { len: 4, serial: 10, name: '容量(mAh)' },
+//   Wh: { len: 4, serial: 11, name: '电量(mWh)' }
+// }
 
 export const END_STATUS = {
   '00': '未结束',

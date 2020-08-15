@@ -15,7 +15,7 @@ interface SetSteps {
 }
 
 export function setChannelStatus(data: SetStatus) {
-  $command.invoke('/port/slaver/setStatus', data)
+  return $command.invoke('/port/slaver/setStatus', data)
 }
 
 /** 写工步 */
@@ -26,6 +26,11 @@ export function setSteps(data: SetSteps) {
 /** 读工步 */
 export function getWorkStep(name: string) {
   return $command.invoke(name)
+}
+
+/** 关闭采样 */
+export function translateSet(data: any) {
+  return $command.invoke(`/port/translateSet`, data)
 }
 
 // export default class Ipc {

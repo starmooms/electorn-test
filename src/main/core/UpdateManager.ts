@@ -5,14 +5,14 @@ import is from 'electron-is'
 import { autoUpdater, UpdateInfo } from 'electron-updater'
 import logger from './Logger'
 
-const uploadUrl = process.env.VUE_APP_UPLOADURL
-
 if (is.dev()) {
-  logger.warn(__dirname + '=====', '???')
   autoUpdater.updateConfigPath = resolve(__dirname, 'latest.yml')
-} else if (uploadUrl) {
-  autoUpdater.setFeedURL(uploadUrl)
 }
+
+// const uploadUrl = process.env.VUE_APP_UPLOADURL
+// if (uploadUrl) {
+//   autoUpdater.setFeedURL(uploadUrl)
+// }
 
 interface Options {
   autoCheck?: boolean

@@ -154,19 +154,19 @@ export default class WorkerSee extends Vue {
 
   // 2
   nowStepDialog = false
-  nowStepList = [
-    {
-      msg: '1.恒流充电：1000mA',
-      limt: '12600mV'
-    },
-    {
-      msg: '2.恒压充电：12600mV',
-      limt: '30mA'
-    },
-    {
-      msg: '3.静置10Min',
-      limt: ''
-    }
+  nowStepList: any[] = [
+    // {
+    //   msg: '1.恒流充电：1000mA',
+    //   limt: '12600mV'
+    // },
+    // {
+    //   msg: '2.恒压充电：12600mV',
+    //   limt: '30mA'
+    // },
+    // {
+    //   msg: '3.静置10Min',
+    //   limt: ''
+    // }
   ]
 
   nowStepShow() {

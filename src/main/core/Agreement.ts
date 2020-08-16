@@ -1,5 +1,8 @@
 import { toHex, FixZero } from '../utils'
 
+export type ReadDataBack = ReturnType<Agreement['readData']>
+export type SetDataBack = ReturnType<Agreement['setData']>
+
 class Agreement {
   nowSId = 0
   // constructor() {
@@ -40,7 +43,7 @@ class Agreement {
     return id
   }
 
-  setData(data: string | Buffer, code = 0x00, getSId = false) {
+  setData(data: string | Buffer, code = 0x00) {
     let dataBuf: null | Buffer = null
     if (data) {
       dataBuf = typeof data === 'string' ? Buffer.from(data, 'hex') : data
@@ -111,8 +114,8 @@ class Agreement {
     // console.log('readData的buf', buf)
     // logger.info('数据域长度', dataLen)
     const dataEndLen = dataLen + dataStart
-    const checkBuf = buf.slice(0, dataEndLen)
-    const crc16Buf = buf.readUInt16BE(dataEndLen)
+    // const checkBuf = buf.slice(0, dataEndLen)
+    // const crc16Buf = buf.readUInt16BE(dataEndLen)
     // if (this.crc16(checkBuf) !== crc16Buf) {
     //   logger.info('校验失败', crc16Buf.toString(16))
     // }

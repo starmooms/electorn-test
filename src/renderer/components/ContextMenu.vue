@@ -57,7 +57,6 @@ export default class ContextMenu extends Vue {
   // }
 
   private contextMenuHandler(e: MouseEvent) {
-    console.log(ContextMenu.currentContext)
     this.x = e.clientX
     this.y = e.clientY
     this.show = true

@@ -1,7 +1,6 @@
 import winManager from '../core/WinManager'
 import ipcManage from '../core/IpcManage'
 import USBManager from '../core/USBManager'
-import logger from '../core/Logger'
 
 interface Opts {
   path: string

@@ -3,14 +3,14 @@ import $command from '@/renderer/command'
 interface SetStatus {
   path: string
   slaverId: number
-  channel: number
+  channelId: number
   status: string
 }
 
 interface SetSteps {
   path: string
   slaverId: number
-  channel: number
+  channelId: number
   list: any[]
 }
 
@@ -28,9 +28,19 @@ export function getWorkStep(name: string) {
   return $command.invoke(name)
 }
 
-/** 关闭采样 */
+/** 开启/关闭 采样 */
 export function translateSet(data: any) {
   return $command.invoke(`/port/translateSet`, data)
+}
+
+/** 设置校准 */
+export function setCal(data: any) {
+  return $command.invoke(`/port/cal/set`, data)
+}
+
+/** 设置校准 */
+export function readCal(data: any) {
+  return $command.invoke(`/port/cal/read`, data)
 }
 
 // export default class Ipc {

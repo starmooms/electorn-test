@@ -109,3 +109,31 @@
 // console.log(a[11])
 
 // console.log(a.readUInt16BE(10))
+
+// function intToFloat(number) {
+//   number = ~-(number + 1)
+//   console.log(number)
+
+//   if (number < 0) {
+//     number += Math.pow(2, 32)
+//   }
+//   console.log(number)
+//   const float = Buffer.from(number.toString(16), 'hex').readFloatBE(0)
+
+//   const significantDigits = 5
+//   return parseFloat(float.toFixed(significantDigits))
+// }
+// intToFloat(1.4)
+
+const a = Buffer.alloc(4)
+a.writeFloatBE(-1.4, 0)
+console.log(a)
+console.log(a.readFloatBE(0).toFixed(2))
+
+// const a = Buffer.alloc(8)
+// a.writeDoubleBE(1.4, 0)
+// console.log(a)
+// console.log(a.readDoubleBE(0))
+
+// const a = Buffer.from([0x00])
+// console.log(a.toString('hex'))

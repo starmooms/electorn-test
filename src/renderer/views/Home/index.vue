@@ -19,7 +19,7 @@
     <ul class="master-list" v-if="portItem">
       <li class="master-item" v-for="(master, mKey) in batteryList" :key="mKey">
         <div class="master-box" @click="master.slaverShow = !master.slaverShow">
-          <span>{{ mKey }}</span>
+          <span>{{ master.name }}</span>
           <svg-icon class="channel-icon" icon-class="down"></svg-icon>
         </div>
         <el-collapse-transition>
@@ -29,7 +29,7 @@
               v-for="(slaver, sKey) in master.slaverList"
               :key="sKey"
             >
-              <div class="slaver-item-l">{{ sKey }}</div>
+              <div class="slaver-item-l">{{ slaver.name }}</div>
               <ul class="channel-list">
                 <li
                   class="channel-item"
@@ -54,15 +54,15 @@
                       </a>
                       <a
                         href="javascript:;"
-                        @click="stepsSetShow(channel, slaver, master)"
-                      >
-                        编辑工步
-                      </a>
-                      <a
-                        href="javascript:;"
                         @click="calOpen(channel, slaver, master)"
                       >
                         校准
+                      </a>
+                      <a
+                        href="javascript:;"
+                        @click="stepsSetShow(channel, slaver, master)"
+                      >
+                        编辑工步
                       </a>
                     </template>
                   </ContextMenu>
@@ -78,6 +78,8 @@
       :show.sync="stepsShow"
       :showItem="stepsShowItem"
     ></StepSetModal>
+
+    <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
   </div>
 </template>
 
@@ -86,15 +88,16 @@ import { Component, Vue } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { channelList } from '@/shared/config/port'
 import { typedKeys } from '@/shared/utils'
-import StepSetModal from './components/StepSetModal.vue'
 import { setChannelStatus, translateSet } from '@/renderer/ipc/channel'
-import { PortItem } from '@/main/core/USBManager'
+import StepSetModal from '@/renderer/components/StepSetModal.vue'
+import CalModal from '@/renderer/components/CalModal.vue'
 
 @Component({
   name: 'Home',
   components: {
     ContextMenu,
-    StepSetModal
+    StepSetModal,
+    CalModal
   }
 })
 export default class Home extends Vue {
@@ -131,7 +134,7 @@ export default class Home extends Vue {
     setChannelStatus({
       path: this.portItem.path,
       slaverId: slaver.id,
-      channel: channel.id,
+      channelId: channel.id,
       status
     })
   }
@@ -224,6 +227,7 @@ export default class Home extends Vue {
   align-items: center;
   border-bottom: 1px solid #ccc;
   padding: 14px 10px;
+  background-color: #eff0f1;
   &:last-child {
     border-bottom: none;
   }

@@ -3,32 +3,12 @@ import usbDetection from 'usb-detection'
 import ipcManage from './IpcManage'
 import { controlCode } from '@/shared/config/port'
 import agreement from './Agreement'
-import { toHex } from '../utils'
 import PortItem from './PortItem'
-
-const Delimiter = SerialPort.parsers.Delimiter
 
 export interface ArgeementData {
   buf: Buffer
   sId: string
 }
-
-// export interface PostParams {
-//   portPath?: string
-//   portItem?: PortItem
-//   data: {
-//     buf: Buffer
-//     sId: string
-//   }
-//   timeOut?: 2000
-// }
-
-// export interface PortItem {
-//   port: SerialPort
-//   parser: SerialPort.parsers.Delimiter
-//   emitList: any
-//   translate: any
-// }
 
 export default class USBManager {
   cache = new Map<string, PortItem>()
@@ -45,6 +25,8 @@ export default class USBManager {
     this.writeSteps()
     this.getPortList()
     this.setTranslate()
+    this.setCal()
+    this.readCal()
   }
 
   /** 开始监测USB */
@@ -119,7 +101,7 @@ export default class USBManager {
       if (!protItem) return
       const buf = Buffer.alloc(3)
       buf.writeUIntBE(data.slaverId, 1, 1)
-      buf.writeUIntBE(data.channel, 2, 1)
+      buf.writeUIntBE(data.channelId, 2, 1)
       const result = agreement.setData(buf, controlCode.slaver[data.status])
       protItem.port.write(result.buf)
     })
@@ -139,21 +121,17 @@ export default class USBManager {
 
   /** 设置校准 */
   setCal() {
-    ipcManage.handle('/port/cal/set', (event, data: any) => {
-      const protItem = this.getPortData(data.path)
-      if (!protItem) return
-      const buf = Buffer.from([
-        0x00,
-        toHex(data.slaverId, 1),
-        toHex(data.list.length, 1)
-      ])
-      const writeArr = []
-      data.list.forEach((item: any) => {
-        const calItem = [
-          toHex(data.channelId, 1),
-          ...Array(30).fill(toHex(0, 4))
-        ]
-      })
+    ipcManage.handle('/port/cal/set', async (event, data: any) => {
+      const portItem = this.getPortData(data.path)
+      return await portItem.setCal(data)
+    })
+  }
+
+  /** 读校准 */
+  readCal() {
+    ipcManage.handle('/port/cal/read', async (event, data: any) => {
+      const portItem = this.getPortData(data.path)
+      return await portItem.readCal(data)
     })
   }
 }

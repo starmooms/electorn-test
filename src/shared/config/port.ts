@@ -10,6 +10,57 @@ export const workSteps = {
   // WCi: { name: '恒功率充电', value: 'A4', input: null }
 }
 
+export const WORKSTEPS_MAP = new Map([
+  [
+    'a1',
+    {
+      name: '恒流充电',
+      type: 'ICi',
+      input: { worker: ['I'], limt: ['U'] }
+    }
+  ],
+  [
+    'a2',
+    {
+      name: '恒压充电',
+      type: 'UCi',
+      input: { worker: ['U'], limt: ['I'] }
+    }
+  ],
+  [
+    'a3',
+    {
+      name: '恒流恒压充电',
+      type: 'IUCi',
+      input: { worker: ['I', 'U'], limt: ['IEnd'] }
+    }
+  ],
+  [
+    'b0',
+    {
+      name: '恒流放电',
+      type: 'IDisCi',
+      input: { worker: ['I'], limt: ['U'] }
+    }
+  ],
+  [
+    '90',
+    {
+      name: '搁置',
+      type: 'shelve',
+      input: { worker: ['time'], limt: [] }
+    }
+  ],
+  [
+    '70',
+    {
+      name: '循环',
+      type: 'loop',
+      input: { worker: ['loopStart'], limt: ['loopNum'], other: ['loopNow'] }
+    }
+  ]
+])
+
 /** 工步 */
 export const WORKSTEPS = {
   a1: {
@@ -43,7 +94,7 @@ export const WORKSTEPS = {
   '70': {
     name: '循环',
     type: 'loop',
-    input: { worker: ['loopStart'], limt: ['loopNum'] }
+    input: { worker: ['loopStart'], limt: ['loopNum'], other: ['loopNow'] }
   }
 }
 
@@ -56,7 +107,8 @@ export const workStepsInput = {
   R: { len: 4, serial: 10, unit: 'mΩ', name: '电阻(mΩ)' },
   loopNum: { len: 4, serial: 11, unit: '', name: '循环次数' },
   loopStart: { len: 1, serial: 12, unit: '', name: '循环起始' },
-  IEnd: { len: 4, serial: 14, unit: '', name: '截止电流' }
+  loopNow: { len: 1, serial: 13, unit: '', name: '当前循环次数' },
+  IEnd: { len: 4, serial: 14, unit: 'mA', name: '截止电流' }
 }
 
 // /** 读工步数据 */
@@ -99,13 +151,48 @@ for (let i = 0; i < 20; i++) {
     }
     slaverObj[`slaver_${j}`] = {
       id: j,
+      name: `从控${j + 1}`,
       list: obj
     }
   }
   channelList[`master_${i}`] = {
     id: i,
+    name: `主控${i + 1}`,
     slaverList: slaverObj
   }
+}
+
+interface CalItem {
+  name: string
+  key: string
+  index: number
+  value: number | string
+}
+
+/** 校准列表 */
+export function getCalList() {
+  const list: CalItem[] = []
+  let index = 1
+  ;['电压校准参数', '电流校准参数', '电流反向校准参数'].forEach(item => {
+    for (let i = 1; i <= 5; i++) {
+      list.push(
+        {
+          name: item,
+          key: `${i}-a`,
+          index: index,
+          value: 0
+        },
+        {
+          name: item,
+          key: `${i}-b`,
+          index: index + 1,
+          value: 0
+        }
+      )
+      index += 2
+    }
+  })
+  return list
 }
 
 /** 控制码 */
@@ -117,6 +204,9 @@ export const controlCode = {
     pause: 0xec,
     continued: 0xed,
     close: 0xee,
-    stepsRead: 0xc3
+    stepsRead: 0xc3,
+    calRead: 0xc8,
+    calSet: 0xe8,
+    translateRead: 0xc5
   }
 }

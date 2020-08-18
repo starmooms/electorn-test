@@ -1,5 +1,16 @@
-import { workSteps, workStepsInput } from '@/shared/config/port'
+import {
+  workSteps,
+  WORKSTEPS,
+  WORKSTEPS_MAP,
+  workStepsInput
+} from '@/shared/config/port'
 import { typedKeys } from '@/shared/utils'
+
+interface StepsSelect {
+  label: string
+  value: string
+  input: any[]
+}
 
 export function getPortSelectList() {
   return typedKeys(workSteps).map(key => {
@@ -12,18 +23,42 @@ export function getPortSelectList() {
   })
 }
 
+// export function getPortSelectList() {
+//   const result: StepsSelect[] = []
+//   WORKSTEPS_MAP.forEach((value, key) => {
+//     const step = WORKSTEPS[key]
+//     result.push({
+//       label: step.name,
+//       value: key,
+//       input: step.input || []
+//     })
+//   })
+//   return result
+// }
+
+// export function getPortSelectList() {
+//   const result: StepsSelect[] = []
+//   WORKSTEPS_MAP.forEach((value, key) => {
+//     const step = WORKSTEPS[key]
+//     result.push({
+//       label: step.name,
+//       value: key,
+//       input: step.input || []
+//     })
+//   })
+//   return result
+// }
+
 export function getPortInputList() {
   const inputList = {}
-  const stepList = {}
   typedKeys(workStepsInput).forEach(key => {
     const item = workStepsInput[key]
     inputList[key] = {
       name: item.name,
       key
     }
-    stepList[key] = null
   })
-  return { inputList, stepList }
+  return { inputList }
 }
 
 export function getChartsData() {

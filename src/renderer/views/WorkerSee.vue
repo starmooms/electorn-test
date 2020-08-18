@@ -1,10 +1,10 @@
 <template>
   <div class="worker-see">
     <el-divider content-position="left">串口</el-divider>
-    <p>
-      slaverId: {{ slaverId }}
+    <p v-if="portItem">
+      slaverId: {{ portItem.slaverId }}
       <br />
-      channelId: {{ channelId }}
+      channelId: {{ portItem.channelId }}
     </p>
 
     <el-divider content-position="left">操作</el-divider>
@@ -12,23 +12,52 @@
       <el-button
         v-for="item in btnList"
         :key="item.name"
-        @click="btnc(item.action)"
+        @click="setStatus(item.action)"
       >
         {{ item.name }}
       </el-button>
+      <el-button @click="calOpen">校准</el-button>
+      <el-button @click="workStepsOpen">编辑工步</el-button>
     </div>
 
     <el-divider content-position="left">当前工步</el-divider>
     <div class="steps-list">
       <el-table border max-height="40vh" :data="nowStepList">
         <el-table-column label="工步信息" prop="msg"></el-table-column>
-        <el-table-column label="工步限制条件" prop="limt"></el-table-column>
+        <el-table-column label="工步工作条件" prop="msg">
+          <template slot-scope="{ row }">
+            <el-tag
+              v-for="item in row.worker"
+              :key="item.label"
+              effect="dark"
+              class="tag-item"
+            >
+              {{ item.label }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="工步限制条件" prop="limt">
+          <template slot-scope="{ row }">
+            <el-tag
+              v-for="item in row.limt"
+              :key="item.label"
+              effect="dark"
+              class="tag-item"
+            >
+              {{ item.label }}
+            </el-tag>
+          </template>
+        </el-table-column>
       </el-table>
     </div>
 
     <div class="echart-box">
       <v-chart :options="polar"></v-chart>
     </div>
+
+    <StepSetModal :show.sync="stepsShow" :showItem="portItem"></StepSetModal>
+
+    <CalModal :show.sync="calShow" :showItem="portItem"></CalModal>
   </div>
 </template>
 
@@ -42,13 +71,20 @@ import 'echarts/lib/component/axisPointer'
 import 'echarts/lib/component/dataZoom'
 import { setChannelStatus, getWorkStep } from '../ipc/channel'
 import command from '../command'
-// import { getChartsData } from '../utils/getConfig'
+import StepSetModal from '@/renderer/components/StepSetModal.vue'
+import CalModal from '@/renderer/components/CalModal.vue'
 
-// const chartData = getChartsData()
+interface PortData {
+  path: string
+  slaverId: number
+  channelId: number
+}
 
 @Component({
   components: {
-    'v-chart': ECharts
+    'v-chart': ECharts,
+    StepSetModal,
+    CalModal
   }
 })
 export default class WorkerSee extends Vue {
@@ -58,18 +94,9 @@ export default class WorkerSee extends Vue {
     { name: '继续', action: 'continued' },
     { name: '关闭', action: 'close' }
   ]
-
-  get path() {
-    return this.$route.params.path
-  }
-
-  get slaverId() {
-    return Number(this.$route.params.slaverId)
-  }
-
-  get channelId() {
-    return Number(this.$route.params.channelId)
-  }
+  portItem: PortData | null = null
+  stepsShow = false
+  calShow = false
 
   polar = {
     tooltip: {
@@ -110,18 +137,18 @@ export default class WorkerSee extends Vue {
     ],
     yAxis: [
       {
-        name: '电压',
-        max: 5000,
+        name: '电压(mV)',
+        max: 10000,
         min: 0,
         splitNumber: 25,
         position: 'left',
         splitLine: { show: true }
       },
       {
-        name: '电流',
-        max: 6000,
+        name: '电流(mA)',
+        max: 10000,
         min: 0,
-        splitNumber: 24,
+        splitNumber: 25,
         position: 'right',
         splitLine: { show: false }
       }
@@ -154,102 +181,70 @@ export default class WorkerSee extends Vue {
 
   // 2
   nowStepDialog = false
-  nowStepList: any[] = [
-    // {
-    //   msg: '1.恒流充电：1000mA',
-    //   limt: '12600mV'
-    // },
-    // {
-    //   msg: '2.恒压充电：12600mV',
-    //   limt: '30mA'
-    // },
-    // {
-    //   msg: '3.静置10Min',
-    //   limt: ''
-    // }
-  ]
+  nowStepList: any[] = []
 
   nowStepShow() {
     this.nowStepDialog = true
   }
 
-  btnc(status: string) {
+  setStatus(status: string) {
+    if (!this.portItem) return
     setChannelStatus({
-      path: this.path,
-      slaverId: this.slaverId,
-      channel: this.channelId,
+      ...this.portItem,
       status
     })
   }
 
-  setTimer: any = null
-  created() {
-    // let i = 0
-    // this.setTimer = setInterval(() => {
-    //   i += 20
-    //   this.polar.series[0].data.push([
-    //     i,
-    //     Math.floor(Math.random() * 1400) + 3600
-    //   ])
-    //   this.polar.series[1].data.push([i, Math.floor(Math.random() * 3000)])
-    // }, 1000)
+  calOpen() {
+    this.calShow = true
   }
 
-  destroy() {
-    clearInterval(this.setTimer)
+  workStepsOpen() {
+    this.stepsShow = true
   }
 
   async getWorkStep() {
-    // const data = await this.$command.invoke(
-    //   `getWorkerStep/${encodeURIComponent(this.path)}/${this.slaverId}/${
-    //     this.channelId
-    //   }`
-    // )
-
+    if (!this.portItem) return
+    const { path, slaverId, channelId } = this.portItem
     const data = await getWorkStep(
-      `getWorkerStep/${encodeURIComponent(this.path)}/${this.slaverId}/${
-        this.channelId
-      }`
+      `getWorkerStep/${encodeURIComponent(path)}/${slaverId}/${channelId}`
     )
     if (data.status) {
       const setInput = (item: any) => {
-        // if (item.name === '循环') {
-        //   return `${item.name}${item.data + 1}${item.unit}`
-        // }
-        return `${item.name}：${item.data}${item.unit}`
+        return {
+          label: `${item.name}：${item.data}${item.unit}`
+        }
       }
       this.nowStepList = data.data.map((item: any) => {
         const worker = item.worker.map(setInput)
         const limt = item.limt.map(setInput)
         return {
-          msg: `${item.id + 1}.${item.name}：${worker.join(' ')}`,
-          limt: limt.join(' ')
+          msg: `${item.id + 1}.${item.name}`,
+          worker,
+          limt
         }
       })
     }
-    console.log(data)
+  }
+
+  created() {
+    this.portItem = {
+      path: this.$route.params.path,
+      slaverId: Number(this.$route.params.slaverId),
+      channelId: Number(this.$route.params.channelId)
+    }
   }
 
   mounted() {
     let i = 0
-    // setInterval(() => {
-    //   i++
-    //   this.polar.xAxis.data.push(i)
-    //   this.polar.series[0].data.push([
-    //     i,
-    //     Math.floor(Math.random() * 1400) + 3600
-    //   ])
-    //   this.polar.series[1].data.push([i, Math.floor(Math.random() * 3000)])
-    // }, 1000)
     command.on({
-      eventName: `/port/translate/${this.slaverId}`,
+      eventName: `/port/translate/${this.portItem!.slaverId}`,
       onEmit: data => {
-        const item = data.list[this.channelId]
+        const item = data.list[this.portItem!.channelId]
         i++
         this.polar.xAxis.data.push(i)
         this.polar.series[0].data.push([i, item.U])
         this.polar.series[1].data.push([i, item.I])
-        // console.log(data)
       },
       vm: this
     })
@@ -260,8 +255,12 @@ export default class WorkerSee extends Vue {
 
 <style lang="scss">
 .steps-list {
-  max-width: 600px;
-  min-width: 600px;
+  width: 800px;
+  .tag-item {
+    & + .tag-item {
+      margin-left: 12px;
+    }
+  }
 }
 
 .echart-box {

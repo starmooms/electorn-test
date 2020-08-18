@@ -1,7 +1,8 @@
 import { BrowserWindow, ipcMain } from 'electron'
-import USBManager, { PortItem } from '../core/USBManager'
+import USBManager from '../core/USBManager'
 import iconv from 'iconv-lite'
 import winManager from '../core/WinManager'
+import PortItem from '../core/PortItem'
 
 export default class PortWindow {
   usbManager: USBManager

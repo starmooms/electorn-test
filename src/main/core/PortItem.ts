@@ -7,7 +7,8 @@ import {
   workSteps,
   controlCode,
   WORKSTEPS,
-  getCalList
+  getCalList,
+  channelList
 } from '@/shared/config/port'
 import BufModel, { BufData, BufWriteListModel } from '../utils/ParsBuf'
 
@@ -43,11 +44,13 @@ export default class PortItem {
   parser: SerialPort.parsers.Delimiter
   translate = new Map<number, MasterTranslate>()
   emitList = new Map<string, (dataBuf: Buffer) => any>()
+  channelList!: any
 
   constructor(path: string) {
     const { port, parser } = this.created(path)
     this.port = port
     this.parser = parser
+    this.channelList = channelList
   }
 
   created(path: string) {
@@ -121,7 +124,11 @@ export default class PortItem {
         step.input.forEach((type: string) => {
           const inputMap = workStepsInput[type]
           if (inputMap) {
-            stepByt[inputMap.serial] = toHex(item[type], inputMap.len)
+            let value = item[type]
+            if (type === 'loopStart') {
+              value = Number(value) - 1
+            }
+            stepByt[inputMap.serial] = toHex(value, inputMap.len)
           }
         })
         writeArr = writeArr.concat(stepByt)
@@ -135,8 +142,12 @@ export default class PortItem {
 
   readStepsInput(bufData: BufData, key: string) {
     const inputItem = workStepsInput[key]
+    let data = bufData.getIndex(inputItem.serial) as number
+    if (key === 'loopStart') {
+      data += 1
+    }
     return {
-      data: bufData.getIndex(inputItem.serial),
+      data,
       unit: inputItem.unit,
       name: inputItem.name.replace(/\(.+\)/, '')
     }
@@ -199,6 +210,7 @@ export default class PortItem {
     let timer: NodeJS.Timeout
     const getData = () => {
       timer = setTimeout(async () => {
+        const translate = this.translate.get(masterId)
         try {
           let resultBuf: Buffer
           if (isDev) {
@@ -230,7 +242,7 @@ export default class PortItem {
               errorCode: bufData.getIndex(5)
             })
           }
-          const translate = this.translate.get(masterId)
+
           if (translate) {
             const winArr = translate.winArr
             winArr.forEach(winName => {
@@ -249,7 +261,9 @@ export default class PortItem {
         } catch (err) {
           logger.warn(err)
         } finally {
-          getData()
+          if (translate && translate.close) {
+            getData()
+          }
         }
       }, 1000)
     }
@@ -272,7 +286,7 @@ export default class PortItem {
 
   /** 添加win */
   emitTranslate(opts: any) {
-    const masterId = opts.masterId
+    const masterId = 0 // opts.masterId
     const winName = opts.winName
     const translate = this.translate.get(masterId)
     if (translate) {
@@ -326,5 +340,22 @@ export default class PortItem {
       item.value = bufData.getIndex(item.index)
     })
     return { list }
+  }
+
+  /** 获取列表 */
+  async getChannelList(opts: any) {
+    if (opts.type) {
+      const { masterId, slaverId } = opts
+      const masterList = this.channelList[`master_${masterId}`]
+      if (!masterList) {
+        throw new Error(`不存在主控 ${masterId}`)
+      }
+      const slaverList = masterList.slaverList[`slaver_${slaverId}`]
+      if (!slaverList) {
+        throw new Error(`不存在从控 ${opts.master}`)
+      }
+      return slaverList
+    }
+    return this.channelList
   }
 }

@@ -51,9 +51,7 @@
       </el-table>
     </div>
 
-    <div class="echart-box">
-      <v-chart :options="polar"></v-chart>
-    </div>
+    <TrendChart ref="trendChart"></TrendChart>
 
     <StepSetModal :show.sync="stepsShow" :showItem="portItem"></StepSetModal>
 
@@ -62,17 +60,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
-import ECharts from 'vue-echarts'
-import 'echarts/lib/chart/line'
-import 'echarts/lib/component/tooltip'
-import 'echarts/lib/component/toolbox'
-import 'echarts/lib/component/axisPointer'
-import 'echarts/lib/component/dataZoom'
+import { Component, Vue, Prop } from 'vue-property-decorator'
 import { setChannelStatus, getWorkStep } from '../ipc/channel'
 import command from '../command'
 import StepSetModal from '@/renderer/components/StepSetModal.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
+import TrendChart from '@/renderer/components/TrendChart.vue'
 
 interface PortData {
   path: string
@@ -82,12 +75,16 @@ interface PortData {
 
 @Component({
   components: {
-    'v-chart': ECharts,
+    TrendChart,
     StepSetModal,
     CalModal
   }
 })
 export default class WorkerSee extends Vue {
+  public $refs!: {
+    trendChart: TrendChart
+  }
+
   btnList = [
     { name: '开始', action: 'start' },
     { name: '暂停', action: 'pause' },
@@ -97,87 +94,6 @@ export default class WorkerSee extends Vue {
   portItem: PortData | null = null
   stepsShow = false
   calShow = false
-
-  polar = {
-    tooltip: {
-      // alwaysShowContent: false,
-      trigger: 'axis',
-      backgroundColor: 'rgba(245, 245, 245, 0.8)',
-      borderWidth: 1,
-      borderColor: '#ccc',
-      padding: 10,
-      textStyle: {
-        color: '#000'
-      },
-      extraCssText: 'width: 170px'
-      // axisPointer: {
-      //   type: 'line',
-      //   // trigger: 'axis',
-      //   extraCssText: 'width: 400px'
-      // }
-    },
-    // axisPointer: {
-    //   // show: true,
-    //   type: 'line',
-    //   snap: true,
-    //   extraCssText: 'width: 400px'
-    // },
-    xAxis: {
-      type: 'value',
-      data: [0]
-      // splitNumber: 5,
-    },
-    grid: {},
-    dataZoom: [
-      {
-        type: 'slider',
-        xAxisIndex: [0],
-        show: true
-      }
-    ],
-    yAxis: [
-      {
-        name: '电压(mV)',
-        max: 10000,
-        min: 0,
-        splitNumber: 25,
-        position: 'left',
-        splitLine: { show: true }
-      },
-      {
-        name: '电流(mA)',
-        max: 10000,
-        min: 0,
-        splitNumber: 25,
-        position: 'right',
-        splitLine: { show: false }
-      }
-    ],
-    series: [
-      {
-        name: '电压',
-        data: [] as number[][],
-        type: 'line',
-        yAxisIndex: 0,
-        lineStyle: { color: 'green' },
-        itemStyle: { color: 'green' },
-        tooltip: {
-          formatter: function(param) {
-            console.log(param)
-            return `电压：${param.data[1]}`
-          }
-        }
-      },
-      {
-        name: '电流',
-        data: [] as number[][],
-        type: 'line',
-        yAxisIndex: 1,
-        lineStyle: { color: 'red' },
-        itemStyle: { color: 'red' }
-      }
-    ]
-  }
 
   // 2
   nowStepDialog = false
@@ -235,25 +151,39 @@ export default class WorkerSee extends Vue {
     }
   }
 
-  mounted() {
+  setCharts() {
     let i = 0
+    console.log(this.portItem!.slaverId)
     command.on({
       eventName: `/port/translate/${this.portItem!.slaverId}`,
-      onEmit: data => {
+      onEmit: (data: any) => {
         const item = data.list[this.portItem!.channelId]
         i++
-        this.polar.xAxis.data.push(i)
-        this.polar.series[0].data.push([i, item.U])
-        this.polar.series[1].data.push([i, item.I])
+        this.$refs.trendChart.update({
+          time: i,
+          U: item.U,
+          I: item.I
+        })
       },
       vm: this
     })
+  }
+
+  mounted() {
+    console.log('mounted')
     this.getWorkStep()
+    this.$nextTick(() => {
+      this.setCharts()
+    })
+  }
+
+  beforeDestroy() {
+    console.log('destory')
   }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .steps-list {
   width: 800px;
   .tag-item {

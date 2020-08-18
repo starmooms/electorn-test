@@ -14,6 +14,14 @@ interface SetSteps {
   list: any[]
 }
 
+interface ChannelListOpts {
+  type?: string
+  path: string
+  masterId: string
+  slaverId?: number
+  channelId?: number
+}
+
 export function setChannelStatus(data: SetStatus) {
   return $command.invoke('/port/slaver/setStatus', data)
 }
@@ -41,6 +49,10 @@ export function setCal(data: any) {
 /** 设置校准 */
 export function readCal(data: any) {
   return $command.invoke(`/port/cal/read`, data)
+}
+
+export function getChannelList(data: ChannelListOpts) {
+  return $command.invoke(`/port/channelList`, data)
 }
 
 // export default class Ipc {

@@ -1,4 +1,4 @@
-import { ipcRenderer, ipcMain } from 'electron'
+import { ipcRenderer } from 'electron'
 import Vue from 'vue'
 
 interface EmitList {
@@ -100,8 +100,13 @@ class Command {
   }
 
   on({ eventName, onEmit, vm }: Register) {
-    ipcRenderer.on(eventName, (event, data) => onEmit(data, event))
-    const unRegister = () => ipcRenderer.removeListener(eventName, onEmit)
+    const listener = (event: Electron.IpcRendererEvent, data: any) => {
+      onEmit(data, event)
+    }
+    ipcRenderer.on(eventName, listener)
+    const unRegister = () => {
+      ipcRenderer.removeListener(eventName, listener)
+    }
     if (vm && vm instanceof Vue) {
       vm.$on('hook:beforeDestroy', () => unRegister())
     }

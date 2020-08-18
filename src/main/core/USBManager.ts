@@ -27,6 +27,7 @@ export default class USBManager {
     this.setTranslate()
     this.setCal()
     this.readCal()
+    this.getChannelList()
   }
 
   /** 开始监测USB */
@@ -132,6 +133,14 @@ export default class USBManager {
     ipcManage.handle('/port/cal/read', async (event, data: any) => {
       const portItem = this.getPortData(data.path)
       return await portItem.readCal(data)
+    })
+  }
+
+  /** 获取列表 */
+  getChannelList() {
+    ipcManage.handle('/port/channelList', async (event, data: any) => {
+      const portItem = this.getPortData(data.path)
+      return await portItem.getChannelList(data)
     })
   }
 }

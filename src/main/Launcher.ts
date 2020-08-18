@@ -1,13 +1,13 @@
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow } from 'electron'
 import is from 'electron-is'
 import USBManager from './core/USBManager'
 import Update from './Update'
 import MenuManager from './MenuManager'
 import winManager from './core/WinManager'
-import PortWindow from './window/portWindow'
 import ipcManage from './core/IpcManage'
 import WorkStepSee from './window/WorkStepSee'
 import UpdateManager from './core/UpdateManager'
+import SlaverTrend from './window/SlaverTrend'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -114,31 +114,22 @@ export default class Launcher {
         this.updateManager.check()
       }
     })
-    ipcManage.on('/createdWin/port/workerSee', (event, data: any) => {
-      if (this.usbManager) {
-        new WorkStepSee(data, this.usbManager)
+    ipcManage.on('/createdWin', (event, data: any) => {
+      switch (data.type) {
+        case 'channel':
+          /** 查看通道 */
+          new WorkStepSee(data.data, this.usbManager)
+          break
+        case 'slaverTrend':
+          new SlaverTrend(data.data, this.usbManager)
+          break
+        default:
+          throw new Error(`${data.type} win no defined`)
       }
     })
   }
 
-  afterWin() {
-    // this.usbManager = new USBManager()
-    if (this.win) {
-      ipcMain.on('createdWin', (event, data: any) => {
-        if (!data || !data.type) return
-        switch (data.type) {
-          case 'portWin':
-            if (data.path) {
-              if (winManager.getWin(`portItem/${data.path}`, true)) {
-                return
-              }
-              new PortWindow(this.usbManager as USBManager, data.path)
-            }
-            break
-        }
-      })
-    }
-  }
+  afterWin() {}
 
   initUSBManager() {
     const usbManager = new USBManager()
@@ -178,21 +169,21 @@ export default class Launcher {
       this.win.setProgressBar(event.percent / 100)
     })
 
-    this.updateManager.on('update-not-available', event => {
-      // this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)
-      // this.trayManager.updateMenuItemEnabledState('app.check-for-updates', true)
-    })
+    // this.updateManager.on('update-not-available', event => {
+    //   // this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)
+    //   // this.trayManager.updateMenuItemEnabledState('app.check-for-updates', true)
+    // })
 
-    this.updateManager.on('update-downloaded', event => {
+    this.updateManager.on('update-downloaded', () => {
       // this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)
       // this.trayManager.updateMenuItemEnabledState('app.check-for-updates', true)
       if (!this.win) return
       this.win.setProgressBar(0)
     })
 
-    this.updateManager.on('will-updated', event => {
-      // this.windowManager.setWillQuit(true)
-    })
+    // this.updateManager.on('will-updated', event => {
+    //   // this.windowManager.setWillQuit(true)
+    // })
 
     // this.updateManager.on('update-error', event => {
     //   this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)

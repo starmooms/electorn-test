@@ -68,6 +68,11 @@
                   </ContextMenu>
                 </li>
               </ul>
+              <div class="slaver-item-r">
+                <el-button @click="openSlaverTrend(master, slaver)">
+                  查看
+                </el-button>
+              </div>
             </li>
           </ul>
         </el-collapse-transition>
@@ -160,11 +165,26 @@ export default class Home extends Vue {
   }
 
   showChannel(master: any, channel: any, slaver: any) {
-    this.$command.send('/createdWin/port/workerSee', {
-      path: this.portItem.path,
-      masterId: master.id,
-      slaverId: slaver.id,
-      channelId: channel.id
+    this.$command.send('/createdWin', {
+      type: 'channel',
+      data: {
+        path: this.portItem.path,
+        masterId: master.id,
+        slaverId: slaver.id,
+        channelId: channel.id
+      }
+    })
+  }
+
+  /** 打开采样统计 */
+  openSlaverTrend(master: any, slaver: any) {
+    this.$command.send('/createdWin', {
+      type: 'slaverTrend',
+      data: {
+        path: this.portItem.path,
+        masterId: master.id,
+        slaverId: slaver.id
+      }
     })
   }
 
@@ -233,7 +253,7 @@ export default class Home extends Vue {
   }
 
   .slaver-item-l {
-    flex: 0 0 100px;
+    flex: 0 0 60px;
   }
 
   .channel-list {

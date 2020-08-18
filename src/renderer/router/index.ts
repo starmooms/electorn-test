@@ -31,14 +31,14 @@ const routes: Array<RouteConfig> = [
     component: Default,
     children: [
       {
-        path: '/portItem/:path',
-        name: 'portItem',
-        component: () => import('@/renderer/views/About.vue')
-      },
-      {
         path: '/port/WorkerSee/:path/:slaverId/:channelId',
         name: 'WorkerSee',
         component: () => import('@/renderer/views/WorkerSee.vue')
+      },
+      {
+        path: '/port/SlaverTrend/:path/:masterId/:slaverId',
+        name: 'SlaverTrend',
+        component: () => import('@/renderer/views/SlaverTrend.vue')
       }
     ]
   }

@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events'
-import Electron, { app, Menu } from 'electron'
+import Electron, { app, Menu, shell } from 'electron'
+import { logPath } from '@/main/core/Logger'
+
 const APP_VERSON = app.getVersion()
 
 export default class MenuManager extends EventEmitter {
@@ -13,6 +15,12 @@ export default class MenuManager extends EventEmitter {
       {
         label: '帮助',
         submenu: [
+          {
+            label: '日志',
+            click: () => {
+              shell.showItemInFolder(logPath)
+            }
+          },
           {
             label: '更新',
             accelerator: 'CmdOrCtrl+U',

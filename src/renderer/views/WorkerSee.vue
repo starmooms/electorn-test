@@ -1,5 +1,18 @@
 <template>
   <div class="worker-see">
+    <!-- <el-tabs type="border-card">
+      <el-tab-pane>
+        <span slot="label">
+          <i class="el-icon-date"></i>
+          我的行程
+        </span>
+        我的行程
+      </el-tab-pane>
+      <el-tab-pane label="消息中心">消息中心</el-tab-pane>
+      <el-tab-pane label="角色管理">角色管理</el-tab-pane>
+      <el-tab-pane label="定时任务补偿">定时任务补偿</el-tab-pane>
+    </el-tabs> -->
+
     <el-divider content-position="left">串口</el-divider>
     <p v-if="portItem">
       slaverId: {{ portItem.slaverId }}
@@ -198,9 +211,7 @@ export default class WorkerSee extends Vue {
   width: 800px;
   height: 600px;
   background-color: #f3f3f3;
-  .echarts {
-    width: 100%;
-    height: 100%;
-  }
+  border: 1px solid #ccc;
+  padding: 20px 0;
 }
 </style>

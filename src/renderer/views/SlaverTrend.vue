@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="slaver-trend">
     <template v-if="slaverData">
       <el-divider content-position="left">信息</el-divider>
       <div class="msg-box">
@@ -10,22 +10,22 @@
         slaverId：{{ portItem.slaverId }}
       </div>
       <el-divider content-position="left">走势图</el-divider>
-      <el-row class="thend-list" :gutter="40">
+      <el-row class="thend-list" :gutter="20">
         <el-col
           class="thend-item"
           v-for="(channel, cKey) in slaverData.list"
           :key="cKey"
           :span="6"
         >
-          {{ cKey }}
-          <TrendChart
-            class="chart-item"
-            ref="TrendChart"
-            :channelId="channel.id"
-            :splitNumber="10"
-            :grid="{ left: 40, right: 40 }"
-            :itemOpacity="0"
-          ></TrendChart>
+          <div class="thend-item-box">
+            <TrendChart
+              class="chart-item"
+              ref="TrendChart"
+              :channelId="channel.id"
+              size="min"
+            ></TrendChart>
+            <p>通道{{ channel.id + 1 }}</p>
+          </div>
         </el-col>
       </el-row>
       <!-- <ul class="thend-list">
@@ -113,9 +113,17 @@ export default class SlaverTrend extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.slaver-trend {
+  min-width: 1200px;
+}
 .thend-list {
   min-width: 1200px;
   .thend-item {
+    .thend-item-box {
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      padding: 10px;
+    }
     .chart-item {
       width: 100%;
       height: 300px;

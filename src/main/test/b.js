@@ -126,7 +126,7 @@
 // intToFloat(1.4)
 
 const a = Buffer.alloc(4)
-a.writeFloatBE(1.4, 0)
+a.writeFloatBE(1.11111, 0)
 console.log(a)
 console.log(a.readFloatBE(0))
 

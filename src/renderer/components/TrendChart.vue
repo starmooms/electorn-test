@@ -12,6 +12,8 @@ import 'echarts/lib/component/tooltip'
 import 'echarts/lib/component/toolbox'
 import 'echarts/lib/component/axisPointer'
 import 'echarts/lib/component/dataZoom'
+import 'echarts/lib/component/legend'
+import { merge } from '@/shared/utils'
 
 interface UpdateOpts {
   time: number
@@ -29,6 +31,7 @@ export default class TrendChart extends Vue {
   @Prop({ type: Number, default: null }) channelId!: number
   @Prop({ type: Number, default: 25 }) splitNumber!: number
   @Prop({ type: Number, default: 1 }) itemOpacity!: number
+  @Prop({ type: String, default: 'default' }) size!: string
   @Prop({
     type: Object,
     default() {
@@ -49,88 +52,110 @@ export default class TrendChart extends Vue {
     this.xData = [0]
     this.UData = []
     this.IData = []
-    const polar = {
-      tooltip: {
-        // alwaysShowContent: false,
-        trigger: 'axis',
-        backgroundColor: 'rgba(245, 245, 245, 0.8)',
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        textStyle: {
-          color: '#000'
-        },
-        extraCssText: 'width: 170px'
-        // axisPointer: {
-        //   type: 'line',
-        //   // trigger: 'axis',
-        //   extraCssText: 'width: 400px'
-        // }
-      },
-      legend: {
-        data: ['电压', '电流']
-      },
-      xAxis: {
-        type: 'value',
-        data: this.xData
-        // splitNumber: 5,
-      },
-      grid: this.grid,
-      dataZoom: [
-        {
-          type: 'slider',
-          xAxisIndex: [0],
-          show: true
-        }
-      ],
-      yAxis: [
-        {
-          name: '电压(mV)',
-          max: 10000,
-          min: 0,
-          splitNumber: this.splitNumber,
-          position: 'left',
-          splitLine: { show: true },
-          axisLabel: {
-            fontSize: 10
+    let sizeOpts: any = {}
+    if (this.size === 'min') {
+      sizeOpts = {
+        grid: { left: 40, right: 40 },
+        dataZoom: [
+          {
+            height: 20
           }
-        },
-        {
-          name: '电流(mA)',
-          max: 10000,
-          min: 0,
-          splitNumber: this.splitNumber,
-          position: 'right',
-          splitLine: { show: false },
-          axisLabel: {
-            fontSize: 10
+        ],
+        yAxis: [
+          {
+            splitNumber: 10,
+            axisLabel: { fontSize: 10 }
+          },
+          {
+            splitNumber: 10,
+            axisLabel: { fontSize: 10 }
           }
-        }
-      ],
-      series: [
-        {
-          name: '电压',
-          data: this.UData,
-          type: 'line',
-          yAxisIndex: 0,
-          lineStyle: { color: 'green' },
-          itemStyle: { color: 'green', opacity: this.itemOpacity },
-          tooltip: {
-            formatter: function(param) {
-              return `电压：${param.data[1]}mV`
-            }
-          }
-        },
-        {
-          name: '电流',
-          data: this.IData,
-          type: 'line',
-          yAxisIndex: 1,
-          lineStyle: { color: 'red' },
-          itemStyle: { color: 'red', opacity: this.itemOpacity }
-        }
-      ]
+        ],
+        series: [{ itemStyle: { opacity: 0 } }, { itemStyle: { opacity: 0 } }]
+      }
     }
+    const polar = merge(
+      {
+        tooltip: {
+          // alwaysShowContent: false,
+          trigger: 'axis',
+          backgroundColor: 'rgba(245, 245, 245, 0.8)',
+          borderWidth: 1,
+          borderColor: '#ccc',
+          padding: 10,
+          textStyle: {
+            color: '#000'
+          },
+          extraCssText: 'width: 170px'
+          // axisPointer: {
+          //   type: 'line',
+          //   // trigger: 'axis',
+          //   extraCssText: 'width: 400px'
+          // }
+        },
+        legend: {
+          show: true,
+          data: ['电压', '电流']
+        },
+        xAxis: {
+          type: 'value',
+          data: this.xData
+          // max: function(value) {
+          //   return value.max + 3600
+          // }
+          // splitNumber: 5,
+        },
+        dataZoom: [
+          {
+            type: 'slider',
+            xAxisIndex: [0],
+            show: true
+          }
+        ],
+        yAxis: [
+          {
+            name: '电压(mV)',
+            max: 10000,
+            min: 0,
+            splitNumber: this.splitNumber,
+            position: 'left',
+            splitLine: { show: true }
+          },
+          {
+            name: '电流(mA)',
+            max: 10000,
+            min: 0,
+            splitNumber: this.splitNumber,
+            position: 'right',
+            splitLine: { show: false }
+          }
+        ],
+        series: [
+          {
+            name: '电压',
+            data: this.UData,
+            type: 'line',
+            yAxisIndex: 0,
+            lineStyle: { color: 'green' },
+            itemStyle: { color: 'green' },
+            tooltip: {
+              formatter: function(param) {
+                return `电压：${param.data[1]}mV`
+              }
+            }
+          },
+          {
+            name: '电流',
+            data: this.IData,
+            type: 'line',
+            yAxisIndex: 1,
+            lineStyle: { color: 'red' },
+            itemStyle: { color: 'red' }
+          }
+        ]
+      },
+      sizeOpts
+    )
     this.$refs.echart.mergeOptions(polar)
   }
 

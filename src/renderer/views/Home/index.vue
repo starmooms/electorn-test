@@ -56,7 +56,7 @@
                         href="javascript:;"
                         @click="calOpen(channel, slaver, master)"
                       >
-                        校准
+                        设置
                       </a>
                       <a
                         href="javascript:;"

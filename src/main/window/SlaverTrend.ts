@@ -36,6 +36,7 @@ export default class SlaverTrend {
     /** 读采样 */
     const closeTranslate = portItem.emitTranslate({
       masterId,
+      slaverId,
       winName
     })
 

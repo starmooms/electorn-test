@@ -20,6 +20,7 @@ const isDev = is.dev()
 interface MasterTranslate {
   masterId: number
   winArr: Set<string>
+  // winEmitMap: Map<string, { slaverId: number }>
   close?: () => any
 }
 
@@ -40,6 +41,7 @@ interface WStepsOpts extends BaseOpts {
 const Delimiter = SerialPort.parsers.Delimiter
 
 export default class PortItem {
+  path: string
   port: SerialPort
   parser: SerialPort.parsers.Delimiter
   translate = new Map<number, MasterTranslate>()
@@ -47,6 +49,7 @@ export default class PortItem {
   channelList!: any
 
   constructor(path: string) {
+    this.path = path
     const { port, parser } = this.created(path)
     this.port = port
     this.parser = parser
@@ -136,7 +139,6 @@ export default class PortItem {
     })
     const write = writeArr.join('')
     const result = agreement.setData(write, controlCode.writeWorkSteps)
-    console.log(write)
     this.port.write(result.buf)
   }
 
@@ -161,7 +163,7 @@ export default class PortItem {
     // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b00000022b0000029a00000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000009000000000000' // eslint-disable-line
     // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b0000000370000004200000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000063000000000000'  // eslint-disable-line
     if (isDev) {
-      const a = '00ff0000000000000000040000010000A100000000000a000000640000000000000000000000000000000000000000000000010100A300000000000a0000000a0000000000000000000000000000000000000000640000010200900000000a0000000000000000000000000000000000000000000000000000000000010300700000000000000000000000000000000000000000000a020000000000000000'  // eslint-disable-line
+      const a = '00ff0200000000000000040000010000A100000000000a000000640000000000000000000000000000000000000000000000010100A300000000000a0000000a0000000000000000000000000000000000000000640000010200900000000a0000000000000000000000000000000000000000000000000000000000010300700000000000000000000000000000000000000000000a020000000000000000'  // eslint-disable-line
       resultBuf = Buffer.from(a, 'hex')
     } else {
       resultBuf = await this.post({ data })
@@ -182,10 +184,19 @@ export default class PortItem {
         const workerArr = input.other
           ? input.worker.concat(input.other)
           : input.worker
+        const worker = workerArr.map(key => this.readStepsInput(bufData, key))
+        if (workerItem.type === 'loop') {
+          worker.unshift({
+            data: resultBuf.readIntBE(2 + opts.channelId, 1) + 1,
+            name: '当前工步序号',
+            unit: ''
+          })
+        }
         stepsList.push({
           id: bufData.getIndex(3),
+          type: workerItem.type,
           name: workerItem.name,
-          worker: workerArr.map(key => this.readStepsInput(bufData, key)),
+          worker,
           limt: input.limt.map(key => this.readStepsInput(bufData, key))
         })
       }
@@ -249,7 +260,7 @@ export default class PortItem {
               const win = winManager.getWin(winName)
               if (win) {
                 ipcManage.send(
-                  `/port/translate/${slaverId}`,
+                  `/port/translate/${this.path}/${masterId}/${slaverId}`,
                   () => {
                     return { list }
                   },
@@ -289,16 +300,19 @@ export default class PortItem {
     const masterId = 0 // opts.masterId
     const winName = opts.winName
     const translate = this.translate.get(masterId)
+    let winArr: Set<string>
     if (translate) {
+      winArr = translate.winArr
       translate.winArr.add(winName)
     } else {
+      winArr = new Set([winName])
       this.translate.set(masterId, {
         masterId,
-        winArr: new Set([winName])
+        winArr
       })
     }
     return () => {
-      this.translate.delete(winName)
+      winArr.delete(winName)
     }
   }
 

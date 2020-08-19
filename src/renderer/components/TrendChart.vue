@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
+import { Component, Vue, Prop, Watch } from 'vue-property-decorator'
 import ECharts from 'vue-echarts'
 import 'echarts/lib/chart/line'
 import 'echarts/lib/component/tooltip'
@@ -29,8 +29,6 @@ interface UpdateOpts {
 })
 export default class TrendChart extends Vue {
   @Prop({ type: Number, default: null }) channelId!: number
-  @Prop({ type: Number, default: 25 }) splitNumber!: number
-  @Prop({ type: Number, default: 1 }) itemOpacity!: number
   @Prop({ type: String, default: 'default' }) size!: string
   @Prop({
     type: Object,
@@ -47,6 +45,11 @@ export default class TrendChart extends Vue {
   xData!: number[]
   UData!: number[][]
   IData!: number[][]
+
+  @Watch('channelId')
+  changeChannelId() {
+    this.setCharts()
+  }
 
   setCharts() {
     this.xData = [0]
@@ -117,15 +120,15 @@ export default class TrendChart extends Vue {
             name: '电压(mV)',
             max: 10000,
             min: 0,
-            splitNumber: this.splitNumber,
+            splitNumber: 25,
             position: 'left',
             splitLine: { show: true }
           },
           {
             name: '电流(mA)',
-            max: 10000,
-            min: 0,
-            splitNumber: this.splitNumber,
+            max: 6000,
+            min: -6000,
+            splitNumber: 25,
             position: 'right',
             splitLine: { show: false }
           }

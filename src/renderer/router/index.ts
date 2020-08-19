@@ -1,7 +1,5 @@
 import Vue from 'vue'
 import VueRouter, { RouteConfig } from 'vue-router'
-import Home from '../views/Home.vue'
-import About from '../views/About.vue'
 import Main from '@/renderer/layout/Main/index.vue'
 import Default from '@/renderer/layout/Default.vue'
 
@@ -31,7 +29,7 @@ const routes: Array<RouteConfig> = [
     component: Default,
     children: [
       {
-        path: '/port/WorkerSee/:path/:slaverId/:channelId',
+        path: '/port/WorkerSee/:path/:masterId/:slaverId/:channelId',
         name: 'WorkerSee',
         component: () => import('@/renderer/views/WorkerSee.vue')
       },

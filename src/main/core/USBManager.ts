@@ -23,6 +23,7 @@ export default class USBManager {
     this.start()
     this.setSlaverStatus()
     this.writeSteps()
+    this.readSteps()
     this.getPortList()
     this.setTranslate()
     this.setCal()
@@ -92,6 +93,13 @@ export default class USBManager {
   writeSteps() {
     ipcManage.handle('/port/writeWorkSteps', (event, data: any) => {
       this.getPortData(data.path).writeSteps(data)
+    })
+  }
+
+  /** 读工步 */
+  readSteps() {
+    ipcManage.handle('/port/readWorkSteps', async (event, data: any) => {
+      return await this.getPortData(data.path).readSteps(data)
     })
   }
 

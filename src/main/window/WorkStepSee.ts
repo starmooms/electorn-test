@@ -4,6 +4,7 @@ import USBManager from '../core/USBManager'
 
 interface Opts {
   path: string
+  masterId: number
   slaverId: number
   channelId: number
 }
@@ -19,8 +20,8 @@ export default class WorkStepSee {
   }
 
   createdWin() {
-    const { path, slaverId, channelId } = this.opts
-    const basePath = `${encodeURIComponent(path)}/${slaverId}/${channelId}`
+    const { path, slaverId, masterId, channelId } = this.opts
+    const basePath = `${encodeURIComponent(path)}/${masterId}/${slaverId}`
     const winName = `port/WorkerSee/${basePath}`
     if (winManager.getWin(winName, true)) {
       return true
@@ -30,25 +31,16 @@ export default class WorkStepSee {
       return false
     }
 
-    /** 读工步 */
-    const getStepChannel = `getWorkerStep/${basePath}`
-    ipcManage.handle(getStepChannel, async () => {
-      const portItem = this.usbManager.getPortData(this.opts.path)
-      return await portItem.readSteps({
-        channelId,
-        slaverId
-      })
-    })
-    const win = winManager.createdWin(winName, winName)
+    const win = winManager.createdWin(winName, `${winName}/${channelId}`)
 
     /** 读采样 */
     const closeTranslate = portItem.emitTranslate({
-      masterId: 0,
+      masterId,
+      slaverId,
       winName
     })
 
     win.on('closed', () => {
-      ipcManage.removeHandler(getStepChannel)
       closeTranslate()
     })
   }

@@ -1,70 +1,78 @@
 <template>
   <div class="worker-see">
-    <!-- <el-tabs type="border-card">
-      <el-tab-pane>
-        <span slot="label">
-          <i class="el-icon-date"></i>
-          我的行程
-        </span>
-        我的行程
-      </el-tab-pane>
-      <el-tab-pane label="消息中心">消息中心</el-tab-pane>
-      <el-tab-pane label="角色管理">角色管理</el-tab-pane>
-      <el-tab-pane label="定时任务补偿">定时任务补偿</el-tab-pane>
-    </el-tabs> -->
+    <el-tabs type="border-card" v-model="tabChannel">
+      <el-tab-pane
+        v-for="item in channelList"
+        :key="item.id"
+        :label="`通道${item.id + 1}`"
+        :name="String(item.id)"
+      ></el-tab-pane>
 
-    <el-divider content-position="left">串口</el-divider>
-    <p v-if="portItem">
-      slaverId: {{ portItem.slaverId }}
-      <br />
-      channelId: {{ portItem.channelId }}
-    </p>
+      <div class="tab-content">
+        <el-divider content-position="left">信息</el-divider>
+        <p v-if="portItem">
+          串口： {{ portItem.path }}
+          <br />
+          主控：{{ portItem.masterId + 1 }}
+          <br />
+          从控: {{ portItem.slaverId + 1 }}
+          <br />
+          通道: {{ portItem.channelId + 1 }}
+        </p>
 
-    <el-divider content-position="left">操作</el-divider>
-    <div>
-      <el-button
-        v-for="item in btnList"
-        :key="item.name"
-        @click="setStatus(item.action)"
-      >
-        {{ item.name }}
-      </el-button>
-      <el-button @click="calOpen">校准</el-button>
-      <el-button @click="workStepsOpen">编辑工步</el-button>
-    </div>
+        <el-divider content-position="left">操作</el-divider>
+        <div>
+          <el-button
+            v-for="item in btnList"
+            :key="item.name"
+            @click="setStatus(item.action)"
+          >
+            {{ item.name }}
+          </el-button>
+          <el-button @click="calOpen">设置</el-button>
+          <el-button @click="workStepsOpen">编辑工步</el-button>
+        </div>
 
-    <el-divider content-position="left">当前工步</el-divider>
-    <div class="steps-list">
-      <el-table border max-height="40vh" :data="nowStepList">
-        <el-table-column label="工步信息" prop="msg"></el-table-column>
-        <el-table-column label="工步工作条件" prop="msg">
-          <template slot-scope="{ row }">
-            <el-tag
-              v-for="item in row.worker"
-              :key="item.label"
-              effect="dark"
-              class="tag-item"
-            >
-              {{ item.label }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="工步限制条件" prop="limt">
-          <template slot-scope="{ row }">
-            <el-tag
-              v-for="item in row.limt"
-              :key="item.label"
-              effect="dark"
-              class="tag-item"
-            >
-              {{ item.label }}
-            </el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
-    </div>
+        <el-divider content-position="left">当前工步</el-divider>
+        <div class="steps-list">
+          <el-table border max-height="40vh" :data="nowStepList">
+            <el-table-column label="工步信息" prop="msg"></el-table-column>
+            <el-table-column label="工步工作条件" prop="msg">
+              <template slot-scope="{ row }">
+                <el-tag
+                  :disable-transitions="true"
+                  effect="dark"
+                  class="tag-item"
+                  v-for="item in row.worker"
+                  :key="item.label"
+                >
+                  {{ item.label }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="工步限制条件" prop="limt">
+              <template slot-scope="{ row }">
+                <el-tag
+                  effect="dark"
+                  class="tag-item"
+                  :disable-transitions="true"
+                  v-for="item in row.limt"
+                  :key="item.label"
+                >
+                  {{ item.label }}
+                </el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
 
-    <TrendChart ref="trendChart"></TrendChart>
+        <TrendChart
+          v-if="channelId !== null"
+          :channelId="channelId"
+          ref="trendChart"
+        ></TrendChart>
+      </div>
+    </el-tabs>
 
     <StepSetModal :show.sync="stepsShow" :showItem="portItem"></StepSetModal>
 
@@ -73,8 +81,9 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
-import { setChannelStatus, getWorkStep } from '../ipc/channel'
+import { Component, Vue, Watch } from 'vue-property-decorator'
+import { Route } from 'vue-router'
+import { setChannelStatus, getWorkStep, getChannelList } from '../ipc/channel'
 import command from '../command'
 import StepSetModal from '@/renderer/components/StepSetModal.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
@@ -82,6 +91,7 @@ import TrendChart from '@/renderer/components/TrendChart.vue'
 
 interface PortData {
   path: string
+  masterId: number
   slaverId: number
   channelId: number
 }
@@ -107,10 +117,33 @@ export default class WorkerSee extends Vue {
   portItem: PortData | null = null
   stepsShow = false
   calShow = false
+  tabChannel = '0'
+  channelList: any[] = []
 
   // 2
   nowStepDialog = false
   nowStepList: any[] = []
+
+  get channelId() {
+    return this.portItem ? this.portItem.channelId : null
+  }
+
+  @Watch('tabChannel')
+  changeTab(newValue) {
+    const newChannelId = Number(newValue)
+    if (this.portItem && this.portItem.channelId !== newChannelId) {
+      this.changeChannelId(newChannelId)
+    }
+  }
+
+  changeChannelId(channelId: number) {
+    if (!this.portItem) return
+    const { path, masterId, slaverId } = this.portItem
+    this.portItem.channelId = channelId
+    this.$router.push({
+      path: `/port/WorkerSee/${path}/${masterId}/${slaverId}/${channelId}`
+    })
+  }
 
   nowStepShow() {
     this.nowStepDialog = true
@@ -132,12 +165,21 @@ export default class WorkerSee extends Vue {
     this.stepsShow = true
   }
 
+  async getList() {
+    const data = await getChannelList({
+      type: 'slaver',
+      path: this.portItem!.path,
+      masterId: this.portItem!.masterId,
+      slaverId: this.portItem!.slaverId
+    })
+    if (data.status) {
+      this.channelList = data.data.list
+    }
+  }
+
   async getWorkStep() {
     if (!this.portItem) return
-    const { path, slaverId, channelId } = this.portItem
-    const data = await getWorkStep(
-      `getWorkerStep/${encodeURIComponent(path)}/${slaverId}/${channelId}`
-    )
+    const data = await getWorkStep(this.portItem)
     if (data.status) {
       const setInput = (item: any) => {
         return {
@@ -156,19 +198,12 @@ export default class WorkerSee extends Vue {
     }
   }
 
-  created() {
-    this.portItem = {
-      path: this.$route.params.path,
-      slaverId: Number(this.$route.params.slaverId),
-      channelId: Number(this.$route.params.channelId)
-    }
-  }
-
   setCharts() {
+    if (!this.portItem) return
     let i = 0
-    console.log(this.portItem!.slaverId)
+    const { path, masterId, slaverId } = this.portItem
     command.on({
-      eventName: `/port/translate/${this.portItem!.slaverId}`,
+      eventName: `/port/translate/${path}/${masterId}/${slaverId}`,
       onEmit: (data: any) => {
         const item = data.list[this.portItem!.channelId]
         i++
@@ -183,15 +218,22 @@ export default class WorkerSee extends Vue {
   }
 
   mounted() {
-    console.log('mounted')
+    this.portItem = {
+      path: this.$route.params.path,
+      masterId: Number(this.$route.params.masterId),
+      slaverId: Number(this.$route.params.slaverId),
+      channelId: Number(this.$route.params.channelId)
+    }
+    this.getList()
     this.getWorkStep()
     this.$nextTick(() => {
       this.setCharts()
     })
   }
 
-  beforeDestroy() {
-    console.log('destory')
+  beforeRouteUpdate(to: Route, from: Route, next: Function) {
+    this.getWorkStep()
+    next()
   }
 }
 </script>
@@ -200,9 +242,7 @@ export default class WorkerSee extends Vue {
 .steps-list {
   width: 800px;
   .tag-item {
-    & + .tag-item {
-      margin-left: 12px;
-    }
+    margin-right: 12px;
   }
 }
 

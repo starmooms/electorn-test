@@ -17,9 +17,16 @@ interface SetSteps {
 interface ChannelListOpts {
   type?: string
   path: string
-  masterId: string
+  masterId: number
   slaverId?: number
   channelId?: number
+}
+
+interface ReadSteps {
+  path: string
+  masterId: number
+  slaverId: number
+  channelId: number
 }
 
 export function setChannelStatus(data: SetStatus) {
@@ -32,8 +39,8 @@ export function setSteps(data: SetSteps) {
 }
 
 /** 读工步 */
-export function getWorkStep(name: string) {
-  return $command.invoke(name)
+export function getWorkStep(data: ReadSteps) {
+  return $command.invoke('/port/readWorkSteps', data)
 }
 
 /** 开启/关闭 采样 */

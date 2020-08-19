@@ -8,15 +8,6 @@ class Agreement {
   // constructor() {
   // }
 
-  /**
-   * 自定义函数名：PrefixZero
-   * @param num： 被操作数
-   * @param n： 固定的总位数
-   */
-  PrefixZero(num: string | number, n: number) {
-    return (Array(n).join('0') + num).slice(-n)
-  }
-
   /** 获取结束帧 */
   getEnd() {
     return Buffer.from('edededed', 'hex')

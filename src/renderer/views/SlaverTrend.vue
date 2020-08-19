@@ -83,13 +83,14 @@ export default class SlaverTrend extends Vue {
     this.$refs.TrendChart.forEach(item => {
       chartMap[item.channelId] = item
     })
+    const { path, masterId, slaverId } = this.portItem
     command.on({
-      eventName: `/port/translate/${this.portItem!.slaverId}`,
+      eventName: `/port/translate/${path}/${masterId}/${slaverId}`,
       onEmit: (data: any) => {
+        i += 1
         data.list.forEach(item => {
           const component = chartMap[item.channelId]
           if (component) {
-            i += 1
             component.update({
               time: i,
               ...item
@@ -118,6 +119,7 @@ export default class SlaverTrend extends Vue {
 }
 .thend-list {
   min-width: 1200px;
+  overflow: hidden;
   .thend-item {
     .thend-item-box {
       border: 1px solid #ccc;

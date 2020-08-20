@@ -85,7 +85,7 @@ import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Route } from 'vue-router'
 import { setChannelStatus, getWorkStep, getChannelList } from '../ipc/channel'
 import command from '../command'
-import StepSetModal from '@/renderer/components/StepSetModal.vue'
+import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
 import TrendChart from '@/renderer/components/TrendChart.vue'
 

@@ -125,10 +125,10 @@
 // }
 // intToFloat(1.4)
 
-const a = Buffer.alloc(4)
-a.writeFloatBE(1.11111, 0)
-console.log(a)
-console.log(a.readFloatBE(0))
+// const a = Buffer.alloc(4)
+// a.writeFloatBE(1.11111, 0)
+// console.log(a)
+// console.log(a.readFloatBE(0))
 
 // const a = Buffer.alloc(8)
 // a.writeDoubleBE(1.4, 0)
@@ -137,3 +137,7 @@ console.log(a.readFloatBE(0))
 
 // const a = Buffer.from([0x00])
 // console.log(a.toString('hex'))
+
+const b = Buffer.alloc(4)
+b.writeUIntBE('0xa1', 1, 1)
+console.log(b)

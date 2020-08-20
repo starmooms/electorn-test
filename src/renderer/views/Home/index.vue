@@ -94,7 +94,7 @@ import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { channelList } from '@/shared/config/port'
 import { typedKeys } from '@/shared/utils'
 import { setChannelStatus, translateSet } from '@/renderer/ipc/channel'
-import StepSetModal from '@/renderer/components/StepSetModal.vue'
+import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
 
 @Component({

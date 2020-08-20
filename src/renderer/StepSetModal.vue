@@ -64,6 +64,8 @@ import { Component, Vue, PropSync, Prop, Watch } from 'vue-property-decorator'
 import { Port } from '@/types/Port'
 import { getPortSelectList, getPortInputList } from '@/renderer/utils/getConfig'
 import { setSteps } from '@/renderer/ipc/channel'
+import { deepClone } from '@/shared/utils'
+import isEqual from 'lodash/isEqual'
 
 @Component
 export default class StepSetModal extends Vue {
@@ -73,6 +75,7 @@ export default class StepSetModal extends Vue {
   @Prop({ type: Object }) private showItem!: any | null
 
   list: Port.Item[] = []
+  listTpl: any[] = []
 
   // nowPort: Port.Item | null = null
   // stepsDialog = false
@@ -113,9 +116,26 @@ export default class StepSetModal extends Vue {
       ...this.showItem
     })
     if (data.status) {
-      this.$message.success('设置工步成功')
-      this.stepsDialog = false
+      // this.$message.success('设置工步成功')
+      isEqual(this.list, this.listTpl)
+      try {
+        await this.$confirm('设置工步成功, 是否保存当前工步设置?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+      } catch (err) {
+        this.closeModal()
+      }
+      this.$message({
+        type: 'success',
+        message: '删除成功!'
+      })
     }
+  }
+
+  closeModal() {
+    this.stepsDialog = false
   }
 
   @Watch('stepsDialog')

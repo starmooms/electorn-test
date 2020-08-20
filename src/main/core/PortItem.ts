@@ -47,6 +47,9 @@ export default class PortItem {
   translate = new Map<number, MasterTranslate>()
   emitList = new Map<string, (dataBuf: Buffer) => any>()
   channelList!: any
+  modelData = {
+    workStep: [1, 1, 1, 1, 1, 1, 4, 2, { byte: 4, hasSigned: true }, 4, 4, 4, 1, 4, 4] // eslint-disable-line
+  }
 
   constructor(path: string) {
     this.path = path
@@ -104,41 +107,33 @@ export default class PortItem {
 
   /** 写工步 */
   async writeSteps(data: WStepsOpts) {
-    let writeArr = [
-      '00',
-      'ff',
-      '0000000000000000',
-      FixZero(data.list.length.toString(16), 2)
-    ]
+    const listLen = data.list.length
+    let dataBuf = Buffer.from([0x00, 0xff, ...Array(8).fill(0x00), listLen])
+    const bufModel = new BufWriteListModel(listLen, this.modelData.workStep)
     data.list.forEach((item: any, index: number) => {
       const step = workSteps[item.setId]
-      if (step && step.input) {
-        const stepByt = [
-          ...[
-            '00',
-            toHex(data.slaverId, 1),
-            toHex(data.channelId, 1),
-            toHex(index, 1),
-            toHex(0, 1),
-            step.value
-          ],
-          ...bytFull(4, 2, 4, 4, 4, 4, 1, 4, 4)
-        ]
-        step.input.forEach((type: string) => {
-          const inputMap = workStepsInput[type]
-          if (inputMap) {
-            let value = item[type]
-            if (type === 'loopStart') {
-              value = Number(value) - 1
-            }
-            stepByt[inputMap.serial] = toHex(value, inputMap.len)
-          }
-        })
-        writeArr = writeArr.concat(stepByt)
+      if (!step || !step.input) {
+        throw new Error(`step ${item.setId} NO defind`)
       }
+      const writeModel = bufModel.getWriteModel(index)
+      writeModel.write(1, data.slaverId)
+      writeModel.write(2, data.channelId)
+      writeModel.write(3, index)
+      writeModel.write(4, 0)
+      writeModel.write(5, `0x${step.value}`)
+      step.input.forEach((type: string) => {
+        const inputMap = workStepsInput[type]
+        if (inputMap) {
+          let value = item[type]
+          if (type === 'loopStart') {
+            value = Number(value) - 1
+          }
+          writeModel.write(inputMap.serial, value)
+        }
+      })
     })
-    const write = writeArr.join('')
-    const result = agreement.setData(write, controlCode.writeWorkSteps)
+    dataBuf = Buffer.concat([dataBuf, bufModel.buf])
+    const result = agreement.setData(dataBuf, controlCode.writeWorkSteps)
     this.port.write(result.buf)
   }
 
@@ -163,7 +158,7 @@ export default class PortItem {
     // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b00000022b0000029a00000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000009000000000000' // eslint-disable-line
     // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b0000000370000004200000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000063000000000000'  // eslint-disable-line
     if (isDev) {
-      const a = '00ff0200000000000000040000010000A100000000000a000000640000000000000000000000000000000000000000000000010100A300000000000a0000000a0000000000000000000000000000000000000000640000010200900000000a0000000000000000000000000000000000000000000000000000000000010300700000000000000000000000000000000000000000000a020000000000000000'  // eslint-disable-line
+      const a = '00ff0000000000000000040000000000a100000000000a000000140000000000000000000000000000000000000000000000000100a300000000000affffffd8000000000000000000000000000000000000000014000000020090000001900000000000000000000000000000000000000000000000000000000000000300700000000000000000000000000000000000000000003c040000000000000000'  // eslint-disable-line
       resultBuf = Buffer.from(a, 'hex')
     } else {
       resultBuf = await this.post({ data })
@@ -172,7 +167,7 @@ export default class PortItem {
     const stepsLen = resultBuf.readUInt8(10)
     const stepsBuf = resultBuf.slice(11)
     const stepsList: any[] = []
-    const bufModel = new BufModel([1, 1, 1, 1, 1, 1, 4, 2, 4, 4, 4, 4, 1, 4, 4]) // eslint-disable-line
+    const bufModel = new BufModel(this.modelData.workStep) // eslint-disable-line
     for (let i = 0; i < stepsLen; i++) {
       const start = bufModel.bufLength * i
       const bufData = bufModel.getBufData(

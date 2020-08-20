@@ -62,6 +62,7 @@ export function getChannelList(data: ChannelListOpts) {
   return $command.invoke(`/port/channelList`, data)
 }
 
+
 // export default class Ipc {
 
 //   install(vue: typeof Vue) {

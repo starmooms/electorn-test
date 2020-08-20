@@ -8,6 +8,7 @@ import ipcManage from './core/IpcManage'
 import WorkStepSee from './window/WorkStepSee'
 import UpdateManager from './core/UpdateManager'
 import SlaverTrend from './window/SlaverTrend'
+import './core/ConfigManage'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -114,6 +115,7 @@ export default class Launcher {
         this.updateManager.check()
       }
     })
+
     ipcManage.on('/createdWin', (event, data: any) => {
       switch (data.type) {
         case 'channel':

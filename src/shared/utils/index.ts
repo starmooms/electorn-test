@@ -18,6 +18,7 @@ export function deepClone<T extends Record<string, any>>(source: T): T {
   return targetObj as T
 }
 
+/** 对象合并 */
 export function merge<T, S>(source1: T, source2: S): T & S {
   const getValue = (target: any, key: string, value: any) => {
     if (value && typeof value === 'object') {

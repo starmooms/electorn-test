@@ -2,6 +2,13 @@ import { toHex, FixZero } from '../utils'
 
 export type ReadDataBack = ReturnType<Agreement['readData']>
 export type SetDataBack = ReturnType<Agreement['setData']>
+export interface CreateData {
+  data?: Buffer | string
+  code: number
+  type: number
+  masterId: number
+  slaverId: number
+}
 
 class Agreement {
   nowSId = 0
@@ -61,6 +68,31 @@ class Agreement {
     // console.log('发送', buf)
     // this.readData(buf)
     return { buf, sId }
+  }
+
+  createData({ data, code, type, masterId, slaverId }: CreateData) {
+    let dataBuf: null | Buffer = null
+    if (data) {
+      dataBuf = typeof data === 'string' ? Buffer.from(data, 'hex') : data
+    }
+    const dataLen = dataBuf ? dataBuf.length : 0
+    // 流水号
+    const sId = this.getId()
+
+    const header = Buffer.from([0x68, type, 0x01, 0xff, 0xff, 0x68, code, 0x00, 0x00, 0x00, 0x00, 0x00]) // eslint-disable-line
+    header.writeUInt8(masterId, 3)
+    header.writeUInt8(slaverId, 4)
+    header.writeUInt16BE(sId, 8)
+    header.writeUInt16BE(dataLen, 10)
+    const checkData =
+      dataLen > 0 && dataBuf ? Buffer.concat([header, dataBuf]) : header
+    const check = Buffer.alloc(2)
+    check.writeUIntBE(this.crc16(checkData), 0, 2)
+    const buf = Buffer.concat([checkData, check, this.getEnd()])
+    return {
+      buf,
+      sId: toHex(sId, 2)
+    }
   }
 
   showDetails(result) {

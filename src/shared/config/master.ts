@@ -1,3 +1,10 @@
+export const CONTROL_CODE = {
+  protectRead: 0x91,
+  protectSet: 0xb1
+}
+
+// 保护参数
+export const PROTECT_ITEM_MODE = [2, 2, 2, 2, 2, 2, 4]
 export const PROTECT = [
   { name: '恒压充保护电压偏差(mV)', type: 'UCi', index: 0 },
   { name: '恒流充保护电流偏差(mA)', type: 'ICi', index: 1 },

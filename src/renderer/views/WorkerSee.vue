@@ -141,7 +141,9 @@ export default class WorkerSee extends Vue {
     const { path, masterId, slaverId } = this.portItem
     this.portItem.channelId = channelId
     this.$router.push({
-      path: `/port/WorkerSee/${path}/${masterId}/${slaverId}/${channelId}`
+      path: `/port/WorkerSee/${encodeURIComponent(
+        path
+      )}/${masterId}/${slaverId}/${channelId}`
     })
   }
 

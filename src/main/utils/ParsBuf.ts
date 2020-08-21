@@ -46,14 +46,13 @@ export class BufData {
   }
 }
 
+declare type BufTypeWrite = BufWriteListModel | BufWriteModel
 export class WriteItemModel {
-  index: number
-  bufModel: BufWriteListModel
+  bufModel: BufTypeWrite
   start: number
-  constructor(bufModel: BufWriteListModel, index: number) {
-    this.index = index
+  constructor(bufModel: BufTypeWrite, start: number) {
     this.bufModel = bufModel
-    this.start = this.bufModel.bufLength * index
+    this.start = start
   }
 
   write(itemIndex: number, value: number | string) {
@@ -115,7 +114,19 @@ export class BufWriteListModel extends BufModel {
   }
 
   getWriteModel(index: number) {
-    return new WriteItemModel(this, index)
+    return new WriteItemModel(this, this.bufLength * index)
+  }
+}
+
+export class BufWriteModel extends BufModel {
+  buf: Buffer
+  constructor(bufSpliceArr: SliceItem[]) {
+    super(bufSpliceArr)
+    this.buf = Buffer.alloc(this.bufLength)
+  }
+
+  getWriteModel() {
+    return new WriteItemModel(this, 0)
   }
 }
 

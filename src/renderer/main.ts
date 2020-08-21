@@ -10,17 +10,29 @@ import 'element-ui/lib/theme-chalk/index.css'
 
 import command from '@/renderer/command'
 import '@/renderer/icons'
+import { SettingStatus } from './store/modules/Setting'
 
-Vue.config.productionTip = false
+const init = () => {
+  Vue.config.productionTip = false
 
-Vue.use(Element, {
-  size: 'mini'
-})
+  Vue.use(Element, {
+    size: 'mini'
+  })
 
-Vue.use(command)
+  Vue.use(command)
 
-new Vue({
-  router,
-  store,
-  render: h => h(App)
-}).$mount('#app')
+  new Vue({
+    router,
+    store,
+    render: h => h(App)
+  }).$mount('#app')
+}
+
+SettingStatus.getUserConfg()
+  .then(data => {
+    if (!data.status) throw data.err || 'DATA STATUS ERROR'
+    init()
+  })
+  .catch(err => {
+    alert(err)
+  })

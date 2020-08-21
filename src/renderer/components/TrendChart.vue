@@ -14,6 +14,7 @@ import 'echarts/lib/component/axisPointer'
 import 'echarts/lib/component/dataZoom'
 import 'echarts/lib/component/legend'
 import { merge } from '@/shared/utils'
+import { SettingStatus } from '../store/modules/Setting'
 
 interface UpdateOpts {
   time: number
@@ -45,6 +46,7 @@ export default class TrendChart extends Vue {
   xData!: number[]
   UData!: number[][]
   IData!: number[][]
+  sampling = SettingStatus.sampling
 
   @Watch('channelId')
   changeChannelId() {
@@ -118,16 +120,16 @@ export default class TrendChart extends Vue {
         yAxis: [
           {
             name: '电压(mV)',
-            max: 10000,
-            min: 0,
+            max: this.sampling.U.max,
+            min: this.sampling.U.min,
             splitNumber: 25,
             position: 'left',
             splitLine: { show: true }
           },
           {
             name: '电流(mA)',
-            max: 6000,
-            min: -6000,
+            max: this.sampling.I.max,
+            min: this.sampling.I.min,
             splitNumber: 25,
             position: 'right',
             splitLine: { show: false }
@@ -170,6 +172,16 @@ export default class TrendChart extends Vue {
     this.$refs.echart.mergeOptions({
       xAxis: { data: this.xData },
       series: [{ data: this.UData }, { data: this.IData }]
+    })
+  }
+
+  @Watch('sampling')
+  upDateSampling() {
+    this.$refs.echart.mergeOptions({
+      yAxis: [
+        { max: this.sampling.U.max, min: this.sampling.U.min },
+        { max: this.sampling.I.max, min: this.sampling.I.min }
+      ]
     })
   }
 

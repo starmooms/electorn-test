@@ -17,9 +17,9 @@ const routes: Array<RouteConfig> = [
         component: () => import('@/renderer/views/Home/index.vue')
       },
       {
-        path: '/protList',
-        name: 'portList',
-        component: () => import('@/renderer/views/PortList/index.vue')
+        path: '/setting',
+        name: 'setting',
+        component: () => import('@/renderer/views/Setting/index.vue')
       }
     ]
   },

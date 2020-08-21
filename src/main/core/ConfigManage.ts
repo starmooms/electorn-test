@@ -10,7 +10,10 @@ class ConfigManage {
   userConfig = new Store({
     name: 'user',
     defaults: {
-
+      sampling: {
+        U: { max: 10000, min: 0 },
+        I: { max: 6000, min: -6000 }
+      }
     }
   })
 
@@ -29,6 +32,8 @@ class ConfigManage {
       switch (data.type) {
         case 'workStepTpl':
           return this.workStepTpl.store
+        case 'userConfig':
+          return this.userConfig.store
         default:
           throw new Error(`${data.type} NO Found`)
       }
@@ -38,6 +43,9 @@ class ConfigManage {
       switch (data.type) {
         case 'workStepTpl':
           this.workStepTplSave(data.data)
+          break
+        case 'userConfig':
+          this.userConfig.set(data.key, data.data)
           break
         default:
           throw new Error(`${data.type} NO Found`)

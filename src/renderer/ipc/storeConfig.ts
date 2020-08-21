@@ -2,12 +2,13 @@ import $command from '@/renderer/command'
 
 interface ConfigBase {
   type: string
-  key: string
+  key?: string
 }
 
 interface ConfigSet {
   type: string
-  data: any
+  key?: string
+  data?: any
 }
 
 export function getStoreConfig(data: ConfigBase) {

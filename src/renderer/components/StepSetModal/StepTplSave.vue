@@ -74,10 +74,12 @@ export default class StepTplSave extends Vue {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .step-tpl-save {
-  .el-dialog__body {
-    padding: 10px 20px;
+  ::v-deep .step-tpl-save {
+    .el-dialog__body {
+      padding: 10px 20px;
+    }
   }
 }
 </style>

@@ -22,11 +22,15 @@ class Command {
   }
 
   errorMsg(msg: string | Record<string, any>) {
-    if (typeof msg === 'object') {
-      console.log(msg)
-      msg = msg.message || JSON.stringify(msg)
+    try {
+      if (typeof msg === 'object') {
+        console.log(msg)
+        msg = msg.message || JSON.stringify(msg)
+      }
+      Vue.prototype.$message.error(msg)
+    } catch (err) {
+      console.error(err, 'errMsg')
     }
-    Vue.prototype.$message.error(msg)
   }
 
   init() {
@@ -58,7 +62,7 @@ class Command {
       this.unRegister(eventName, newId)
     }
     if (vm && vm instanceof Vue) {
-      vm.$on('hook:beforeDestroy', () => {
+      vm.$once('hook:beforeDestroy', () => {
         console.log('销毁')
         unRegister()
       })
@@ -95,7 +99,7 @@ class Command {
       return data
     } catch (err) {
       this.errorMsg(err)
-      return { status: false }
+      return { status: false, err }
     }
   }
 

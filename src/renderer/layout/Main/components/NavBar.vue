@@ -5,6 +5,12 @@
         <li class="nav-item">
           <router-link to="/">端口调试</router-link>
         </li>
+        <li class="nav-item">
+          <router-link to="/setting">
+            <svg-icon icon-class="setting"></svg-icon>
+            设置
+          </router-link>
+        </li>
       </ul>
     </nav>
   </div>

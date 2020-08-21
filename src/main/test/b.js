@@ -139,5 +139,5 @@
 // console.log(a.toString('hex'))
 
 const b = Buffer.alloc(4)
-b.writeUIntBE('0xa1', 1, 1)
+b.write([0x25], 1, 1)
 console.log(b)

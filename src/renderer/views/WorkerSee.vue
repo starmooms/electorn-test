@@ -29,7 +29,7 @@
           >
             {{ item.name }}
           </el-button>
-          <el-button @click="calOpen">设置</el-button>
+          <el-button @click="calOpen">局部设置</el-button>
           <el-button @click="workStepsOpen">编辑工步</el-button>
         </div>
 

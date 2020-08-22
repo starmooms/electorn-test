@@ -24,6 +24,7 @@ import { Vue, Component } from 'vue-property-decorator'
 import FromAction from './FromAction.vue'
 import { PROTECT } from '@/shared/config/master'
 import { deepClone } from '@/shared/utils'
+import { setProtect } from '@/renderer/ipc/master'
 
 @Component({
   components: {
@@ -47,7 +48,11 @@ export default class Protect extends Vue {
 
   list = deepClone(PROTECT)
 
-  submit() {}
+  async submit() {
+    await setProtect({
+      form: this.form
+    })
+  }
 
   mounted() {
     this.$nextTick(() => {

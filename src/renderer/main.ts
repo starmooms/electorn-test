@@ -6,9 +6,9 @@ import './utils/class-component-hooks'
 import Element from 'element-ui'
 
 import '@/renderer/style/index.scss'
-import 'element-ui/lib/theme-chalk/index.css'
 
 import command from '@/renderer/command'
+import TitleBox from '@/renderer/components/TitleBox.vue'
 import '@/renderer/icons'
 import { SettingStatus } from './store/modules/Setting'
 
@@ -20,6 +20,7 @@ const init = () => {
   })
 
   Vue.use(command)
+  Vue.component('title-box', TitleBox)
 
   new Vue({
     router,

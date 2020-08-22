@@ -1,90 +1,193 @@
 <template>
   <div class="home">
-    <el-form size="medium" :inline="true" class="port-select-form">
-      <el-form-item label="串口" class="port-select">
-        <el-select v-model="portItem" placeholder="选择串口">
-          <el-option
-            v-for="item in portList"
-            :key="item.path"
-            :label="item.path"
-            :value="item"
-          ></el-option>
-        </el-select>
-      </el-form-item>
-      <el-button v-if="portItem" @click="setTranslate(portItem)">
-        {{ portItem.readTranslate ? '关闭采样' : '打开采样' }}
-      </el-button>
-    </el-form>
+    <div v-if="portPath">
+      <el-form size="medium" :inline="true" class="port-select-form">
+        <el-button @click="setTranslate">
+          {{ readTranslate ? '关闭采样' : '打开采样' }}
+        </el-button>
+        <el-button type="primary" @click="openBatch('master')">
+          机柜批量设置
+        </el-button>
+      </el-form>
 
-    <ul class="master-list" v-if="portItem">
-      <li class="master-item" v-for="(master, mKey) in batteryList" :key="mKey">
-        <div class="master-box" @click="master.slaverShow = !master.slaverShow">
-          <span>{{ master.name }}</span>
-          <svg-icon class="channel-icon" icon-class="down"></svg-icon>
-        </div>
-        <el-collapse-transition>
-          <ul class="slaver-list" v-if="master.slaverShow">
-            <li
-              class="slaver-item"
-              v-for="(slaver, sKey) in master.slaverList"
-              :key="sKey"
-            >
-              <div class="slaver-item-l">{{ slaver.name }}</div>
-              <ul class="channel-list">
+      <title-box name="通道列表">
+        <el-radio-group class="master-group" v-model="activeMasterId">
+          <el-radio-button
+            class="master-group-item"
+            v-for="(master, mKey) in batteryList"
+            :key="mKey"
+            :label="mKey"
+          >
+            {{ master.name }}
+          </el-radio-button>
+        </el-radio-group>
+        <transition name="el-fade-in">
+          <div v-if="activeMaster">
+            <!-- <el-divider content-position="left">
+              机柜{{ activeMaster.id + 1 }}
+            </el-divider> -->
+            <el-card class="box-card" shadow="never">
+              <div slot="header" class="box-card-header">
+                <span>{{ activeMaster.name }}</span>
+                <el-dropdown>
+                  <el-button type="text">
+                    操作
+                    <i class="el-icon-arrow-down el-icon--right"></i>
+                  </el-button>
+                  <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item>批量操作从控</el-dropdown-item>
+                  </el-dropdown-menu>
+                </el-dropdown>
+              </div>
+              <ul class="slaver-list">
                 <li
-                  class="channel-item"
-                  v-for="(channel, ckey) in slaver.list"
-                  :span="3"
-                  :key="ckey"
-                  @click="showChannel(master, channel, slaver)"
+                  class="slaver-item"
+                  v-for="(slaver, sKey) in activeMaster.slaverList"
+                  :key="sKey"
                 >
-                  <ContextMenu>
-                    <svg-icon
-                      class="channel-icon"
-                      icon-class="batter"
-                    ></svg-icon>
-                    <template v-slot:menu>
-                      <a
-                        href="javascript:;"
-                        v-for="menu in batteryCtxMenu"
-                        :key="menu.action"
-                        @click="changeStatus(menu.action, channel, slaver)"
-                      >
-                        {{ menu.name }}
-                      </a>
-                      <a
-                        href="javascript:;"
-                        @click="calOpen(channel, slaver, master)"
-                      >
-                        设置
-                      </a>
-                      <a
-                        href="javascript:;"
-                        @click="stepsSetShow(channel, slaver, master)"
-                      >
-                        编辑工步
-                      </a>
-                    </template>
-                  </ContextMenu>
+                  <div class="slaver-item-l">{{ slaver.name }}</div>
+                  <ul class="channel-list">
+                    <li
+                      class="channel-item"
+                      v-for="(channel, ckey) in slaver.list"
+                      :span="3"
+                      :key="ckey"
+                      @click="showChannel(activeMaster, channel, slaver)"
+                    >
+                      <ContextMenu>
+                        <svg-icon
+                          class="channel-icon"
+                          icon-class="batter"
+                        ></svg-icon>
+                        <template v-slot:menu>
+                          <a
+                            href="javascript:;"
+                            v-for="menu in batteryCtxMenu"
+                            :key="menu.action"
+                            @click="changeStatus(menu.action, channel, slaver)"
+                          >
+                            {{ menu.name }}
+                          </a>
+                          <a
+                            href="javascript:;"
+                            @click="calOpen(channel, slaver, activeMaster)"
+                          >
+                            局部设置
+                          </a>
+                          <a
+                            href="javascript:;"
+                            @click="stepsSetShow(channel, slaver, activeMaster)"
+                          >
+                            编辑工步
+                          </a>
+                        </template>
+                      </ContextMenu>
+                    </li>
+                  </ul>
+
+                  <div class="slaver-item-r">
+                    <el-dropdown>
+                      <el-button type="text">
+                        操作
+                        <i class="el-icon-arrow-down el-icon--right"></i>
+                      </el-button>
+                      <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item
+                          @click.native="openSlaverTrend(activeMaster, slaver)"
+                        >
+                          查看
+                        </el-dropdown-item>
+                        <el-dropdown-item>批量操作通道</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </el-dropdown>
+                  </div>
                 </li>
               </ul>
-              <div class="slaver-item-r">
-                <el-button @click="openSlaverTrend(master, slaver)">
-                  查看
-                </el-button>
-              </div>
-            </li>
-          </ul>
-        </el-collapse-transition>
-      </li>
-    </ul>
+            </el-card>
+          </div>
+        </transition>
+      </title-box>
 
-    <StepSetModal
-      :show.sync="stepsShow"
-      :showItem="stepsShowItem"
-    ></StepSetModal>
+      <!-- <ul class="master-list">
+        <li
+          class="master-item"
+          v-for="(master, mKey) in batteryList"
+          :key="mKey"
+        >
+          <div
+            class="master-box"
+            @click="master.slaverShow = !master.slaverShow"
+          >
+            <span>{{ master.name }}</span>
+            <svg-icon class="channel-icon" icon-class="down"></svg-icon>
+          </div>
+          <el-collapse-transition>
+            <ul class="slaver-list" v-if="master.slaverShow">
+              <li
+                class="slaver-item"
+                v-for="(slaver, sKey) in master.slaverList"
+                :key="sKey"
+              >
+                <div class="slaver-item-l">{{ slaver.name }}</div>
+                <ul class="channel-list">
+                  <li
+                    class="channel-item"
+                    v-for="(channel, ckey) in slaver.list"
+                    :span="3"
+                    :key="ckey"
+                    @click="showChannel(master, channel, slaver)"
+                  >
+                    <ContextMenu>
+                      <svg-icon
+                        class="channel-icon"
+                        icon-class="batter"
+                      ></svg-icon>
+                      <template v-slot:menu>
+                        <a
+                          href="javascript:;"
+                          v-for="menu in batteryCtxMenu"
+                          :key="menu.action"
+                          @click="changeStatus(menu.action, channel, slaver)"
+                        >
+                          {{ menu.name }}
+                        </a>
+                        <a
+                          href="javascript:;"
+                          @click="calOpen(channel, slaver, master)"
+                        >
+                          局部设置
+                        </a>
+                        <a
+                          href="javascript:;"
+                          @click="stepsSetShow(channel, slaver, master)"
+                        >
+                          编辑工步
+                        </a>
+                      </template>
+                    </ContextMenu>
+                  </li>
+                </ul>
+                <div class="slaver-item-r">
+                  <el-button @click="openSlaverTrend(master, slaver)">
+                    查看
+                  </el-button>
+                </div>
+              </li>
+            </ul>
+          </el-collapse-transition>
+        </li>
+      </ul> -->
 
-    <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
+      <StepSetModal
+        :show.sync="stepsShow"
+        :showItem="stepsShowItem"
+      ></StepSetModal>
+
+      <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
+
+      <BatchModal ref="batchModal" :show.sync="batchShow"></BatchModal>
+    </div>
+    <div v-else>请先设置串口</div>
   </div>
 </template>
 
@@ -96,16 +199,22 @@ import { typedKeys } from '@/shared/utils'
 import { setChannelStatus, translateSet } from '@/renderer/ipc/channel'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
+import BatchModal from './components/BatchModal.vue'
+import { SettingStatus } from '@/renderer/store/modules/Setting'
 
 @Component({
   name: 'Home',
   components: {
     ContextMenu,
     StepSetModal,
-    CalModal
+    CalModal,
+    BatchModal
   }
 })
 export default class Home extends Vue {
+  $refs!: {
+    batchModal: BatchModal
+  }
   batteryShow = []
   batteryCtxMenu = [
     { name: '开始', action: 'start' },
@@ -115,8 +224,9 @@ export default class Home extends Vue {
   ]
   batteryList: any = {}
 
-  portItem: any = null
+  // portItem: any = null
   portList: any[] = []
+  portPath = SettingStatus.portPath
 
   stepsShow = false
   stepsShowItem: any = {
@@ -132,12 +242,23 @@ export default class Home extends Vue {
     channelId: null
   }
 
+  batchShow = false
+
+  activeMasterId = ''
+
+  get activeMaster() {
+    return this.batteryList[this.activeMasterId]
+  }
+
+  handleClick() {}
+
+  get readTranslate() {
+    return SettingStatus.$readTranslate
+  }
+
   changeStatus(status, channel, slaver) {
-    if (!this.portItem) {
-      return this.$message.info('请先选择串口')
-    }
     setChannelStatus({
-      path: this.portItem.path,
+      path: this.portPath,
       slaverId: slaver.id,
       channelId: channel.id,
       status
@@ -146,7 +267,7 @@ export default class Home extends Vue {
 
   stepsSetShow(channel: any, slaver: any, master: any) {
     this.stepsShowItem = {
-      path: this.portItem.path,
+      path: this.portPath,
       masterId: master.id,
       slaverId: slaver.id,
       channelId: channel.id
@@ -156,7 +277,7 @@ export default class Home extends Vue {
 
   calOpen(channel: any, slaver: any, master: any) {
     this.calShowItem = {
-      path: this.portItem.path,
+      path: this.portPath,
       masterId: master.id,
       slaverId: slaver.id,
       channelId: channel.id
@@ -168,7 +289,7 @@ export default class Home extends Vue {
     this.$command.send('/createdWin', {
       type: 'channel',
       data: {
-        path: this.portItem.path,
+        path: this.portPath,
         masterId: master.id,
         slaverId: slaver.id,
         channelId: channel.id
@@ -181,36 +302,36 @@ export default class Home extends Vue {
     this.$command.send('/createdWin', {
       type: 'slaverTrend',
       data: {
-        path: this.portItem.path,
+        path: this.portPath,
         masterId: master.id,
         slaverId: slaver.id
       }
     })
   }
 
-  async setTranslate(portItem: any) {
-    const status = !portItem.readTranslate
-    await translateSet({
-      path: portItem.path,
-      status
-    })
-    portItem.readTranslate = status
+  openBatch(type: string) {
+    this.$refs.batchModal.open(type, this.batteryList)
+    this.batchShow = true
+  }
+
+  async setTranslate() {
+    await SettingStatus.toggleReadTranslate()
   }
 
   mounted() {
-    this.$command.on({
-      eventName: '/port/sendList',
-      onEmit: data => {
-        this.portList = data.list.map(item => {
-          return {
-            readTranslate: false,
-            ...item
-          }
-        })
-      },
-      vm: this
-    })
-    this.$command.send('/port/getPortList', true)
+    // this.$command.on({
+    //   eventName: '/port/sendList',
+    //   onEmit: data => {
+    //     this.portList = data.list.map(item => {
+    //       return {
+    //         readTranslate: false,
+    //         ...item
+    //       }
+    //     })
+    //   },
+    //   vm: this
+    // })
+    // this.$command.send('/port/getPortList', true)
     const obj: any = {}
     typedKeys(channelList).forEach(masterKey => {
       obj[masterKey] = {
@@ -241,6 +362,9 @@ export default class Home extends Vue {
     line-height: 40px;
     padding: 0 20px;
   }
+}
+.slaver-list {
+  margin: 0;
 }
 .slaver-item {
   display: flex;
@@ -276,6 +400,54 @@ export default class Home extends Vue {
         color: #606266;
         font-size: 40px;
       }
+    }
+  }
+}
+
+::v-deep .master-group {
+  display: flex;
+  flex-flow: row wrap;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  .master-group-item {
+    flex: 10%;
+
+    &:nth-of-type(10n + 1):after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      width: 1000%;
+      height: 1px;
+      background: #ccc;
+      z-index: 99;
+    }
+    &:nth-of-type(10n) {
+      .el-radio-button__inner {
+        border: none;
+      }
+    }
+
+    .el-radio-button__inner {
+      display: block;
+      box-sizing: border-box;
+      border: none;
+      border-right: 1px solid #ccc;
+    }
+  }
+}
+.box-card {
+  margin-top: 40px;
+  .box-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  ::v-deep {
+    .el-card__header {
+      padding: 8px 20px;
+    }
+    .el-card__body {
+      padding: 0;
     }
   }
 }

@@ -13,6 +13,9 @@ class ConfigManage {
       sampling: {
         U: { max: 10000, min: 0 },
         I: { max: 6000, min: -6000 }
+      },
+      base: {
+        portPath: ''
       }
     }
   })

@@ -29,6 +29,7 @@ export default class USBManager {
     this.setCal()
     this.readCal()
     this.getChannelList()
+    this.setMasterMode()
   }
 
   /** 开始监测USB */
@@ -59,12 +60,20 @@ export default class USBManager {
   sendList() {
     ipcManage.send('/port/sendList', async () => {
       const list = await SerialPort.list()
+      list.forEach(item => {
+        item['readTranslate'] = false
+      })
       const keys = Object.keys(this.cache)
       if (keys.length > 0) {
         keys.forEach(key => {
-          const has = list.find(item => item.path === key)
-          if (!has) {
+          const listItem = list.find(item => item.path === key)
+          if (!listItem) {
             this.cache.delete(key)
+          } else {
+            const portItem = this.cache.get(key)
+            if (portItem) {
+              listItem['readTranslate'] = portItem.translateReadNow
+            }
           }
         })
       }
@@ -150,5 +159,20 @@ export default class USBManager {
       const portItem = this.getPortData(data.path)
       return await portItem.getChannelList(data)
     })
+  }
+
+  // 主控模式
+  /** 设置保护参数 */
+  setMasterMode() {
+    ipcManage.handle(
+      '/port/masterMode',
+      async (event, path: string, type: string, data: any) => {
+        const portItem = this.getPortData(data.path)
+        if (!portItem.masterMode[type]) {
+          throw new Error(`fun ${type} undefined`)
+        }
+        return await portItem.masterMode[type](data)
+      }
+    )
   }
 }

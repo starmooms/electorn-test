@@ -15,6 +15,7 @@ import BufModel, { BufData, BufWriteListModel } from '../utils/ParsBuf'
 import winManager from './WinManager'
 import ipcManage from './IpcManage'
 import is from 'electron-is'
+import MasterMode from './MasterMode'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -42,20 +43,20 @@ const Delimiter = SerialPort.parsers.Delimiter
 
 export default class PortItem {
   path: string
-  port: SerialPort
-  parser: SerialPort.parsers.Delimiter
+  port!: SerialPort
+  parser!: SerialPort.parsers.Delimiter
+  translateReadNow = false
   translate = new Map<number, MasterTranslate>()
   emitList = new Map<string, (dataBuf: Buffer) => any>()
   channelList!: any
   modelData = {
     workStep: [1, 1, 1, 1, 1, 1, 4, 2, { byte: 4, hasSigned: true }, 4, 4, 4, 1, 4, 4] // eslint-disable-line
   }
+  masterMode!: MasterMode
 
   constructor(path: string) {
     this.path = path
-    const { port, parser } = this.created(path)
-    this.port = port
-    this.parser = parser
+    this.created(path)
     this.channelList = channelList
   }
 
@@ -85,7 +86,10 @@ export default class PortItem {
     port.on('error', err => {
       logger.warn('串口触发error', err)
     })
-    return { port, parser }
+    this.port = port
+    this.parser = parser
+    this.masterMode = new MasterMode(this)
+    return
   }
 
   /** 串口通讯 */
@@ -201,6 +205,7 @@ export default class PortItem {
 
   /** 读采样 */
   readTranslate() {
+    if (this.translateReadNow) return
     const masterId = 0
     const slaverId = 0
     const bufModel = new BufModel([1, 1, 2, 4, 1, 1]) // eslint-disable-line
@@ -277,7 +282,9 @@ export default class PortItem {
     translate.close = () => {
       clearTimeout(timer)
       translate.close = undefined
+      this.translateReadNow = false
     }
+    this.translateReadNow = true
     this.translate.set(masterId, translate)
   }
 

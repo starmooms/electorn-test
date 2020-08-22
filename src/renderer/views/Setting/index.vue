@@ -20,15 +20,21 @@
 import { Vue, Component } from 'vue-property-decorator'
 import Protect from './components/Protect.vue'
 import Sampling from './components/Sampling.vue'
+import Base from './components/Base.vue'
 
 @Component({
   components: {
     Protect,
-    Sampling
+    Sampling,
+    Base
   }
 })
 export default class Setting extends Vue {
   tabList = [
+    {
+      label: '基础设置',
+      name: 'Base'
+    },
     {
       label: '保护参数设置',
       name: 'Protect'

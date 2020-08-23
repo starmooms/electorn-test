@@ -6,16 +6,24 @@ import {
   workStepsInput,
   workSteps,
   controlCode,
-  WORKSTEPS,
+  WORKSTEPS_MAP,
   getCalList,
-  channelList
+  channelList,
+  PROTECT,
+  WORKSTEPS_TYPE_MAP,
+  WORKSTEPSINPUT
 } from '@/shared/config/port'
-import BufModel, { BufData, BufWriteListModel } from '../utils/ParsBuf'
+import BufModel, {
+  BufData,
+  BufWriteListModel,
+  BufWriteModel
+} from '../utils/ParsBuf'
 
 import winManager from './WinManager'
 import ipcManage from './IpcManage'
 import is from 'electron-is'
 import MasterMode from './MasterMode'
+import { typedKeys } from '@/shared/utils'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -31,12 +39,14 @@ interface PostOpts {
 }
 
 interface BaseOpts {
-  slaverId: number
-  channelId: number
+  slaverId: number[]
+  channelId: number[]
+  masterId: number
 }
 
 interface WStepsOpts extends BaseOpts {
   list: any[]
+  protect: any
 }
 
 const Delimiter = SerialPort.parsers.Delimiter
@@ -50,7 +60,8 @@ export default class PortItem {
   emitList = new Map<string, (dataBuf: Buffer) => any>()
   channelList!: any
   modelData = {
-    workStep: [1, 1, 1, 1, 1, 1, 4, 2, { byte: 4, hasSigned: true }, 4, 4, 4, 1, 4, 4] // eslint-disable-line
+    protect: [2, 2, 2, 2, 2, 2, 4],
+    workStep: [1, 1, 1, 1, 4, 2, { byte: 4, hasSigned: true }, 4, 4, 4, 1, 4, 4] // eslint-disable-line
   }
   masterMode!: MasterMode
 
@@ -109,36 +120,59 @@ export default class PortItem {
     })
   }
 
+  setByt(len: number, arr1: number[]) {
+    const bytArr = Array(len).fill(0)
+    arr1.forEach(item => {
+      bytArr[item] = 1
+    })
+    return parseInt(bytArr.join(''), 2)
+  }
+
   /** 写工步 */
   async writeSteps(data: WStepsOpts) {
     const listLen = data.list.length
-    let dataBuf = Buffer.from([0x00, 0xff, ...Array(8).fill(0x00), listLen])
+    console.log(data)
+    const dataModel = new BufWriteModel([ 1, 1, 4, 1, 1,  ...this.modelData.protect, 1]) // eslint-disable-line
+    const dataWriteModel = dataModel.getWriteModel()
+    dataWriteModel.write(1, data.masterId)
+    dataWriteModel.write(2, this.setByt(32, data.slaverId))
+    dataWriteModel.write(3, this.setByt(8, data.channelId))
+    dataWriteModel.write(12, listLen)
+    PROTECT.forEach(item => {
+      dataWriteModel.write(item.index + 5, data.protect[item.type] || 0)
+    })
+
     const bufModel = new BufWriteListModel(listLen, this.modelData.workStep)
     data.list.forEach((item: any, index: number) => {
-      const step = workSteps[item.setId]
+      const step = WORKSTEPS_TYPE_MAP[item.type]
       if (!step || !step.input) {
         throw new Error(`step ${item.setId} NO defind`)
       }
       const writeModel = bufModel.getWriteModel(index)
-      writeModel.write(1, data.slaverId)
-      writeModel.write(2, data.channelId)
-      writeModel.write(3, index)
-      writeModel.write(4, 0)
-      writeModel.write(5, `0x${step.value}`)
-      step.input.forEach((type: string) => {
-        const inputMap = workStepsInput[type]
-        if (inputMap) {
-          let value = item[type]
-          if (type === 'loopStart') {
+      writeModel.write(1, index)
+      writeModel.write(2, 0)
+      writeModel.write(3, `0x${step.key}`)
+      typedKeys(item.input).forEach(key => {
+        const input = WORKSTEPSINPUT[key]
+        if (input) {
+          let value = item.input[key]
+          if (key === 'loopStart') {
             value = Number(value) - 1
           }
-          writeModel.write(inputMap.serial, value)
+          writeModel.write(input.serial, value)
         }
       })
     })
-    dataBuf = Buffer.concat([dataBuf, bufModel.buf])
-    const result = agreement.setData(dataBuf, controlCode.writeWorkSteps)
-    this.port.write(result.buf)
+    const dataBuf = Buffer.concat([dataModel.buf, bufModel.buf])
+    const result = agreement.createData({
+      masterId: data.masterId,
+      slaverId: 0xff,
+      type: 0x02,
+      code: controlCode.master.stepsSet,
+      data: dataBuf
+    })
+    logger.info('写工步', dataBuf.toString('hex'))
+    await this.port.write(result.buf)
   }
 
   readStepsInput(bufData: BufData, key: string) {
@@ -156,20 +190,41 @@ export default class PortItem {
 
   /** 读工步 */
   async readSteps(opts: BaseOpts) {
-    const buf = Buffer.from([0x00, opts.slaverId, opts.channelId])
-    const data = agreement.setData(buf, controlCode.slaver.stepsRead)
+    const buf = Buffer.from([
+      0x00,
+      opts.masterId || 0,
+      opts.slaverId,
+      opts.channelId
+    ])
+
+    const data = agreement.createData({
+      masterId: opts.masterId,
+      slaverId: 0xff,
+      type: 0x02,
+      code: controlCode.master.stepsRead,
+      data: buf
+    })
     let resultBuf: Buffer
     // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b00000022b0000029a00000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000009000000000000' // eslint-disable-line
     // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b0000000370000004200000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000063000000000000'  // eslint-disable-line
     if (isDev) {
-      const a = '00ff0000000000000000040000000000a100000000000a000000140000000000000000000000000000000000000000000000000100a300000000000affffffd8000000000000000000000000000000000000000014000000020090000001900000000000000000000000000000000000000000000000000000000000000300700000000000000000000000000000000000000000003c040000000000000000'  // eslint-disable-line
-      resultBuf = Buffer.from(a, 'hex')
+      // const a = '68010100ff68a9000000003e0000ffffffffff000000000000000000000000000000000000000000a10004000000030000000000000000000000000000000000000000000000000000009568edededed'  // eslint-disable-line
+      const b = '0000ffffffffff0000c8006400000000000000000000000006000000a10000000000140000000a000000000000000000000000000000000000000000000100a200000000001400000189000000000000000000000000000000000000000000000200a30000000000310000002700000000000000000000000000000000000000001d000300b000000000000400000003000000000000000000000000000000000000000000000400900000001e000000000000000000000000000000000000000000000000000000000500700000000000000000000000000000000000000000001e130000000000000000'  // eslint-disable-line
+      resultBuf = Buffer.from(b, 'hex')
     } else {
       resultBuf = await this.post({ data })
     }
 
-    const stepsLen = resultBuf.readUInt8(10)
-    const stepsBuf = resultBuf.slice(11)
+    const dataModel = new BufModel([1, 1, 4, 1, 1, ...this.modelData.protect, 1]) // eslint-disable-line
+    const baseBufData = dataModel.getBufData(resultBuf)
+    const protect = {}
+    PROTECT.forEach(item => {
+      protect[item.type] = baseBufData.getIndex(item.index + 5)
+    })
+
+    const { offset } = dataModel.sliceData[dataModel.sliceData.length - 1]
+    const stepsLen = baseBufData.getIndex(12)
+    const stepsBuf = resultBuf.slice(offset + 1)
     const stepsList: any[] = []
     const bufModel = new BufModel(this.modelData.workStep) // eslint-disable-line
     for (let i = 0; i < stepsLen; i++) {
@@ -177,7 +232,7 @@ export default class PortItem {
       const bufData = bufModel.getBufData(
         stepsBuf.slice(start, start + bufModel.bufLength)
       )
-      const workerItem = WORKSTEPS[bufData.getIndexHex(5)]
+      const workerItem = WORKSTEPS_MAP[bufData.getIndexHex(3)]
       if (workerItem) {
         const input = workerItem.input
         const workerArr = input.other
@@ -186,13 +241,13 @@ export default class PortItem {
         const worker = workerArr.map(key => this.readStepsInput(bufData, key))
         if (workerItem.type === 'loop') {
           worker.unshift({
-            data: resultBuf.readIntBE(2 + opts.channelId, 1) + 1,
+            data: Number(baseBufData.getIndex(4)) + 1,
             name: '当前工步序号',
             unit: ''
           })
         }
         stepsList.push({
-          id: bufData.getIndex(3),
+          id: bufData.getIndex(1),
           type: workerItem.type,
           name: workerItem.name,
           worker,
@@ -200,7 +255,10 @@ export default class PortItem {
         })
       }
     }
-    return stepsList
+    return {
+      list: stepsList,
+      protect
+    }
   }
 
   /** 读采样 */

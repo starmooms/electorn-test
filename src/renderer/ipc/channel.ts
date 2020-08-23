@@ -9,9 +9,11 @@ interface SetStatus {
 
 interface SetSteps {
   path: string
-  slaverId: number
-  channelId: number
+  masterId: number
+  slaverId: number[]
+  channelId: number[]
   list: any[]
+  protect: any
 }
 
 interface ChannelListOpts {
@@ -61,7 +63,6 @@ export function readCal(data: any) {
 export function getChannelList(data: ChannelListOpts) {
   return $command.invoke(`/port/channelList`, data)
 }
-
 
 // export default class Ipc {
 

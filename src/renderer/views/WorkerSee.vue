@@ -33,38 +33,58 @@
           <el-button @click="workStepsOpen">编辑工步</el-button>
         </div>
 
-        <el-divider content-position="left">当前工步</el-divider>
-        <div class="steps-list">
-          <el-table border max-height="40vh" :data="nowStepList">
-            <el-table-column label="工步信息" prop="msg"></el-table-column>
-            <el-table-column label="工步工作条件" prop="msg">
-              <template slot-scope="{ row }">
-                <el-tag
-                  :disable-transitions="true"
-                  effect="dark"
-                  class="tag-item"
-                  v-for="item in row.worker"
-                  :key="item.label"
-                >
-                  {{ item.label }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="工步限制条件" prop="limt">
-              <template slot-scope="{ row }">
-                <el-tag
-                  effect="dark"
-                  class="tag-item"
-                  :disable-transitions="true"
-                  v-for="item in row.limt"
-                  :key="item.label"
-                >
-                  {{ item.label }}
-                </el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
+        <title-box name="当前工步">
+          <div class="steps-list">
+            <el-table border max-height="40vh" :data="nowStepList">
+              <el-table-column label="工步信息" prop="msg"></el-table-column>
+              <el-table-column label="工步工作条件" prop="msg">
+                <template slot-scope="{ row }">
+                  <el-tag
+                    :disable-transitions="true"
+                    effect="dark"
+                    class="tag-item"
+                    v-for="item in row.worker"
+                    :key="item.label"
+                  >
+                    {{ item.label }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="工步限制条件" prop="limt">
+                <template slot-scope="{ row }">
+                  <el-tag
+                    effect="dark"
+                    class="tag-item"
+                    :disable-transitions="true"
+                    v-for="item in row.limt"
+                    :key="item.label"
+                  >
+                    {{ item.label }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </title-box>
+
+        <title-box name="保护参数" style="width: 400px;">
+          <el-form
+            class="protect-form"
+            :model="protectForm"
+            label-width="200px"
+          >
+            <el-form-item
+              v-for="item in protectList"
+              :key="item.index"
+              :label="item.name"
+            >
+              <el-input
+                v-model.number="protectForm[item.type]"
+                :disabled="true"
+              ></el-input>
+            </el-form-item>
+          </el-form>
+        </title-box>
 
         <TrendChart
           v-if="channelId !== null"
@@ -88,6 +108,8 @@ import command from '../command'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
 import TrendChart from '@/renderer/components/TrendChart.vue'
+import { deepClone } from '@/shared/utils'
+import { GET_PROTECT_FORM, PROTECT } from '@/shared/config/port'
 
 interface PortData {
   path: string
@@ -123,6 +145,9 @@ export default class WorkerSee extends Vue {
   // 2
   nowStepDialog = false
   nowStepList: any[] = []
+
+  protectList = deepClone(PROTECT)
+  protectForm = GET_PROTECT_FORM()
 
   get channelId() {
     return this.portItem ? this.portItem.channelId : null
@@ -188,7 +213,8 @@ export default class WorkerSee extends Vue {
           label: `${item.name}：${item.data}${item.unit}`
         }
       }
-      this.nowStepList = data.data.map((item: any) => {
+      this.protectForm = data.data.protect
+      this.nowStepList = data.data.list.map((item: any) => {
         const worker = item.worker.map(setInput)
         const limt = item.limt.map(setInput)
         return {
@@ -255,5 +281,11 @@ export default class WorkerSee extends Vue {
   background-color: #f3f3f3;
   border: 1px solid #ccc;
   padding: 20px 0;
+}
+
+.protect-form {
+  max-width: 800px;
+  display: flex;
+  flex-flow: row wrap;
 }
 </style>

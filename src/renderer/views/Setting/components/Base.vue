@@ -15,7 +15,7 @@
       </el-form>
       <FromAction
         ref="FromAction"
-        title="采样设置"
+        title="基础设置"
         :data.sync="form"
         @submit="submit"
       ></FromAction>

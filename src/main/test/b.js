@@ -138,6 +138,8 @@
 // const a = Buffer.from([0x00])
 // console.log(a.toString('hex'))
 
-const b = Buffer.alloc(4)
-b.write([0x25], 1, 1)
-console.log(b)
+const a = '01000010'
+const c = parseInt(a, 2)
+const d = Buffer.alloc(1)
+d.writeIntBE(c, 0, 1)
+console.log(d)

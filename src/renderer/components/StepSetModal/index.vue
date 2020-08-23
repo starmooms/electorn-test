@@ -6,52 +6,102 @@
       :close-on-click-modal="false"
       :visible.sync="stepsDialog"
     >
-      <el-button type="text" @click="stepsAdd">添加工步</el-button>
-      <el-button type="text" @click="tplSaveOpen">保存工步模板</el-button>
-      <el-button type="text" @click="tplUseOpen">应用工步模板</el-button>
-
-      <el-table :data="stepsList" height="40vh">
-        <el-table-column type="index" label="步次" width="50"></el-table-column>
-        <el-table-column label="工步类型" width="150">
-          <template slot-scope="{ row, $index }">
-            <el-select
-              v-model="row.setId"
-              placeholder="请选择"
-              @change="stepItemIdChange($event, row, $index)"
+      <template v-if="isBatch">
+        <title-box name="选择通道">
+          <SelectMaster v-model="batchMasterId"></SelectMaster>
+          <el-divider content-position="left">从控</el-divider>
+          <div class="slaver-select">
+            <el-checkbox v-model="batchSlaverIdAll">
+              全选
+            </el-checkbox>
+            <el-checkbox-group
+              class="slaver-select-list"
+              v-model="batchSlaverId"
             >
-              <el-option
-                v-for="item in stepsSelectList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-                :disabled="item.value === 'loop' && hasLoop"
-              ></el-option>
-            </el-select>
-          </template>
-        </el-table-column>
-        <el-table-column label="设置" min-width="400">
-          <template
-            slot-scope="{ row }"
-            v-if="row.setId && stepsSelectMap[row.setId]"
-          >
-            <div class="input-box">
-              <div
-                v-for="inputType in stepsSelectMap[row.setId].input"
-                :key="inputType"
-                class="input-item"
+              <el-checkbox
+                class="slaver-select-item"
+                v-for="(item, index) in 32"
+                :label="index"
+                :key="item"
               >
-                {{ stepsInputMap[inputType].name }}：
-                <el-input type="text" v-model.number="row[inputType]" />
+                从控{{ item }}
+              </el-checkbox>
+            </el-checkbox-group>
+          </div>
+          <el-divider content-position="left">通道</el-divider>
+          <el-checkbox v-model="batchChannelIdAll">
+            全选
+          </el-checkbox>
+          <el-checkbox-group v-model="batchChannelId">
+            <el-checkbox v-for="(item, index) in 8" :label="index" :key="item">
+              通道{{ item }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </title-box>
+      </template>
+
+      <title-box name="工步编辑">
+        <el-button type="text" @click="stepsAdd">添加工步</el-button>
+        <el-button type="text" @click="tplSaveOpen">保存工步模板</el-button>
+        <el-button type="text" @click="tplUseOpen">应用工步模板</el-button>
+
+        <el-table :data="stepsList">
+          <el-table-column
+            type="index"
+            label="步次"
+            width="50"
+          ></el-table-column>
+          <el-table-column label="工步类型" width="150">
+            <template slot-scope="{ row, $index }">
+              <el-select
+                v-model="row.name"
+                placeholder="请选择"
+                value-key="name"
+                @change="stepItemIdChange($event, row, $index)"
+              >
+                <el-option
+                  v-for="item in stepsSelectOpts"
+                  :key="item.label"
+                  :label="item.label"
+                  :value="item.value"
+                  :disabled="item.value.type === 'loop' && hasLoop"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="设置" min-width="400">
+            <template slot-scope="{ row }" v-if="row.input">
+              <div class="input-box">
+                <div
+                  v-for="(value, key) in row.input"
+                  :key="key"
+                  class="input-item"
+                >
+                  {{ stepsInputMap[key].name }}：
+                  <el-input type="text" v-model.number="row.input[key]" />
+                </div>
               </div>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column width="100" label="操作">
-          <template slot-scope="{ $index }">
-            <el-button type="text" @click="stepsDel($index)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+            </template>
+          </el-table-column>
+          <el-table-column width="100" label="操作">
+            <template slot-scope="{ $index }">
+              <el-button type="text" @click="stepsDel($index)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </title-box>
+
+      <title-box name="保护参数">
+        <el-form class="protect-form" :model="protectForm" label-width="200px">
+          <el-form-item
+            v-for="item in protectList"
+            :key="item.index"
+            :label="item.name"
+          >
+            <el-input v-model.number="protectForm[item.type]"></el-input>
+          </el-form-item>
+        </el-form>
+      </title-box>
 
       <div slot="footer">
         <el-button @click="stepsDialog = false">取 消</el-button>
@@ -68,23 +118,29 @@
 <script lang="ts">
 import { Component, Vue, PropSync, Prop, Watch } from 'vue-property-decorator'
 import { Port } from '@/types/Port'
-import { getPortSelectList, getPortInputList } from '@/renderer/utils/getConfig'
+import { getStepsOpts, getStepsInputMap } from '@/renderer/utils/getConfig'
 import { setSteps } from '@/renderer/ipc/channel'
 import StepTplSave from './StepTplSave.vue'
 import StepTplUse from './StepTplUse.vue'
 import isEqual from 'lodash/isEqual'
 import { deepClone } from '@/shared/utils'
+import SelectMaster from '@/renderer/components/SelectMaster.vue'
+import { ChannelStatus } from '@/renderer/store/modules/Channel'
+import { PROTECT, GET_PROTECT_FORM } from '@/shared/config/port'
+import { SettingStatus } from '@/renderer/store/modules/Setting'
 
 @Component({
   components: {
     StepTplSave,
-    StepTplUse
+    StepTplUse,
+    SelectMaster
   }
 })
 export default class StepSetModal extends Vue {
   @PropSync('show', { type: Boolean, default: false })
   private stepsDialog!: boolean
 
+  @Prop({ type: Boolean, default: false }) isBatch!: boolean
   @Prop({ type: Object }) private showItem!: any | null
 
   list: Port.Item[] = []
@@ -92,66 +148,113 @@ export default class StepSetModal extends Vue {
   tplSaveShow = false
   tplUseShow = false
 
-  // nowPort: Port.Item | null = null
-  // stepsDialog = false
   stepsList: any[] = []
-  stepsSelectList = getPortSelectList()
-  stepsSelectMap: any = {}
-  stepsInputMap: any = {}
+  stepsSelectOpts = getStepsOpts()
+  stepsInputMap = getStepsInputMap()
   stepsId = 0
 
+  protectList = deepClone(PROTECT)
+  protectForm = GET_PROTECT_FORM()
+
+  batchMasterId = 'master_0'
+  batchSlaverId: number[] = []
+  batchChannelId: number[] = []
+  batchSlaverList: number[] = []
+
+  get channelList() {
+    return ChannelStatus.list
+  }
+
+  get batchMaster() {
+    return this.channelList[this.batchMasterId] || null
+  }
+
+  get batchSlaverIdAll() {
+    return this.batchSlaverId.length === 32
+  }
+
+  set batchSlaverIdAll(v) {
+    this.batchSlaverId = v ? this.batchSlaverList : []
+  }
+
+  get batchChannelIdAll() {
+    return this.batchChannelId.length === 8
+  }
+
+  set batchChannelIdAll(v) {
+    this.batchChannelId = v ? [0, 1, 2, 3, 4, 5, 6, 7] : []
+  }
+
+  get portPath() {
+    return SettingStatus.portPath
+  }
+
   get hasLoop() {
-    return this.stepsList.find((item: any) => item.setId === 'loop')
+    return this.stepsList.find((item: any) => item.type === 'loop')
       ? true
       : false
   }
 
   async stepsSubmit() {
-    if (!this.showItem) {
-      this.$message.error('参数错误')
-      return
+    let msg = ''
+    let masterId = 0
+    let slaverId: number[] = []
+    let channelId: number[] = []
+    if (this.isBatch) {
+      if (!this.batchMaster) {
+        msg = '请先选择机柜'
+      } else if (this.batchSlaverId.length === 0) {
+        msg = '请先选择从控'
+      } else if (this.batchChannelId.length === 0) {
+        msg = '请先选择通道'
+      } else {
+        masterId = this.batchMaster.id
+        slaverId = this.batchSlaverId
+        channelId = this.batchChannelId
+      }
+    } else {
+      if (!this.showItem) {
+        msg = 'showItem 参数错误'
+      } else {
+        masterId = this.showItem.masterId
+        slaverId = [this.showItem.slaverId]
+        channelId = [this.showItem.channelId]
+      }
     }
-    const list = this.stepsList.filter(item => {
-      if (item.setId) {
-        const input = this.stepsSelectMap[item.setId].input
-        if (input.length > 0) {
-          const hasNull = input.find(i => !item[i])
+
+    let list: any = []
+    if (!msg) {
+      list = this.stepsList.filter(item => {
+        if (item.name) {
+          const hasNull = Object.keys(item.input).find(key => !item.input[key])
+          if (hasNull) {
+            msg = '工步中有参数未设置'
+          }
+          console.log(hasNull)
           return !hasNull
         }
-      }
-      return false
-    })
+        return false
+      })
+    }
+    if (msg) {
+      this.$message.warning(msg)
+      return
+    }
+
     if (list.length === 0) {
       this.$message.error('请正确设置工步')
       return
     }
-    // this.$message.info(JSON.stringify(list))
     const data = await setSteps({
+      path: this.portPath,
       list,
-      ...this.showItem
+      masterId,
+      slaverId,
+      channelId,
+      protect: this.protectForm
     })
     if (data.status) {
       this.$message.success('设置工步成功')
-      // console.log(isEqual(this.list, this.listTpl))
-      // if (isEqual(this.list, this.listTpl)) {
-      //   const confirm = await this.$confirm(
-      //     '设置工步成功, 是否保存当前工步设置?',
-      //     '提示',
-      //     {
-      //       confirmButtonText: '确定',
-      //       cancelButtonText: '取消',
-      //       type: 'success'
-      //     }
-      //   ).catch(() => {})
-      //   if (confirm === 'confirm') {
-      //     await setStoreConfig({
-      //       type: 'workStepTpl',
-      //       data: this.list
-      //     })
-      //   }
-      // } else {
-      //   this.$message.success('设置工步成功')
-      // }
       this.closeModal()
     }
   }
@@ -165,7 +268,20 @@ export default class StepSetModal extends Vue {
     if (v === true) {
       this.stepsList = []
       this.stepsAdd()
+      if (this.isBatch) {
+        this.batchSelectReset()
+      }
     }
+  }
+
+  @Watch('batchMasterId')
+  changeBatchMaster() {
+    this.batchSelectReset()
+  }
+
+  batchSelectReset() {
+    this.batchSlaverIdAll = true
+    this.batchChannelIdAll = true
   }
 
   // @Watch('asyncShow')
@@ -194,11 +310,10 @@ export default class StepSetModal extends Vue {
   stepsAdd() {
     const obj: any = {
       id: ++this.stepsId,
-      setId: null
+      type: '',
+      name: '',
+      input: {}
     }
-    Object.keys(this.stepsInputMap).forEach(key => {
-      obj[key] = null
-    })
     if (this.hasLoop) {
       this.stepsList.splice(this.stepsList.length - 1, 0, obj)
     } else {
@@ -212,44 +327,67 @@ export default class StepSetModal extends Vue {
 
   stepItemIdChange(value, row, index) {
     const lastIndex = this.stepsList.length - 1
+    const input = {}
+    value.input.forEach(item => {
+      input[item] = null
+    })
+    row.input = input
+    row.type = value.type
+    row.name = value.name
     if (value === 'loop' && index !== lastIndex) {
       this.stepsList.splice(index, 1)
       this.stepsList.push(row)
     }
   }
 
-  getStepsList() {
-    const obj: any = {}
-    this.stepsSelectList.forEach(item => {
-      obj[item.value] = {
-        input: item.input
-      }
-    })
-    this.stepsSelectMap = obj
-    const inputAttr = getPortInputList()
-    this.stepsInputMap = inputAttr.inputList
-  }
-
   mounted() {
-    this.getStepsList()
+    this.batchSelectReset()
+    for (let i = 0; i < 32; i++) {
+      this.batchSlaverList.push(i)
+    }
   }
 }
 </script>
 
-<style lang="scss">
-.steps-add-dialog {
+<style lang="scss" scoped>
+::v-deep .steps-add-dialog {
   min-width: 900px;
+
+  .el-dialog__body {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-top: 0;
+  }
+
   .input-box {
     display: flex;
     flex-flow: row wrap;
     align-items: center;
     .input-item {
       flex: 0 0 33.33%;
-      margin: 10px 0;
+      margin-bottom: 10px;
+      &:nth-last-child(-n + 3) {
+        margin-bottom: 0;
+      }
       .el-input {
-        width: 108px;
+        width: 74px;
       }
     }
+  }
+
+  .slaver-select-list {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start;
+    .slaver-select-item {
+      flex: 0 0 12.5%;
+      margin-right: 0;
+    }
+  }
+
+  .protect-form {
+    display: flex;
+    flex-flow: row wrap;
   }
 }
 </style>

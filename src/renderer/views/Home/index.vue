@@ -5,13 +5,17 @@
         <el-button @click="setTranslate">
           {{ readTranslate ? '关闭采样' : '打开采样' }}
         </el-button>
+        <el-button type="primary" @click="stepsBatchOpen">
+          机柜批量编辑工步
+        </el-button>
         <el-button type="primary" @click="openBatch('master')">
           机柜批量设置
         </el-button>
       </el-form>
 
       <title-box name="通道列表">
-        <el-radio-group class="master-group" v-model="activeMasterId">
+        <SelectMaster v-model="activeMasterId"></SelectMaster>
+        <!-- <el-radio-group class="master-group" v-model="activeMasterId">
           <el-radio-button
             class="master-group-item"
             v-for="(master, mKey) in batteryList"
@@ -20,7 +24,7 @@
           >
             {{ master.name }}
           </el-radio-button>
-        </el-radio-group>
+        </el-radio-group> -->
         <transition name="el-fade-in">
           <div v-if="activeMaster">
             <!-- <el-divider content-position="left">
@@ -108,79 +112,10 @@
         </transition>
       </title-box>
 
-      <!-- <ul class="master-list">
-        <li
-          class="master-item"
-          v-for="(master, mKey) in batteryList"
-          :key="mKey"
-        >
-          <div
-            class="master-box"
-            @click="master.slaverShow = !master.slaverShow"
-          >
-            <span>{{ master.name }}</span>
-            <svg-icon class="channel-icon" icon-class="down"></svg-icon>
-          </div>
-          <el-collapse-transition>
-            <ul class="slaver-list" v-if="master.slaverShow">
-              <li
-                class="slaver-item"
-                v-for="(slaver, sKey) in master.slaverList"
-                :key="sKey"
-              >
-                <div class="slaver-item-l">{{ slaver.name }}</div>
-                <ul class="channel-list">
-                  <li
-                    class="channel-item"
-                    v-for="(channel, ckey) in slaver.list"
-                    :span="3"
-                    :key="ckey"
-                    @click="showChannel(master, channel, slaver)"
-                  >
-                    <ContextMenu>
-                      <svg-icon
-                        class="channel-icon"
-                        icon-class="batter"
-                      ></svg-icon>
-                      <template v-slot:menu>
-                        <a
-                          href="javascript:;"
-                          v-for="menu in batteryCtxMenu"
-                          :key="menu.action"
-                          @click="changeStatus(menu.action, channel, slaver)"
-                        >
-                          {{ menu.name }}
-                        </a>
-                        <a
-                          href="javascript:;"
-                          @click="calOpen(channel, slaver, master)"
-                        >
-                          局部设置
-                        </a>
-                        <a
-                          href="javascript:;"
-                          @click="stepsSetShow(channel, slaver, master)"
-                        >
-                          编辑工步
-                        </a>
-                      </template>
-                    </ContextMenu>
-                  </li>
-                </ul>
-                <div class="slaver-item-r">
-                  <el-button @click="openSlaverTrend(master, slaver)">
-                    查看
-                  </el-button>
-                </div>
-              </li>
-            </ul>
-          </el-collapse-transition>
-        </li>
-      </ul> -->
-
       <StepSetModal
         :show.sync="stepsShow"
         :showItem="stepsShowItem"
+        :isBatch="stepsBatch"
       ></StepSetModal>
 
       <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
@@ -199,6 +134,7 @@ import { typedKeys } from '@/shared/utils'
 import { setChannelStatus, translateSet } from '@/renderer/ipc/channel'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
+import SelectMaster from '@/renderer/components/SelectMaster.vue'
 import BatchModal from './components/BatchModal.vue'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 
@@ -208,7 +144,8 @@ import { SettingStatus } from '@/renderer/store/modules/Setting'
     ContextMenu,
     StepSetModal,
     CalModal,
-    BatchModal
+    BatchModal,
+    SelectMaster
   }
 })
 export default class Home extends Vue {
@@ -229,6 +166,7 @@ export default class Home extends Vue {
   portPath = SettingStatus.portPath
 
   stepsShow = false
+  stepsBatch = false
   stepsShowItem: any = {
     masterId: null,
     slaverId: null,
@@ -272,6 +210,12 @@ export default class Home extends Vue {
       slaverId: slaver.id,
       channelId: channel.id
     }
+    this.stepsBatch = false
+    this.stepsShow = true
+  }
+
+  stepsBatchOpen() {
+    this.stepsBatch = true
     this.stepsShow = true
   }
 
@@ -319,19 +263,6 @@ export default class Home extends Vue {
   }
 
   mounted() {
-    // this.$command.on({
-    //   eventName: '/port/sendList',
-    //   onEmit: data => {
-    //     this.portList = data.list.map(item => {
-    //       return {
-    //         readTranslate: false,
-    //         ...item
-    //       }
-    //     })
-    //   },
-    //   vm: this
-    // })
-    // this.$command.send('/port/getPortList', true)
     const obj: any = {}
     typedKeys(channelList).forEach(masterKey => {
       obj[masterKey] = {
@@ -404,37 +335,6 @@ export default class Home extends Vue {
   }
 }
 
-::v-deep .master-group {
-  display: flex;
-  flex-flow: row wrap;
-  border: 1px solid #ccc;
-  border-bottom: none;
-  .master-group-item {
-    flex: 10%;
-
-    &:nth-of-type(10n + 1):after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      width: 1000%;
-      height: 1px;
-      background: #ccc;
-      z-index: 99;
-    }
-    &:nth-of-type(10n) {
-      .el-radio-button__inner {
-        border: none;
-      }
-    }
-
-    .el-radio-button__inner {
-      display: block;
-      box-sizing: border-box;
-      border: none;
-      border-right: 1px solid #ccc;
-    }
-  }
-}
 .box-card {
   margin-top: 40px;
   .box-card-header {

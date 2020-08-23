@@ -1,3 +1,5 @@
+import { typedKeys } from '../utils'
+
 /** 工步 */
 export const workSteps = {
   ICi: { name: '恒流充电', value: 'A1', input: ['U', 'I'], limt: {} },
@@ -10,106 +12,70 @@ export const workSteps = {
   // WCi: { name: '恒功率充电', value: 'A4', input: null }
 }
 
-export const WORKSTEPS_MAP = new Map([
-  [
-    'a1',
-    {
-      name: '恒流充电',
-      type: 'ICi',
-      input: { worker: ['I'], limt: ['U'] }
-    }
-  ],
-  [
-    'a2',
-    {
-      name: '恒压充电',
-      type: 'UCi',
-      input: { worker: ['U'], limt: ['I'] }
-    }
-  ],
-  [
-    'a3',
-    {
-      name: '恒流恒压充电',
-      type: 'IUCi',
-      input: { worker: ['I', 'U'], limt: ['IEnd'] }
-    }
-  ],
-  [
-    'b0',
-    {
-      name: '恒流放电',
-      type: 'IDisCi',
-      input: { worker: ['I'], limt: ['U'] }
-    }
-  ],
-  [
-    '90',
-    {
-      name: '搁置',
-      type: 'shelve',
-      input: { worker: ['time'], limt: [] }
-    }
-  ],
-  [
-    '70',
-    {
-      name: '循环',
-      type: 'loop',
-      input: { worker: ['loopStart'], limt: ['loopNum'], other: ['loopNow'] }
-    }
-  ]
-])
-
 /** 工步 */
-export const WORKSTEPS = {
-  a1: {
+export const WORKSTEPS = [
+  {
     name: '恒流充电',
     type: 'ICi',
+    key: 'a1',
     input: { worker: ['I'], limt: ['U'] }
   },
-  a2: {
+  {
     name: '恒压充电',
     type: 'UCi',
+    key: 'a2',
     input: { worker: ['U'], limt: ['I'] }
   },
-  a3: {
+  {
     name: '恒流恒压充电',
     type: 'IUCi',
+    key: 'a3',
     input: { worker: ['I', 'U'], limt: ['IEnd'] }
   },
-  b0: {
+  {
     name: '恒流放电',
     type: 'IDisCi',
+    key: 'b0',
     input: { worker: ['I'], limt: ['U'] }
   },
-  '90': {
+  {
     name: '搁置',
     type: 'shelve',
+    key: '90',
     input: {
       worker: ['time'],
       limt: []
     }
   },
-  '70': {
+  {
     name: '循环',
     type: 'loop',
+    key: '70',
     input: { worker: ['loopStart'], limt: ['loopNum'], other: ['loopNow'] }
   }
-}
+]
+export const WORKSTEPS_MAP: any = {}
+export const WORKSTEPS_TYPE_MAP: any = {}
+
+WORKSTEPS.forEach(item => {
+  WORKSTEPS_MAP[item.key] = item
+  WORKSTEPS_TYPE_MAP[item.type] = item
+})
 
 /** 工步input字节序号 */
 export const workStepsInput = {
-  time: { len: 4, serial: 6, unit: 's', name: '时间(秒)' },
-  U: { len: 2, serial: 7, unit: 'mV', name: '电压(mV)' },
-  I: { len: 4, serial: 8, unit: 'mA', name: '电流(mA)' },
-  W: { len: 4, serial: 9, unit: 'W', name: '功率(W)' },
-  R: { len: 4, serial: 10, unit: 'mΩ', name: '电阻(mΩ)' },
-  loopNum: { len: 4, serial: 11, unit: '', name: '循环次数' },
-  loopStart: { len: 1, serial: 12, unit: '', name: '循环起始' },
-  loopNow: { len: 1, serial: 13, unit: '', name: '当前循环次数' },
-  IEnd: { len: 4, serial: 14, unit: 'mA', name: '截止电流' }
+  time: { len: 4, serial: 4, unit: 's', name: '时间(秒)' },
+  U: { len: 2, serial: 5, unit: 'mV', name: '电压(mV)' },
+  I: { len: 4, serial: 6, unit: 'mA', name: '电流(mA)' },
+  W: { len: 4, serial: 7, unit: 'W', name: '功率(W)' },
+  R: { len: 4, serial: 8, unit: 'mΩ', name: '电阻(mΩ)' },
+  loopNum: { len: 4, serial: 9, unit: '', name: '循环次数' },
+  loopStart: { len: 1, serial: 10, unit: '', name: '循环起始' },
+  loopNow: { len: 1, serial: 11, unit: '', name: '当前循环次数' },
+  IEnd: { len: 4, serial: 12, unit: 'mA', name: '截止电流' }
 }
+
+export const WORKSTEPSINPUT = workStepsInput
 
 // /** 读工步数据 */
 // export const workStepsRead = {
@@ -195,6 +161,25 @@ export function getCalList() {
   return list
 }
 
+// 保护参数
+export const PROTECT_ITEM_MODE = [2, 2, 2, 2, 2, 2, 4]
+export const PROTECT = [
+  { name: '恒压充保护电压偏差(mV)', type: 'UCi', index: 0 },
+  { name: '恒流充保护电流偏差(mA)', type: 'ICi', index: 1 },
+  { name: '恒流放保护电流偏差(mA)', type: 'IDisCi', index: 2 },
+  { name: '报警上限电压(mV)', type: 'UMax', index: 3 },
+  { name: '报警下限电压(mV)', type: 'UMin', index: 4 },
+  { name: '报警下限起效时间(min)', type: 'TimeMin', index: 5 },
+  { name: '报警容量(mAh)', type: 'warnVal', index: 6 }
+]
+export const GET_PROTECT_FORM = () => {
+  const form: any = {}
+  PROTECT.map(item => {
+    form[item.type] = null
+  })
+  return form
+}
+
 /** 控制码 */
 export const controlCode = {
   writeWorkSteps: 0xe3, // 写从控工步参数
@@ -208,5 +193,9 @@ export const controlCode = {
     calRead: 0xc8,
     calSet: 0xe8,
     translateRead: 0xc5
+  },
+  master: {
+    stepsSet: 0xa9,
+    stepsRead: 0x89
   }
 }

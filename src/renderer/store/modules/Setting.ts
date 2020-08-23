@@ -28,7 +28,7 @@ interface UserConfig {
   }
 }
 
-@Module({ dynamic: true, store, name: 'app' })
+@Module({ dynamic: true, store, name: 'setting' })
 export default class SettingImpl extends VuexModule {
   public userConfig: UserConfig | null = null
   public $readTranslate = false
@@ -89,4 +89,3 @@ export default class SettingImpl extends VuexModule {
 }
 
 export const SettingStatus = getModule(SettingImpl)
-SettingStatus.getUserConfg()

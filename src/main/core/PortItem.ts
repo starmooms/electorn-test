@@ -128,6 +128,10 @@ export default class PortItem {
     arr1.forEach(item => {
       bytArr[item] = 1
     })
+    // let result = 0
+    // arr1.forEach(num => {
+    //   result |= 1 << num
+    // })
     return parseInt(bytArr.reverse().join(''), 2)
   }
 

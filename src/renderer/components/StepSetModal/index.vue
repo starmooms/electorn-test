@@ -7,37 +7,12 @@
       :visible.sync="stepsDialog"
     >
       <template v-if="isBatch">
-        <title-box name="选择通道">
-          <SelectMaster v-model="batchMasterId"></SelectMaster>
-          <el-divider content-position="left">从控</el-divider>
-          <div class="slaver-select">
-            <el-checkbox v-model="batchSlaverIdAll">
-              全选
-            </el-checkbox>
-            <el-checkbox-group
-              class="slaver-select-list"
-              v-model="batchSlaverId"
-            >
-              <el-checkbox
-                class="slaver-select-item"
-                v-for="(item, index) in 32"
-                :label="index"
-                :key="item"
-              >
-                从控{{ item }}
-              </el-checkbox>
-            </el-checkbox-group>
-          </div>
-          <el-divider content-position="left">通道</el-divider>
-          <el-checkbox v-model="batchChannelIdAll">
-            全选
-          </el-checkbox>
-          <el-checkbox-group v-model="batchChannelId">
-            <el-checkbox v-for="(item, index) in 8" :label="index" :key="item">
-              通道{{ item }}
-            </el-checkbox>
-          </el-checkbox-group>
-        </title-box>
+        <SelectChannel
+          ref="SelectChannel"
+          :masterId.sync="batchMasterId"
+          :slaverId.sync="batchSlaverId"
+          :channelId.sync="batchChannelId"
+        ></SelectChannel>
       </template>
 
       <title-box name="工步编辑">
@@ -128,12 +103,14 @@ import SelectMaster from '@/renderer/components/SelectMaster.vue'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import { PROTECT, GET_PROTECT_FORM } from '@/shared/config/port'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
+import SelectChannel from '@/renderer/components/SelectChannel.vue'
 
 @Component({
   components: {
     StepTplSave,
     StepTplUse,
-    SelectMaster
+    SelectMaster,
+    SelectChannel
   }
 })
 export default class StepSetModal extends Vue {
@@ -142,6 +119,10 @@ export default class StepSetModal extends Vue {
 
   @Prop({ type: Boolean, default: false }) isBatch!: boolean
   @Prop({ type: Object }) private showItem!: any | null
+
+  $refs!: {
+    SelectChannel: SelectChannel
+  }
 
   list: Port.Item[] = []
 
@@ -156,34 +137,17 @@ export default class StepSetModal extends Vue {
   protectList = deepClone(PROTECT)
   protectForm = GET_PROTECT_FORM()
 
-  batchMasterId = 'master_0'
+  batchMasterId = 0
   batchSlaverId: number[] = []
   batchChannelId: number[] = []
-  batchSlaverList: number[] = []
 
   get channelList() {
     return ChannelStatus.list
   }
 
-  get batchMaster() {
-    return this.channelList[this.batchMasterId] || null
-  }
-
-  get batchSlaverIdAll() {
-    return this.batchSlaverId.length === 32
-  }
-
-  set batchSlaverIdAll(v) {
-    this.batchSlaverId = v ? this.batchSlaverList : []
-  }
-
-  get batchChannelIdAll() {
-    return this.batchChannelId.length === 8
-  }
-
-  set batchChannelIdAll(v) {
-    this.batchChannelId = v ? [0, 1, 2, 3, 4, 5, 6, 7] : []
-  }
+  // get batchMaster() {
+  //   return this.channelList[this.batchMasterId] || null
+  // }
 
   get portPath() {
     return SettingStatus.portPath
@@ -201,14 +165,14 @@ export default class StepSetModal extends Vue {
     let slaverId: number[] = []
     let channelId: number[] = []
     if (this.isBatch) {
-      if (!this.batchMaster) {
+      if (!this.batchMasterId && this.batchMasterId != 0) {
         msg = '请先选择机柜'
       } else if (this.batchSlaverId.length === 0) {
         msg = '请先选择从控'
       } else if (this.batchChannelId.length === 0) {
         msg = '请先选择通道'
       } else {
-        masterId = this.batchMaster.id
+        masterId = this.batchMasterId
         slaverId = this.batchSlaverId
         channelId = this.batchChannelId
       }
@@ -268,20 +232,10 @@ export default class StepSetModal extends Vue {
     if (v === true) {
       this.stepsList = []
       this.stepsAdd()
-      if (this.isBatch) {
-        this.batchSelectReset()
-      }
+      // if (this.isBatch) {
+      //   this.$refs.SelectChannel.reset()
+      // }
     }
-  }
-
-  @Watch('batchMasterId')
-  changeBatchMaster() {
-    this.batchSelectReset()
-  }
-
-  batchSelectReset() {
-    this.batchSlaverIdAll = true
-    this.batchChannelIdAll = true
   }
 
   // @Watch('asyncShow')
@@ -337,13 +291,6 @@ export default class StepSetModal extends Vue {
     if (value === 'loop' && index !== lastIndex) {
       this.stepsList.splice(index, 1)
       this.stepsList.push(row)
-    }
-  }
-
-  mounted() {
-    this.batchSelectReset()
-    for (let i = 0; i < 32; i++) {
-      this.batchSlaverList.push(i)
     }
   }
 }

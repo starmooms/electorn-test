@@ -103,13 +103,19 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Route } from 'vue-router'
-import { setChannelStatus, getWorkStep, getChannelList } from '../ipc/channel'
+import {
+  setChannelStatus,
+  getWorkStep,
+  getChannelList,
+  changeStatus
+} from '../ipc/channel'
 import command from '../command'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
 import TrendChart from '@/renderer/components/TrendChart.vue'
 import { deepClone } from '@/shared/utils'
 import { GET_PROTECT_FORM, PROTECT } from '@/shared/config/port'
+import { ChannelStatus } from '../store/modules/Channel'
 
 interface PortData {
   path: string
@@ -130,12 +136,6 @@ export default class WorkerSee extends Vue {
     trendChart: TrendChart
   }
 
-  btnList = [
-    { name: '开始', action: 'start' },
-    { name: '暂停', action: 'pause' },
-    { name: '继续', action: 'continued' },
-    { name: '关闭', action: 'close' }
-  ]
   portItem: PortData | null = null
   stepsShow = false
   calShow = false
@@ -148,6 +148,10 @@ export default class WorkerSee extends Vue {
 
   protectList = deepClone(PROTECT)
   protectForm = GET_PROTECT_FORM()
+
+  get btnList() {
+    return ChannelStatus.statusList
+  }
 
   get channelId() {
     return this.portItem ? this.portItem.channelId : null
@@ -176,10 +180,13 @@ export default class WorkerSee extends Vue {
     this.nowStepDialog = true
   }
 
-  setStatus(status: string) {
+  async setStatus(status: string) {
     if (!this.portItem) return
-    setChannelStatus({
-      ...this.portItem,
+    await changeStatus({
+      path: this.portItem.path,
+      slaverId: [this.portItem.slaverId],
+      channelId: [this.portItem.channelId],
+      masterId: this.portItem.masterId,
       status
     })
   }
@@ -233,13 +240,15 @@ export default class WorkerSee extends Vue {
     command.on({
       eventName: `/port/translate/${path}/${masterId}/${slaverId}`,
       onEmit: (data: any) => {
-        const item = data.list[this.portItem!.channelId]
-        i++
-        this.$refs.trendChart.update({
-          time: i,
-          U: item.U,
-          I: item.I
-        })
+        const item = data.list[this.portItem!.channelId + slaverId * 8]
+        if (item) {
+          i++
+          this.$refs.trendChart.update({
+            time: i,
+            U: item.U,
+            I: item.I
+          })
+        }
       },
       vm: this
     })

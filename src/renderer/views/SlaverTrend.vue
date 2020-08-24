@@ -89,12 +89,14 @@ export default class SlaverTrend extends Vue {
       onEmit: (data: any) => {
         i += 1
         data.list.forEach(item => {
-          const component = chartMap[item.channelId]
-          if (component) {
-            component.update({
-              time: i,
-              ...item
-            })
+          if (item.slaverId === slaverId) {
+            const component = chartMap[item.channelId]
+            if (component) {
+              component.update({
+                time: i,
+                ...item
+              })
+            }
           }
         })
       },
@@ -105,8 +107,8 @@ export default class SlaverTrend extends Vue {
   mounted() {
     this.portItem = {
       path: encodeURIComponent(this.$route.params.path),
-      masterId: this.$route.params.masterId,
-      slaverId: this.$route.params.slaverId
+      masterId: Number(this.$route.params.masterId),
+      slaverId: Number(this.$route.params.slaverId)
     }
     this.getList()
   }

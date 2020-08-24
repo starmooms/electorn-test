@@ -1,9 +1,13 @@
 import $command from '@/renderer/command'
+import Vue from 'vue'
 
 interface SetStatus {
   path: string
-  slaverId: number
-  channelId: number
+  slaverId?: number[]
+  channelId?: number[]
+  masterId?: number
+  masterIdList?: number[]
+  startId?: number
   status: string
 }
 
@@ -33,6 +37,37 @@ interface ReadSteps {
 
 export function setChannelStatus(data: SetStatus) {
   return $command.invoke('/port/slaver/setStatus', data)
+}
+
+export async function changeStatus(params: SetStatus) {
+  const set = async (startId?: number) => {
+    const data = await setChannelStatus({
+      ...params,
+      startId
+    })
+    if (data.status) {
+      Vue.prototype.$message.success(`成功`)
+    }
+  }
+  if (params.status === 'start') {
+    const data = await Vue.prototype
+      .$prompt('请输入起始工步', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /\d+/,
+        inputErrorMessage: '工步id格式不正确'
+      })
+      .catch(err => {
+        return {
+          action: err
+        }
+      })
+    if (data.action === 'confirm') {
+      return set(Number(data.value))
+    }
+  } else {
+    return set()
+  }
 }
 
 /** 写工步 */

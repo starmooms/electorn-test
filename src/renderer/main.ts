@@ -14,7 +14,6 @@ import { SettingStatus } from './store/modules/Setting'
 
 const init = () => {
   Vue.config.productionTip = false
-
   Vue.use(Element, {
     size: 'mini'
   })

@@ -115,13 +115,13 @@ for (let i = 0; i < 20; i++) {
         id: k
       }
     }
-    slaverObj[`slaver_${j}`] = {
+    slaverObj[j] = {
       id: j,
       name: `从控${j + 1}`,
       list: obj
     }
   }
-  channelList[`master_${i}`] = {
+  channelList[i] = {
     id: i,
     name: `主控${i + 1}`,
     slaverList: slaverObj
@@ -196,6 +196,13 @@ export const controlCode = {
   },
   master: {
     stepsSet: 0xa9,
-    stepsRead: 0x89
+    stepsRead: 0x89,
+    translateRead: 0x85,
+    status: {
+      start: 0xa5,
+      pause: 0xa6,
+      continued: 0xa7,
+      close: 0xa8
+    }
   }
 }

@@ -76,7 +76,7 @@ export default class CalModal extends Vue {
     flex: 0 1 50%;
     margin-right: 0;
     .el-form-item__content {
-      width: 80px;
+      width: 140px;
     }
   }
 }

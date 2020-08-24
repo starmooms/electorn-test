@@ -39,14 +39,17 @@ interface PostOpts {
 }
 
 interface BaseOpts {
-  slaverId: number[]
-  channelId: number[]
+  slaverId: number
+  channelId: number
   masterId: number
 }
 
-interface WStepsOpts extends BaseOpts {
+interface WStepsOpts {
   list: any[]
   protect: any
+  slaverId: number[]
+  channelId: number[]
+  masterId: number
 }
 
 const Delimiter = SerialPort.parsers.Delimiter
@@ -120,26 +123,25 @@ export default class PortItem {
     })
   }
 
-  setByt(len: number, arr1: number[]) {
-    const bytArr = Array(len).fill(0)
+  setByt(len: number, arr1: number[], fillNum = 0) {
+    const bytArr = Array(len).fill(fillNum)
     arr1.forEach(item => {
       bytArr[item] = 1
     })
-    return parseInt(bytArr.join(''), 2)
+    return parseInt(bytArr.reverse().join(''), 2)
   }
 
   /** 写工步 */
   async writeSteps(data: WStepsOpts) {
     const listLen = data.list.length
-    console.log(data)
-    const dataModel = new BufWriteModel([ 1, 1, 4, 1, 1,  ...this.modelData.protect, 1]) // eslint-disable-line
+    const dataModel = new BufWriteModel([ 1, 1, 4, 1, 8, 1,  ...this.modelData.protect]) // eslint-disable-line
     const dataWriteModel = dataModel.getWriteModel()
     dataWriteModel.write(1, data.masterId)
     dataWriteModel.write(2, this.setByt(32, data.slaverId))
     dataWriteModel.write(3, this.setByt(8, data.channelId))
-    dataWriteModel.write(12, listLen)
+    dataWriteModel.write(5, listLen)
     PROTECT.forEach(item => {
-      dataWriteModel.write(item.index + 5, data.protect[item.type] || 0)
+      dataWriteModel.write(item.index + 6, data.protect[item.type] || 0)
     })
 
     const bufModel = new BufWriteListModel(listLen, this.modelData.workStep)
@@ -172,7 +174,7 @@ export default class PortItem {
       data: dataBuf
     })
     logger.info('写工步', dataBuf.toString('hex'))
-    await this.port.write(result.buf)
+    return await this.port.write(result.buf)
   }
 
   readStepsInput(bufData: BufData, key: string) {
@@ -190,41 +192,40 @@ export default class PortItem {
 
   /** 读工步 */
   async readSteps(opts: BaseOpts) {
-    const buf = Buffer.from([
-      0x00,
-      opts.masterId || 0,
-      opts.slaverId,
-      opts.channelId
-    ])
+    const postModel = new BufWriteModel([1, 1, 4, 1]) // eslint-disable-line
+    const postWriteModel = postModel.getWriteModel()
+    postWriteModel.write(1, opts.masterId)
+    postWriteModel.write(2, this.setByt(32, [opts.slaverId]))
+    postWriteModel.write(3, this.setByt(8, [opts.channelId]))
 
     const data = agreement.createData({
       masterId: opts.masterId,
       slaverId: 0xff,
       type: 0x02,
       code: controlCode.master.stepsRead,
-      data: buf
+      data: postModel.buf
     })
     let resultBuf: Buffer
     // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b00000022b0000029a00000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000009000000000000' // eslint-disable-line
     // const a = '00000000000000000000050000000000a100000001000000020000000000000000000000000000000000000000000100a2000000210000002c0000000000000000000000000000000000000000000200b0000000370000004200000000000000000000000000000000000000000003009000000000000000000000000000000000000000000000000000000000000400700000000000000000000000000000000000000063000000000000'  // eslint-disable-line
     if (isDev) {
       // const a = '68010100ff68a9000000003e0000ffffffffff000000000000000000000000000000000000000000a10004000000030000000000000000000000000000000000000000000000000000009568edededed'  // eslint-disable-line
-      const b = '0000ffffffffff0000c8006400000000000000000000000006000000a10000000000140000000a000000000000000000000000000000000000000000000100a200000000001400000189000000000000000000000000000000000000000000000200a30000000000310000002700000000000000000000000000000000000000001d000300b000000000000400000003000000000000000000000000000000000000000000000400900000001e000000000000000000000000000000000000000000000000000000000500700000000000000000000000000000000000000000001e130000000000000000'  // eslint-disable-line
+      const b = '000000000000ff00000000000000000300000000000000000000000000000000000000a10000000000de0000006f000000000000000000000000000000000000000000000100a200000000014d000001bc000000000000000000000000000000000000000000000200b000000000029a0000022b000000000000000000000000000000000000000000'  // eslint-disable-line
       resultBuf = Buffer.from(b, 'hex')
     } else {
       resultBuf = await this.post({ data })
+      logger.info('读工步返回', resultBuf.toString('hex'))
     }
 
-    const dataModel = new BufModel([1, 1, 4, 1, 1, ...this.modelData.protect, 1]) // eslint-disable-line
+    const dataModel = new BufModel([1, 1, 4, 1, 8, 1, ...this.modelData.protect]) // eslint-disable-line
     const baseBufData = dataModel.getBufData(resultBuf)
     const protect = {}
     PROTECT.forEach(item => {
-      protect[item.type] = baseBufData.getIndex(item.index + 5)
+      protect[item.type] = baseBufData.getIndex(item.index + 6)
     })
-
-    const { offset } = dataModel.sliceData[dataModel.sliceData.length - 1]
-    const stepsLen = baseBufData.getIndex(12)
-    const stepsBuf = resultBuf.slice(offset + 1)
+    const { offset, byte } = dataModel.sliceData[dataModel.sliceData.length - 1]
+    const stepsLen = baseBufData.getIndex(5)
+    const stepsBuf = resultBuf.slice(offset + byte)
     const stepsList: any[] = []
     const bufModel = new BufModel(this.modelData.workStep) // eslint-disable-line
     for (let i = 0; i < stepsLen; i++) {
@@ -266,7 +267,20 @@ export default class PortItem {
     if (this.translateReadNow) return
     const masterId = 0
     const slaverId = 0
-    const bufModel = new BufModel([1, 1, 2, 4, 1, 1]) // eslint-disable-line
+    const bufModel = new BufModel([1, 1, 1, 1, 2, { byte: 4, hasSigned: true}, 1, 1]) // eslint-disable-line
+
+    const postModel = new BufWriteModel([1, 1, 4, 1])
+    const postWrite = postModel.getWriteModel()
+    postWrite.write(1, masterId)
+    postWrite.write(2, this.setByt(32, [], 1))
+    postWrite.write(1, this.setByt(8, [], 1))
+    const postBufData = agreement.createData({
+      masterId,
+      slaverId: 0xff,
+      type: 0x02,
+      code: controlCode.master.translateRead,
+      data: postModel.buf
+    })
     let oldTranslate: MasterTranslate | undefined
     if (this.translate.has(masterId)) {
       oldTranslate = this.translate.get(masterId)
@@ -276,6 +290,9 @@ export default class PortItem {
       masterId,
       winArr: new Set<string>()
     }
+    if (!translate.winArr.has('mainWin')) {
+      translate.winArr.add('mainWin')
+    }
     let timer: NodeJS.Timeout
     const getData = () => {
       timer = setTimeout(async () => {
@@ -284,15 +301,13 @@ export default class PortItem {
           let resultBuf: Buffer
           if (isDev) {
             // const a = '0000080001010000000000000001020000000000000000020200000000000000000302000000000000000004020000000000000000050200000000000000000602000000000000000007020000000000000000' // eslint-disable-line
-            const a = '0000080002000000000004000001020000000000040000020200000000000400000302000000000004000004020000000000040000050200000000000400000602000000000004000007020000000000040000' // eslint-disable-line
+            const a = '00000800000200000000000000000000010200000affffff9c0000000202000014ffffff38000000030200001efffffed40000000402000028fffffe700000000502000032fffffe0c000000060200003cfffffda80000000702000046fffffd440000' // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
             resultBuf = await this.post({
-              data: agreement.setData(
-                Buffer.from([0x00, toHex(slaverId, 1)]),
-                controlCode.slaver.translateRead
-              )
+              data: postBufData
             })
+            logger.info('读采样返回', resultBuf.toString('hex'))
           }
           const len = resultBuf.readUInt8(2)
           const dataBuf = resultBuf.slice(3)
@@ -303,12 +318,14 @@ export default class PortItem {
               dataBuf.slice(start, start + bufModel.bufLength)
             )
             list.push({
-              channelId: bufData.getIndex(0),
-              workerCode: bufData.getIndex(1),
-              U: bufData.getIndex(2),
-              I: bufData.getIndex(3),
-              endStatus: bufData.getIndex(4),
-              errorCode: bufData.getIndex(5)
+              slaverId: bufData.getIndex(0),
+              channelId: bufData.getIndex(1),
+              workerCode: bufData.getIndex(2),
+              workerId: bufData.getIndex(3),
+              U: bufData.getIndex(4),
+              I: bufData.getIndex(5),
+              endStatus: bufData.getIndex(6),
+              errorCode: bufData.getIndex(7)
             })
           }
 
@@ -318,7 +335,9 @@ export default class PortItem {
               const win = winManager.getWin(winName)
               if (win) {
                 ipcManage.send(
-                  `/port/translate/${this.path}/${masterId}/${slaverId}`,
+                  `/port/translate/${encodeURIComponent(
+                    this.path
+                  )}/${masterId}/${slaverId}`,
                   () => {
                     return { list }
                   },
@@ -421,16 +440,42 @@ export default class PortItem {
   async getChannelList(opts: any) {
     if (opts.type) {
       const { masterId, slaverId } = opts
-      const masterList = this.channelList[`master_${masterId}`]
+      const masterList = this.channelList[`${masterId}`]
       if (!masterList) {
         throw new Error(`不存在主控 ${masterId}`)
       }
-      const slaverList = masterList.slaverList[`slaver_${slaverId}`]
+      const slaverList = masterList.slaverList[`${slaverId}`]
       if (!slaverList) {
         throw new Error(`不存在从控 ${opts.master}`)
       }
       return slaverList
     }
     return this.channelList
+  }
+
+  /** 设置状态 */
+  async setStatus(data: any) {
+    const code = controlCode.master.status[data.status]
+    if (!code) {
+      throw new Error(`${data.status} Error`)
+    }
+    const dataModel = new BufWriteModel([1, 1, 4, 1]) // eslint-disable-line
+    const dataWriteModel = dataModel.getWriteModel()
+    dataWriteModel.write(1, data.masterId)
+    dataWriteModel.write(2, this.setByt(32, data.slaverId))
+    dataWriteModel.write(3, this.setByt(8, data.channelId))
+    let buf = dataModel.buf
+    if (data.status === 'start') {
+      buf = Buffer.concat([buf, Buffer.from([data.startId])])
+    }
+    const result = agreement.createData({
+      masterId: data.masterId,
+      slaverId: 0xff,
+      type: 0x02,
+      code,
+      data: buf
+    })
+    logger.info('改变状态', buf.toString('hex'))
+    return this.post({ data: result })
   }
 }

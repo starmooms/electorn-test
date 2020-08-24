@@ -11,7 +11,7 @@
     </el-tabs>
     <div class="setting-box">
       <keep-alive>
-        <component v-bind:is="activeName"></component>
+        <component :is="activeName"></component>
       </keep-alive>
     </div>
   </div>

@@ -108,11 +108,15 @@ class Command {
       onEmit(data, event)
     }
     ipcRenderer.on(eventName, listener)
+    const hasVm = vm instanceof Vue
     const unRegister = () => {
       ipcRenderer.removeListener(eventName, listener)
+      if (hasVm) {
+        vm!.$off('hook:beforeDestroy', unRegister)
+      }
     }
-    if (vm && vm instanceof Vue) {
-      vm.$on('hook:beforeDestroy', () => unRegister())
+    if (hasVm) {
+      vm!.$once('hook:beforeDestroy', unRegister)
     }
     return { unRegister }
   }

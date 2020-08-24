@@ -138,8 +138,25 @@
 // const a = Buffer.from([0x00])
 // console.log(a.toString('hex'))
 
-const a = '01000010'
-const c = parseInt(a, 2)
-const d = Buffer.alloc(1)
-d.writeIntBE(c, 0, 1)
-console.log(d)
+// const a = '01000010'
+// const c = parseInt(a, 2)
+// const d = Buffer.alloc(1)
+// d.writeIntBE(c, 0, 1)
+// console.log(d)
+
+function readData(buf) {
+  const dataStart = 12
+  const dataLen = buf.readUInt16BE(10)
+  const dataEndLen = dataLen + dataStart
+  console.log(buf.slice(dataStart, dataEndLen).toString('hex'))
+  return {
+    buf: buf.slice(dataStart, dataEndLen)
+    // sId: toHex(buf.readUInt16BE(8), 2)
+  }
+}
+readData(
+  Buffer.from(
+    '68010100006885000002006300000800000200000000000000000000010200000affffff9c0000000202000014ffffff38000000030200001efffffed40000000402000028fffffe700000000502000032fffffe0c000000060200003cfffffda80000000702000046fffffd4400006667edededed',
+    'hex'
+  )
+)

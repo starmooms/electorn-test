@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <div v-if="portPath">
-      <el-form size="medium" :inline="true" class="port-select-form">
+      <el-form size="medium" :inline="true">
         <el-button @click="setTranslate">
           {{ readTranslate ? '关闭采样' : '打开采样' }}
         </el-button>
@@ -58,34 +58,59 @@
                       :key="ckey"
                       @click="showChannel(activeMaster, channel, slaver)"
                     >
-                      <ContextMenu>
-                        <svg-icon
-                          class="channel-icon"
-                          icon-class="batter"
-                        ></svg-icon>
-                        <template v-slot:menu>
-                          <a
-                            href="javascript:;"
-                            v-for="menu in batteryCtxMenu"
-                            :key="menu.action"
-                            @click="changeStatus(menu.action, channel, slaver)"
-                          >
-                            {{ menu.name }}
-                          </a>
-                          <a
-                            href="javascript:;"
-                            @click="calOpen(channel, slaver, activeMaster)"
-                          >
-                            局部设置
-                          </a>
-                          <a
-                            href="javascript:;"
-                            @click="stepsSetShow(channel, slaver, activeMaster)"
-                          >
-                            编辑工步
-                          </a>
-                        </template>
-                      </ContextMenu>
+                      <el-tooltip
+                        class="item"
+                        effect="dark"
+                        content="Left Top 提示文字"
+                        placement="bottom-end"
+                        transition="none"
+                        v-model="channel.tipShow"
+                      >
+                        <div slot="content">
+                          电压: {{ channel.trend.U }}
+                          <br />
+                          电流: {{ channel.trend.I }}
+                          <br />
+                          当前工步：{{ channel.trend.workerId }}
+                        </div>
+                        <ContextMenu @open="openMenu(channel)">
+                          <svg-icon
+                            class="channel-icon"
+                            icon-class="batter"
+                          ></svg-icon>
+                          <template v-slot:menu>
+                            <a
+                              href="javascript:;"
+                              v-for="menu in batteryCtxMenu"
+                              :key="menu.action"
+                              @click="
+                                changeStatus(
+                                  menu.action,
+                                  channel,
+                                  slaver,
+                                  activeMaster
+                                )
+                              "
+                            >
+                              {{ menu.name }}
+                            </a>
+                            <a
+                              href="javascript:;"
+                              @click="calOpen(channel, slaver, activeMaster)"
+                            >
+                              局部设置
+                            </a>
+                            <a
+                              href="javascript:;"
+                              @click="
+                                stepsSetShow(channel, slaver, activeMaster)
+                              "
+                            >
+                              编辑工步
+                            </a>
+                          </template>
+                        </ContextMenu>
+                      </el-tooltip>
                     </li>
                   </ul>
 
@@ -127,16 +152,18 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue, Watch } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { channelList } from '@/shared/config/port'
-import { typedKeys } from '@/shared/utils'
-import { setChannelStatus, translateSet } from '@/renderer/ipc/channel'
+import { typedKeys, deepClone } from '@/shared/utils'
+import { changeStatus } from '@/renderer/ipc/channel'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
 import SelectMaster from '@/renderer/components/SelectMaster.vue'
 import BatchModal from './components/BatchModal.vue'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
+import { ChannelStatus } from '@/renderer/store/modules/Channel'
+import { deprecate } from 'util'
 
 @Component({
   name: 'Home',
@@ -153,13 +180,6 @@ export default class Home extends Vue {
     batchModal: BatchModal
   }
   batteryShow = []
-  batteryCtxMenu = [
-    { name: '开始', action: 'start' },
-    { name: '暂停', action: 'pause' },
-    { name: '继续', action: 'continued' },
-    { name: '关闭', action: 'close' }
-  ]
-  batteryList: any = {}
 
   // portItem: any = null
   portList: any[] = []
@@ -182,23 +202,39 @@ export default class Home extends Vue {
 
   batchShow = false
 
-  activeMasterId = ''
+  activeMasterId: null | number = null
+  trendList = {}
+  trendUnRegister!: any
 
-  get activeMaster() {
-    return this.batteryList[this.activeMasterId]
+  get batteryList() {
+    return ChannelStatus.list
   }
 
-  handleClick() {}
+  get activeMaster() {
+    return this.activeMasterId !== null
+      ? this.trendList[this.activeMasterId]
+      : null
+  }
 
   get readTranslate() {
     return SettingStatus.$readTranslate
   }
 
-  changeStatus(status, channel, slaver) {
-    setChannelStatus({
+  get batteryCtxMenu() {
+    return ChannelStatus.statusList
+  }
+
+  @Watch('activeMasterId')
+  changeMasterId() {
+    this.trendChange()
+  }
+
+  async changeStatus(status, channel, slaver, master) {
+    await changeStatus({
       path: this.portPath,
-      slaverId: slaver.id,
-      channelId: channel.id,
+      slaverId: [slaver.id],
+      channelId: [channel.id],
+      masterId: master.id,
       status
     })
   }
@@ -258,30 +294,89 @@ export default class Home extends Vue {
     this.batchShow = true
   }
 
+  openMenu(channel: any) {
+    channel.tipShow = false
+  }
+
   async setTranslate() {
     await SettingStatus.toggleReadTranslate()
   }
 
-  mounted() {
-    const obj: any = {}
-    typedKeys(channelList).forEach(masterKey => {
-      obj[masterKey] = {
-        slaverShow: false,
-        ...(channelList[masterKey] as any)
-      }
+  trendListSet() {
+    const trendList = deepClone(this.batteryList)
+    Object.keys(trendList).forEach(mKey => {
+      const master = trendList[mKey]
+      Object.keys(master.slaverList).forEach(sKey => {
+        const slaver = master.slaverList[sKey]
+        Object.keys(slaver.list).forEach(cKey => {
+          const channel = slaver.list[cKey]
+          channel.trend = {
+            U: 0,
+            I: 0,
+            workerId: null
+          }
+          channel.tipShow = false
+        })
+      })
     })
-    this.batteryList = obj
+    this.trendList = trendList
+    this.trendChange()
+  }
+
+  trendChange() {
+    if (this.trendUnRegister) {
+      this.trendUnRegister()
+    }
+    if (!this.portPath || this.activeMasterId === null) {
+      return
+    }
+
+    const { unRegister } = this.$command.on({
+      eventName: `/port/translate/${encodeURIComponent(this.portPath)}/${
+        this.activeMasterId
+      }/0`,
+      onEmit: data => {
+        data.list.forEach(item => {
+          const slaver = this.activeMaster.slaverList[item.slaverId]
+          if (slaver) {
+            const channel = slaver.list[item.channelId]
+            if (channel) {
+              const trend = channel.trend
+              trend.U = item.U
+              trend.I = item.I
+              trend.workerId = item.workerId + 1
+            }
+          }
+        })
+      },
+      vm: this
+    })
+    this.trendUnRegister = unRegister
+  }
+
+  mounted() {
+    const trendList = deepClone(this.batteryList)
+    Object.keys(trendList).forEach(mKey => {
+      const master = trendList[mKey]
+      Object.keys(master.slaverList).forEach(sKey => {
+        const slaver = master.slaverList[sKey]
+        Object.keys(slaver.list).forEach(cKey => {
+          const channel = slaver.list[cKey]
+          channel.trend = {
+            U: 0,
+            I: 0,
+            workerId: null
+          }
+          channel.tipShow = false
+        })
+      })
+    })
+    this.trendList = trendList
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.port-select-form {
-  width: 324px;
-  .el-select {
-    width: 270px;
-  }
-}
 .master-item {
   max-width: 860px;
   cursor: pointer;

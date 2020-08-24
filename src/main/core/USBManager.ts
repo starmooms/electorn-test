@@ -116,12 +116,7 @@ export default class USBManager {
   setSlaverStatus() {
     ipcManage.handle('/port/slaver/setStatus', (event, data: any) => {
       const protItem = this.getPortData(data.path)
-      if (!protItem) return
-      const buf = Buffer.alloc(3)
-      buf.writeUIntBE(data.slaverId, 1, 1)
-      buf.writeUIntBE(data.channelId, 2, 1)
-      const result = agreement.setData(buf, controlCode.slaver[data.status])
-      protItem.port.write(result.buf)
+      return protItem.setStatus(data)
     })
   }
 

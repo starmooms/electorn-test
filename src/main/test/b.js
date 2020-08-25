@@ -5,6 +5,8 @@
 // buf1.writeIntLE(0x18, )
 // console.log(buf1)
 
+const Bluebird = require('bluebird')
+
 // const buf1 = Buffer.from('0016', 'hex')
 // console.log(`${buf1[0]}${buf1[1]}`)
 // const buf2 = Buffer.alloc(2)
@@ -144,19 +146,70 @@
 // d.writeIntBE(c, 0, 1)
 // console.log(d)
 
-function readData(buf) {
-  const dataStart = 12
-  const dataLen = buf.readUInt16BE(10)
-  const dataEndLen = dataLen + dataStart
-  console.log(buf.slice(dataStart, dataEndLen).toString('hex'))
-  return {
-    buf: buf.slice(dataStart, dataEndLen)
-    // sId: toHex(buf.readUInt16BE(8), 2)
-  }
+// function readData(buf) {
+//   const dataStart = 12
+//   const dataLen = buf.readUInt16BE(10)
+//   const dataEndLen = dataLen + dataStart
+//   console.log(buf.slice(dataStart, dataEndLen).toString('hex'))
+//   return {
+//     buf: buf.slice(dataStart, dataEndLen)
+//     // sId: toHex(buf.readUInt16BE(8), 2)
+//   }
+// }
+// readData(
+//   Buffer.from(
+//     '68010100006885000002006300000800000200000000000000000000010200000affffff9c0000000202000014ffffff38000000030200001efffffed40000000402000028fffffe700000000502000032fffffe0c000000060200003cfffffda80000000702000046fffffd4400006667edededed',
+//     'hex'
+//   )
+// )
+
+// const arr1 = [0, 30]
+// console.time()
+// let result = 0
+// arr1.forEach(num => {
+//   result |= 1 << num
+// })
+// console.log(result.toString('2'))
+// console.timeEnd()
+
+// console.time()
+// const bytArr = Array(32).fill(0)
+// arr1.forEach(item => {
+//   bytArr[item] = 1
+// })
+// console.log(
+//   bytArr
+//     .reverse()
+//     .join('')
+//     .toString('2')
+// )
+// console.timeEnd()
+
+// console.time()
+// const bytArr2 = Array(32).fill(0)
+// for (let i = 0; i <= arr1.length; i++) {
+//   bytArr2[arr1[i]] = 1
+// }
+// console.log(
+//   bytArr2
+//     .reverse()
+//     .join('')
+//     .toString('2')
+// )
+// console.timeEnd()
+
+const p = () => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // if (i === 2) {
+      //   reject('ddd')
+      // }
+      reject('33')
+    }, 1000)
+  })
 }
-readData(
-  Buffer.from(
-    '68010100006885000002006300000800000200000000000000000000010200000affffff9c0000000202000014ffffff38000000030200001efffffed40000000402000028fffffe700000000502000032fffffe0c000000060200003cfffffda80000000702000046fffffd4400006667edededed',
-    'hex'
-  )
-)
+
+Bluebird.mapSeries([1, 2, 31, 45], async i => {
+  await p()
+  console.log(i)
+})

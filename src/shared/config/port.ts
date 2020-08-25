@@ -87,6 +87,8 @@ export const WORKSTEPSINPUT = workStepsInput
 //   Wh: { len: 4, serial: 11, name: '电量(mWh)' }
 // }
 
+/* eslint-disable quote-props */
+// prettier-ignore
 export const END_STATUS = {
   '00': '未结束',
   '01': '时间到',
@@ -101,8 +103,44 @@ export const END_STATUS = {
   '0a': '无电池或电池接触不良',
   '0b': '不良电池',
   '0c': '补充电容量到结束',
-  ff: '未知结束'
+  'ff': '未知结束'
 }
+
+// prettier-ignore
+export const ERR_STATUS = {
+  '00': '无',
+  '01': '寄存',
+  '02': '漏电流异常',
+  '03': '电压上限异常',
+  '04': '电流异常',
+  '05': '无电压无电流',
+  '06': '容量异常',
+  '07': '实时电压超过平均数值',
+  '08': '温度异常',
+  '09': '电压下限异常',
+  '0a': '',
+  'ff': '未知报警'
+}
+
+// prettier-ignore
+export const CHANNEL_STATUS = {
+  '00': { name: '等待', status: 'default' },
+  '01': { name: '保护', status: 'protect' },
+  '02': { name: '停止', status: 'pause' },
+  '03': { name: '结束', status: 'default' },
+  '90': { name: '搁置', status: 'run' },
+  'a0': { name: '恒流预充', status: 'run' },
+  'a1': { name: '恒流充电', status: 'run' },
+  'a2': { name: '恒压充电', status: 'run' },
+  'a3': { name: '恒流恒压充电', status: 'run' },
+  'a4': { name: '恒功率充电', status: 'run' },
+  'b0': { name: '恒流放电', status: 'run' },
+  'b1': { name: '恒阻放电', status: 'run' },
+  'b2': { name: '恒功率放电', status: 'run' },
+  '70': { name: '循环', status: 'run' },
+}
+
+/* eslint-enable quote-props */
 
 /** 通道数据 */
 export const channelList = {}

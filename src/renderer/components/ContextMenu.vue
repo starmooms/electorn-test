@@ -127,7 +127,7 @@ $bcl: hsla(0, 0%, 100%, 0.12);
   border: solid 1px rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   z-index: 999;
-  background-color: rgba(28, 28, 28, 0.9);
+  background-color: $--color-bg-reversal;
   color: #fff;
   a {
     min-width: 40px;

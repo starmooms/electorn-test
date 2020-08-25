@@ -2,7 +2,7 @@
   "name": "upper-computer",
   "author": "GXM",
   "description": "upper computer for battery detection",
-  "version": "0.1.70",
+  "version": "0.1.73",
   "private": true,
   "engines": {
     "node": ">=12.18.2"
@@ -18,6 +18,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "bluebird": "^3.7.2",
     "core-js": "^3.6.5",
     "electron-is": "^3.0.0",
     "electron-store": "^6.0.0",
@@ -39,6 +40,7 @@
     "vuex-module-decorators": "^0.17.0"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.32",
     "@types/lodash": "^4.14.159",
     "@types/node": "12",
     "@types/node-uuid": "^0.0.28",

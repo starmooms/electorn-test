@@ -44,8 +44,8 @@ import SelectMaster from '@/renderer/components/SelectMaster.vue'
 })
 export default class SelectChannel extends Vue {
   @Prop({ type: Boolean, default: false }) isCheckboxMaster!: boolean
-  @PropSync('masterId', { type: [String, Number, Array], required: true })
-  masterIdSync!: string[] | string
+  @PropSync('masterId', { type: [Object, Number, Array], required: false })
+  masterIdSync!: number | number[] | null
   @PropSync('slaverId', { type: Array, required: true })
   slaverIdSync!: number[]
   @PropSync('channelId', { type: Array, required: true })

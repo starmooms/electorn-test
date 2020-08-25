@@ -33,7 +33,8 @@
           <el-button @click="workStepsOpen">编辑工步</el-button>
         </div>
 
-        <title-box name="当前工步">
+        <title-box name="工步信息">
+          <p class="steps-now">当前工步：{{ this.workerIdNow }}</p>
           <div class="steps-list">
             <el-table border max-height="40vh" :data="nowStepList">
               <el-table-column label="工步信息" prop="msg"></el-table-column>
@@ -148,6 +149,7 @@ export default class WorkerSee extends Vue {
 
   protectList = deepClone(PROTECT)
   protectForm = GET_PROTECT_FORM()
+  workerIdNow: null | number = null
 
   get btnList() {
     return ChannelStatus.statusList
@@ -241,6 +243,7 @@ export default class WorkerSee extends Vue {
       eventName: `/port/translate/${path}/${masterId}/${slaverId}`,
       onEmit: (data: any) => {
         const item = data.list[this.portItem!.channelId + slaverId * 8]
+        this.workerIdNow = item.workerId + 1
         if (item) {
           i++
           this.$refs.trendChart.update({
@@ -296,5 +299,10 @@ export default class WorkerSee extends Vue {
   max-width: 800px;
   display: flex;
   flex-flow: row wrap;
+}
+
+.steps-now {
+  margin-top: 0;
+  margin-bottom: 10px;
 }
 </style>

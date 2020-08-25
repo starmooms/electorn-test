@@ -198,18 +198,24 @@ const Bluebird = require('bluebird')
 // )
 // console.timeEnd()
 
-const p = () => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      // if (i === 2) {
-      //   reject('ddd')
-      // }
-      reject('33')
-    }, 1000)
-  })
-}
+// const p = () => {
+//   return new Promise((resolve, reject) => {
+//     setTimeout(() => {
+//       // if (i === 2) {
+//       //   reject('ddd')
+//       // }
+//       reject('33')
+//     }, 1000)
+//   })
+// }
 
-Bluebird.mapSeries([1, 2, 31, 45], async i => {
-  await p()
-  console.log(i)
-})
+// Bluebird.mapSeries([1, 2, 31, 45], async i => {
+//   await p()
+//   console.log(i)
+// })
+
+const a = Buffer.from(
+  '00000000000101000000000000000004000000000000000000000000000000000000009000000005000000000000000000000000000000000000000000000000000000000100900000000a000000000000000000000000000000000000000000000000000000000200900000000f0000000000000000000000000000000000000000000000000000000003007000000000000000000000000000000000000000000003000000000000000000',
+  'hex'
+)
+a.readIntBE(7, 8)

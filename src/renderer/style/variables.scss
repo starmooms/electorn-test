@@ -1,5 +1,12 @@
 $width: 5em;
 $cl1: #ccc;
+$--color-bg-reversal: rgba(28, 28, 28, 0.9) !default;
+
+$--color-error: #f56c6c !default;
+$--color-protect: #67c23a !default;
+$--color-pause: #e6a23c !default;
+$--color-run: #409eff !default;
+
 /// color|1|Font Color|2
 $--color-text-regular: #606266 !default;
 

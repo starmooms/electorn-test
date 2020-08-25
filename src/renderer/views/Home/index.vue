@@ -8,8 +8,8 @@
         <el-button type="primary" @click="stepsBatchOpen">
           机柜批量编辑工步
         </el-button>
-        <el-button type="primary" @click="openBatch('master')">
-          机柜批量设置
+        <el-button type="primary" @click="openBatch">
+          机柜批量操作
         </el-button>
       </el-form>
 
@@ -56,61 +56,65 @@
                       v-for="(channel, ckey) in slaver.list"
                       :span="3"
                       :key="ckey"
+                      :class="[
+                        channel.trend.workerStatus.status,
+                        { error: channel.trend.errorMsg }
+                      ]"
                       @click="showChannel(activeMaster, channel, slaver)"
                     >
-                      <el-tooltip
-                        class="item"
-                        effect="dark"
-                        content="Left Top 提示文字"
-                        placement="bottom-end"
-                        transition="none"
-                        v-model="channel.tipShow"
-                      >
-                        <div slot="content">
-                          电压: {{ channel.trend.U }}
-                          <br />
-                          电流: {{ channel.trend.I }}
-                          <br />
-                          当前工步：{{ channel.trend.workerId }}
-                        </div>
-                        <ContextMenu @open="openMenu(channel)">
+                      <ContextMenu @open="openMenu(channel)">
+                        <div class="channel-box">
+                          <div class="sigh-box" v-if="channel.trend.errorMsg">
+                            <svg-icon icon-class="sigh"></svg-icon>
+                          </div>
+                          <div class="tip-box">
+                            <div class="tip-box-wrap">
+                              电压: {{ channel.trend.U }}
+                              <br />
+                              电流: {{ channel.trend.I }}
+                              <br />
+                              当前工步：{{ channel.trend.workerId }}
+                              <template v-if="channel.trend.errorMsg">
+                                <br />
+                                错误信息：{{ channel.trend.errorMsg }}
+                              </template>
+                            </div>
+                          </div>
                           <svg-icon
                             class="channel-icon"
                             icon-class="batter"
                           ></svg-icon>
-                          <template v-slot:menu>
-                            <a
-                              href="javascript:;"
-                              v-for="menu in batteryCtxMenu"
-                              :key="menu.action"
-                              @click="
-                                changeStatus(
-                                  menu.action,
-                                  channel,
-                                  slaver,
-                                  activeMaster
-                                )
-                              "
-                            >
-                              {{ menu.name }}
-                            </a>
-                            <a
-                              href="javascript:;"
-                              @click="calOpen(channel, slaver, activeMaster)"
-                            >
-                              局部设置
-                            </a>
-                            <a
-                              href="javascript:;"
-                              @click="
-                                stepsSetShow(channel, slaver, activeMaster)
-                              "
-                            >
-                              编辑工步
-                            </a>
-                          </template>
-                        </ContextMenu>
-                      </el-tooltip>
+                        </div>
+                        <template v-slot:menu>
+                          <a
+                            href="javascript:;"
+                            v-for="menu in batteryCtxMenu"
+                            :key="menu.action"
+                            @click="
+                              changeStatus(
+                                menu.action,
+                                channel,
+                                slaver,
+                                activeMaster
+                              )
+                            "
+                          >
+                            {{ menu.name }}
+                          </a>
+                          <a
+                            href="javascript:;"
+                            @click="calOpen(channel, slaver, activeMaster)"
+                          >
+                            局部设置
+                          </a>
+                          <a
+                            href="javascript:;"
+                            @click="stepsSetShow(channel, slaver, activeMaster)"
+                          >
+                            编辑工步
+                          </a>
+                        </template>
+                      </ContextMenu>
                     </li>
                   </ul>
 
@@ -289,8 +293,7 @@ export default class Home extends Vue {
     })
   }
 
-  openBatch(type: string) {
-    this.$refs.batchModal.open(type, this.batteryList)
+  openBatch() {
     this.batchShow = true
   }
 
@@ -313,7 +316,9 @@ export default class Home extends Vue {
           channel.trend = {
             U: 0,
             I: 0,
-            workerId: null
+            workerId: null,
+            errorMsg: '',
+            status: ''
           }
           channel.tipShow = false
         })
@@ -345,6 +350,8 @@ export default class Home extends Vue {
               trend.U = item.U
               trend.I = item.I
               trend.workerId = item.workerId + 1
+              trend.errorMsg = item.errorMsg
+              trend.workerStatus = item.workerStatus
             }
           }
         })
@@ -365,7 +372,12 @@ export default class Home extends Vue {
           channel.trend = {
             U: 0,
             I: 0,
-            workerId: null
+            workerId: null,
+            errorMsg: '',
+            workerStatus: {
+              name: '',
+              status: ''
+            }
           }
           channel.tipShow = false
         })
@@ -417,7 +429,30 @@ export default class Home extends Vue {
       &:hover {
         .channel-icon {
           transform: translate3d(0, -4px, 0);
-          color: #66b1ff;
+        }
+      }
+
+      &.protect {
+        .channel-icon {
+          color: $--color-protect;
+        }
+      }
+
+      &.pause {
+        .channel-icon {
+          color: $--color-pause;
+        }
+      }
+
+      &.run {
+        .channel-icon {
+          color: $--color-run;
+        }
+      }
+
+      &.error {
+        .channel-icon {
+          color: $--color-error;
         }
       }
 
@@ -425,6 +460,14 @@ export default class Home extends Vue {
         transition: all 0.2s;
         color: #606266;
         font-size: 40px;
+      }
+
+      .sigh-box {
+        position: absolute;
+        top: 0;
+        right: 50%;
+        color: $--color-error;
+        margin-right: -40px;
       }
     }
   }
@@ -443,6 +486,50 @@ export default class Home extends Vue {
     }
     .el-card__body {
       padding: 0;
+    }
+  }
+}
+
+.channel-box {
+  position: relative;
+  &:hover {
+    .tip-box {
+      display: block;
+    }
+  }
+
+  $tipW: 200px;
+  .tip-box {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #fff;
+    z-index: 99;
+    width: $tipW;
+    box-sizing: border-box;
+    margin-top: 8px;
+    margin-left: -($tipW/2);
+    .tip-box-wrap {
+      padding: 6px;
+      display: inline-block;
+      border-radius: 4px;
+      background-color: $--color-bg-reversal;
+    }
+
+    $tipIw: 6px;
+    &:after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 100%;
+      width: 0;
+      height: 0;
+      border: $tipIw solid transparent;
+      margin-left: -$tipIw;
+      border-bottom-color: $--color-bg-reversal;
     }
   }
 }

@@ -7,17 +7,20 @@
       width="800px"
     >
       <SelectChannel
+        ref="SelectChannel"
         isCheckboxMaster
-        :masterId.sync="masterId"
+        :masterId.sync="masterIdList"
         :slaverId.sync="slaverId"
         :channelId.sync="channelId"
       ></SelectChannel>
 
       <div slot="footer">
+        <el-button @click="diolog = false">取消</el-button>
         <el-button
           v-for="item in statusList"
           :key="item.action"
           @click="setStatus(item.action)"
+          type="primary"
         >
           {{ item.name }}
         </el-button>
@@ -41,10 +44,11 @@ export default class BatchModal extends Vue {
   @PropSync('show', { type: Boolean, required: true }) diolog!: boolean
   type = ''
 
-  list: any[] = []
-  value: number[] = []
-  batchMasterList: string[] = []
-  masterId: string[] = []
+  $refs!: {
+    SelectChannel: SelectChannel
+  }
+
+  masterIdList: number[] = []
   slaverId: number[] = []
   channelId: number[] = []
 
@@ -57,39 +61,33 @@ export default class BatchModal extends Vue {
   }
 
   async setStatus(status: string) {
-    if (this.value.length === 0) {
-      return this.$message.warning('请先选择机柜')
+    let msg = ''
+    if (this.masterIdList.length === 0) {
+      msg = '请先选择机柜'
+    } else if (this.slaverId.length === 0) {
+      msg = '请先选择从控'
+    } else if (this.channelId.length === 0) {
+      msg = '请先选择通道'
+    }
+    if (msg) {
+      return this.$message.warning(msg)
     }
     await changeStatus({
       path: this.portPath,
-      masterIdList: this.value.map(item => this.list[item].id),
+      masterIdList: this.masterIdList,
+      slaverId: this.slaverId,
+      channelId: this.channelId,
       status
     })
   }
 
-  open(type: string, data: any) {
-    this.type = ''
-    this.value = []
-    switch (type) {
-      case 'master':
-        this.type = 'master'
-        this.list = Object.keys(data).map(key => {
-          const val = data[key]
-          return {
-            key: val.id,
-            label: val.name
-          }
-        })
-        break
-      default:
-        return false
+  @Watch('diolog')
+  changeShow(v) {
+    if (v === true && this.$refs.SelectChannel) {
+      this.$refs.SelectChannel.reset()
+      this.masterIdList = []
     }
   }
-
-  // @Watch('showSync')
-  // changeShow(){
-
-  // }
 }
 </script>
 

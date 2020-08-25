@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     class="cal-dialog"
-    title="设置"
+    title="局部设置"
     width="700px"
     :close-on-click-modal="false"
     :visible.sync="dialog"

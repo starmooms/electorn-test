@@ -59,7 +59,12 @@ module.exports = {
           target: ['dmg', 'zip']
         },
         win: {
-          target: ['nsis', 'zip']
+          target: ['nsis', 'zip'],
+          extraResources: {
+            from: './extra/win32/',
+            to: './',
+            filter: ['**/*']
+          }
         },
         nsis: {
           oneClick: false,

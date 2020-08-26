@@ -49,7 +49,7 @@ module.exports = {
       nodeIntegration: true,
       mainProcessFile: 'src/main/background.ts',
       mainProcessWatch: ['src/main'],
-      externals: ['serialport', 'usb-detection'],
+      externals: ['serialport', 'usb-detection', 'forever-monitor'],
       builderOptions: {
         electronDownload: {
           mirror: 'https://npm.taobao.org/mirrors/electron/'

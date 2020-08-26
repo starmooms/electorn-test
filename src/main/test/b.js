@@ -5,8 +5,6 @@
 // buf1.writeIntLE(0x18, )
 // console.log(buf1)
 
-const Bluebird = require('bluebird')
-
 // const buf1 = Buffer.from('0016', 'hex')
 // console.log(`${buf1[0]}${buf1[1]}`)
 // const buf2 = Buffer.alloc(2)
@@ -208,7 +206,7 @@ const Bluebird = require('bluebird')
 //     }, 1000)
 //   })
 // }
-
+// const Bluebird = require('bluebird')
 // Bluebird.mapSeries([1, 2, 31, 45], async i => {
 //   await p()
 //   console.log(i)

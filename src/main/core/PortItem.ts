@@ -147,9 +147,9 @@ export default class PortItem {
     dataWriteModel.write(1, data.masterId)
     dataWriteModel.write(2, this.setByt(32, data.slaverId))
     dataWriteModel.write(3, this.setByt(8, data.channelId))
-    dataWriteModel.write(5, listLen)
+    dataWriteModel.write(4, listLen)
     PROTECT.forEach(item => {
-      dataWriteModel.write(item.index + 6, data.protect[item.type] || 0)
+      dataWriteModel.write(item.index + 5, data.protect[item.type] || 0)
     })
 
     const bufModel = new BufWriteListModel(listLen, this.modelData.workStep)
@@ -219,7 +219,10 @@ export default class PortItem {
     if (isDev) {
       // const a = '68010100ff68a9000000003e0000ffffffffff000000000000000000000000000000000000000000a10004000000030000000000000000000000000000000000000000000000000000009568edededed'  // eslint-disable-line
       // const b = '0000000000010104000000000000000000000000000000000000009000000005000000000000000000000000000000000000000000000000000000000100900000000a000000000000000000000000000000000000000000000000000000000200900000000f0000000000000000000000000000000000000000000000000000000003007000000000000000000000000000000000000000000003000000000000000000' // eslint-disable-line
-      const b = '000000000000ff0300000000000000000000000000000000000000a10000000000de0000006f000000000000000000000000000000000000000000000100a200000000014d000001bc000000000000000000000000000000000000000000000200b000000000029a0000022b000000000000000000000000000000000000000000'  // eslint-disable-line
+      const b =
+        '0000000000010104000000000000000000000000000000000000009000000005000000000000000000000000000000000000000000000000000000000100900000000a000000000000000000000000000000000000000000000000000000000200900000000f0000000000000000000000000000000000000000000000000000000003007000000000000000000000000000000000000000000003000000000000000000'
+      // const b = '000000000000ff0300000000000000000000000000000000000000a10000000000de0000006f000000000000000000000000000000000000000000000100a200000000014d000001bc000000000000000000000000000000000000000000000200b000000000029a0000022b000000000000000000000000000000000000000000'  // eslint-disable-line
+      // const b = '000000000001010000000000000000000000000000000000'
       resultBuf = Buffer.from(b, 'hex')
     } else {
       resultBuf = await this.post({ data })
@@ -276,13 +279,7 @@ export default class PortItem {
     postWrite.write(1, masterId)
     postWrite.write(2, this.setByt(32, [], 1))
     postWrite.write(1, this.setByt(8, [], 1))
-    const postBufData = agreement.createData({
-      masterId,
-      slaverId: 0xff,
-      type: 0x02,
-      code: controlCode.master.translateRead,
-      data: postModel.buf
-    })
+
     let oldTranslate: MasterTranslate | undefined
     if (this.translate.has(masterId)) {
       oldTranslate = this.translate.get(masterId)
@@ -299,6 +296,13 @@ export default class PortItem {
     const getData = () => {
       timer = setTimeout(async () => {
         const translate = this.translate.get(masterId)
+        const postBufData = agreement.createData({
+          masterId,
+          slaverId: 0xff,
+          type: 0x02,
+          code: controlCode.master.translateRead,
+          data: postModel.buf
+        })
         try {
           let resultBuf: Buffer
           if (isDev) {
@@ -308,6 +312,7 @@ export default class PortItem {
             const a = `0000080000020000000000000000${t}00019000000affffff9c0000000201000014ffffff38000000030000001efffffed40000000402000028fffffe700000000502000032fffffe0c000000060200003cfffffda80000000702000046fffffd440000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
+            logger.info('读采样发送', postBufData.buf.toString('hex'))
             resultBuf = await this.post({
               data: postBufData
             })

@@ -9,6 +9,8 @@ import WorkStepSee from './window/WorkStepSee'
 import UpdateManager from './core/UpdateManager'
 import SlaverTrend from './window/SlaverTrend'
 import './core/ConfigManage'
+import RedisServer from './core/redis/RedisServer'
+import RedisClient from './core/redis/RedisClient'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -19,6 +21,7 @@ export default class Launcher {
   usbManager = this.initUSBManager()
   beforeMainWin: beforeMainWin | null = null
   updateManager = this.initUpdaterManager()
+  redisServer!: RedisServer
 
   constructor(beforeMainWin?: beforeMainWin) {
     if (beforeMainWin) {
@@ -80,6 +83,9 @@ export default class Launcher {
       if (this.usbManager) {
         this.usbManager.destory()
       }
+      if (this.redisServer) {
+        this.redisServer.stop()
+      }
     })
     return this.win
   }
@@ -131,7 +137,14 @@ export default class Launcher {
     })
   }
 
-  afterWin() {}
+  afterWin() {
+    // this.redisServer = RedisServer.getInstance()
+    // this.redisServer.start()
+    // const redisClient = RedisClient.getInstance()
+    // setInterval(() => {
+    //   redisClient.redis.set(Date.now().toString(), 'bb')
+    // }, 1000)
+  }
 
   initUSBManager() {
     const usbManager = new USBManager()

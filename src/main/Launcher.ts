@@ -22,6 +22,7 @@ export default class Launcher {
   beforeMainWin: beforeMainWin | null = null
   updateManager = this.initUpdaterManager()
   redisServer!: RedisServer
+  redisClient!: RedisClient
 
   constructor(beforeMainWin?: beforeMainWin) {
     if (beforeMainWin) {
@@ -78,14 +79,10 @@ export default class Launcher {
       this.beforeMainWin()
     }
     this.win = winManager.createdWin('mainWin')
-    this.win.on('closed', () => {
-      this.win = null
-      if (this.usbManager) {
-        this.usbManager.destory()
-      }
-      if (this.redisServer) {
-        this.redisServer.stop()
-      }
+    this.win.on('close', event => {
+      this.win!.hide()
+      this.destoryWin()
+      event.preventDefault()
     })
     return this.win
   }
@@ -138,12 +135,32 @@ export default class Launcher {
   }
 
   afterWin() {
-    // this.redisServer = RedisServer.getInstance()
-    // this.redisServer.start()
-    // const redisClient = RedisClient.getInstance()
-    // setInterval(() => {
-    //   redisClient.redis.set(Date.now().toString(), 'bb')
-    // }, 1000)
+    this.redisServer = RedisServer.getInstance()
+    this.redisServer.start().then(() => {
+      this.redisClient = RedisClient.getInstance()
+      // setInterval(() => {
+      //   redisClient.redis.set(Date.now().toString(), 'bb')
+      // }, 1000)
+    })
+  }
+
+  async destoryWin() {
+    try {
+      if (this.usbManager) {
+        this.usbManager.destory()
+      }
+      if (this.redisClient) {
+        await this.redisClient.close()
+      }
+      if (this.redisServer) {
+        await this.redisServer.stop()
+      }
+    } catch (err) {
+      alert(err)
+    } finally {
+      this.win!.destroy()
+      this.win = null
+    }
   }
 
   initUSBManager() {

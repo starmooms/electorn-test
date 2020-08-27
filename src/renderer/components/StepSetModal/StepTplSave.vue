@@ -29,12 +29,12 @@ export default class StepTplSave extends Vue {
   @PropSync('show', { type: Boolean, default: false })
   private dialog!: boolean
   @Prop({
-    type: Array,
+    type: Object,
     default() {
-      return []
+      return null
     }
   })
-  list!: any[]
+  tplData!: any
 
   loading = false
   stepTplName = ''
@@ -52,12 +52,14 @@ export default class StepTplSave extends Vue {
       this.loading = true
       if (!this.stepTplName) {
         return this.$message.info('请先输入模板名称')
+      } else if (!this.tplData) {
+        return this.$message.info('模板数据不能为空')
       }
       await setStoreConfig({
         type: 'workStepTpl',
         data: {
           name: this.stepTplName,
-          list: this.list
+          tplData: this.tplData
         }
       })
       this.closeModal()

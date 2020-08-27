@@ -2,13 +2,22 @@ $width: 5em;
 $cl1: #ccc;
 $--color-bg-reversal: rgba(28, 28, 28, 0.9) !default;
 
-$--color-error: #f56c6c !default;
-$--color-protect: #67c23a !default;
-$--color-pause: #e6a23c !default;
-$--color-run: #409eff !default;
+// $--color-error: #f56c6c !default;
+// $--color-protect: #67c23a !default;
+// $--color-pause: #e6a23c !default;
+// $--color-run: #409eff !default;
 
 /// color|1|Font Color|2
 $--color-text-regular: #606266 !default;
 
 /// color|1|Border Color|3
 $--border-color-base: #DCDFE6 !default;
+
+$--color-error: #f56c6c !default;
+$--color-protect: #43a19d !default;
+$--color-pause: #e6a23c !default;
+$--color-stop: #000 !default;
+$--color-null: #ccc !default;
+// $--color-pause: #e6a23c !default;
+$--color-run: #67c23a !default;
+$--color-end: #409eff !default;

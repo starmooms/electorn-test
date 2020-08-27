@@ -43,6 +43,9 @@ export default class USBManager {
   /** 结束监测USB */
   destory() {
     if (this.hasEvent === true) {
+      this.cache.forEach(portItem => {
+        portItem.stopTranslate()
+      })
       this.cache.clear()
       usbDetection.stopMonitoring()
       this.hasEvent = false

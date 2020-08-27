@@ -124,10 +124,11 @@ export const ERR_STATUS = {
 
 // prettier-ignore
 export const CHANNEL_STATUS = {
-  '00': { name: '等待', status: 'default' },
+  '00': { name: '等待', status: 'null' },
   '01': { name: '保护', status: 'protect' },
-  '02': { name: '停止', status: 'pause' },
-  '03': { name: '结束', status: 'default' },
+  '02': { name: '停止', status: 'stop' },
+  '03': { name: '结束', status: 'end' },
+  '04': { name: '暂停', status: 'pause' },
   '90': { name: '搁置', status: 'run' },
   'a0': { name: '恒流预充', status: 'run' },
   'a1': { name: '恒流充电', status: 'run' },
@@ -176,7 +177,7 @@ interface CalItem {
 /** 校准列表 */
 export function getCalList() {
   const list: CalItem[] = []
-  let index = 1
+  let index = 3
   ;['电压校准参数', '电流校准参数', '电流反向校准参数'].forEach(item => {
     for (let i = 1; i <= 5; i++) {
       list.push(
@@ -240,7 +241,10 @@ export const controlCode = {
       start: 0xa5,
       pause: 0xa6,
       continued: 0xa7,
-      close: 0xa8
-    }
+      close: 0xa8,
+      reset: 0xa4
+    },
+    calSet: 0xaa,
+    calRead: 0x8a
   }
 }

@@ -34,11 +34,19 @@
         </div>
 
         <title-box name="工步信息">
-          <p class="steps-now">当前工步：{{ this.workerIdNow }}</p>
+          <p class="steps-now">当前工步：{{ workerIdNow + 1 }}</p>
+          <p class="steps-now">当前工步状态：{{ workerStatus }}</p>
           <div class="steps-list">
             <el-table border max-height="40vh" :data="nowStepList">
-              <el-table-column label="工步信息" prop="msg"></el-table-column>
-              <el-table-column label="工步工作条件" prop="msg">
+              <el-table-column label="工步信息">
+                <template slot-scope="{ row }">
+                  <span class="step-now-icon">
+                    {{ row.id === workerIdNow ? '*' : '' }}
+                  </span>
+                  <span>{{ row.msg }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="工步工作条件">
                 <template slot-scope="{ row }">
                   <el-tag
                     :disable-transitions="true"
@@ -149,7 +157,8 @@ export default class WorkerSee extends Vue {
 
   protectList = deepClone(PROTECT)
   protectForm = GET_PROTECT_FORM()
-  workerIdNow: null | number = null
+  workerIdNow: number | null = null
+  workerStatus: string | null = null
 
   get btnList() {
     return ChannelStatus.statusList
@@ -227,6 +236,7 @@ export default class WorkerSee extends Vue {
         const worker = item.worker.map(setInput)
         const limt = item.limt.map(setInput)
         return {
+          id: item.id,
           msg: `${item.id + 1}.${item.name}`,
           worker,
           limt
@@ -243,7 +253,8 @@ export default class WorkerSee extends Vue {
       eventName: `/port/translate/${path}/${masterId}/${slaverId}`,
       onEmit: (data: any) => {
         const item = data.list[this.portItem!.channelId + slaverId * 8]
-        this.workerIdNow = item.workerId + 1
+        this.workerIdNow = item.workerId
+        this.workerStatus = item.workerStatus.name
         if (item) {
           i++
           this.$refs.trendChart.update({
@@ -268,6 +279,9 @@ export default class WorkerSee extends Vue {
     this.getWorkStep()
     this.$nextTick(() => {
       this.setCharts()
+      // setInterval(() => {
+      //   this.workerIdNow = this.workerIdNow === 0 ? 1 : 0
+      // }, 1000)
     })
   }
 
@@ -304,5 +318,8 @@ export default class WorkerSee extends Vue {
 .steps-now {
   margin-top: 0;
   margin-bottom: 10px;
+}
+.step-now-icon {
+  color: red;
 }
 </style>

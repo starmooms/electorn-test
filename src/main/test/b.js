@@ -212,8 +212,74 @@
 //   console.log(i)
 // })
 
-const a = Buffer.from(
-  '00000000000101000000000000000004000000000000000000000000000000000000009000000005000000000000000000000000000000000000000000000000000000000100900000000a000000000000000000000000000000000000000000000000000000000200900000000f0000000000000000000000000000000000000000000000000000000003007000000000000000000000000000000000000000000003000000000000000000',
-  'hex'
-)
-a.readIntBE(7, 8)
+// const a = Buffer.from(
+//   '00000000000101000000000000000004000000000000000000000000000000000000009000000005000000000000000000000000000000000000000000000000000000000100900000000a000000000000000000000000000000000000000000000000000000000200900000000f0000000000000000000000000000000000000000000000000000000003007000000000000000000000000000000000000000000003000000000000000000',
+//   'hex'
+// )
+// a.readIntBE(7, 8)
+// const { spawn, exec } = require('child_process')
+
+// const binName = `F:\\work\\gxmTest\\Electron\\electorn-test\\extra\\win32\\redis\\redis-server.exe`
+// const execFun = (sh, cb) => {
+//   exec(
+//     sh,
+//     {
+//       cwd: 'F:\\work\\gxmTest\\Electron\\electorn-test\\extra\\win32\\redis'
+//     },
+//     (err, stdout, stderr) => {
+//       console.log(stdout, stderr)
+//       if (err) {
+//         console.log(err)
+//         // throw new Error(err)
+//       }
+//       if (cb) cb()
+//     }
+//   )
+// }
+
+// execFun(`${binName} --service-install ./redis.windows.conf`, () => {
+//   execFun(`${binName} --service-start`)
+// })
+
+// const ls = spawn(
+//   'F:\\work\\gxmTest\\Electron\\electorn-test\\extra\\win32\\redis\\redis-server.exe',
+//   [
+//     'F:\\work\\gxmTest\\Electron\\electorn-test\\extra\\win32\\redis\\redis.windows.conf'
+//   ],
+//   {
+//     cwd: 'F:\\work\\gxmTest\\Electron\\electorn-test\\extra\\win32\\redis',
+//     windowsHide: false,
+//     detached: true
+//   }
+// )
+
+// ls.stdout.on('data', data => {
+//   console.log(`stdout: ${data}`)
+// })
+
+// ls.stderr.on('data', data => {
+//   console.error(`stderr: ${data}`)
+// })
+
+// ls.on('close', code => {
+//   console.log(`child process exited with code ${code}`)
+// })
+
+// process.on('SIGINT', () => {
+//   console.log('end?')
+//   execFun(`${binName} --service-stop`, () => {
+//     execFun(`${binName} --service-uninstall`)
+//   })
+// })
+
+// setTimeout(() => {
+//   console.log('到时退出??')
+//   execFun(`${binName} --service-stop`, () => {
+//     execFun(`${binName} --service-uninstall`)
+//   })
+// }, 20000000)
+// setTimeout(() => {
+//   console.log('end')
+// }, 20000)
+
+console.log(Buffer.from('333333330d0a', 'hex').toString())

@@ -65,7 +65,7 @@ export default class StepTplUse extends Vue {
   @Emit('tplUse')
   stepsTplUse(item: any) {
     this.closeModal()
-    return item.list
+    return item.tplData
   }
 
   async getList() {

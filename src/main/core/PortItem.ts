@@ -308,8 +308,9 @@ export default class PortItem {
           if (isDev) {
             // const a = '0000080001010000000000000001020000000000000000020200000000000000000302000000000000000004020000000000000000050200000000000000000602000000000000000007020000000000000000' // eslint-disable-line
             // 24
-            const t = Math.random() > 0.5 ? '03' : '00'
-            const a = `0000080000020000000000000000${t}00019000000affffff9c0000000201000014ffffff38000000030000001efffffed40000000402000028fffffe700000000502000032fffffe0c000000060200003cfffffda80000000702000046fffffd440000` // eslint-disable-line
+            // const t = Math.random() > 0.5 ? '03' : '00'
+            // const a = `0000080000020000000000000000${t}00019000000affffff9c0000000201000014ffffff38000000030000001efffffed40000000402000028fffffe700000000502000032fffffe0c000000060200003cfffffda80000000702000046fffffd440000` // eslint-disable-line
+            const a = `0000080000900026080000000000000001900004a8000000000000000290000472fffffff500000003900004760000000000000004900006610000000000000005900004b2000000000000000690000489000000000000000790000dbe000003910000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
             logger.info('读采样发送', postBufData.buf.toString('hex'))
@@ -410,38 +411,51 @@ export default class PortItem {
 
   async setCal(opts: any) {
     const listModel = Array(30).fill({ byte: 4, hasFload: true })
-    const bufModel = new BufWriteListModel(1, [1].concat(listModel)) // eslint-disable-line
-    const writeModel = bufModel.getWriteModel(0)
+    const bufModel = new BufWriteModel([1, 1, 1].concat(listModel)) // eslint-disable-line
+    const writeModel = bufModel.getWriteModel()
+    writeModel.write(0, opts.masterId)
+    writeModel.write(1, opts.slaverId)
+    writeModel.write(2, opts.channelId)
     opts.list.forEach(item => {
       writeModel.write(item.index, item.value || 0)
     })
-    bufModel.buf.writeUInt8(opts.channelId, 0)
-    const dataBuf = Buffer.concat([
-      Buffer.from([0x00, opts.slaverId, 1]),
-      bufModel.buf
-    ])
-    const postBuf = agreement.setData(dataBuf, controlCode.slaver.calSet)
-    console.log(dataBuf.toString('hex'))
+    const dataBuf = Buffer.concat([Buffer.from([0x00, 1]), bufModel.buf])
+    const result = agreement.createData({
+      masterId: opts.masterId,
+      slaverId: 0xff,
+      type: 0x02,
+      code: controlCode.master.calSet,
+      data: dataBuf
+    })
+    logger.info('写校准发送', result.buf.toString('hex'))
     await this.post({
-      data: postBuf
+      data: result
     })
   }
 
   async readCal(opts: any) {
-    const dataBuf = agreement.setData(
-      Buffer.from([0x00, opts.slaverId, opts.channelId]),
-      controlCode.slaver.calRead
-    )
+    const dataModel = new BufWriteModel([1, 1, 4, 1]) // eslint-disable-line
+    const dataWriteModel = dataModel.getWriteModel()
+    dataWriteModel.write(1, opts.masterId)
+    dataWriteModel.write(2, this.setByt(32, [opts.slaverId]))
+    dataWriteModel.write(3, this.setByt(8, [opts.channelId]))
+    const dataBuf = agreement.createData({
+      masterId: opts.masterId,
+      slaverId: 0xff,
+      type: 0x02,
+      code: controlCode.master.calRead,
+      data: dataModel.buf
+    })
     let resultBuf: Buffer
     if (isDev) {
       // resultBuf = Buffer.from('000001003f99999a00000000000000003dcccccd00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003fb333330000000000000000000000000000000000000000000000000000000000000000', 'hex') // eslint-disable-line
-      resultBuf = Buffer.from('00000101da388e3fda380ec047555540da388ec011c7b1404755d5c07ee3f840da380ec1f6ff1f41f6ff1fc10000000000000000000000000000000000000000000000000000000000000000000000000000000033e38a44669cad46cd5450458d03d948c78aa94a000000001be33d4900000000fe237449f34fc347', 'hex') // eslint-disable-line
+      resultBuf = Buffer.from('0001000000e3388e3fe3380e4040555547408e38e30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040f8e37e410e38da411ffff6411ffff7', 'hex') // eslint-disable-line
     } else {
       resultBuf = await this.post({ data: dataBuf })
     }
     const listModel = Array(30).fill({ byte: 4, hasFload: true })
-    const bufModel = new BufModel([1].concat(listModel))
-    const bufData = bufModel.getBufData(resultBuf.slice(3))
+    const bufModel = new BufModel([1, 1, 1].concat(listModel))
+    const bufData = bufModel.getBufData(resultBuf.slice(2))
     const list = getCalList()
     list.forEach(item => {
       item.value = bufData.getIndex(item.index)

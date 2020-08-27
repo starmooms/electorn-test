@@ -13,18 +13,41 @@
         </el-button>
       </el-form>
 
+      <div class="color-box">
+        <ul class="color-box-list">
+          <li class="null">
+            <span class="color-icon"></span>
+            <span class="color-tip">等待</span>
+          </li>
+          <li class="pause">
+            <span class="color-icon"></span>
+            <span class="color-tip">暂停</span>
+          </li>
+          <li class="stop">
+            <span class="color-icon"></span>
+            <span class="color-tip">停止</span>
+          </li>
+          <li class="end">
+            <span class="color-icon"></span>
+            <span class="color-tip">结束</span>
+          </li>
+          <li class="run">
+            <span class="color-icon"></span>
+            <span class="color-tip">运行</span>
+          </li>
+          <li class="protect">
+            <span class="color-icon"></span>
+            <span class="color-tip">保护</span>
+          </li>
+          <li class="error">
+            <span class="color-icon"></span>
+            <span class="color-tip">异常</span>
+          </li>
+        </ul>
+      </div>
+
       <title-box name="通道列表">
         <SelectMaster v-model="activeMasterId"></SelectMaster>
-        <!-- <el-radio-group class="master-group" v-model="activeMasterId">
-          <el-radio-button
-            class="master-group-item"
-            v-for="(master, mKey) in batteryList"
-            :key="mKey"
-            :label="mKey"
-          >
-            {{ master.name }}
-          </el-radio-button>
-        </el-radio-group> -->
         <transition name="el-fade-in">
           <div v-if="activeMaster">
             <!-- <el-divider content-position="left">
@@ -389,6 +412,47 @@ export default class Home extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.color-box {
+  .color-box-list {
+    display: flex;
+    align-items: center;
+    li {
+      margin-right: 20px;
+      display: inline-flex;
+      align-items: center;
+      .color-icon {
+        width: 14px;
+        height: 14px;
+        background-color: #ccc;
+        border-radius: 4px;
+        margin-right: 4px;
+      }
+
+      &.null .color-icon {
+        background-color: $--color-null;
+      }
+      &.pause .color-icon {
+        background-color: $--color-pause;
+      }
+      &.protect .color-icon {
+        background-color: $--color-protect;
+      }
+      &.stop .color-icon {
+        background-color: $--color-stop;
+      }
+      &.end .color-icon {
+        background-color: $--color-end;
+      }
+      &.run .color-icon {
+        background-color: $--color-run;
+      }
+      &.error .color-icon {
+        background-color: $--color-error;
+      }
+    }
+  }
+}
+
 .master-item {
   max-width: 860px;
   cursor: pointer;
@@ -432,7 +496,29 @@ export default class Home extends Vue {
         }
       }
 
-      &.protect {
+      &.null .channel-icon {
+        color: $--color-null;
+      }
+      &.pause .channel-icon {
+        color: $--color-pause;
+      }
+      &.protect .channel-icon {
+        color: $--color-protect;
+      }
+      &.stop .channel-icon {
+        color: $--color-stop;
+      }
+      &.end .channel-icon {
+        color: $--color-end;
+      }
+      &.run .channel-icon {
+        color: $--color-run;
+      }
+      &.error .channel-icon {
+        color: $--color-error;
+      }
+
+      /* &.protect {
         .channel-icon {
           color: $--color-protect;
         }
@@ -454,7 +540,7 @@ export default class Home extends Vue {
         .channel-icon {
           color: $--color-error;
         }
-      }
+      } */
 
       .channel-icon {
         transition: all 0.2s;

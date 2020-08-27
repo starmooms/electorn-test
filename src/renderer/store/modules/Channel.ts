@@ -21,6 +21,7 @@ export default class ChannelImpl extends VuexModule {
     { name: '开始', action: 'start' },
     { name: '暂停', action: 'pause' },
     { name: '继续', action: 'continued' },
+    { name: '重新启动', action: 'reset' },
     { name: '关闭', action: 'close' }
   ]
 }

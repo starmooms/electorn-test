@@ -15,67 +15,78 @@
         ></SelectChannel>
       </template>
 
-      <title-box name="工步编辑">
+      <title-box name="通道工步编辑">
         <el-button type="text" @click="stepsAdd">添加工步</el-button>
         <el-button type="text" @click="tplSaveOpen">保存工步模板</el-button>
         <el-button type="text" @click="tplUseOpen">应用工步模板</el-button>
+        <div class="steps-edit-box">
+          <el-divider content-position="left">工步编辑</el-divider>
+          <div class="table-wrapper">
+            <el-table :data="stepsList">
+              <el-table-column
+                type="index"
+                label="步次"
+                width="50"
+              ></el-table-column>
+              <el-table-column label="工步类型" width="150">
+                <template slot-scope="{ row, $index }">
+                  <el-select
+                    v-model="row.name"
+                    placeholder="请选择"
+                    value-key="name"
+                    @change="stepItemIdChange($event, row, $index)"
+                  >
+                    <el-option
+                      v-for="item in stepsSelectOpts"
+                      :key="item.label"
+                      :label="item.label"
+                      :value="item.value"
+                      :disabled="item.value.type === 'loop' && hasLoop"
+                    ></el-option>
+                  </el-select>
+                </template>
+              </el-table-column>
+              <el-table-column label="设置" min-width="400">
+                <template slot-scope="{ row }" v-if="row.input">
+                  <div class="input-box">
+                    <div
+                      v-for="(value, key) in row.input"
+                      :key="key"
+                      class="input-item"
+                    >
+                      {{ stepsInputMap[key].name }}：
+                      <el-input type="text" v-model.number="row.input[key]" />
+                    </div>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column width="100" label="操作">
+                <template slot-scope="{ $index }">
+                  <el-button type="text" @click="stepsDel($index)">
+                    删除
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
 
-        <el-table :data="stepsList">
-          <el-table-column
-            type="index"
-            label="步次"
-            width="50"
-          ></el-table-column>
-          <el-table-column label="工步类型" width="150">
-            <template slot-scope="{ row, $index }">
-              <el-select
-                v-model="row.name"
-                placeholder="请选择"
-                value-key="name"
-                @change="stepItemIdChange($event, row, $index)"
-              >
-                <el-option
-                  v-for="item in stepsSelectOpts"
-                  :key="item.label"
-                  :label="item.label"
-                  :value="item.value"
-                  :disabled="item.value.type === 'loop' && hasLoop"
-                ></el-option>
-              </el-select>
-            </template>
-          </el-table-column>
-          <el-table-column label="设置" min-width="400">
-            <template slot-scope="{ row }" v-if="row.input">
-              <div class="input-box">
-                <div
-                  v-for="(value, key) in row.input"
-                  :key="key"
-                  class="input-item"
-                >
-                  {{ stepsInputMap[key].name }}：
-                  <el-input type="text" v-model.number="row.input[key]" />
-                </div>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column width="100" label="操作">
-            <template slot-scope="{ $index }">
-              <el-button type="text" @click="stepsDel($index)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </title-box>
-
-      <title-box name="保护参数">
-        <el-form class="protect-form" :model="protectForm" label-width="200px">
-          <el-form-item
-            v-for="item in protectList"
-            :key="item.index"
-            :label="item.name"
+        <div>
+          <el-divider content-position="left">保护参数</el-divider>
+          <el-form
+            class="protect-form"
+            :model="protectForm"
+            label-width="200px"
           >
-            <el-input v-model.number="protectForm[item.type]"></el-input>
-          </el-form-item>
-        </el-form>
+            <el-form-item
+              v-for="item in protectList"
+              :key="item.index"
+              :label="item.name"
+            >
+              <el-input v-model.number="protectForm[item.type]"></el-input>
+            </el-form-item>
+          </el-form>
+        </div>
       </title-box>
 
       <div slot="footer">
@@ -85,7 +96,7 @@
         </el-button>
       </div>
     </el-dialog>
-    <StepTplSave :show.sync="tplSaveShow" :list="stepsList"></StepTplSave>
+    <StepTplSave :show.sync="tplSaveShow" :tplData="tplData"></StepTplSave>
     <StepTplUse :show.sync="tplUseShow" @tplUse="tplUse"></StepTplUse>
   </div>
 </template>
@@ -141,6 +152,18 @@ export default class StepSetModal extends Vue {
   batchSlaverId: number[] = []
   batchChannelId: number[] = []
 
+  get tplData() {
+    return {
+      stepsList: this.stepsList,
+      protectForm: this.protectForm
+    }
+  }
+
+  set tplData(tpl: any) {
+    this.stepsList = tpl.stepsList
+    this.protectForm = tpl.protectForm
+  }
+
   get channelList() {
     return ChannelStatus.list
   }
@@ -190,7 +213,9 @@ export default class StepSetModal extends Vue {
     if (!msg) {
       list = this.stepsList.filter(item => {
         if (item.name) {
-          const hasNull = Object.keys(item.input).find(key => !item.input[key])
+          const hasNull = Object.keys(item.input).find(
+            key => !item.input[key] && item.input[key] !== 0
+          )
           if (hasNull) {
             msg = '工步中有参数未设置'
           }
@@ -232,6 +257,9 @@ export default class StepSetModal extends Vue {
     if (v === true) {
       this.stepsList = []
       this.stepsAdd()
+      Object.keys(this.protectForm).forEach(key => {
+        this.$set(this.protectForm, key, null)
+      })
       // if (this.isBatch) {
       //   this.$refs.SelectChannel.reset()
       // }
@@ -249,8 +277,8 @@ export default class StepSetModal extends Vue {
     this.tplUseShow = true
   }
 
-  tplUse(list: any[]) {
-    this.stepsList = list
+  tplUse(tpl: any) {
+    this.tplData = tpl
   }
 
   tplSaveOpen() {
@@ -301,7 +329,7 @@ export default class StepSetModal extends Vue {
   min-width: 900px;
 
   .el-dialog__body {
-    max-height: 60vh;
+    max-height: 76vh;
     overflow-y: auto;
     padding-top: 0;
   }
@@ -335,6 +363,45 @@ export default class StepSetModal extends Vue {
   .protect-form {
     display: flex;
     flex-flow: row wrap;
+  }
+}
+
+.steps-edit-box {
+  margin: 20px 0;
+}
+
+.table-wrapper {
+  background-color: #f5f7fa;
+}
+.table-wrapper ::v-deep {
+  .el-table,
+  .el-table tr,
+  .el-table th,
+  .el-table--enable-row-transition .el-table__body td {
+    background-color: transparent;
+  }
+}
+.el-table__expanded-cell,
+.el-table .cell {
+  background-color: transparent;
+}
+
+::v-deep {
+  .el-dialog {
+    display: flex;
+    flex-direction: column;
+    margin: 0 !important;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /*height:600px;*/
+    max-height: calc(100% - 30px);
+    max-width: calc(100% - 30px);
+    .el-dialog__body {
+      flex: 1;
+      overflow: auto;
+    }
   }
 }
 </style>

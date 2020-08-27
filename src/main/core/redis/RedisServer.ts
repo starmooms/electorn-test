@@ -4,6 +4,9 @@ import fs from 'fs'
 import is from 'electron-is'
 import logger from '@/main/core/Logger'
 import forever from 'forever-monitor'
+import { reject } from 'bluebird'
+import { exec, execSync } from 'child_process'
+import { stdout, stderr } from 'process'
 
 export default class RedisServer {
   private static _instance: RedisServer | null = null
@@ -42,63 +45,42 @@ export default class RedisServer {
       })
     }
 
-    const confPath = join(basePath, '/redis.windows.conf')
     return {
-      sh: [binPath, confPath],
+      binPath: binPath,
       cwd: basePath
     }
   }
 
-  start() {
-    // console.log(forever)
-    if (this.monitor === null) {
-      const { sh, cwd } = this.getStartSh()
-      logger.info('redis start sh:', sh)
-      this.monitor = forever.start(sh, {
-        max: 1,
-        cwd,
-        // spawnWith: {
-        //   shell: true // Windows only - makes forever spawn in a shell
-        // },
-        parser: function(command, args) {
-          return {
-            command: command,
-            args: args
-          }
-        },
-        silent: !is.dev()
+  exec(sh: string, cwd: string) {
+    return new Promise((resolve, reject) => {
+      exec(sh, { cwd }, (err, stdout, stderr) => {
+        if (err) {
+          logger.error(err)
+          return reject(err)
+        }
+        logger.info(stdout, stderr)
+        return resolve()
       })
-
-      // const { child } = this.monitor
-      // logger.info('Redis pid:', child.pid)
-
-      this.monitor.on('error', err => {
-        logger.info(`Redis error: ${err}`)
-      })
-
-      this.monitor.on('start', () => {
-        logger.info('Redis started')
-      })
-
-      this.monitor.on('stop', () => {
-        logger.info('Redis stop')
-      })
-    }
+    })
   }
 
-  stop() {
-    if (this.monitor) {
-      try {
-        logger.info('[Motrix] Engine stopping')
-        this.monitor.stop()
-      } catch (err) {
-        logger.error('[Motrix] Engine stop fail:', err.message)
-        alert('redis close error')
-      } finally {
-        this.monitor.removeAllListeners('start')
-        this.monitor.removeAllListeners('error')
-        this.monitor.removeAllListeners('stop')
-      }
-    }
+  execSync(sh: string, cwd: string) {
+    const data = execSync(sh, { cwd })
+    logger.info(data.toString())
+  }
+
+  async start() {
+    const { binPath, cwd } = this.getStartSh()
+    await this.exec(
+      `${binPath} --service-install ./redis.windows-service.conf`,
+      cwd
+    )
+    await this.exec(`${binPath} --service-start`, cwd)
+  }
+
+  async stop() {
+    const { binPath, cwd } = this.getStartSh()
+    await this.exec(`${binPath} --service-stop`, cwd)
+    await this.exec(`${binPath} --service-uninstall`, cwd)
   }
 }

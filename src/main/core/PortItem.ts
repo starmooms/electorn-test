@@ -24,9 +24,11 @@ import { Promise as Bluebird } from 'bluebird'
 
 import winManager from './WinManager'
 import ipcManage from './IpcManage'
-import is from 'electron-is'
+import is, { mas } from 'electron-is'
 import MasterMode from './MasterMode'
 import { typedKeys } from '@/shared/utils'
+import redisClient, { RedisClient } from './redis/RedisClient'
+import dayjs from 'dayjs'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -270,6 +272,7 @@ export default class PortItem {
   /** 读采样 */
   readTranslate() {
     if (this.translateReadNow) return
+    const redisClient = RedisClient.getInstance()
     const masterId = 0
     const slaverId = 0
     const bufModel = new BufModel([1, 1, 1, 1, 2, { byte: 4, hasSigned: true}, 1, 1]) // eslint-disable-line
@@ -322,6 +325,7 @@ export default class PortItem {
           const len = resultBuf.readUInt8(2)
           const dataBuf = resultBuf.slice(3)
           const list: any[] = []
+          const nowUnix = dayjs().unix()
           for (let i = 0; i < len; i++) {
             const start = bufModel.bufLength * i
             const bufData = bufModel.getBufData(
@@ -339,10 +343,11 @@ export default class PortItem {
               endStatus: bufData.getIndex(6),
               errorCode: errCode,
               errorMsg: errCode !== '00' ? ERR_STATUS[errCode] : '',
-              workerStatus: CHANNEL_STATUS[workerCode] || this.noWorkerStatus
+              workerStatus: CHANNEL_STATUS[workerCode] || this.noWorkerStatus,
+              createTime: nowUnix
             })
           }
-
+          await redisClient.setSamp(masterId, list)
           if (translate) {
             const winArr = translate.winArr
             winArr.forEach(winName => {

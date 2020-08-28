@@ -20,6 +20,7 @@
   "dependencies": {
     "bluebird": "^3.7.2",
     "core-js": "^3.6.5",
+    "dayjs": "^1.8.34",
     "electron-is": "^3.0.0",
     "electron-store": "^6.0.0",
     "electron-updater": "^4.3.4",

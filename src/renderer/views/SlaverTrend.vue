@@ -50,6 +50,9 @@ import { Vue, Component } from 'vue-property-decorator'
 import TrendChart from '@/renderer/components/TrendChart.vue'
 import { getChannelList } from '../ipc/channel'
 import command from '../command'
+import { getSamp } from '../ipc/db'
+import { keys } from 'lodash'
+import dayjs from 'dayjs'
 
 @Component({
   components: {
@@ -71,8 +74,51 @@ export default class SlaverTrend extends Vue {
     })
     if (data.status) {
       this.slaverData = data.data
-      this.$nextTick(() => {
+      this.$nextTick(async () => {
+        await this.getSampData()
         this.setCharts()
+      })
+    }
+  }
+
+  getChartMap() {
+    const chartMap: { [key: string]: TrendChart } = {}
+    this.$refs.TrendChart.forEach(item => {
+      chartMap[item.channelId] = item
+    })
+    return chartMap
+  }
+
+  async getSampData() {
+    const objList = this.slaverData.list
+    const channelList = Object.keys(objList).map(key => {
+      return {
+        id: objList[key].id
+      }
+    })
+    const data = await getSamp({
+      start: dayjs()
+        .subtract(60 * 6, 'minute')
+        .unix(),
+      masterId: this.portItem.masterId,
+      slaverArr: [
+        {
+          id: this.portItem.slaverId,
+          channel: channelList
+        }
+      ]
+    })
+    if (data.status) {
+      console.log(data)
+      const chartMap = this.getChartMap()
+      data.data.forEach(item => {
+        if (item.length > 0) {
+          const channelId = item[0].channelId
+          const component = chartMap[channelId]
+          if (component) {
+            component.setBaseList(item)
+          }
+        }
       })
     }
   }

@@ -1,4 +1,4 @@
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, dialog } from 'electron'
 import is from 'electron-is'
 import USBManager from './core/USBManager'
 import Update from './Update'
@@ -10,7 +10,7 @@ import UpdateManager from './core/UpdateManager'
 import SlaverTrend from './window/SlaverTrend'
 import './core/ConfigManage'
 import RedisServer from './core/redis/RedisServer'
-import RedisClient from './core/redis/RedisClient'
+import redisClient, { RedisClient } from './core/redis/RedisClient'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -80,9 +80,21 @@ export default class Launcher {
     }
     this.win = winManager.createdWin('mainWin')
     this.win.on('close', event => {
-      this.win!.hide()
-      this.destoryWin()
       event.preventDefault()
+      dialog
+        .showMessageBox({
+          type: 'info',
+          title: '关闭程序',
+          message: '确定关闭程序',
+          buttons: ['是', '否'],
+          cancelId: 1
+        })
+        .then(({ response }) => {
+          if (response === 0) {
+            this.win!.hide()
+            this.destoryWin()
+          }
+        })
     })
     return this.win
   }
@@ -136,12 +148,16 @@ export default class Launcher {
 
   afterWin() {
     this.redisServer = RedisServer.getInstance()
-    this.redisServer.start().then(() => {
-      this.redisClient = RedisClient.getInstance()
-      // setInterval(() => {
-      //   redisClient.redis.set(Date.now().toString(), 'bb')
-      // }, 1000)
-    })
+    this.redisServer
+      .start()
+      .then(() => {
+        // setInterval(() => {
+        //   redisClient.redis.set(Date.now().toString(), 'bb')
+        // }, 1000)
+      })
+      .finally(() => {
+        redisClient.initRedis()
+      })
   }
 
   async destoryWin() {
@@ -149,12 +165,11 @@ export default class Launcher {
       if (this.usbManager) {
         this.usbManager.destory()
       }
-      if (this.redisClient) {
-        await this.redisClient.close()
-      }
+      await redisClient.close()
       if (this.redisServer) {
         await this.redisServer.stop()
       }
+      winManager.closeOtherWin()
     } catch (err) {
       alert(err)
     } finally {

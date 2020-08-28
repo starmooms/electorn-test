@@ -14,6 +14,14 @@ class WinManager {
     return hasWin
   }
 
+  closeOtherWin() {
+    this.winList.forEach((value, key) => {
+      if (key !== 'mainWin') {
+        value.close()
+      }
+    })
+  }
+
   /**
    * 创建窗口
    * @param name 窗口名

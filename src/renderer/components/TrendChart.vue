@@ -13,6 +13,7 @@ import 'echarts/lib/component/toolbox'
 import 'echarts/lib/component/axisPointer'
 import 'echarts/lib/component/dataZoom'
 import 'echarts/lib/component/legend'
+import 'echarts/lib/component/visualMap'
 import { merge } from '@/shared/utils'
 import { SettingStatus } from '../store/modules/Setting'
 
@@ -46,6 +47,7 @@ export default class TrendChart extends Vue {
   xData!: number[]
   UData!: number[][]
   IData!: number[][]
+  xMinUnix = 0
   sampling = SettingStatus.sampling
 
   @Watch('channelId')
@@ -75,8 +77,8 @@ export default class TrendChart extends Vue {
             splitNumber: 10,
             axisLabel: { fontSize: 10 }
           }
-        ],
-        series: [{ itemStyle: { opacity: 0 } }, { itemStyle: { opacity: 0 } }]
+        ]
+        // series: [{ itemStyle: { opacity: 0 } }, { itemStyle: { opacity: 0 } }]
       }
     }
     const polar = merge(
@@ -104,12 +106,32 @@ export default class TrendChart extends Vue {
         },
         xAxis: {
           type: 'value',
+          // max: 1000,
+          // min: 0
           data: this.xData
           // max: function(value) {
           //   return value.max + 3600
           // }
           // splitNumber: 5,
         },
+        // visualMap: {
+        //   show: false,
+        //   dimension: 0,
+        //   pieces: [
+        //     {
+        //       gt: 1000,
+        //       lt: 2000,
+        //       color: 'green'
+        //     },
+        //     {
+        //       gt: 6,
+        //       lte: 8,
+        //       color: 'red'
+        //     }
+        //   ],
+        //   outOfRange: { opacity: 1 },
+        //   inRange: { opacity: 0 }
+        // },
         dataZoom: [
           {
             type: 'slider',
@@ -164,15 +186,35 @@ export default class TrendChart extends Vue {
     this.$refs.echart.mergeOptions(polar)
   }
 
-  update(data: UpdateOpts) {
-    const time = data.time
-    this.xData.push(data.time)
-    this.UData.push([time, data.U])
-    this.IData.push([time, data.I])
+  update(data?: UpdateOpts) {
+    if (data) {
+      const time = data.createTime - this.xMinUnix
+      // if (this.UData.length - 1 <= time -2) {
+      //   const fillData = []
+
+      //   this.UData.push([time - 1, null])
+      // }
+      this.xData.push(time)
+      this.UData.push([time, data.U])
+      this.IData.push([time, data.I])
+    }
     this.$refs.echart.mergeOptions({
       xAxis: { data: this.xData },
       series: [{ data: this.UData }, { data: this.IData }]
     })
+  }
+
+  setBaseList(list: any) {
+    if (list.length > 0) {
+      const min = list[0].createTime - 1
+      list.forEach(item => {
+        const x = item.createTime - min
+        this.UData.push([x, item.U])
+        this.IData.push([x, item.I])
+      })
+      this.xMinUnix = min
+      this.update()
+    }
   }
 
   @Watch('sampling')

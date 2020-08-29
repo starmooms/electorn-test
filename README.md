@@ -48,3 +48,7 @@ redis-server --service-install redis.windows.conf
 删除服务: redis-server --service-uninstall
 
 ```
+
+```
+https://github.com/apache/incubator-echarts/issues/10929
+```

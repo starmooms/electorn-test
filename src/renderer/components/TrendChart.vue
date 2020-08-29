@@ -1,6 +1,6 @@
 <template>
   <div class="echart-box">
-    <v-chart ref="echart" :manual-update="true" :autoresize="true"></v-chart>
+    <v-chart ref="echart" manual-update :autoresize="true"></v-chart>
   </div>
 </template>
 
@@ -16,6 +16,7 @@ import 'echarts/lib/component/legend'
 import 'echarts/lib/component/visualMap'
 import { merge } from '@/shared/utils'
 import { SettingStatus } from '../store/modules/Setting'
+import dayjs from 'dayjs'
 
 interface UpdateOpts {
   time: number
@@ -49,6 +50,7 @@ export default class TrendChart extends Vue {
   IData!: number[][]
   xMinUnix = 0
   sampling = SettingStatus.sampling
+  lastTime = 0
 
   @Watch('channelId')
   changeChannelId() {
@@ -86,14 +88,30 @@ export default class TrendChart extends Vue {
         tooltip: {
           // alwaysShowContent: false,
           trigger: 'axis',
-          backgroundColor: 'rgba(245, 245, 245, 0.8)',
-          borderWidth: 1,
-          borderColor: '#ccc',
+          // backgroundColor: 'rgba(245, 245, 245, 0.8)',
+          // borderWidth: 1,
+          // borderColor: '#ccc',
           padding: 10,
           textStyle: {
-            color: '#000'
+            fontSize: 12
+            // color: '#000'
           },
-          extraCssText: 'width: 170px'
+          extraCssText: 'width: 170px',
+          formatter(params, ticket, callback) {
+            let htmlStr = ''
+            for (let i = 0; i < params.length; i++) {
+              const param = params[i]
+              if (i === 0) {
+                const xName = param.value[0] // x轴的名称
+                htmlStr += xName + '<br/>' // x轴的名称
+              }
+              const seriesName = param.seriesName // 图例名称
+              const value = param.value[1] // y轴值
+              const unit = i === 0 ? 'mV' : 'mA'
+              htmlStr += `<div>${param.marker} ${seriesName}：${value} ${unit}</div>`
+            }
+            return htmlStr
+          }
           // axisPointer: {
           //   type: 'line',
           //   // trigger: 'axis',
@@ -101,14 +119,15 @@ export default class TrendChart extends Vue {
           // }
         },
         legend: {
-          show: true,
-          data: ['电压', '电流']
+          show: true
+          // data: ['电压(mV)', '电流(mA)']
         },
         xAxis: {
-          type: 'value',
+          type: 'time'
+          // type: 'value',
           // max: 1000,
           // min: 0
-          data: this.xData
+          // data: this.xData
           // max: function(value) {
           //   return value.max + 3600
           // }
@@ -137,6 +156,9 @@ export default class TrendChart extends Vue {
             type: 'slider',
             xAxisIndex: [0],
             show: true
+          },
+          {
+            type: 'inside'
           }
         ],
         yAxis: [
@@ -165,11 +187,8 @@ export default class TrendChart extends Vue {
             yAxisIndex: 0,
             lineStyle: { color: 'green' },
             itemStyle: { color: 'green' },
-            tooltip: {
-              formatter: function(param) {
-                return `电压：${param.data[1]}mV`
-              }
-            }
+            showSymbol: false,
+            sampling: 'average'
           },
           {
             name: '电流',
@@ -177,7 +196,9 @@ export default class TrendChart extends Vue {
             type: 'line',
             yAxisIndex: 1,
             lineStyle: { color: 'red' },
-            itemStyle: { color: 'red' }
+            itemStyle: { color: 'red' },
+            sampling: 'average',
+            showSymbol: false
           }
         ]
       },
@@ -186,33 +207,82 @@ export default class TrendChart extends Vue {
     this.$refs.echart.mergeOptions(polar)
   }
 
+  fullNullData(item: any, lastTime = this.lastTime) {
+    const UData: any[] = []
+    const IData: any[] = []
+    if (item.createTime - lastTime >= 2) {
+      const len = Math.abs(item.createTime - lastTime)
+      for (let i = 1; i < len; i++) {
+        const full = dayjs.unix(lastTime + i).format('YYYY-MM-DD HH:mm:ss')
+        // this.UData.push([full, '-'])
+        // this.IData.push([full, '-'])
+        UData.push([full, '-'])
+        IData.push([full, '-'])
+      }
+    }
+    this.lastTime = item.createTime
+    return {
+      UData,
+      IData
+    }
+  }
+
   update(data?: UpdateOpts) {
     if (data) {
-      const time = data.createTime - this.xMinUnix
+      const time = dayjs.unix(data.createTime).format('YYYY-MM-DD HH:mm:ss')
       // if (this.UData.length - 1 <= time -2) {
       //   const fillData = []
 
       //   this.UData.push([time - 1, null])
       // }
+      // this.xData.push(time)
+      const { UData, IData } = this.fullNullData(data)
+      UData.push([time, data.U])
+      IData.push([time, data.I])
       this.xData.push(time)
-      this.UData.push([time, data.U])
-      this.IData.push([time, data.I])
+      if (this.$refs.echart.chart) {
+        this.$refs.echart.chart.appendData({
+          seriesIndex: 0,
+          data: UData
+        })
+        this.$refs.echart.chart.appendData({
+          seriesIndex: 1,
+          data: IData
+        })
+        this.$refs.echart.mergeOptions({
+          xAxis: { data: this.xData }
+        })
+      }
+    } else {
+      this.$refs.echart.mergeOptions({
+        xAxis: { data: this.xData },
+        series: [{ data: this.UData }, { data: this.IData }]
+      })
     }
-    this.$refs.echart.mergeOptions({
-      xAxis: { data: this.xData },
-      series: [{ data: this.UData }, { data: this.IData }]
-    })
   }
 
   setBaseList(list: any) {
     if (list.length > 0) {
       const min = list[0].createTime - 1
+      let lastTime = list[0].createTime
+      // let lastX = min
       list.forEach(item => {
-        const x = item.createTime - min
+        // const x = item.createTime - min
+        // if (x - lastX > 2) {
+        //   console.log('添加null')
+        //   this.UData.push([lastX + 1, null])
+        //   this.IData.push([lastX + 1, null])
+        // }
+        const { UData, IData } = this.fullNullData(item, lastTime)
+        this.UData = [...this.UData, ...UData]
+        this.IData = [...this.IData, ...IData]
+        const x = dayjs.unix(item.createTime).format('YYYY-MM-DD HH:mm:ss')
         this.UData.push([x, item.U])
         this.IData.push([x, item.I])
+        lastTime = item.createTime
+        // lastX = x
       })
-      this.xMinUnix = min
+      this.lastTime = lastTime
       this.update()
     }
   }
@@ -232,6 +302,8 @@ export default class TrendChart extends Vue {
       this.setCharts()
     })
   }
+
+  beforeDestroy() {}
 }
 </script>
 

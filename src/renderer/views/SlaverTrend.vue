@@ -17,7 +17,7 @@
           :key="cKey"
           :span="6"
         >
-          <div class="thend-item-box">
+          <div class="thend-item-box" v-if="cKey === '0'">
             <TrendChart
               class="chart-item"
               ref="TrendChart"
@@ -98,8 +98,11 @@ export default class SlaverTrend extends Vue {
     })
     const data = await getSamp({
       start: dayjs()
-        .subtract(60 * 6, 'minute')
+        .subtract(60 * 1, 'minute')
         .unix(),
+      // end: dayjs()
+      //   .subtract(60 * 8, 'minute')
+      //   .unix(),
       masterId: this.portItem.masterId,
       slaverArr: [
         {
@@ -111,14 +114,16 @@ export default class SlaverTrend extends Vue {
     if (data.status) {
       console.log(data)
       const chartMap = this.getChartMap()
-      data.data.forEach(item => {
-        if (item.length > 0) {
-          const channelId = item[0].channelId
-          const component = chartMap[channelId]
-          if (component) {
-            component.setBaseList(item)
+      Object.keys(data.data).forEach(sKey => {
+        Object.keys(data.data[sKey]).forEach(cKey => {
+          if (data.data[sKey][cKey]) {
+            const component = chartMap[cKey]
+            if (component) {
+              console.log(data.data[sKey][cKey])
+              component.setBaseList(data.data[sKey][cKey])
+            }
           }
-        }
+        })
       })
     }
   }

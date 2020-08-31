@@ -4,14 +4,14 @@ import fs from 'fs'
 import is from 'electron-is'
 import logger from '@/main/core/Logger'
 import forever from 'forever-monitor'
+import { exec } from 'child_process'
 import { reject } from 'bluebird'
-import { exec, execSync } from 'child_process'
-import { stdout, stderr } from 'process'
+import { rejects } from 'assert'
 
 export default class RedisServer {
   private static _instance: RedisServer | null = null
   monitor: forever.Monitor | null = null
-
+  isWin = is.windows()
   cachePath = `../../__local/redis/`
 
   public static getInstance() {
@@ -28,7 +28,7 @@ export default class RedisServer {
     if (is.dev()) {
       basePath = resolve(__dirname, `../extra/${platform}/redis`)
     }
-    const binName = platform === 'win32' ? 'redis-server.exe' : 'redis-server'
+    const binName = this.isWin ? 'redis-server.exe' : 'redis-server'
 
     const binPath = join(basePath, `/${binName}`)
     const binIsExist = fs.existsSync(binPath)
@@ -64,12 +64,56 @@ export default class RedisServer {
     })
   }
 
-  execSync(sh: string, cwd: string) {
-    const data = execSync(sh, { cwd })
-    logger.info(data.toString())
+  async start() {
+    return this.isWin ? this.winServiceStart() : this.cmdStart()
   }
 
-  async start() {
+  async stop() {
+    return this.isWin ? this.winServiceStop() : this.cmdStop()
+  }
+
+  async cmdStart() {
+    return new Promise((resolve, reject) => {
+      const { binPath, cwd } = this.getStartSh()
+      this.monitor = forever.start([binPath, './redis.conf'], {
+        max: 1,
+        cwd,
+        parser(command, args) {
+          return {
+            command: command,
+            args: args
+          }
+        },
+        silent: !is.dev()
+      })
+      this.monitor.on('start', () => {
+        logger.info('RedisServer Start')
+        resolve()
+      })
+      this.monitor.on('error', err => {
+        logger.info('RedisServer Error', err)
+        reject(err)
+      })
+    })
+  }
+
+  async cmdStop() {
+    return new Promise((resolve, rejects) => {
+      if (this.monitor) {
+        this.monitor.on('exit', () => {
+          logger.info('RedisServer Exit')
+          resolve()
+        })
+        this.monitor.on('error', err => {
+          logger.info('RedisServer Error', err)
+          reject(err)
+        })
+        this.monitor.stop()
+      }
+    })
+  }
+
+  async winServiceStart() {
     const { binPath, cwd } = this.getStartSh()
     await this.exec(
       `${binPath} --service-install ./redis.windows-service.conf`,
@@ -78,7 +122,7 @@ export default class RedisServer {
     await this.exec(`${binPath} --service-start`, cwd)
   }
 
-  async stop() {
+  async winServiceStop() {
     const { binPath, cwd } = this.getStartSh()
     await this.exec(`${binPath} --service-stop`, cwd)
     await this.exec(`${binPath} --service-uninstall`, cwd)

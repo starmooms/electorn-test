@@ -1,4 +1,10 @@
-import { app, protocol, BrowserWindow, dialog } from 'electron'
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  dialog,
+  powerSaveBlocker
+} from 'electron'
 import is from 'electron-is'
 import USBManager from './core/USBManager'
 import Update from './Update'
@@ -130,6 +136,9 @@ export default class Launcher {
         this.updateManager.check()
       }
     })
+    const id = powerSaveBlocker.start('prevent-display-sleep')
+    // console.log(powerSaveBlocker.isStarted(id), id)
+    powerSaveBlocker.stop(id)
 
     ipcManage.on('/createdWin', (event, data: any) => {
       switch (data.type) {

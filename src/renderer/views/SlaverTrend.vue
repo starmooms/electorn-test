@@ -9,15 +9,21 @@
         <br />
         slaverId：{{ portItem.slaverId }}
       </div>
+      <el-divider content-position="left">范围选择</el-divider>
+      <button @click="changeTime(0.25)">15分钟</button>
+      <button @click="changeTime(0.5)">30分钟</button>
+      <button @click="changeTime(1)">1小时</button>
+      <button @click="changeTime(3)">3小时</button>
+      <button @click="changeTime(6)">6小时</button>
       <el-divider content-position="left">走势图</el-divider>
-      <el-row class="thend-list" :gutter="20">
+      <el-row class="thend-list" :gutter="20" v-loading="loading">
         <el-col
           class="thend-item"
           v-for="(channel, cKey) in slaverData.list"
           :key="cKey"
           :span="6"
         >
-          <div class="thend-item-box" v-if="cKey === '0'">
+          <div class="thend-item-box">
             <TrendChart
               class="chart-item"
               ref="TrendChart"
@@ -53,6 +59,7 @@ import command from '../command'
 import { getSamp } from '../ipc/db'
 import { keys } from 'lodash'
 import dayjs from 'dayjs'
+import { formatTimeStr } from '../utils/util'
 
 @Component({
   components: {
@@ -66,6 +73,7 @@ export default class SlaverTrend extends Vue {
 
   portItem: null | any = null
   slaverData: any = null
+  loading = false
 
   async getList() {
     const data = await getChannelList({
@@ -89,42 +97,80 @@ export default class SlaverTrend extends Vue {
     return chartMap
   }
 
-  async getSampData() {
-    const objList = this.slaverData.list
-    const channelList = Object.keys(objList).map(key => {
-      return {
-        id: objList[key].id
-      }
-    })
-    const data = await getSamp({
-      start: dayjs()
-        .subtract(60 * 1, 'minute')
-        .unix(),
-      // end: dayjs()
-      //   .subtract(60 * 8, 'minute')
-      //   .unix(),
-      masterId: this.portItem.masterId,
-      slaverArr: [
-        {
-          id: this.portItem.slaverId,
-          channel: channelList
+  async getSampData(minute = 15) {
+    try {
+      this.loading = true
+      const objList = this.slaverData.list
+      const channelList = Object.keys(objList).map(key => {
+        return {
+          id: objList[key].id
         }
-      ]
-    })
-    if (data.status) {
-      console.log(data)
-      const chartMap = this.getChartMap()
-      Object.keys(data.data).forEach(sKey => {
-        Object.keys(data.data[sKey]).forEach(cKey => {
-          if (data.data[sKey][cKey]) {
-            const component = chartMap[cKey]
-            if (component) {
-              console.log(data.data[sKey][cKey])
-              component.setBaseList(data.data[sKey][cKey])
+      })
+      const slaverId = this.portItem.slaverId
+      const startTime = dayjs()
+        .subtract(minute, 'minute')
+        .unix()
+      const endTime = dayjs().unix()
+      const data = await getSamp({
+        start: startTime,
+        end: endTime,
+        masterId: this.portItem.masterId,
+        slaverArr: [
+          {
+            id: slaverId,
+            channel: channelList
+          }
+        ]
+      })
+      if (data.status) {
+        const chartMap = this.getChartMap()
+        const slaverSamp = data.data[slaverId] || {}
+        const promisArr = Object.keys(chartMap).map(async cKey => {
+          const sampData = slaverSamp[cKey] || []
+          const component = chartMap[cKey]
+          if (component) {
+            if (sampData.length > 0) {
+              if (sampData[0].createTime > startTime) {
+                sampData.unshift({
+                  createTime: startTime,
+                  U: '-',
+                  I: '-'
+                })
+              }
+              if (sampData[1].createTime < endTime) {
+                sampData.push({
+                  createTime: endTime,
+                  U: '-',
+                  I: '-'
+                })
+              }
             }
+            await component.setBaseList(sampData)
           }
         })
-      })
+        await Promise.all(promisArr)
+        // Object.keys(data.data).forEach(sKey => {
+        //   Object.keys(data.data[sKey]).forEach(cKey => {
+        //     if (data.data[sKey][cKey]) {
+        //       const component = chartMap[cKey]
+        //       if (component) {
+        //         component.setBaseList(data.data[sKey][cKey])
+        //       }
+        //     }
+        //   })
+        // })
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      this.loading = false
+    }
+  }
+
+  async changeTime(start: number) {
+    if (start < 24) {
+      console.log(start * 2 * 30)
+      this.getSampData(start * 2 * 30)
     }
   }
 
@@ -136,7 +182,9 @@ export default class SlaverTrend extends Vue {
     })
     const { path, masterId, slaverId } = this.portItem
     command.on({
-      eventName: `/port/translate/${path}/${masterId}/${slaverId}`,
+      eventName: `/port/translate/${encodeURIComponent(
+        path
+      )}/${masterId}/${slaverId}`,
       onEmit: (data: any) => {
         i += 1
         data.list.forEach(item => {
@@ -157,7 +205,7 @@ export default class SlaverTrend extends Vue {
 
   mounted() {
     this.portItem = {
-      path: encodeURIComponent(this.$route.params.path),
+      path: this.$route.params.path,
       masterId: Number(this.$route.params.masterId),
       slaverId: Number(this.$route.params.slaverId)
     }

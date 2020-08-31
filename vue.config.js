@@ -1,5 +1,6 @@
 /* eslint-disable */
 const path = require('path')
+const WorkerPlugin = require('worker-plugin')
 /* eslint-enable */
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -11,7 +12,8 @@ function resolve(dir) {
 module.exports = {
   lintOnSave: isDev,
   configureWebpack: {
-    devtool: isDev ? 'source-map' : 'none'
+    devtool: isDev ? 'source-map' : 'none',
+    plugins: [new WorkerPlugin()]
   },
   css: {
     loaderOptions: {

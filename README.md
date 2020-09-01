@@ -52,3 +52,7 @@ redis-server --service-install redis.windows.conf
 ```
 https://github.com/apache/incubator-echarts/issues/10929
 ```
+
+https://www.cnblogs.com/LLBFWH/articles/11013791.html
+https://www.jianshu.com/p/b4c5480146a9
+https://docs.mongodb.com/manual/reference/configuration-options/#windows-service-options

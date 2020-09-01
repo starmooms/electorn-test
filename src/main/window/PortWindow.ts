@@ -45,10 +45,10 @@ export default class PortWindow {
         `portItem/${portPath}`,
         `portItem/${encodeURIComponent(portPath)}`
       )
-      this.portItem.parser.on('data', buf => {
-        console.log(iconv.decode(buf, 'GBK'))
-        win.webContents.send(portDataEvent, iconv.decode(buf, 'GBK'))
-      })
+      // this.portItem.parser.on('data', buf => {
+      //   console.log(iconv.decode(buf, 'GBK'))
+      //   win.webContents.send(portDataEvent, iconv.decode(buf, 'GBK'))
+      // })
       win.on('close', () => {
         ipcMain.removeHandler(getPortEvent)
         ipcMain.removeAllListeners(writeEvent)

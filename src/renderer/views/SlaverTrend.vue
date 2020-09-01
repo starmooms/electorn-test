@@ -249,8 +249,7 @@ export default class SlaverTrend extends Vue {
     { title: '1小时', value: 60 },
     { title: '2小时', value: 120 },
     { title: '12小时', value: 60 * 12 },
-    { title: '1天', value: 60 * 24 },
-    { title: '2天', value: 60 * 48 }
+    { title: '1天', value: 60 * 24 }
   ]
 
   selectDate = []
@@ -330,7 +329,6 @@ export default class SlaverTrend extends Vue {
       if (this.selectDate.length === 2) {
         startTime = dayjs(this.selectDate[0]).unix()
         endTime = dayjs(this.selectDate[1]).unix()
-        console.log(startTime, endTime)
       }
 
       // const add = 60 * 2
@@ -371,7 +369,7 @@ export default class SlaverTrend extends Vue {
           }
 
           const component = chartMap[id]
-          if (component) {
+          if (component && sampData.length > 0) {
             if (sampData.length > 0) {
               if (sampData[0].createTime > startTime) {
                 sampData.unshift({
@@ -388,6 +386,7 @@ export default class SlaverTrend extends Vue {
                 })
               }
             }
+
             await component.setBaseList(sampData)
           }
         })
@@ -436,11 +435,11 @@ export default class SlaverTrend extends Vue {
           }, 200)
         }
       })
-      // this.$nextTick(() => {
-      //   if (tagId === 0) {
-      //     this.getSampData(this.showTime, [channel])
-      //   }
-      // })
+      this.$nextTick(() => {
+        if (tagId === 0) {
+          this.getSampData(this.showTime, [channel])
+        }
+      })
     }
   }
 

@@ -5,8 +5,7 @@ import is from 'electron-is'
 import logger from '@/main/core/Logger'
 import forever from 'forever-monitor'
 import { exec } from 'child_process'
-import { reject } from 'bluebird'
-import { rejects } from 'assert'
+import configManage from '../ConfigManage'
 
 export default class RedisServer {
   private static _instance: RedisServer | null = null
@@ -24,6 +23,7 @@ export default class RedisServer {
   getStartSh() {
     const { platform } = process
     let basePath = resolve(app.getAppPath(), '../redis')
+    // let basePath = app.getPath('userData')
 
     if (is.dev()) {
       basePath = resolve(__dirname, `../extra/${platform}/redis`)
@@ -106,7 +106,7 @@ export default class RedisServer {
         })
         this.monitor.on('error', err => {
           logger.info('RedisServer Error', err)
-          reject(err)
+          rejects(err)
         })
         this.monitor.stop()
       }

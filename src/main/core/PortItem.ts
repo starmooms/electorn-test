@@ -29,6 +29,7 @@ import MasterMode from './MasterMode'
 import { typedKeys } from '@/shared/utils'
 import redisClient, { RedisClient } from './redis/RedisClient'
 import dayjs from 'dayjs'
+import TransfromParser from '../utils/transfromParser'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -57,12 +58,12 @@ interface WStepsOpts {
   masterId: number
 }
 
-const Delimiter = SerialPort.parsers.Delimiter
+const SelfParser = TransfromParser
 
 export default class PortItem {
   path: string
   port!: SerialPort
-  parser!: SerialPort.parsers.Delimiter
+  parser!: TransfromParser
   translateReadNow = false
   translate = new Map<number, MasterTranslate>()
   emitList = new Map<string, (dataBuf: Buffer) => any>()
@@ -85,7 +86,7 @@ export default class PortItem {
     const port = new SerialPort(path, {
       baudRate: 115200
     })
-    const parser = new Delimiter({
+    const parser = new SelfParser({
       delimiter: agreement.getEnd()
     })
     port.pipe(parser)
@@ -338,6 +339,11 @@ export default class PortItem {
           code: controlCode.master.translateRead,
           data: postModel.buf
         })
+
+        if (translate && translate.close) {
+          getData()
+        }
+
         try {
           let resultBuf: Buffer
           if (isDev) {
@@ -345,7 +351,8 @@ export default class PortItem {
             // 24
             // const t = Math.random() > 0.5 ? '03' : '00'
             // const a = `0000080000020000000000000000${t}00019000000affffff9c0000000201000014ffffff38000000030000001efffffed40000000402000028fffffe700000000502000032fffffe0c000000060200003cfffffda80000000702000046fffffd440000` // eslint-disable-line
-            const a = `0000080000900026080000000000000001900004a8000000000000000290000472fffffff500000003900004760000000000000004900006610000000000000005900004b2000000000000000690000489000000000000000790000dbe000003910000` // eslint-disable-line
+            // const a = `0000080000900026080000000000000001900004a8000000000000000290000472fffffff500000003900004760000000000000004900006610000000000000005900004b2000000000000000690000489000000000000000790000dbe000003910000` // eslint-disable-line
+            const a = `00000800000000000000000000000000010000000afffffff60000000200000014ffffffec000000030000001effffffe20000000400000028ffffffd80000000500000032ffffffce000000060000003cffffffc40000000700000046ffffffba0000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
             logger.info('读采样发送', postBufData.buf.toString('hex'))
@@ -379,7 +386,9 @@ export default class PortItem {
               createTime: nowUnix
             })
           }
+          logger.info('存储redis', postBufData.buf.toString('hex'))
           await redisClient.setSamp(masterId, list)
+          logger.info('redis存储成功', postBufData.buf.toString('hex'))
           if (translate) {
             const winArr = translate.winArr
             winArr.forEach(winName => {
@@ -399,10 +408,6 @@ export default class PortItem {
           }
         } catch (err) {
           logger.warn(err)
-        } finally {
-          if (translate && translate.close) {
-            getData()
-          }
         }
       }, 1000)
     }

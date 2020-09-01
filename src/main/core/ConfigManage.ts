@@ -1,6 +1,7 @@
 import Store from 'electron-store'
 import ipcManage from './IpcManage'
 import uuid from 'node-uuid'
+import { app } from 'electron'
 
 /* eslint-disable quote-props */
 // prettier-ignore
@@ -16,6 +17,9 @@ class ConfigManage {
       },
       base: {
         portPath: ''
+      },
+      x: {
+        DBPath: app.getPath('userData')
       }
     }
   })

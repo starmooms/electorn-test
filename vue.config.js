@@ -82,6 +82,7 @@ module.exports = {
           // createStartMenuShortcut: true, // 创建开始菜单图标
           // shortcutName: 'xxxx', // 图标名称
           // include: 'build/script/installer.nsh' // 包含的自定义nsis脚本 这个对于构建需求严格得安装过程相当有用。
+          // deleteAppDataOnUninstall: // 卸载是删除用户数据
         },
         // 软件更新地址
         publish: {

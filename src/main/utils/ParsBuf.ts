@@ -44,6 +44,16 @@ export class BufData {
       .slice(sliceItem.offset, sliceItem.offset + sliceItem.byte)
       .toString('hex')
   }
+
+  getIndexByt(index: number) {
+    const num = this.getIndex(index).toString(2)
+    const i = num.indexOf('1')
+    if (i >= 0) {
+      return num.length - i
+    } else {
+      return 0
+    }
+  }
 }
 
 declare type BufTypeWrite = BufWriteListModel | BufWriteModel

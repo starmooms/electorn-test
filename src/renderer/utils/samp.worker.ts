@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import { chartFullNull, getSampChartList } from './util'
 
-const webWorker: Worker | any = self as any
+const webWorker: Worker | any = self
 
 const postChatList = async (data: any) => {
   const result = await getSampChartList(data)

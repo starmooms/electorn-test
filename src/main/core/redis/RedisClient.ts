@@ -112,20 +112,20 @@ export class RedisClient {
       }
       return list.forEach(item => {
         const samp = JSON.parse(item)
-        const sampData = {
-          channelId: samp.channelId,
-          U: samp.U,
-          I: samp.I,
-          createTime: samp.createTime
-        }
+        // const sampData = {
+        //   channelId: samp.channelId,
+        //   U: samp.U,
+        //   I: samp.I,
+        //   createTime: samp.createTime
+        // }
         if (!slaverList[samp.slaverId]) {
           slaverList[samp.slaverId] = {}
         }
         const channel = slaverList[samp.slaverId][samp.channelId]
         if (channel) {
-          channel.push(sampData)
+          channel.push(samp)
         } else {
-          slaverList[samp.slaverId][samp.channelId] = [sampData]
+          slaverList[samp.slaverId][samp.channelId] = [samp]
         }
       })
     })

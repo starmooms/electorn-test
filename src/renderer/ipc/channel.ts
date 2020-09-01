@@ -32,7 +32,7 @@ interface ReadSteps {
   path: string
   masterId: number
   slaverId: number
-  channelId: number
+  channelId: number[]
 }
 
 export function setChannelStatus(data: SetStatus) {

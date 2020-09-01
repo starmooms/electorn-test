@@ -2,7 +2,7 @@
   "name": "upper-computer",
   "author": "GXM",
   "description": "upper computer for battery detection",
-  "version": "0.1.85",
+  "version": "0.1.94",
   "private": true,
   "engines": {
     "node": ">=12.18.2"
@@ -39,6 +39,7 @@
     "vue-echarts": "^5.0.0-beta.0",
     "vue-property-decorator": "^8.4.2",
     "vue-router": "^3.2.0",
+    "vue-virtual-scroller": "^1.0.10",
     "vuex": "^3.4.0",
     "vuex-module-decorators": "^0.17.0"
   },

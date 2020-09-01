@@ -224,24 +224,34 @@ export default class WorkerSee extends Vue {
 
   async getWorkStep() {
     if (!this.portItem) return
-    const data = await getWorkStep(this.portItem)
+    const data = await getWorkStep({
+      ...this.portItem,
+      channelId: [this.portItem.channelId]
+    })
     if (data.status) {
-      const setInput = (item: any) => {
-        return {
-          label: `${item.name}：${item.data}${item.unit}`
+      if (!data.data.stepData || !data.data.stepData[this.portItem.channelId]) {
+        this.$message.error('工步返回结构错误')
+      } else {
+        const setInput = (item: any) => {
+          return {
+            label: `${item.name}：${item.data}${item.unit}`
+          }
         }
+        const { protect, stepList } = data.data.stepData[
+          this.portItem.channelId
+        ]
+        this.protectForm = protect
+        this.nowStepList = stepList.map((item: any) => {
+          const worker = item.worker.map(setInput)
+          const limt = item.limt.map(setInput)
+          return {
+            id: item.id,
+            msg: `${item.id + 1}.${item.name}`,
+            worker,
+            limt
+          }
+        })
       }
-      this.protectForm = data.data.protect
-      this.nowStepList = data.data.list.map((item: any) => {
-        const worker = item.worker.map(setInput)
-        const limt = item.limt.map(setInput)
-        return {
-          id: item.id,
-          msg: `${item.id + 1}.${item.name}`,
-          worker,
-          limt
-        }
-      })
     }
   }
 

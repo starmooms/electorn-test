@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 import './utils/class-component-hooks'
 import Element from 'element-ui'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 import '@/renderer/style/index.scss'
 

@@ -34,7 +34,7 @@ class GetSampWorker {
         data
       })
       worker.addEventListener('message', data => {
-        resolve(data.data as T)
+        resolve(data.data as any)
       })
       worker.addEventListener('error', err => {
         rejects(err)

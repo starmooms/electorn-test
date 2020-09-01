@@ -1,10 +1,4 @@
-import {
-  workSteps,
-  WORKSTEPS,
-  WORKSTEPS_MAP,
-  workStepsInput,
-  WORKSTEPSINPUT
-} from '@/shared/config/port'
+import { WORKSTEPS, WORKSTEPSINPUT } from '@/shared/config/port'
 
 export function getStepsOpts() {
   return WORKSTEPS.map(item => {

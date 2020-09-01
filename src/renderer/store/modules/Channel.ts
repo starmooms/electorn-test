@@ -1,11 +1,4 @@
-import {
-  Action,
-  getModule,
-  Module,
-  Mutation,
-  config,
-  VuexModule
-} from 'vuex-module-decorators'
+import { getModule, Module, config, VuexModule } from 'vuex-module-decorators'
 import store from '@/renderer/store'
 import { channelList } from '@/shared/config/port'
 import { deepClone } from '@/shared/utils'

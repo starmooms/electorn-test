@@ -15,10 +15,8 @@ import 'echarts/lib/component/dataZoom'
 import 'echarts/lib/component/legend'
 import 'echarts/lib/component/visualMap'
 import 'echarts/lib/component/graphic'
-import _ from 'lodash'
 import { merge } from '@/shared/utils'
 import { SettingStatus } from '../store/modules/Setting'
-import dayjs from 'dayjs'
 import getSampWorker from '@/renderer/utils/getSampWorker'
 
 interface UpdateOpts {
@@ -54,7 +52,7 @@ export default class TrendChart extends Vue {
   xMinUnix = 0
   sampling = SettingStatus.sampling
   lastTime = 0
-  chartSamp!: string
+  chartSamp!: string | null
   polar!: any
 
   @Watch('channelId')
@@ -66,7 +64,7 @@ export default class TrendChart extends Vue {
     this.xData = []
     this.UData = UData
     this.IData = IData
-    this.chartSamp = 'average'
+    this.chartSamp = this.UData.length > 2000 ? 'average' : null
     const tip =
       this.UData.length === 0 && this.IData.length === 0 ? '暂无数据' : ''
     let sizeOpts: any = {}
@@ -221,6 +219,7 @@ export default class TrendChart extends Vue {
             id: 'test1',
             left: 'center',
             top: 'middle',
+            z: 9,
             style: {
               fill: '#333',
               text: [tip],
@@ -240,49 +239,87 @@ export default class TrendChart extends Vue {
   }
 
   async update(data?: UpdateOpts) {
-    if (data) {
-      const { UData, IData, lastTime, lastX } = await getSampWorker.getSampList(
-        [data],
-        this.lastTime
-      )
-      if (this.lastTime >= lastTime) return
-      this.lastTime = lastTime
-      // this.xData[this.xData.length - 1] = lastX
-      if (this.$refs.echart.chart) {
-        this.$refs.echart.chart.appendData({
-          seriesIndex: 0,
-          data: UData
-        })
-        this.$refs.echart.chart.appendData({
-          seriesIndex: 1,
-          data: IData
-        })
-        this.$refs.echart.mergeOptions({
-          xAxis: { data: this.xData }
-        })
-      }
-    } else {
-      let text = ''
-      let sampling: string | null = this.chartSamp
-      if (this.UData.length === 0 && this.IData.length === 0) {
-        text = '暂无数据'
-        sampling = null
-      }
-      console.log(sampling, this.UData, this.IData)
-
-      this.$refs.echart.mergeOptions({
-        xAxis: { data: [] },
-        series: [
-          { data: this.UData, sampling },
-          { data: this.IData, sampling }
-        ],
-        graphic: [
-          {
-            style: { text: [text] }
-          }
-        ]
-      })
-    }
+    // let text = ''
+    // let sampling: string | null = this.chartSamp
+    // if (this.UData.length === 0 && this.IData.length === 0) {
+    //   text = '暂无数据'
+    //   sampling = null
+    // }
+    const { UData, IData, lastTime, lastX } = await getSampWorker.getSampList(
+      [data],
+      this.lastTime
+    )
+    this.lastTime = lastTime
+    this.xData.shift()
+    this.xData.push(lastX)
+    this.UData.shift()
+    this.UData = [...this.UData, ...UData]
+    this.IData.shift()
+    this.IData = [...this.IData, ...IData]
+    this.$refs.echart.mergeOptions({
+      xAxis: { data: this.xData },
+      series: [{ data: this.UData }, { data: this.IData }],
+      graphic: [
+        {
+          style: { text: [''] }
+        }
+      ]
+    })
+    // if (data) {
+    //   const { UData, IData, lastTime, lastX } = await getSampWorker.getSampList(
+    //     [data],
+    //     this.lastTime
+    //   )
+    //   if (this.lastTime >= lastTime) return
+    //   this.lastTime = lastTime
+    //   this.xData[this.xData.length - 1] = lastX
+    //   if (this.$refs.echart.chart) {
+    //     // this.$refs.echart.chart.appendData({
+    //     //   seriesIndex: '0',
+    //     //   data: UData
+    //     // })
+    //     // this.$refs.echart.chart.appendData({
+    //     //   seriesIndex: '1',
+    //     //   data: IData
+    //     // })
+    //     // this.$refs.echart.mergeOptions({
+    //     //   xAxis: { data: this.xData }
+    //     //   // graphic: [
+    //     //   //   {
+    //     //   //     style: { text: [''] }
+    //     //   //   }
+    //     //   // ]
+    //     // })
+    //     // this.$refs.echart.mergeOptions({
+    //     //   xAxis: { data: this.xData },
+    //     //   series: [{ data: this.UData }, { data: this.IData }],
+    //     //   graphic: [
+    //     //     {
+    //     //       style: { text: [''] }
+    //     //     }
+    //     //   ]
+    //     // })
+    //   }
+    // } else {
+    //   // let text = ''
+    //   // let sampling: string | null = this.chartSamp
+    //   // if (this.UData.length === 0 && this.IData.length === 0) {
+    //   //   text = '暂无数据'
+    //   //   sampling = null
+    //   // }
+    //   // this.$refs.echart.mergeOptions({
+    //   //   xAxis: { data: [] },
+    //   //   series: [
+    //   //     { data: this.UData, sampling },
+    //   //     { data: this.IData, sampling }
+    //   //   ],
+    //   //   graphic: [
+    //   //     {
+    //   //       style: { text: [text] }
+    //   //     }
+    //   //   ]
+    //   // })
+    // }
   }
 
   /** 采样数据整理 */

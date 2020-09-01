@@ -14,4 +14,3 @@ export const PROTECT = [
   { name: '报警下限起效时间(min)', type: 'TimeMin', index: 5 },
   { name: '报警容量(mAh)', type: 'warnVal', index: 6 }
 ]
-

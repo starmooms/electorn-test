@@ -3,7 +3,6 @@ import {
   getModule,
   Module,
   Mutation,
-  MutationAction,
   config,
   VuexModule
 } from 'vuex-module-decorators'

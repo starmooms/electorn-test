@@ -62,3 +62,21 @@ export const getSampChartList = async (
     lastX: UData.length > 0 ? UData[UData.length - 1][0] : ''
   }
 }
+
+export const stepListSetInput = (item: any) => {
+  return {
+    label: `${item.name}：${item.data}${item.unit}`
+  }
+}
+
+/** 工步列表处理 */
+export const stepListUtil = (item: any) => {
+  const worker = item.worker.map(stepListSetInput)
+  const limt = item.limt.map(stepListSetInput)
+  return {
+    id: item.id,
+    msg: `${item.id + 1}.${item.name}`,
+    worker,
+    limt
+  }
+}

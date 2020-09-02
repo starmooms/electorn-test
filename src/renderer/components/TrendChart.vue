@@ -250,11 +250,11 @@ export default class TrendChart extends Vue {
       this.lastTime
     )
     this.lastTime = lastTime
-    this.xData.shift()
-    this.xData.push(lastX)
+    // this.xData.shift()
+    // this.xData.push(lastX)
     this.UData.shift()
-    this.UData = [...this.UData, ...UData]
     this.IData.shift()
+    this.UData = [...this.UData, ...UData]
     this.IData = [...this.IData, ...IData]
     this.$refs.echart.mergeOptions({
       xAxis: { data: this.xData },
@@ -323,8 +323,32 @@ export default class TrendChart extends Vue {
   }
 
   /** 采样数据整理 */
-  async setBaseList(list: any) {
-    const { UData, IData, lastTime } = await getSampWorker.getSampList(list)
+  async setBaseList(list: any, start?: number, end?: number) {
+    let fullNull = false
+    if (start && end) {
+      const first = list[0]
+      const last = list[list.length - 1]
+      if (!first || first.createTime !== start) {
+        list.unshift({
+          createTime: start,
+          U: '-',
+          I: '-'
+        })
+      }
+      if (!last || last !== end) {
+        list.push({
+          createTime: end,
+          U: '-',
+          I: '-'
+        })
+      }
+      fullNull = end - start <= 1000
+    }
+    const { UData, IData, lastTime } = await getSampWorker.getSampList(
+      list,
+      undefined,
+      fullNull
+    )
     this.lastTime = lastTime
     this.setCharts(UData, IData)
   }

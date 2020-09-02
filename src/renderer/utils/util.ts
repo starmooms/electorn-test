@@ -25,7 +25,8 @@ export function chartFullNull({ time, len }: ChartFullNullOpts) {
 export const getSampChartList = async (
   list: any[],
   fullFun?: any,
-  lastTime = 0
+  lastTime = 0,
+  fullNull = false
 ) => {
   if (!lastTime && list.length > 0) {
     lastTime = lastTime || list[0].createTime
@@ -34,23 +35,27 @@ export const getSampChartList = async (
   let IData: [string, number][] = []
   for (let i = 0; i < list.length; i++) {
     const item = list[i]
-    const len = Math.abs(item.createTime - lastTime)
-    if (len >= 2) {
-      const opts = {
-        time: lastTime,
-        len
+    if (fullNull) {
+      const len = Math.abs(item.createTime - lastTime)
+      if (len >= 2) {
+        const opts = {
+          time: lastTime,
+          len
+        }
+        let data: any
+        if (fullFun) {
+          data = await fullFun(opts)
+        } else {
+          data = chartFullNull(opts)
+        }
+        UData = [...UData, ...data.UData]
+        IData = [...IData, ...data.IData]
       }
-      let data: any
-      if (fullFun) {
-        data = await fullFun(opts)
-      } else {
-        data = chartFullNull(opts)
-      }
-
-      UData = [...UData, ...data.UData]
-      IData = [...IData, ...data.IData]
     }
-    const x = dayjs.unix(item.createTime).format('YYYY-MM-DD HH:mm:ss')
+
+    const x = item.createTimeStr
+      ? item.createTimeStr
+      : dayjs.unix(item.createTime).format('YYYY-MM-DD HH:mm:ss')
     UData.push([x, item.U])
     IData.push([x, item.I])
     lastTime = item.createTime

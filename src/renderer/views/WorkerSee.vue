@@ -125,6 +125,8 @@ import TrendChart from '@/renderer/components/TrendChart.vue'
 import { deepClone } from '@/shared/utils'
 import { GET_PROTECT_FORM, PROTECT } from '@/shared/config/port'
 import { ChannelStatus } from '../store/modules/Channel'
+import dayjs from 'dayjs'
+import { getSamp } from '../ipc/db'
 
 interface PortData {
   path: string
@@ -150,6 +152,7 @@ export default class WorkerSee extends Vue {
   calShow = false
   tabChannel = '0'
   channelList: any[] = []
+  sampStop = true
 
   // 2
   nowStepDialog = false
@@ -224,14 +227,16 @@ export default class WorkerSee extends Vue {
 
   async getWorkStep() {
     if (!this.portItem) return
+    this.sampStop = true
+    this.$refs.trendChart.setBaseList([])
     const data = await getWorkStep({
       ...this.portItem,
       channelId: [this.portItem.channelId]
     })
     if (data.status) {
-      if (!data.data.stepData || !data.data.stepData[this.portItem.channelId]) {
-        this.$message.error('工步返回结构错误')
-      } else {
+      if (data.data.stepData && data.data.stepData[this.portItem.channelId]) {
+        // this.$message.error('没有返回工步信息')
+
         const setInput = (item: any) => {
           return {
             label: `${item.name}：${item.data}${item.unit}`
@@ -253,25 +258,60 @@ export default class WorkerSee extends Vue {
         })
       }
     }
+    this.getSampData()
+  }
+
+  async getSampData() {
+    const start = dayjs()
+      .subtract(15, 'minute')
+      .unix()
+    const end = dayjs().unix()
+    try {
+      const { masterId, slaverId, channelId } = this.portItem!
+      const samp = await getSamp({
+        start: start,
+        end: end,
+        masterId,
+        slaverArr: [
+          {
+            id: slaverId,
+            channel: [
+              {
+                id: channelId
+              }
+            ]
+          }
+        ]
+      })
+      if (samp.status) {
+        if (samp.data[slaverId]) {
+          const sampData = samp.data[slaverId][channelId]
+          if (sampData) {
+            this.$refs.trendChart.setBaseList(sampData, start, end)
+          }
+        }
+      } else {
+        this.$refs.trendChart.setBaseList([], start, end)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      this.sampStop = false
+    }
   }
 
   setCharts() {
     if (!this.portItem) return
-    let i = 0
     const { path, masterId, slaverId } = this.portItem
     command.on({
       eventName: `/port/translate/${path}/${masterId}/${slaverId}`,
       onEmit: (data: any) => {
+        if (this.sampStop) return
         const item = data.list[this.portItem!.channelId + slaverId * 8]
-        this.workerIdNow = item.workerId
-        this.workerStatus = item.workerStatus.name
         if (item) {
-          i++
-          this.$refs.trendChart.update({
-            time: i,
-            U: item.U,
-            I: item.I
-          })
+          this.workerIdNow = item.workerId
+          this.workerStatus = item.workerStatus.name
+          this.$refs.trendChart.update(item)
         }
       },
       vm: this
@@ -286,8 +326,8 @@ export default class WorkerSee extends Vue {
       channelId: Number(this.$route.params.channelId)
     }
     this.getList()
-    this.getWorkStep()
     this.$nextTick(() => {
+      this.getWorkStep()
       this.setCharts()
       // setInterval(() => {
       //   this.workerIdNow = this.workerIdNow === 0 ? 1 : 0

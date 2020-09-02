@@ -108,6 +108,23 @@
                   </li>
                 </ul> -->
 
+                <!-- <div class="smap-wrap">
+                  <div class="samp-fix-box">
+                    <div class="samp-fix-header">
+                      <div class="spam-item">
+                        <div class="samp-w-box">
+                          <div class="spam-text date-r">日期</div>
+                          <div class="spam-text u-r">电压</div>
+                          <div class="spam-text i-r">电流</div>
+                          <div class="spam-text status-r">执行工步</div>
+                          <div class="spam-text workeId-r">工步ID</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="samp-scroll"></div>
+                  </div>
+                </div> -->
+
                 <RecycleScroller
                   class="spam-table"
                   :items="channel.sampData"
@@ -132,6 +149,13 @@
                       </div>
                     </div>
                   </template>
+                  <div class="samp-w-box">
+                    <div class="spam-text date-r">日期</div>
+                    <div class="spam-text u-r">电压</div>
+                    <div class="spam-text i-r">电流</div>
+                    <div class="spam-text status-r">执行工步</div>
+                    <div class="spam-text workeId-r">工步ID</div>
+                  </div>
                   <template v-slot="{ item }">
                     <div class="spam-item">
                       <div class="samp-w-box">
@@ -150,48 +174,70 @@
                     </div>
                   </template>
                 </RecycleScroller>
+
+                <!-- <div class="spam-item samp-header">
+                  <div class="samp-w-box">
+                    <div class="spam-text date-r">日期</div>
+                    <div class="spam-text u-r">电压</div>
+                    <div class="spam-text i-r">电流</div>
+                    <div class="spam-text status-r">执行工步</div>
+                    <div class="spam-text workeId-r">工步ID</div>
+                  </div>
+                </div>
+                <div
+                  v-if="channel.sampData.length === 0"
+                  style="text-align: center;padding:10px;"
+                >
+                  暂无数据
+                </div> -->
               </div>
-              <div class="spam-worker-step" v-if="channel.tag === 2">
+              <div
+                class="spam-worker-step"
+                v-if="channel.tag === 2"
+                style="width:100%;height:100%;overflow:auto;"
+              >
                 <p class="steps-now">当前工步：{{ channel.workerIdNow + 1 }}</p>
                 <p class="steps-now">
                   当前工步状态：{{ channel.workerStatus }}
                 </p>
-                <el-table border max-height="40vh" :data="channel.nowStepList">
-                  <el-table-column label="工步信息">
-                    <template slot-scope="{ row }">
-                      <span class="step-now-icon">
-                        {{ row.id === channel.workerIdNow ? '*' : '' }}
-                      </span>
-                      <span>{{ row.msg }}</span>
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="工步工作条件">
-                    <template slot-scope="{ row }">
-                      <el-tag
-                        :disable-transitions="true"
-                        effect="dark"
-                        class="tag-item"
-                        v-for="item in row.worker"
-                        :key="item.label"
-                      >
-                        {{ item.label }}
-                      </el-tag>
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="工步限制条件" prop="limt">
-                    <template slot-scope="{ row }">
-                      <el-tag
-                        effect="dark"
-                        class="tag-item"
-                        :disable-transitions="true"
-                        v-for="item in row.limt"
-                        :key="item.label"
-                      >
-                        {{ item.label }}
-                      </el-tag>
-                    </template>
-                  </el-table-column>
-                </el-table>
+                <div style="width:600px;">
+                  <el-table border :data="channel.nowStepList">
+                    <el-table-column label="工步信息">
+                      <template slot-scope="{ row }">
+                        <span class="step-now-icon">
+                          {{ row.id === channel.workerIdNow ? '*' : '' }}
+                        </span>
+                        <span>{{ row.msg }}</span>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="工步工作条件">
+                      <template slot-scope="{ row }">
+                        <el-tag
+                          :disable-transitions="true"
+                          effect="dark"
+                          class="tag-item"
+                          v-for="item in row.worker"
+                          :key="item.label"
+                        >
+                          {{ item.label }}
+                        </el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="工步限制条件" prop="limt">
+                      <template slot-scope="{ row }">
+                        <el-tag
+                          effect="dark"
+                          class="tag-item"
+                          :disable-transitions="true"
+                          v-for="item in row.limt"
+                          :key="item.label"
+                        >
+                          {{ item.label }}
+                        </el-tag>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </div>
               </div>
             </div>
             <p>通道{{ channel.id + 1 }}</p>
@@ -222,10 +268,8 @@ import { getChannelList, getWorkStep } from '../ipc/channel'
 import command from '../command'
 import { getSamp } from '../ipc/db'
 import dayjs from 'dayjs'
-import { deepClone } from '@/shared/utils'
 import { formatTimeStr, stepListUtil } from '../utils/util'
 import { RecycleScroller } from 'vue-virtual-scroller'
-import { channelList } from '@/shared/config/port'
 
 @Component({
   components: {
@@ -275,7 +319,7 @@ export default class SlaverTrend extends Vue {
       })
       this.getWorkStepList()
       this.$nextTick(async () => {
-        await this.getSampData(15, this.list)
+        await this.getSampDatas(15, this.list)
         this.setCharts()
       })
     }
@@ -310,9 +354,109 @@ export default class SlaverTrend extends Vue {
     }
   }
 
-  async getSampData(minute, channelList: any[]) {
+  // async getSampData(minute, channelList: any[]) {
+  //   try {
+  //     console.time()
+  //     const channelArr: any[] = []
+  //     channelList.forEach(item => {
+  //       item.loading = true
+  //       channelArr.push({
+  //         id: item.id
+  //       })
+  //     })
+  //     if (channelArr.length <= 0) return
+  //     const slaverId = this.portItem.slaverId
+  //     let startTime = dayjs()
+  //       .subtract(minute, 'minute')
+  //       .unix()
+  //     let endTime = dayjs().unix()
+  //     if (this.selectDate.length === 2) {
+  //       startTime = dayjs(this.selectDate[0]).unix()
+  //       endTime = dayjs(this.selectDate[1]).unix()
+  //     }
+
+  //     // const add = 60 * 2
+  //     // const startTime = dayjs()
+  //     //   .subtract(minute + add, 'minute')
+  //     //   .unix()
+  //     // const endTime = dayjs()
+  //     //   .subtract(add, 'minute')
+  //     //   .unix()
+  //     const data = await getSamp({
+  //       start: startTime,
+  //       end: endTime,
+  //       masterId: this.portItem.masterId,
+  //       slaverArr: [
+  //         {
+  //           id: slaverId,
+  //           channel: channelArr
+  //         }
+  //       ]
+  //     })
+  //     if (data.status) {
+  //       const chartMap = this.getChartMap()
+  //       const slaverSamp = data.data[slaverId] || {}
+  //       const promisArr = this.list.map(async channel => {
+  //         const id = channel.id
+  //         const sampData = slaverSamp[id] || []
+
+  //         if (channel && sampData.length > 0) {
+  //           channel.sampData = sampData.map(item => {
+  //             return {
+  //               createTime: dayjs.unix(item.createTime).format(formatTimeStr),
+  //               U: item.U,
+  //               I: item.I,
+  //               workerStatus: item.workerStatus.name,
+  //               workerId: item.workerId + 1
+  //             }
+  //           })
+  //         }
+
+  //         const component = chartMap[id]
+  //         if (component && sampData.length > 0) {
+  //           if (sampData.length > 0) {
+  //             if (sampData[0].createTime > startTime) {
+  //               sampData.unshift({
+  //                 createTime: startTime,
+  //                 U: '-',
+  //                 I: '-'
+  //               })
+  //             }
+  //             if (sampData[1].createTime < endTime) {
+  //               sampData.push({
+  //                 createTime: endTime,
+  //                 U: '-',
+  //                 I: '-'
+  //               })
+  //             }
+  //           }
+
+  //           await component.setBaseList(sampData)
+  //         }
+  //       })
+  //       await Promise.all(promisArr)
+  //     }
+  //   } catch (err) {
+  //     console.error(err)
+  //   } finally {
+  //     console.timeEnd()
+  //     channelList.forEach(item => {
+  //       item.loading = false
+  //     })
+  //   }
+  // }
+
+  showTime = 15
+  async changeTime(minute: number) {
+    if (this.showTime !== minute) {
+      this.selectDate = []
+      this.showTime = minute
+      this.getSampDatas(this.showTime, this.list)
+    }
+  }
+
+  async getSampDatas(minute, channelList: any[]) {
     try {
-      console.time()
       const channelArr: any[] = []
       channelList.forEach(item => {
         item.loading = true
@@ -322,22 +466,19 @@ export default class SlaverTrend extends Vue {
       })
       if (channelArr.length <= 0) return
       const slaverId = this.portItem.slaverId
-      let startTime = dayjs()
-        .subtract(minute, 'minute')
-        .unix()
-      let endTime = dayjs().unix()
+      let startTime = 0
+      let endTime = 0
+
       if (this.selectDate.length === 2) {
         startTime = dayjs(this.selectDate[0]).unix()
         endTime = dayjs(this.selectDate[1]).unix()
+      } else {
+        startTime = dayjs()
+          .subtract(minute, 'minute')
+          .unix()
+        endTime = dayjs().unix()
       }
 
-      // const add = 60 * 2
-      // const startTime = dayjs()
-      //   .subtract(minute + add, 'minute')
-      //   .unix()
-      // const endTime = dayjs()
-      //   .subtract(add, 'minute')
-      //   .unix()
       const data = await getSamp({
         start: startTime,
         end: endTime,
@@ -352,42 +493,22 @@ export default class SlaverTrend extends Vue {
       if (data.status) {
         const chartMap = this.getChartMap()
         const slaverSamp = data.data[slaverId] || {}
-        const promisArr = this.list.map(async channel => {
+        const promisArr = channelList.map(async channel => {
           const id = channel.id
           const sampData = slaverSamp[id] || []
-
-          if (channel && sampData.length > 0) {
-            channel.sampData = sampData.map(item => {
-              return {
-                createTime: dayjs.unix(item.createTime).format(formatTimeStr),
-                U: item.U,
-                I: item.I,
-                workerStatus: item.workerStatus.name,
-                workerId: item.workerId + 1
-              }
-            })
-          }
-
-          const component = chartMap[id]
-          if (component && sampData.length > 0) {
-            if (sampData.length > 0) {
-              if (sampData[0].createTime > startTime) {
-                sampData.unshift({
-                  createTime: startTime,
-                  U: '-',
-                  I: '-'
-                })
-              }
-              if (sampData[1].createTime < endTime) {
-                sampData.push({
-                  createTime: endTime,
-                  U: '-',
-                  I: '-'
-                })
-              }
+          channel.sampData = sampData.map(samp => {
+            samp.createTimeStr = dayjs.unix(samp.createTime).format(formatTimeStr) // eslint-disable-line
+            return {
+              createTime: samp.createTimeStr,
+              U: samp.U,
+              I: samp.I,
+              workerStatus: samp.workerStatus.name,
+              workerId: samp.workerId + 1
             }
-
-            await component.setBaseList(sampData)
+          })
+          const chart = chartMap[id]
+          if (chart) {
+            await chart.setBaseList(sampData, startTime, endTime)
           }
         })
         await Promise.all(promisArr)
@@ -395,30 +516,20 @@ export default class SlaverTrend extends Vue {
     } catch (err) {
       console.error(err)
     } finally {
-      console.timeEnd()
       channelList.forEach(item => {
         item.loading = false
       })
     }
   }
 
-  showTime = 15
-  async changeTime(minute: number) {
-    if (this.showTime !== minute) {
-      this.selectDate = []
-      this.showTime = minute
-      this.getSampData(this.showTime, this.list)
-    }
-  }
-
   refresh() {
-    this.getSampData(this.showTime, this.list)
+    this.getSampDatas(this.showTime, this.list)
     this.getWorkStepList()
     this.checkScroll()
   }
 
   selectDateChange() {
-    this.getSampData(this.showTime, this.list)
+    this.getSampDatas(this.showTime, this.list)
   }
 
   channelTagChange(channel: any, tagId: number) {
@@ -437,7 +548,7 @@ export default class SlaverTrend extends Vue {
       })
       this.$nextTick(() => {
         if (tagId === 0) {
-          this.getSampData(this.showTime, [channel])
+          this.getSampDatas(this.showTime, [channel])
         }
       })
     }
@@ -529,6 +640,7 @@ export default class SlaverTrend extends Vue {
     .tag-container {
       height: 320px;
       overflow: hidden;
+      position: relative;
     }
     .thend-item-box {
       padding: 10px;
@@ -544,13 +656,44 @@ export default class SlaverTrend extends Vue {
       width: 100%;
       overflow-y: auto;
 
-      .spam-table {
+      .smap-wrap {
+        width: 500px;
+      }
+
+      .samp-fix-box {
+        position: relative;
+        .samp-fix-header {
+          height: 32px;
+          .samp-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+          }
+        }
+      }
+
+      /* .spam-table {
         height: 300px;
         margin: 0;
         width: 100%;
+      } */
+      ::v-deep .vue-recycle-scroller {
+        height: 100%;
       }
       ::v-deep .vue-recycle-scroller__item-wrapper {
         width: 500px;
+      }
+
+      .samp-header {
+        height: 32px;
+        .samp-w-box {
+          position: absolute;
+          top: 0;
+          left: 0;
+        }
+      }
+      .samp-scroll {
+        height: 288px;
       }
       .spam-item {
         height: 32px;

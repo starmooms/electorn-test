@@ -340,10 +340,6 @@ export default class PortItem {
           data: postModel.buf
         })
 
-        if (translate && translate.close) {
-          getData()
-        }
-
         try {
           let resultBuf: Buffer
           if (isDev) {
@@ -388,7 +384,7 @@ export default class PortItem {
           }
           logger.info('存储redis', postBufData.buf.toString('hex'))
           await redisClient.setSamp(masterId, list)
-          logger.info('redis存储成功', postBufData.buf.toString('hex'))
+          // logger.info('redis存储成功', postBufData.buf.toString('hex'))
           if (translate) {
             const winArr = translate.winArr
             winArr.forEach(winName => {
@@ -408,6 +404,10 @@ export default class PortItem {
           }
         } catch (err) {
           logger.warn(err)
+        } finally {
+          if (translate && translate.close) {
+            getData()
+          }
         }
       }, 1000)
     }

@@ -11,7 +11,8 @@ class GetSampWorker {
 
   async getSampList(
     data,
-    lastTime = 0
+    lastTime = 0,
+    fullNull = false
   ): Promise<ReturnType<typeof getSampChartList>> {
     if (data.length <= 2000) {
       return getSampChartList(
@@ -19,7 +20,8 @@ class GetSampWorker {
         data => {
           return this.fullNullData(data)
         },
-        lastTime
+        lastTime,
+        fullNull
       )
     } else {
       return this.createWorker('getSampChartList', data)

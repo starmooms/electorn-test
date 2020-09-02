@@ -33,7 +33,8 @@ export class RedisClient {
   initRedis() {
     this.redis = new Redis(6379, '127.0.0.21', {
       showFriendlyErrorStack: true,
-      connectTimeout: 10000
+      connectTimeout: 10000,
+      enableOfflineQueue: false
     })
     this.redis.on('error', err => {
       logger.warn('RedisClient ConnectError', err)
@@ -60,16 +61,26 @@ export class RedisClient {
   }
 
   async setSamp(masterId: number, list: any[]) {
-    const pipeline = this.redis.pipeline()
-    const today = dayjs().startOf('day').unix() // eslint-disable-line
-    list.forEach(item => {
-      pipeline.zadd(
-        `samp_${masterId}_${item.slaverId}_${item.channelId}_${today}`,
-        item.createTime,
-        JSON.stringify(item)
-      )
-    })
-    await pipeline.exec()
+    try {
+      const pipeline = this.redis.pipeline()
+      const today = dayjs().startOf('day').unix() // eslint-disable-line
+      list.forEach(item => {
+        pipeline.zadd(
+          `samp_${masterId}_${item.slaverId}_${item.channelId}_${today}`,
+          item.createTime,
+          JSON.stringify(item)
+        )
+      })
+      const data = await pipeline.exec()
+      data.forEach(item => {
+        if (item[0]) {
+          throw new Error(item[0])
+        }
+      })
+      logger.info('redis存储成功')
+    } catch (err) {
+      logger.warn('redis存储失败', err)
+    }
   }
 
   async getSamp({ masterId, start, end, slaverArr }: any = {}) {

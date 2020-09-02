@@ -16,6 +16,7 @@ if (is.dev()) {
 
 interface Options {
   autoCheck?: boolean
+  beforeQuit?: () => any
 }
 
 export default class UpdateManager extends EventEmitter {
@@ -24,11 +25,13 @@ export default class UpdateManager extends EventEmitter {
     checkEnable: false,
     userCheck: false
   }
+  beforeQuit!: Options['beforeQuit']
 
   constructor(options: Options = {}) {
     super()
     this.updater.autoDownload = false
     this.updater.logger = logger
+    this.beforeQuit = options.beforeQuit
     this.autoCheckData.checkEnable = options.autoCheck || false
     this.init()
   }
@@ -97,7 +100,10 @@ export default class UpdateManager extends EventEmitter {
       })
       .then(() => {
         this.emit('will-updated')
-        setImmediate(() => {
+        setImmediate(async () => {
+          if (this.beforeQuit) {
+            await this.beforeQuit()
+          }
           this.updater.quitAndInstall()
         })
       })

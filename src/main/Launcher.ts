@@ -86,21 +86,22 @@ export default class Launcher {
     }
     this.win = winManager.createdWin('mainWin')
     this.win.on('close', event => {
-      event.preventDefault()
-      dialog
-        .showMessageBox({
-          type: 'info',
-          title: '关闭程序',
-          message: '确定关闭程序',
-          buttons: ['是', '否'],
-          cancelId: 1
-        })
-        .then(({ response }) => {
-          if (response === 0) {
-            this.win!.hide()
-            this.destoryWin()
-          }
-        })
+      if (this.win) {
+        event.preventDefault()
+        dialog
+          .showMessageBox({
+            type: 'info',
+            title: '关闭程序',
+            message: '确定关闭程序',
+            buttons: ['是', '否'],
+            cancelId: 1
+          })
+          .then(({ response }) => {
+            if (response === 0) {
+              this.destoryWin()
+            }
+          })
+      }
     })
     return this.win
   }
@@ -169,8 +170,9 @@ export default class Launcher {
       })
   }
 
-  async destoryWin() {
+  async destoryWin(destroy = true) {
     try {
+      this.win!.hide()
       if (this.usbManager) {
         this.usbManager.destory()
       }
@@ -180,9 +182,11 @@ export default class Launcher {
       }
       winManager.closeOtherWin()
     } catch (err) {
-      alert(err)
+      dialog.showErrorBox('derstoryWin Error', err)
     } finally {
-      this.win!.destroy()
+      if (destroy) {
+        this.win!.destroy()
+      }
       this.win = null
     }
   }
@@ -200,7 +204,10 @@ export default class Launcher {
     // const enabled = this.configManager.getUserConfig('auto-check-update')
     // const lastTime = this.configManager.getUserConfig('last-check-update-time')
     const updateManager = new UpdateManager({
-      autoCheck: false
+      autoCheck: false,
+      beforeQuit: () => {
+        this.destoryWin(false)
+      }
     })
     this.handleUpdaterEvents()
     return updateManager

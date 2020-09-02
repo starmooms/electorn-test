@@ -55,8 +55,12 @@ export class RedisClient {
 
   async close() {
     if (this.redis) {
-      await this.redis.quit()
-      logger.info('RedisClient Close')
+      try {
+        await this.redis.quit()
+        logger.info('RedisClient Close')
+      } catch (err) {
+        logger.error('RedisClient Close Error', err)
+      }
     }
   }
 

@@ -20,16 +20,22 @@ import BufModel, {
   BufWriteListModel,
   BufWriteModel
 } from '../utils/ParsBuf'
+import { BufWriteModel as BufWriteModel2 } from '../utils/bufModel'
 import { Promise as Bluebird } from 'bluebird'
 
 import winManager from './WinManager'
 import ipcManage from './IpcManage'
-import is, { mas } from 'electron-is'
+import is from 'electron-is'
 import MasterMode from './MasterMode'
 import { typedKeys } from '@/shared/utils'
-import redisClient, { RedisClient } from './redis/RedisClient'
+import { RedisClient } from './redis/RedisClient'
 import dayjs from 'dayjs'
 import TransfromParser from '../utils/transfromParser'
+import {
+  WORKER_STEP_MODEL,
+  WORKER_SATUS_MODEL,
+  WORKER_START_MODEL
+} from '@/shared/model'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -145,27 +151,31 @@ export default class PortItem {
   /** 写工步 */
   async writeSteps(data: WStepsOpts) {
     const listLen = data.list.length
-    const dataModel = new BufWriteModel([ 1, 1, 4, 1, 1, 1,  ...this.modelData.protect]) // eslint-disable-line
-    const dataWriteModel = dataModel.getWriteModel()
-    dataWriteModel.write(1, data.masterId)
-    dataWriteModel.write(2, this.setByt(32, data.slaverId))
-    dataWriteModel.write(3, this.setByt(8, data.channelId))
-    dataWriteModel.write(4, 1)
-    dataWriteModel.write(5, listLen)
-    PROTECT.forEach(item => {
-      dataWriteModel.write(item.index + 7, data.protect[item.type] || 0)
+    const writerModel = new BufWriteModel2({
+      model: WORKER_STEP_MODEL,
+      listLen: {
+        protectList: 1,
+        workerList: listLen
+      }
     })
-
-    const bufModel = new BufWriteListModel(listLen, this.modelData.workStep)
-    data.list.forEach((item: any, index: number) => {
+    writerModel.writer('masterId', data.masterId)
+    writerModel.writerBit('slaverId', data.slaverId)
+    writerModel.writerBit('channelId', data.channelId)
+    writerModel.writer('protectLen', 1)
+    writerModel.writer('workerLen', listLen)
+    writerModel.ecahList('protectList', writeItem => {
+      PROTECT.forEach(item => {
+        writeItem.writer(item.type, data.protect[item.type] || 0)
+      })
+    })
+    writerModel.ecahList('workerList', (writeItem, index) => {
+      const item = data.list[index]
       const step = WORKSTEPS_TYPE_MAP[item.type]
       if (!step || !step.input) {
-        throw new Error(`step ${item.setId} NO defind`)
+        throw new Error(`step ${item.type} NO defind`)
       }
-      const writeModel = bufModel.getWriteModel(index)
-      writeModel.write(2, index)
-      writeModel.write(3, 0)
-      writeModel.write(4, `0x${step.key}`)
+      writeItem.writer('workerId', index)
+      writeItem.writer('workerCode', `0x${step.key}`)
       typedKeys(item.input).forEach(key => {
         const input = WORKSTEPSINPUT[key]
         if (input) {
@@ -173,20 +183,22 @@ export default class PortItem {
           if (key === 'loopStart') {
             value = Number(value) - 1
           }
-          writeModel.write(input.serial, value)
+          writeItem.writer(key as string, value)
         }
       })
     })
-    const dataBuf = Buffer.concat([dataModel.buf, bufModel.buf])
+
     const result = agreement.createData({
       masterId: data.masterId,
       slaverId: 0xff,
       type: 0x02,
       code: controlCode.master.stepsSet,
-      data: dataBuf
+      data: writerModel.buf
     })
-    logger.info('写工步', dataBuf.toString('hex'))
-    return await this.port.write(result.buf)
+    logger.info('写工步', writerModel.buf.toString('hex'))
+    return this.post({
+      data: result
+    })
   }
 
   readStepsInput(bufData: BufData, key: string) {
@@ -528,33 +540,30 @@ export default class PortItem {
     if (!code) {
       throw new Error(`${data.status} Error`)
     }
-    const splitBit = [1, 1, 4, 1]
-    if (data.status === 'start') {
-      splitBit.push(1)
-    }
-    const dataModel = new BufWriteModel(splitBit) // eslint-disable-line
-    const dataWriteModel = dataModel.getWriteModel()
-    dataWriteModel.write(2, this.setByt(32, data.slaverId))
-    dataWriteModel.write(3, this.setByt(8, data.channelId))
+    const writerModel = new BufWriteModel2({
+      model: data.status === 'start' ? WORKER_START_MODEL : WORKER_SATUS_MODEL
+    })
+    writerModel.writerBit('slaver', data.slaverId)
+    writerModel.writerBit('channel', data.channelId)
     if (data.status === 'start') {
       const start = Number(data.startId)
       if (!start) {
         throw new Error('START ID ERROR')
       }
-      dataWriteModel.write(4, start - 1)
+      writerModel.writer('startWorkerId', start - 1)
     }
 
     const list = data.masterIdList || [data.masterId]
     await Bluebird.mapSeries(list, async (masterId: number) => {
-      dataWriteModel.write(1, masterId)
+      writerModel.writer('masterId', masterId)
       const result = agreement.createData({
         masterId: masterId,
         slaverId: 0xff,
         type: 0x02,
         code,
-        data: dataModel.buf
+        data: writerModel.buf
       })
-      logger.info('改变状态', dataModel.buf.toString('hex'))
+      logger.info('改变状态', writerModel.buf.toString('hex'))
       await this.post({ data: result })
     })
   }

@@ -67,64 +67,6 @@
                 ></TrendChart>
               </div>
               <div class="spam-table-box" v-if="channel.tag === 1">
-                <!-- <el-table
-                  class="spam-table"
-                  :data="channel.sampData"
-                  style="width: 100%;"
-                  max-height="100%"
-                  height="100%"
-                  border
-                >
-                  <el-table-column
-                    prop="createTime"
-                    label="日期"
-                    width="140"
-                    fixed
-                  ></el-table-column>
-                  <el-table-column
-                    prop="U"
-                    label="电压(mV)"
-                    width="76"
-                  ></el-table-column>
-                  <el-table-column
-                    prop="I"
-                    label="电流(mA)"
-                    width="76"
-                  ></el-table-column>
-                  <el-table-column
-                    prop="workerId"
-                    label="工步id"
-                    width="100"
-                  ></el-table-column>
-                  <el-table-column
-                    prop="workerStatus"
-                    label="执行工步"
-                    width="100"
-                  ></el-table-column>
-                </el-table> -->
-                <!-- <ul>
-                  <li v-for="(item, index) in channel.sampData" :key="index">
-                    <p>电流：{{ item.I }}</p>
-                  </li>
-                </ul> -->
-
-                <!-- <div class="smap-wrap">
-                  <div class="samp-fix-box">
-                    <div class="samp-fix-header">
-                      <div class="spam-item">
-                        <div class="samp-w-box">
-                          <div class="spam-text date-r">日期</div>
-                          <div class="spam-text u-r">电压</div>
-                          <div class="spam-text i-r">电流</div>
-                          <div class="spam-text status-r">执行工步</div>
-                          <div class="spam-text workeId-r">工步ID</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="samp-scroll"></div>
-                  </div>
-                </div> -->
-
                 <RecycleScroller
                   class="spam-table"
                   :items="channel.sampData"
@@ -160,7 +102,7 @@
                     <div class="spam-item">
                       <div class="samp-w-box">
                         <div class="spam-text date-r">
-                          {{ item.createTime }}
+                          <span>{{ item.createTime }}</span>
                         </div>
                         <div class="spam-text u-r">{{ item.U }}</div>
                         <div class="spam-text i-r">{{ item.I }}</div>
@@ -174,22 +116,6 @@
                     </div>
                   </template>
                 </RecycleScroller>
-
-                <!-- <div class="spam-item samp-header">
-                  <div class="samp-w-box">
-                    <div class="spam-text date-r">日期</div>
-                    <div class="spam-text u-r">电压</div>
-                    <div class="spam-text i-r">电流</div>
-                    <div class="spam-text status-r">执行工步</div>
-                    <div class="spam-text workeId-r">工步ID</div>
-                  </div>
-                </div>
-                <div
-                  v-if="channel.sampData.length === 0"
-                  style="text-align: center;padding:10px;"
-                >
-                  暂无数据
-                </div> -->
               </div>
               <div
                 class="spam-worker-step"
@@ -656,55 +582,62 @@ export default class SlaverTrend extends Vue {
       width: 100%;
       overflow-y: auto;
 
-      .smap-wrap {
-        width: 500px;
-      }
+      // .smap-wrap {
+      //   width: 500px;
+      // }
 
-      .samp-fix-box {
-        position: relative;
-        .samp-fix-header {
-          height: 32px;
-          .samp-item {
-            position: absolute;
-            top: 0;
-            left: 0;
-          }
-        }
-      }
+      // .samp-fix-box {
+      //   position: relative;
+      //   .samp-fix-header {
+      //     height: 32px;
+      //     .samp-item {
+      //       position: absolute;
+      //       top: 0;
+      //       left: 0;
+      //     }
+      //   }
+      // }
 
-      /* .spam-table {
-        height: 300px;
+      .spam-table {
+        height: 100%;
         margin: 0;
         width: 100%;
-      } */
-      ::v-deep .vue-recycle-scroller {
-        height: 100%;
       }
-      ::v-deep .vue-recycle-scroller__item-wrapper {
-        width: 500px;
-      }
-
-      .samp-header {
-        height: 32px;
+      $w: 504px;
+      ::v-deep .vue-recycle-scroller__slot {
+        position: sticky;
+        top: 0;
+        z-index: 99;
         .samp-w-box {
-          position: absolute;
-          top: 0;
-          left: 0;
+          background-color: #fff;
         }
       }
-      .samp-scroll {
-        height: 288px;
+      ::v-deep .vue-recycle-scroller__item-wrapper {
+        width: $w;
       }
+
+      // .samp-header {
+      //   height: 32px;
+      //   .samp-w-box {
+      //     position: absolute;
+      //     top: 0;
+      //     left: 0;
+      //   }
+      // }
+      // .samp-scroll {
+      //   height: 288px;
+      // }
       .spam-item {
         height: 32px;
         line-height: 32px;
         align-items: center;
         width: 100%;
         .samp-w-box {
+          width: $w;
           border-bottom: 1px solid #ccc;
           box-sizing: border-box;
           display: flex;
-          width: 500px;
+          position: relative;
         }
 
         .spam-text {
@@ -713,6 +646,12 @@ export default class SlaverTrend extends Vue {
           box-sizing: border-box;
           &.date-r {
             flex: 1;
+            span {
+              position: absolute;
+              top: 0;
+              left: 0;
+              padding: inherit;
+            }
           }
           &.u-r,
           &.i-r {

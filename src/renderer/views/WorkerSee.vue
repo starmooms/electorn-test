@@ -304,7 +304,9 @@ export default class WorkerSee extends Vue {
     if (!this.portItem) return
     const { path, masterId, slaverId } = this.portItem
     command.on({
-      eventName: `/port/translate/${path}/${masterId}/${slaverId}`,
+      eventName: `/port/translate/${encodeURIComponent(
+        path
+      )}/${masterId}/${slaverId}`,
       onEmit: (data: any) => {
         if (this.sampStop) return
         const item = data.list[this.portItem!.channelId + slaverId * 8]

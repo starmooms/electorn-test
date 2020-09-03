@@ -55,8 +55,12 @@ export class RedisClient {
 
   async close() {
     if (this.redis) {
-      await this.redis.quit()
-      logger.info('RedisClient Close')
+      try {
+        await this.redis.quit()
+        logger.info('RedisClient Close')
+      } catch (err) {
+        logger.error('RedisClient Close Error', err)
+      }
     }
   }
 
@@ -74,7 +78,7 @@ export class RedisClient {
       const data = await pipeline.exec()
       data.forEach(item => {
         if (item[0]) {
-          throw new Error(item[0])
+          throw item[0]
         }
       })
       logger.info('redis存储成功')

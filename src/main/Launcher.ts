@@ -206,7 +206,7 @@ export default class Launcher {
     const updateManager = new UpdateManager({
       autoCheck: false,
       beforeQuit: () => {
-        this.destoryWin(false)
+        return this.destoryWin(false)
       }
     })
     this.handleUpdaterEvents()

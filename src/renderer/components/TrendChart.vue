@@ -64,7 +64,8 @@ export default class TrendChart extends Vue {
     this.xData = []
     this.UData = UData
     this.IData = IData
-    this.chartSamp = this.UData.length > 2000 ? 'average' : null
+    // this.chartSamp = this.UData.length > 20000 ? 'average' : null
+    this.chartSamp = null
     const tip =
       this.UData.length === 0 && this.IData.length === 0 ? '暂无数据' : ''
     let sizeOpts: any = {}

@@ -282,4 +282,11 @@
 //   console.log('end')
 // }, 20000)
 
-console.log(Buffer.from('333333330d0a', 'hex').toString())
+// console.log(Buffer.from('333333330d0a', 'hex').toString())
+
+const b = Buffer.from(
+  '00000000000101010100000a00140014001400c800c8000000c800000000a100000000001400000014000000000000000000000000000000000000000000',
+  'hex'
+)
+// b.writeIntBE('0xff', 0, 2)
+console.log(b.length)

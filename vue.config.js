@@ -59,6 +59,7 @@ module.exports = {
       mainProcessWatch: ['src/main'],
       externals: ['serialport', 'usb-detection', 'forever-monitor'],
       builderOptions: {
+        // productName: '中文名',
         electronDownload: {
           mirror: 'https://npm.taobao.org/mirrors/electron/'
         },

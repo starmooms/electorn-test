@@ -104,7 +104,7 @@ export default class USBManager {
   /** 写工步 */
   writeSteps() {
     ipcManage.handle('/port/writeWorkSteps', (event, data: any) => {
-      this.getPortData(data.path).writeSteps(data)
+      return this.getPortData(data.path).writeSteps(data)
     })
   }
 

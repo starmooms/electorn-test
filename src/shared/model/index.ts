@@ -1,6 +1,19 @@
 import { BufModelT } from '@/types/BufModel'
 declare type Model = BufModelT.OrginModel
 
+/**
+ * 通用读发送数据model
+ * 读实时数据/采样
+ * 读校准时发送
+ * 读工步发送
+ *  */
+export const COMMON_READ: Model[] = [
+  { name: 'version', bytLen: 1 },
+  { name: 'masterId', bytLen: 1 },
+  { name: 'slaverBit', bytLen: 4 },
+  { name: 'channelBit', bytLen: 1 }
+]
+
 /** 工步 */
 export const WORKER_STEP_MODEL: Model[] = [
   { name: 'version', bytLen: 1 },
@@ -104,10 +117,24 @@ export const CAL_MODEL: Model[] = [
   }
 ]
 
-/** 读校准时发送 */
-export const CAL_READ_MODEL: Model[] = [
+/** 采样 */
+export const SAMP_MODEL: Model[] = [
   { name: 'version', bytLen: 1 },
   { name: 'masterId', bytLen: 1 },
-  { name: 'slaverBit', bytLen: 4 },
-  { name: 'channelBit', bytLen: 1 }
+  { name: 'sampLen', bytLen: 1 },
+  {
+    name: 'sampList',
+    type: 'list',
+    len: 'sampLen',
+    model: [
+      { name: 'slaverId', bytLen: 1 },
+      { name: 'channelId', bytLen: 1 },
+      { name: 'workerCode', bytLen: 1 },
+      { name: 'workerId', bytLen: 1 },
+      { name: 'U', bytLen: 2 },
+      { name: 'I', bytLen: 4, type: 'int' },
+      { name: 'endCode', bytLen: 1 },
+      { name: 'errCode', bytLen: 1 }
+    ]
+  }
 ]

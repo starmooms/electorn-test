@@ -210,7 +210,7 @@ export class BufWriteModel {
   readHex(name: string) {
     const target = this.getTarget(name)
     const data = this.read(name)
-    toHex(data, target.bytLen)
+    return toHex(data, target.bytLen)
   }
 
   readFloat(name: string, fractionDigits = 6) {

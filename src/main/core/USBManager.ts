@@ -75,7 +75,7 @@ export default class USBManager {
           } else {
             const portItem = this.cache.get(key)
             if (portItem) {
-              listItem['readTranslate'] = portItem.translateReadNow
+              listItem['readTranslate'] = portItem.sampIsRead
             }
           }
         })
@@ -110,8 +110,8 @@ export default class USBManager {
 
   /** 读工步 */
   readSteps() {
-    ipcManage.handle('/port/readWorkSteps', async (event, data: any) => {
-      return await this.getPortData(data.path).readSteps(data)
+    ipcManage.handle('/port/readWorkSteps', (event, data: any) => {
+      return this.getPortData(data.path).readSteps(data)
     })
   }
 

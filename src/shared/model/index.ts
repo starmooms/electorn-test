@@ -1,4 +1,5 @@
-import { Model } from '@/main/utils/bufModel'
+import { BufModelT } from '@/types/BufModel'
+declare type Model = BufModelT.OrginModel
 
 /** 工步 */
 export const WORKER_STEP_MODEL: Model[] = [
@@ -58,28 +59,27 @@ export const WORKER_START_MODEL: Model[] = [
   { name: 'startWorkerId', bytLen: 1 }
 ]
 
-// /* eslint-disable */
-// // prettier-ignore
-// ;['电压校准参数', '电流校准参数', '电流反向校准参数'].forEach(item => {
-//   for (let i = 1; i <= 5; i++) {
-//     list.push(
-//       {
-//         name: item,
-//         key: `${i}-a`,
-//         index: index,
-//         value: 0
-//       },
-//       {
-//         name: item,
-//         key: `${i}-b`,
-//         index: index + 1,
-//         value: 0
-//       }
-//     )
-//     index += 2
-//   }
-// })
-// /* eslint-enable */
+const GET_CAL_DATA = () => {
+  const CAL_DATA = ['电压校准参数', '电流校准参数', '电流反向校准参数']
+  const list: Model[] = []
+  CAL_DATA.forEach(item => {
+    for (let i = 1; i <= 5; i++) {
+      list.push(
+        {
+          name: `${i}-a`,
+          bytLen: 4,
+          type: 'float'
+        },
+        {
+          name: `${i}-b`,
+          bytLen: 4,
+          type: 'float'
+        }
+      )
+    }
+  })
+  return list
+}
 
 /** 校准 */
 export const CAL_MODEL: Model[] = [
@@ -91,7 +91,8 @@ export const CAL_MODEL: Model[] = [
     model: [
       { name: 'masterId', bytLen: 1 },
       { name: 'slaverId', bytLen: 1 },
-      { name: 'channelId', bytLen: 1 }
+      { name: 'channelId', bytLen: 1 },
+      ...GET_CAL_DATA()
       // { name: 'workerId', bytLen: 1 },
       // { name: 'startModel', bytLen: 1 },
       // { name: 'workerCode', bytLen: 1 },

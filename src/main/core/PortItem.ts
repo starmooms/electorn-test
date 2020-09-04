@@ -34,7 +34,8 @@ import TransfromParser from '../utils/transfromParser'
 import {
   WORKER_STEP_MODEL,
   WORKER_SATUS_MODEL,
-  WORKER_START_MODEL
+  WORKER_START_MODEL,
+  CAL_MODEL
 } from '@/shared/model'
 const isDev = is.dev()
 
@@ -464,6 +465,22 @@ export default class PortItem {
   }
 
   async setCal(opts: any) {
+    const writerModel = new BufWriteModel2({
+      model: CAL_MODEL,
+      listLen: {
+        calList: 1
+      }
+    })
+    writerModel.writer('calLen', 1)
+    writerModel.ecahList('calList', writerItem => {
+      writerItem.writer('masterId', opts.masterId)
+      writerItem.writer('slaverId', opts.slaverId)
+      writerItem.writer('channelId', opts.channelId)
+      opts.list.forEach(item => {
+        writerItem.writer(item.key, item.value || 0)
+      })
+    })
+
     const listModel = Array(30).fill({ byte: 4, hasFload: true })
     const bufModel = new BufWriteModel([1, 1, 1].concat(listModel)) // eslint-disable-line
     const writeModel = bufModel.getWriteModel()
@@ -474,12 +491,18 @@ export default class PortItem {
       writeModel.write(item.index, item.value || 0)
     })
     const dataBuf = Buffer.concat([Buffer.from([0x00, 1]), bufModel.buf])
+    const old = dataBuf.toString('hex')
+    const n = writerModel.buf.toString('hex')
+    logger.info(n)
+    logger.info(old)
+    console.log('新旧？', old === n)
+
     const result = agreement.createData({
       masterId: opts.masterId,
       slaverId: 0xff,
       type: 0x02,
       code: controlCode.master.calSet,
-      data: dataBuf
+      data: writerModel.buf
     })
     logger.info('写校准发送', result.buf.toString('hex'))
     await this.post({

@@ -1,12 +1,16 @@
 import { deepClone } from '@/shared/utils'
 import logger from '../core/Logger'
+import { BufModelT } from '@/types/BufModel'
 
-export interface Model {
-  name: string
-  bytLen?: number
-  type?: 'list' | 'int' | 'float'
-  model?: Model[]
-}
+// export interface Model {
+//   name: string
+//   bytLen?: number
+//   type?: 'list' | 'int' | 'float'
+//   model?: Model[]
+// }
+
+declare type Model = BufModelT.OrginModel
+
 interface BufModelOpts {
   model: Model[]
   listLen?: {
@@ -25,6 +29,7 @@ declare type BufWriteModelOpts = {
 declare type ModelBaseItem = Model & {
   offset: number
   type?: string
+  bytLen: number
 }
 
 declare type ModelListItem<T = any> = ModelBaseItem & {
@@ -49,6 +54,7 @@ class BufModel<T = any> {
     model.forEach(item => {
       const target: ModelItem = {
         offset: this.bufLength,
+        bytLen: 0,
         ...deepClone(item)
       }
       this.modelTarget[item.name] = target
@@ -59,29 +65,18 @@ class BufModel<T = any> {
         if (!listLen || listLen[target.name] === void 0) {
           throw new Error(`${target.name} listlen undefined`)
         }
-        // if (!actionModel) {
-        //   throw new Error(`bufModel actionModel undefined`)
-        // }
 
-        // const listLength = listLen[target.name]
-        // target.bufModel = []
-        // for (let i = 0; i < listLength; i++) {
-        //   target.bufModel.push(actionModel(target.offset, target.model))
-        // }
-        // if (target.bufModel.length > 0) {
-        //   const actionModel = target.bufModel[0]
-        //   this.bufLength += actionModel.bufLength * listLength
-        // }
         const listBufModel = new BufModel({
           model: target.model
         })
-        ;(target as ModelListItem).bufModel = listBufModel
-        ;(target as ModelListItem).listLength = listLen[target.name]
-        ;(target as ModelListItem).listAction = []
-        target.bytLen = listBufModel.bufLength
-        this.listModel.push(target as ModelListItem)
+        const listTarget = target as ModelListItem
+        listTarget.bufModel = listBufModel
+        listTarget.listLength = listLen[target.name]
+        listTarget.listAction = []
+        listTarget.bytLen = listBufModel.bufLength
+        this.listModel.push(listTarget)
         // logger.debug(
-        //   '列表添加',
+        //   '列表添加++++++++',
         //   target.name,
         //   listBufModel.bufLength * listLen[target.name]
         // )

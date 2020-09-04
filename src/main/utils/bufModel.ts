@@ -14,6 +14,7 @@ declare type Model = BufModelT.OrginModel
 
 interface BufModelOpts {
   model: Model[]
+  readBuf?: Buffer
   listLen?: {
     [key: string]: number
   }
@@ -54,7 +55,7 @@ class BufModel<T = any> {
   bufLength = 0
   listModel: ModelListItem<T>[] = []
 
-  constructor({ model, listLen }: BufModelOpts) {
+  constructor({ model, listLen, readBuf }: BufModelOpts) {
     model.forEach(item => {
       const target: ModelItem = {
         offset: this.bufLength,
@@ -66,8 +67,25 @@ class BufModel<T = any> {
         if (!target.model) {
           throw new Error(`${target.name} list model undefined`)
         }
-        if (!listLen || listLen[target.name] === void 0) {
+
+        let len = 0
+        if (readBuf) {
+          if (!target.len) {
+            throw new Error(`${target.name} read listlen undefined`)
+          }
+
+          const lenTarget = this.modelTarget[target.len]
+          if (!lenTarget) {
+            throw new Error(
+              `ReadBuf ${target.name} listlen read ${target.len} undefined before`
+            )
+          }
+
+          len = readBuf.readIntBE(lenTarget.offset, lenTarget.bytLen)
+        } else if (!listLen || listLen[target.name] === void 0) {
           throw new Error(`${target.name} listlen undefined`)
+        } else {
+          len = listLen[target.name]
         }
 
         const listBufModel = new BufModel({
@@ -75,7 +93,7 @@ class BufModel<T = any> {
         })
         const listTarget = target as ModelListItem
         listTarget.bufModel = listBufModel
-        listTarget.listLength = listLen[target.name]
+        listTarget.listLength = len
         listTarget.listAction = []
         listTarget.bytLen = listBufModel.bufLength
         this.listModel.push(listTarget)
@@ -84,7 +102,7 @@ class BufModel<T = any> {
         //   target.name,
         //   listBufModel.bufLength * listLen[target.name]
         // )
-        this.bufLength += listBufModel.bufLength * listLen[target.name]
+        this.bufLength += listBufModel.bufLength * len
       } else {
         // logger.debug('单项添加', target.name, target.bytLen)
         this.bufLength += target.bytLen as number
@@ -109,7 +127,8 @@ export class BufWriteModel {
       }
       this.bufModel = new BufModel({
         model: opts.model,
-        listLen: opts.listLen
+        listLen: opts.listLen,
+        readBuf: opts.readBuf
       })
       this.buf = opts.readBuf
         ? opts.readBuf
@@ -192,6 +211,12 @@ export class BufWriteModel {
     const target = this.getTarget(name)
     const data = this.read(name)
     toHex(data, target.bytLen)
+  }
+
+  readFloat(name: string, fractionDigits = 6) {
+    const n = fractionDigits > 1 ? 10 ** fractionDigits : 1
+    // console.log(this.read(name) + Number.EPSILON)
+    return Math.round(this.read(name) * n) / n
   }
 
   ecahList(

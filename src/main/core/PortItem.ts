@@ -35,8 +35,10 @@ import {
   WORKER_STEP_MODEL,
   WORKER_SATUS_MODEL,
   WORKER_START_MODEL,
-  CAL_MODEL
+  CAL_MODEL,
+  CAL_READ_MODEL
 } from '@/shared/model'
+import { read } from 'fs'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -110,30 +112,48 @@ export default class PortItem {
     })
     port.on('open', data => {
       logger.info('串口触发open', data)
+      port.flush()
     })
     port.on('error', err => {
       logger.warn('串口触发error', err)
+      port.flush()
+    })
+    port.on('close', err => {
+      logger.warn('串口触发close', err)
+      port.flush()
     })
     this.port = port
     this.parser = parser
-    this.masterMode = new MasterMode(this)
+    // this.masterMode = new MasterMode(this)
     return
   }
 
   /** 串口通讯 */
   post({ timeout, data }: PostOpts): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
+      let timer: NodeJS.Timeout // eslint-disable-line
+
+      const setError = (msg: string) => {
         this.emitList.delete(data.sId)
-        reject(new Error('PORT Time Out'))
-      }, timeout || 2000)
+        reject(new Error('POST ERROR' + msg))
+        clearTimeout(timer)
+      }
 
       this.emitList.set(data.sId, buf => {
         resolve(buf)
         clearTimeout(timer)
       })
 
-      this.port.write(data.buf)
+      const status = this.port.write(data.buf)
+      logger.info('write Status', status)
+      // if (status !== true) {
+      //   setError('PORT Write Status Error')
+      //   return
+      // }
+
+      timer = setTimeout(() => {
+        setError('PORT Time Out')
+      }, timeout || 2000)
     })
   }
 
@@ -510,7 +530,7 @@ export default class PortItem {
 
   async readCal(opts: any) {
     const writeModel = new BufWriteModel2({
-      model: CAL_MODEL
+      model: CAL_READ_MODEL
     })
     writeModel.writer('masterId', opts.masterId)
     writeModel.writerBit('slaverBit', [opts.slaverId])
@@ -532,36 +552,18 @@ export default class PortItem {
       resultBuf = await this.post({ data: dataBuf })
     }
 
-    // const readModel = new BufWriteModel2({
-    //   model: CAL_MODEL
-    // })
-
-    // const dataModel = new BufWriteModel([1, 1, 4, 1]) // eslint-disable-line
-    // const dataWriteModel = dataModel.getWriteModel()
-    // dataWriteModel.write(1, opts.masterId)
-    // dataWriteModel.write(2, this.setByt(32, [opts.slaverId]))
-    // dataWriteModel.write(3, this.setByt(8, [opts.channelId]))
-    // const dataBuf = agreement.createData({
-    //   masterId: opts.masterId,
-    //   slaverId: 0xff,
-    //   type: 0x02,
-    //   code: controlCode.master.calRead,
-    //   data: dataModel.buf
-    // })
-    // let resultBuf: Buffer
-    // if (isDev) {
-    //   // resultBuf = Buffer.from('000001003f99999a00000000000000003dcccccd00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003fb333330000000000000000000000000000000000000000000000000000000000000000', 'hex') // eslint-disable-line
-    //   resultBuf = Buffer.from('0001000000e3388e3fe3380e4040555547408e38e30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040f8e37e410e38da411ffff6411ffff7', 'hex') // eslint-disable-line
-    // } else {
-    //   resultBuf = await this.post({ data: dataBuf })
-    // }
-    const listModel = Array(30).fill({ byte: 4, hasFload: true })
-    const bufModel = new BufModel([1, 1, 1].concat(listModel))
-    const bufData = bufModel.getBufData(resultBuf.slice(2))
-    const list = getCalList()
-    list.forEach(item => {
-      item.value = bufData.getIndex(item.index)
+    const readModel = new BufWriteModel2({
+      model: CAL_MODEL,
+      readBuf: resultBuf
     })
+
+    const list = getCalList()
+    readModel.ecahList('calList', readItem => {
+      list.forEach(item => {
+        item.value = readItem.readFloat(item.nameKey)
+      })
+    })
+
     return { list }
   }
 

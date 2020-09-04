@@ -10,6 +10,7 @@ export declare namespace BufModelT {
     name: string
     type: 'list'
     model: OrginModel[]
+    len: string
   }
   /** Model 源 */
   type OrginModel = ModelOItem | ModelOList

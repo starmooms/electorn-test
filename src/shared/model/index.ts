@@ -12,6 +12,7 @@ export const WORKER_STEP_MODEL: Model[] = [
   {
     name: 'protectList',
     type: 'list',
+    len: 'protectLen',
     model: [
       { name: 'channelId', bytLen: 1 },
       { name: 'UCi', bytLen: 2 }, // 恒压充保护电压偏差(mV)
@@ -26,6 +27,7 @@ export const WORKER_STEP_MODEL: Model[] = [
   {
     name: 'workerList',
     type: 'list',
+    len: 'workerLen',
     model: [
       { name: 'version', bytLen: 1 },
       { name: 'channelId', bytLen: 1 },
@@ -92,6 +94,7 @@ export const CAL_MODEL: Model[] = [
   {
     name: 'calList',
     type: 'list',
+    len: 'calLen',
     model: [
       { name: 'masterId', bytLen: 1 },
       { name: 'slaverId', bytLen: 1 },

@@ -60,18 +60,22 @@ export const WORKER_START_MODEL: Model[] = [
 ]
 
 const GET_CAL_DATA = () => {
-  const CAL_DATA = ['电压校准参数', '电流校准参数', '电流反向校准参数']
+  const CAL_DATA = [
+    { name: '电压校准参数', key: 'U' },
+    { name: '电流校准参数', key: 'I' },
+    { name: '电流反向校准参数', key: 'RevI' }
+  ]
   const list: Model[] = []
   CAL_DATA.forEach(item => {
     for (let i = 1; i <= 5; i++) {
       list.push(
         {
-          name: `${i}-a`,
+          name: `${item.key}${i}-a`,
           bytLen: 4,
           type: 'float'
         },
         {
-          name: `${i}-b`,
+          name: `${item.key}${i}-b`,
           bytLen: 4,
           type: 'float'
         }
@@ -93,18 +97,14 @@ export const CAL_MODEL: Model[] = [
       { name: 'slaverId', bytLen: 1 },
       { name: 'channelId', bytLen: 1 },
       ...GET_CAL_DATA()
-      // { name: 'workerId', bytLen: 1 },
-      // { name: 'startModel', bytLen: 1 },
-      // { name: 'workerCode', bytLen: 1 },
-      // { name: 'time', bytLen: 4 },
-      // { name: 'U', bytLen: 2 },
-      // { name: 'I', bytLen: 4, type: 'int' },
-      // { name: 'W', bytLen: 4 },
-      // { name: 'R', bytLen: 4 },
-      // { name: 'loopNum', bytLen: 4 },
-      // { name: 'loopStart', bytLen: 1 },
-      // { name: 'loopNow', bytLen: 4 },
-      // { name: 'IEnd', bytLen: 4 }
     ]
   }
+]
+
+/** 读校准时发送 */
+export const CAL_READ_MODEL: Model[] = [
+  { name: 'version', bytLen: 1 },
+  { name: 'masterId', bytLen: 1 },
+  { name: 'slaverBit', bytLen: 4 },
+  { name: 'channelBit', bytLen: 1 }
 ]

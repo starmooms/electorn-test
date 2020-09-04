@@ -170,24 +170,31 @@ interface CalItem {
   key: string
   index: number
   value: number | string
+  nameKey: string
 }
 
 /** 校准列表 */
 export function getCalList() {
   const list: CalItem[] = []
   let index = 3
-  ;['电压校准参数', '电流校准参数', '电流反向校准参数'].forEach(item => {
+  ;[
+    { name: '电压校准参数', key: 'U' },
+    { name: '电流校准参数', key: 'I' },
+    { name: '电流反向校准参数', key: 'RevI' }
+  ].forEach(item => {
     for (let i = 1; i <= 5; i++) {
       list.push(
         {
-          name: item,
+          name: item.name,
           key: `${i}-a`,
           index: index,
+          nameKey: `${item.key}${i}-a`,
           value: 0
         },
         {
-          name: item,
+          name: item.name,
           key: `${i}-b`,
+          nameKey: `${item.key}${i}-b`,
           index: index + 1,
           value: 0
         }

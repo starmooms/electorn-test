@@ -1,6 +1,7 @@
 import { deepClone } from '@/shared/utils'
 import logger from '../core/Logger'
 import { BufModelT } from '@/types/BufModel'
+import { toHex } from '.'
 
 // export interface Model {
 //   name: string
@@ -19,11 +20,14 @@ interface BufModelOpts {
 }
 
 declare type BufWriteModelOpts = {
-  bufModel?: BufModel
-  buf?: Buffer
-  start?: number
   model?: BufModelOpts['model']
   listLen?: BufModelOpts['listLen']
+  readBuf?: Buffer
+  parent?: {
+    bufModel: BufModel
+    buf: Buffer
+    start: number
+  }
 }
 
 declare type ModelBaseItem = Model & {
@@ -91,13 +95,14 @@ class BufModel<T = any> {
 
 export class BufWriteModel {
   buf: Buffer
-  parent?: BufWriteModel
   bufModel: BufModel<BufWriteModel>
   start = 0
 
   constructor(opts: BufWriteModelOpts) {
-    if (opts.bufModel) {
-      this.bufModel = opts.bufModel
+    if (opts.parent) {
+      this.buf = opts.parent.buf
+      this.start = opts.parent.start
+      this.bufModel = opts.parent.bufModel
     } else {
       if (!opts.model) {
         throw new Error(`BufWriteModel model undefined`)
@@ -106,9 +111,10 @@ export class BufWriteModel {
         model: opts.model,
         listLen: opts.listLen
       })
+      this.buf = opts.readBuf
+        ? opts.readBuf
+        : Buffer.alloc(this.bufModel.bufLength)
     }
-    this.start = opts.start || 0
-    this.buf = opts.buf || Buffer.alloc(this.bufModel.bufLength)
     this.createListModel()
   }
 
@@ -118,9 +124,11 @@ export class BufWriteModel {
         item.listAction = []
         for (let i = 0; i < item.listLength; i++) {
           const action = new BufWriteModel({
-            bufModel: item.bufModel,
-            buf: this.buf,
-            start: item.bufModel.bufLength * i + item.offset
+            parent: {
+              bufModel: item.bufModel,
+              buf: this.buf,
+              start: item.bufModel.bufLength * i + item.offset
+            }
           })
           item.listAction.push(action)
         }
@@ -163,6 +171,27 @@ export class BufWriteModel {
       bitArr[item] = 1
     })
     return this.writer(name, parseInt(bitArr.reverse().join(''), 2))
+  }
+
+  /** 直接读数值 */
+  read(name: string) {
+    const target = this.getTarget(name)
+    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+    const offset = this.start + target.offset
+    if (target.type === 'float') {
+      return this.buf.readFloatBE(offset)
+    }
+    if (target.type === 'int') {
+      return this.buf.readIntBE(offset, target.bytLen)
+    }
+    return this.buf.readUIntBE(offset, target.bytLen)
+  }
+
+  /** 读16进制数值 */
+  readHex(name: string) {
+    const target = this.getTarget(name)
+    const data = this.read(name)
+    toHex(data, target.bytLen)
   }
 
   ecahList(

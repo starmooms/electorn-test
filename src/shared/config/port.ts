@@ -1,3 +1,5 @@
+import { Port } from '@/types/Port'
+
 /** 工步 */
 export const workSteps = {
   ICi: { name: '恒流充电', value: 'A1', input: ['U', 'I'], limt: {} },
@@ -139,17 +141,24 @@ export const CHANNEL_STATUS = {
   '70': { name: '循环', status: 'run' },
 }
 
+export const CHANNEL_STATUS_END = ['00', '02', '03']
+
 /* eslint-enable quote-props */
 
 /** 通道数据 */
-export const channelList = {}
+export const channelList: Port.MasterList = {}
 for (let i = 0; i < 20; i++) {
   const slaverObj = {}
   for (let j = 0; j < 32; j++) {
     const obj = {}
     for (let k = 0; k < 8; k++) {
       obj[k] = {
-        id: k
+        id: k,
+        samp: {
+          workerCode: '00'
+        },
+        workerStart: null,
+        workerEnd: null
       }
     }
     slaverObj[j] = {

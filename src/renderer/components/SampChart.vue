@@ -18,6 +18,9 @@ import 'echarts/lib/component/graphic'
 import { merge } from '@/shared/utils'
 import { SettingStatus } from '../store/modules/Setting'
 import getSampWorker from '@/renderer/utils/getSampWorker'
+import { ipcReq } from '@/types/ipcReq'
+import dayjs from 'dayjs'
+import { formatTimeStr } from '../utils/util'
 
 interface UpdateOpts {
   time: number
@@ -31,16 +34,9 @@ interface UpdateOpts {
     'v-chart': ECharts
   }
 })
-export default class TrendChart extends Vue {
+export default class SampChart extends Vue {
   @Prop({ type: Number, default: null }) channelId!: number
   @Prop({ type: String, default: 'default' }) size!: string
-  @Prop({
-    type: Object,
-    default() {
-      return {}
-    }
-  })
-  grid!: any
 
   public $refs!: {
     echart: ECharts
@@ -49,9 +45,8 @@ export default class TrendChart extends Vue {
   xData!: string[]
   UData!: [string, number][]
   IData!: [string, number][]
-  xMinUnix = 0
   sampling = SettingStatus.sampling
-  lastTime = 0
+
   chartSamp!: string | null
   polar!: any
 
@@ -60,14 +55,11 @@ export default class TrendChart extends Vue {
     this.setCharts()
   }
 
-  setCharts(UData: any[] = [], IData: any[] = []) {
+  setCharts(data: any[] = []) {
     this.xData = []
-    this.UData = UData
-    this.IData = IData
-    // this.chartSamp = this.UData.length > 20000 ? 'average' : null
-    this.chartSamp = null
-    const tip =
-      this.UData.length === 0 && this.IData.length === 0 ? '暂无数据' : ''
+    // this.UData = UData
+    // this.IData = IData
+
     let sizeOpts: any = {}
     if (this.size === 'min') {
       sizeOpts = {
@@ -99,18 +91,18 @@ export default class TrendChart extends Vue {
             axisLabel: { fontSize: 10 }
           }
         ]
-        // series: [{ itemStyle: { opacity: 0 } }, { itemStyle: { opacity: 0 } }]
       }
     }
+
     const polar = merge(
       {
+        dataset: {
+          dimensions: ['createTimeStr', 'U', 'I'],
+          source: data
+        },
         tooltip: {
-          // alwaysShowContent: false,
           trigger: 'axis',
           transitionDuration: 0,
-          // backgroundColor: 'rgba(245, 245, 245, 0.8)',
-          // borderWidth: 1,
-          // borderColor: '#ccc',
           padding: 10,
           textStyle: {
             fontSize: 12
@@ -120,6 +112,7 @@ export default class TrendChart extends Vue {
           extraCssText: 'width: 170px',
           formatter(params, ticket, callback) {
             let htmlStr = ''
+            console.log(params)
             for (let i = 0; i < params.length; i++) {
               const param = params[i]
               if (i === 0) {
@@ -133,45 +126,13 @@ export default class TrendChart extends Vue {
             }
             return htmlStr
           }
-          // axisPointer: {
-          //   type: 'line',
-          //   // trigger: 'axis',
-          //   extraCssText: 'width: 400px'
-          // }
         },
         legend: {
           show: true
-          // data: ['电压(mV)', '电流(mA)']
         },
         xAxis: {
           type: 'time'
-          // type: 'value',
-          // max: 1000,
-          // min: 0
-          // data: this.xData
-          // max: function(value) {
-          //   return value.max + 3600
-          // }
-          // splitNumber: 5,
         },
-        // visualMap: {
-        //   show: false,
-        //   dimension: 0,
-        //   pieces: [
-        //     {
-        //       gt: 1000,
-        //       lt: 2000,
-        //       color: 'green'
-        //     },
-        //     {
-        //       gt: 6,
-        //       lte: 8,
-        //       color: 'red'
-        //     }
-        //   ],
-        //   outOfRange: { opacity: 1 },
-        //   inRange: { opacity: 0 }
-        // },
         dataZoom: [
           {
             type: 'slider',
@@ -180,11 +141,12 @@ export default class TrendChart extends Vue {
           {
             type: 'slider',
             yAxisIndex: [0],
-            left: 2
+            left: 'left'
           },
           {
             type: 'slider',
-            yAxisIndex: [1]
+            yAxisIndex: [1],
+            right: 'right'
           },
           {
             type: 'inside'
@@ -211,7 +173,7 @@ export default class TrendChart extends Vue {
         series: [
           {
             name: '电压',
-            data: this.UData,
+            seriesLayoutBy: 'column',
             type: 'line',
             yAxisIndex: 0,
             lineStyle: { color: 'green' },
@@ -221,30 +183,15 @@ export default class TrendChart extends Vue {
           },
           {
             name: '电流',
-            data: this.IData,
             type: 'line',
             yAxisIndex: 1,
             lineStyle: { color: 'red' },
             itemStyle: { color: 'red' },
             sampling: this.chartSamp,
+            seriesLayoutBy: 'column',
             showSymbol: false
           }
         ]
-        // graphic: [
-        //   {
-        //     type: 'text',
-        //     id: 'test1',
-        //     left: 'center',
-        //     top: 'middle',
-        //     z: 9,
-        //     style: {
-        //       fill: '#333',
-        //       text: [tip],
-        //       font: '15px Microsoft YaHei',
-        //       zIndex: 999
-        //     }
-        //   }
-        // ]
       },
       sizeOpts
     )
@@ -340,10 +287,15 @@ export default class TrendChart extends Vue {
   }
 
   /** 采样数据整理 */
-  async setBaseList(list: any) {
-    const { UData, IData, lastTime } = await getSampWorker.getSampList(list)
-    this.lastTime = lastTime
-    this.setCharts(UData, IData)
+  async setBaseList(list: Port.SampItem[]) {
+    // const { UData, IData, lastTime } = await getSampWorker.getSampList(list)
+    // this.lastTime = lastTime
+    this.setCharts(
+      list.map(item => {
+        item.createTimeStr = dayjs.unix(item.createTime).format(formatTimeStr)
+        return item
+      })
+    )
   }
 
   @Watch('sampling')

@@ -1,4 +1,6 @@
 import dayjs from 'dayjs'
+import { ipcReq } from '@/types/ipcReq'
+import { Port } from '@/types/Port'
 
 export const formatTimeStr = 'YYYY-MM-DD HH:mm:ss'
 
@@ -55,7 +57,7 @@ export const getSampChartList = async (
 
     const x = item.createTimeStr
       ? item.createTimeStr
-      : dayjs.unix(item.createTime).format('YYYY-MM-DD HH:mm:ss')
+      : dayjs.unix(item.createTime).format(formatTimeStr)
     UData.push([x, item.U])
     IData.push([x, item.I])
     lastTime = item.createTime
@@ -72,6 +74,14 @@ export const stepListSetInput = (item: any) => {
   return {
     label: `${item.name}：${item.data}${item.unit}`
   }
+}
+
+export const setSampChartList = (list: Port.SampItem[]) => {
+  list.map(item => {
+    const time =
+      item.createTimeStr || dayjs.unix(item.createTime).format(formatTimeStr)
+    return [time, item.U, item.I]
+  })
 }
 
 /** 工步列表处理 */

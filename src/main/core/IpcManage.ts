@@ -88,6 +88,12 @@ class IpcManage {
       this.ipcError(err, win)
     }
   }
+
+  commonMsg(channel: string) {
+    winManager.winList.forEach(win => {
+      win.webContents.send('commomMsg', channel)
+    })
+  }
 }
 
 const ipcManage = new IpcManage()

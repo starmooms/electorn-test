@@ -95,11 +95,11 @@
           </el-form>
         </title-box>
 
-        <TrendChart
+        <samp-chart
           v-if="channelId !== null"
           :channelId="channelId"
-          ref="trendChart"
-        ></TrendChart>
+          ref="sampChart"
+        ></samp-chart>
       </div>
     </el-tabs>
 
@@ -121,33 +121,28 @@ import {
 import command from '../command'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
-import TrendChart from '@/renderer/components/TrendChart.vue'
+// import TrendChart from '@/renderer/components/TrendChart.vue'
+import SampChart from '@/renderer/components/SampChart.vue'
 import { deepClone } from '@/shared/utils'
 import { GET_PROTECT_FORM, PROTECT } from '@/shared/config/port'
 import { ChannelStatus } from '../store/modules/Channel'
 import dayjs from 'dayjs'
 import { getSamp } from '../ipc/db'
-
-interface PortData {
-  path: string
-  masterId: number
-  slaverId: number
-  channelId: number
-}
+import { stepListUtil } from '../utils/util'
 
 @Component({
   components: {
-    TrendChart,
+    SampChart,
     StepSetModal,
     CalModal
   }
 })
 export default class WorkerSee extends Vue {
   public $refs!: {
-    trendChart: TrendChart
+    sampChart: SampChart
   }
 
-  portItem: PortData | null = null
+  portItem: ipcReq.PortItem | null = null
   stepsShow = false
   calShow = false
   tabChannel = '0'
@@ -228,49 +223,33 @@ export default class WorkerSee extends Vue {
   async getWorkStep() {
     if (!this.portItem) return
     this.sampStop = true
-    this.$refs.trendChart.setBaseList([])
+    this.$refs.sampChart.setBaseList([])
+    this.nowStepList = []
+    const { channelId } = this.portItem!
     const data = await getWorkStep({
       ...this.portItem,
-      channelId: [this.portItem.channelId]
+      channelId: [channelId]
     })
     if (data.status) {
-      if (data.data.stepData && data.data.stepData[this.portItem.channelId]) {
-        // this.$message.error('没有返回工步信息')
-
-        const setInput = (item: any) => {
-          return {
-            label: `${item.name}：${item.data}${item.unit}`
-          }
-        }
-        const { protect, stepList } = data.data.stepData[
-          this.portItem.channelId
-        ]
+      if (data.data.stepData && data.data.stepData[channelId]) {
+        const { protect, stepList } = data.data.stepData[channelId]
         this.protectForm = protect
-        this.nowStepList = stepList.map((item: any) => {
-          const worker = item.worker.map(setInput)
-          const limt = item.limt.map(setInput)
-          return {
-            id: item.id,
-            msg: `${item.id + 1}.${item.name}`,
-            worker,
-            limt
-          }
-        })
+        this.nowStepList = stepList.map(stepListUtil)
       }
+      this.getSampData()
     }
-    this.getSampData()
   }
 
   async getSampData() {
-    const start = dayjs()
-      .subtract(15, 'minute')
-      .unix()
-    const end = dayjs().unix()
     try {
+      const start = dayjs()
+        .subtract(600, 'minute')
+        .unix()
+      const end = dayjs().unix()
       const { masterId, slaverId, channelId } = this.portItem!
       const samp = await getSamp({
-        start: start,
-        end: end,
+        start,
+        end,
         masterId,
         slaverArr: [
           {
@@ -284,14 +263,11 @@ export default class WorkerSee extends Vue {
         ]
       })
       if (samp.status) {
-        if (samp.data[slaverId]) {
-          const sampData = samp.data[slaverId][channelId]
-          if (sampData) {
-            this.$refs.trendChart.setBaseList(sampData)
-          }
+        const sampData = samp.data?.[slaverId]?.[channelId]
+        // console.log(sampData)
+        if (sampData) {
+          this.$refs.sampChart.setBaseList(sampData)
         }
-      } else {
-        this.$refs.trendChart.setBaseList([])
       }
     } catch (err) {
       console.error(err)
@@ -313,7 +289,7 @@ export default class WorkerSee extends Vue {
         if (item) {
           this.workerIdNow = item.workerId
           this.workerStatus = item.workerStatus.name
-          this.$refs.trendChart.update(item)
+          this.$refs.sampChart.update(item)
         }
       },
       vm: this
@@ -327,13 +303,11 @@ export default class WorkerSee extends Vue {
       slaverId: Number(this.$route.params.slaverId),
       channelId: Number(this.$route.params.channelId)
     }
+    this.tabChannel = this.$route.params.channelId
     this.getList()
     this.$nextTick(() => {
       this.getWorkStep()
       this.setCharts()
-      // setInterval(() => {
-      //   this.workerIdNow = this.workerIdNow === 0 ? 1 : 0
-      // }, 1000)
     })
   }
 

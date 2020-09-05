@@ -11,7 +11,9 @@ import {
   WORKSTEPS_TYPE_MAP,
   WORKSTEPSINPUT,
   ERR_STATUS,
-  CHANNEL_STATUS
+  CHANNEL_STATUS,
+  CHANNEL_STATUS_CODE,
+  CHANNEL_STATUS_END
 } from '@/shared/config/port'
 import { BufWriteModel as BufWriteModel2 } from '../utils/bufModel'
 import { Promise as Bluebird } from 'bluebird'
@@ -31,6 +33,7 @@ import {
   CAL_MODEL,
   COMMON_READ
 } from '@/shared/model'
+import { Port } from '@/types/Port'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -70,7 +73,7 @@ export default class PortItem {
   sampIsRead = false
   translate = new Map<number, MasterTranslate>()
   emitList = new Map<string, (dataBuf: Buffer) => any>()
-  channelList!: any
+  channelList!: Port.MasterList
   noWorkerStatus = { name: '未知工作状态', status: 'error' }
 
   constructor(path: string) {
@@ -160,28 +163,12 @@ export default class PortItem {
         }
       })
       logger.info('write Status', status)
-      // if (status !== true) {
-      //   setError('PORT Write Status Error')
-      //   return
-      // }
 
       timer = setTimeout(() => {
         setError('PORT Time Out')
       }, timeout || 2000)
     })
   }
-
-  // setByt(len: number, arr1: number[], fillNum = 0) {
-  //   const bytArr = Array(len).fill(fillNum)
-  //   arr1.forEach(item => {
-  //     bytArr[item] = 1
-  //   })
-  //   // let result = 0
-  //   // arr1.forEach(num => {
-  //   //   result |= 1 << num
-  //   // })
-  //   return parseInt(bytArr.reverse().join(''), 2)
-  // }
 
   /** 写工步 */
   async writeSteps(data: WStepsOpts) {
@@ -333,13 +320,6 @@ export default class PortItem {
     writeModel.writerBit('slaverBit', [], 1)
     writeModel.writerBit('channelBit', [], 1)
 
-    // const bufModel = new BufModel([1, 1, 1, 1, 2, { byte: 4, hasSigned: true}, 1, 1]) // eslint-disable-line
-    // const postModel = new BufWriteModel([1, 1, 4, 1])
-    // const postWrite = postModel.getWriteModel()
-    // postWrite.write(1, masterId)
-    // postWrite.write(2, this.setByt(32, [], 1))
-    // postWrite.write(1, this.setByt(8, [], 1))
-
     let oldSamp: MasterTranslate | undefined
     if (this.translate.has(masterId)) {
       oldSamp = this.translate.get(masterId)
@@ -385,10 +365,12 @@ export default class PortItem {
 
           const nowUnix = dayjs().unix()
           const list: any[] = []
+          const channelStatus: any[] = []
+
           readModel.ecahList('sampList', readItem => {
             const workerCode = readItem.readHex('workerCode')
             const errCode = readItem.readHex('errCode')
-            list.push({
+            const samp = {
               slaverId: readItem.read('slaverId'),
               channelId: readItem.read('channelId'),
               workerCode: workerCode,
@@ -400,11 +382,45 @@ export default class PortItem {
               errorMsg: errCode !== '00' ? ERR_STATUS[errCode] : '',
               workerStatus: CHANNEL_STATUS[workerCode] || this.noWorkerStatus,
               createTime: nowUnix
-            })
+            }
+            list.push(samp)
+            const channel = this.channelList[masterId].slaverList[samp.slaverId].list[samp.channelId] // eslint-disable-line
+            const lastSamp = channel.samp // eslint-disable-line
+            channel.samp = samp
+
+            if (lastSamp.workerCode !== samp.workerCode) {
+              // 判断是否启动、或结束过度
+              const lastStatus = CHANNEL_STATUS_END.includes(lastSamp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
+              const nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
+              if (lastStatus !== nowStatus) {
+                if (lastStatus === 'RUN') {
+                  channel.workerStart = nowUnix
+                  channelStatus.push({
+                    masterId,
+                    slaverId: samp.slaverId,
+                    channelId: samp.channelId,
+                    start: nowUnix
+                  })
+                } else {
+                  channel.workerStart = null
+                  channelStatus.push({
+                    masterId,
+                    slaverId: samp.slaverId,
+                    channelId: samp.channelId,
+                    start: channel.workerStart,
+                    end: nowUnix
+                  })
+                }
+              }
+            }
           })
 
           logger.info('存储redis', readModel.buf.toString('hex'))
           await redisClient.setSamp(masterId, list)
+          if (channelStatus.length > 0) {
+            await redisClient.channelSetStart(channelStatus)
+            ipcManage.commonMsg('updateChannelList')
+          }
 
           if (translate) {
             const winArr = translate.winArr
@@ -557,12 +573,15 @@ export default class PortItem {
     if (!code) {
       throw new Error(`${data.status} Error`)
     }
-
+    const slaverIds = data.slaverId
+    const channelIds = data.slaverId
+    const setStartList: any[] = []
     const writerModel = new BufWriteModel2({
       model: data.status === 'start' ? WORKER_START_MODEL : WORKER_SATUS_MODEL
     })
-    writerModel.writerBit('slaver', data.slaverId)
-    writerModel.writerBit('channel', data.channelId)
+    writerModel.writerBit('slaver', slaverIds)
+    writerModel.writerBit('channel', channelIds)
+
     if (data.status === 'start') {
       const start = Number(data.startId)
       if (!start) {
@@ -571,6 +590,7 @@ export default class PortItem {
       writerModel.writer('startWorkerId', start - 1)
     }
 
+    const now = dayjs().unix()
     const list = data.masterIdList || [data.masterId]
     await Bluebird.mapSeries(list, async (masterId: number) => {
       writerModel.writer('masterId', masterId)
@@ -580,6 +600,28 @@ export default class PortItem {
         data: writerModel.buf,
         masterId
       })
+      // if (data.status === 'start') {
+      //   slaverIds.forEach(slaverId => {
+      //     channelIds.forEach(channelId => {
+      //       const channel = this.channelList[masterId].slaverList[slaverId].list[channelId] // eslint-disable-line
+      //       if (channel && !channel.workStart) {
+      //         channel.workStart = now
+      //         setStartList.push({
+      //           masterId,
+      //           slaverId: slaverId,
+      //           channelId: channelId,
+      //           start: now
+      //         })
+      //       }
+      //     })
+      //   })
+      // }
     })
+
+    // if (setStartList.length > 0) {
+    //   ipcManage.commonMsg('updateChannelList', this.channelList)
+    //   // const redisClient = RedisClient.getInstance()
+    //   // await redisClient.channelSetStart(setStartList)
+    // }
   }
 }

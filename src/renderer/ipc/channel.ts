@@ -23,7 +23,7 @@ interface SetSteps {
 interface ChannelListOpts {
   type?: string
   path: string
-  masterId: number
+  masterId?: number
   slaverId?: number
   channelId?: number
 }

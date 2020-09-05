@@ -329,7 +329,7 @@ export default class Home extends Vue {
   }
 
   trendListSet() {
-    const trendList = deepClone(this.batteryList)
+    const trendList: any = deepClone(this.batteryList)
     Object.keys(trendList).forEach(mKey => {
       const master = trendList[mKey]
       Object.keys(master.slaverList).forEach(sKey => {
@@ -385,7 +385,7 @@ export default class Home extends Vue {
   }
 
   mounted() {
-    const trendList = deepClone(this.batteryList)
+    const trendList: any = deepClone(this.batteryList)
     Object.keys(trendList).forEach(mKey => {
       const master = trendList[mKey]
       Object.keys(master.slaverList).forEach(sKey => {

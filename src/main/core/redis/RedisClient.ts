@@ -107,11 +107,6 @@ export class RedisClient {
     dayKeys.forEach(dayKey => {
       slaverArr.forEach(slaver => {
         slaver.channel.forEach(channel => {
-          logger.info(
-            `samp_${masterId}_${slaver.id}_${channel.id}_${dayKey}`,
-            start,
-            end
-          )
           pipeline.zrangebyscore(
             `samp_${masterId}_${slaver.id}_${channel.id}_${dayKey}`,
             start,
@@ -147,6 +142,25 @@ export class RedisClient {
       })
     })
     return slaverList
+  }
+
+  async channelSetStart(channelStartList: any[]) {
+    const pipeline = this.redis.pipeline()
+    channelStartList.forEach(item => {
+      pipeline.lpush(
+        `status_${item.masterId}_${item.slaverId}_${item.channelId}`,
+        JSON.stringify({
+          start: item.start,
+          end: item.end || null
+        })
+      )
+    })
+    const result = await pipeline.exec()
+    result.forEach(([err]) => {
+      if (err) {
+        throw err
+      }
+    })
   }
 }
 

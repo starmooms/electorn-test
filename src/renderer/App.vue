@@ -5,8 +5,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue, Watch } from 'vue-property-decorator'
 import { ipcRenderer } from 'electron'
+import { SettingStatus } from './store/modules/Setting'
+import { ChannelStatus } from './store/modules/Channel'
 
 @Component
 export default class App extends Vue {
@@ -14,33 +16,33 @@ export default class App extends Vue {
   tips = ''
   downloadPercent = 0
 
+  get portPath() {
+    return SettingStatus.portPath
+  }
+
+  @Watch('portPath')
+  checkPortPath() {
+    if (this.portPath) {
+      ChannelStatus.getList()
+    }
+  }
+
   mounted() {
-    ipcRenderer.on('updateMsg', (event, text) => {
-      if (text === 'startUpdate') {
-        this.dialogVisible = true
-        this.tips = '检测到新版本，正在下载……'
-      } else if (text === 'noUpdate') {
-        this.$message('现在使用的就是最新版本')
-      } else {
-        this.tips = text
+    ipcRenderer.on('commomMsg', (event, channel) => {
+      switch (channel) {
+        case 'updateChannelList':
+          // 更新通道列表
+          ChannelStatus.getList()
+          break
+        default:
+          console.error(`${channel} undefined`)
+          return
       }
-    })
-
-    ipcRenderer.on('updateError', (event, msg) => {
-      this.$message.error(msg)
-    })
-
-    ipcRenderer.on('downloadProgress', (event, progressObj) => {
-      this.downloadPercent = progressObj.percent || 0
-    })
-
-    ipcRenderer.on('downloaded', () => {
-      ipcRenderer.send('isUpdateNow', 'isUpdateNow')
     })
   }
 
   destroy() {
-    ;['message', 'downloadProgress', 'isUpdateNow'].forEach(item => {
+    ;['commomMsg'].forEach(item => {
       ipcRenderer.removeAllListeners(item)
     })
   }

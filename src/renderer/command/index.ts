@@ -1,5 +1,6 @@
 import { ipcRenderer } from 'electron'
 import Vue from 'vue'
+import { ipcReq } from '@/types/ipcReq'
 
 interface EmitList {
   [eventName: string]: {
@@ -90,7 +91,10 @@ class Command {
     ipcRenderer.send(eventName, ...args)
   }
 
-  async invoke(name: string, ...args: any[]) {
+  async invoke<T = any>(
+    name: string,
+    ...args: any[]
+  ): Promise<ipcReq.Response<T>> {
     try {
       const data = await ipcRenderer.invoke(name, ...args)
       if (data.status === false && data.error) {

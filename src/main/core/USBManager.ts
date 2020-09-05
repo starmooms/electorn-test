@@ -29,7 +29,6 @@ export default class USBManager {
     this.setCal()
     this.readCal()
     this.getChannelList()
-    this.setMasterMode()
   }
 
   /** 开始监测USB */
@@ -157,20 +156,5 @@ export default class USBManager {
       const portItem = this.getPortData(data.path)
       return await portItem.getChannelList(data)
     })
-  }
-
-  // 主控模式
-  /** 设置保护参数 */
-  setMasterMode() {
-    ipcManage.handle(
-      '/port/masterMode',
-      async (event, path: string, type: string, data: any) => {
-        const portItem = this.getPortData(data.path)
-        if (!portItem.masterMode[type]) {
-          throw new Error(`fun ${type} undefined`)
-        }
-        return await portItem.masterMode[type](data)
-      }
-    )
   }
 }

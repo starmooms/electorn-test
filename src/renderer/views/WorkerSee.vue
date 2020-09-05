@@ -287,11 +287,11 @@ export default class WorkerSee extends Vue {
         if (samp.data[slaverId]) {
           const sampData = samp.data[slaverId][channelId]
           if (sampData) {
-            this.$refs.trendChart.setBaseList(sampData, start, end)
+            this.$refs.trendChart.setBaseList(sampData)
           }
         }
       } else {
-        this.$refs.trendChart.setBaseList([], start, end)
+        this.$refs.trendChart.setBaseList([])
       }
     } catch (err) {
       console.error(err)

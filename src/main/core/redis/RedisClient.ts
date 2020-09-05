@@ -69,11 +69,13 @@ export class RedisClient {
       const pipeline = this.redis.pipeline()
       const today = dayjs().startOf('day').unix() // eslint-disable-line
       list.forEach(item => {
-        pipeline.zadd(
-          `samp_${masterId}_${item.slaverId}_${item.channelId}_${today}`,
-          item.createTime,
-          JSON.stringify(item)
-        )
+        if (item.workerCode !== '00') {
+          pipeline.zadd(
+            `samp_${masterId}_${item.slaverId}_${item.channelId}_${today}`,
+            item.createTime,
+            JSON.stringify(item)
+          )
+        }
       })
       const data = await pipeline.exec()
       data.forEach(item => {

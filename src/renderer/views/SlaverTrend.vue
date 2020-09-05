@@ -434,7 +434,7 @@ export default class SlaverTrend extends Vue {
           })
           const chart = chartMap[id]
           if (chart) {
-            await chart.setBaseList(sampData, startTime, endTime)
+            await chart.setBaseList(sampData)
           }
         })
         await Promise.all(promisArr)

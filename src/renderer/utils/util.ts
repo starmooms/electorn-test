@@ -31,27 +31,27 @@ export const getSampChartList = async (
   if (!lastTime && list.length > 0) {
     lastTime = lastTime || list[0].createTime
   }
-  let UData: [string, number][] = []
-  let IData: [string, number][] = []
+  const UData: [string, number][] = []
+  const IData: [string, number][] = []
   for (let i = 0; i < list.length; i++) {
     const item = list[i]
-    if (fullNull) {
-      const len = Math.abs(item.createTime - lastTime)
-      if (len >= 2) {
-        const opts = {
-          time: lastTime,
-          len
-        }
-        let data: any
-        if (fullFun) {
-          data = await fullFun(opts)
-        } else {
-          data = chartFullNull(opts)
-        }
-        UData = [...UData, ...data.UData]
-        IData = [...IData, ...data.IData]
-      }
-    }
+    // if (fullNull) {
+    //   const len = Math.abs(item.createTime - lastTime)
+    //   if (len >= 2) {
+    //     const opts = {
+    //       time: lastTime,
+    //       len
+    //     }
+    //     let data: any
+    //     if (fullFun) {
+    //       data = await fullFun(opts)
+    //     } else {
+    //       data = chartFullNull(opts)
+    //     }
+    //     UData = [...UData, ...data.UData]
+    //     IData = [...IData, ...data.IData]
+    //   }
+    // }
 
     const x = item.createTimeStr
       ? item.createTimeStr

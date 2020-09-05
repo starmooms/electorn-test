@@ -13,7 +13,6 @@ import {
   ERR_STATUS,
   CHANNEL_STATUS
 } from '@/shared/config/port'
-import BufModel, { BufData, BufWriteModel } from '../utils/ParsBuf'
 import { BufWriteModel as BufWriteModel2 } from '../utils/bufModel'
 import { Promise as Bluebird } from 'bluebird'
 
@@ -387,12 +386,12 @@ export default class PortItem {
           const nowUnix = dayjs().unix()
           const list: any[] = []
           readModel.ecahList('sampList', readItem => {
-            const errCode = readItem.readHex('errCode')
             const workerCode = readItem.readHex('workerCode')
+            const errCode = readItem.readHex('errCode')
             list.push({
               slaverId: readItem.read('slaverId'),
               channelId: readItem.read('channelId'),
-              workerCode: readItem.read('workerCode'),
+              workerCode: workerCode,
               workerId: readItem.read('workerId'),
               U: readItem.read('U'),
               I: readItem.read('I'),

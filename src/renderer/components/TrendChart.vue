@@ -71,11 +71,19 @@ export default class TrendChart extends Vue {
     let sizeOpts: any = {}
     if (this.size === 'min') {
       sizeOpts = {
-        grid: { left: 40, right: 40 },
+        grid: { left: 60, right: 60 },
         dataZoom: [
           {
             height: 20,
             bottom: 0
+          },
+          {
+            width: 20,
+            left: 0
+          },
+          {
+            width: 20,
+            right: 0
           }
         ],
         xAxis: {
@@ -167,8 +175,16 @@ export default class TrendChart extends Vue {
         dataZoom: [
           {
             type: 'slider',
-            xAxisIndex: [0],
-            show: true
+            xAxisIndex: [0]
+          },
+          {
+            type: 'slider',
+            yAxisIndex: [0],
+            left: 2
+          },
+          {
+            type: 'slider',
+            yAxisIndex: [1]
           },
           {
             type: 'inside'
@@ -324,32 +340,8 @@ export default class TrendChart extends Vue {
   }
 
   /** 采样数据整理 */
-  async setBaseList(list: any, start?: number, end?: number) {
-    let fullNull = false
-    if (start && end) {
-      const first = list[0]
-      const last = list[list.length - 1]
-      if (!first || first.createTime !== start) {
-        list.unshift({
-          createTime: start,
-          U: '-',
-          I: '-'
-        })
-      }
-      if (!last || last !== end) {
-        list.push({
-          createTime: end,
-          U: '-',
-          I: '-'
-        })
-      }
-      fullNull = end - start <= 1000
-    }
-    const { UData, IData, lastTime } = await getSampWorker.getSampList(
-      list,
-      undefined,
-      fullNull
-    )
+  async setBaseList(list: any) {
+    const { UData, IData, lastTime } = await getSampWorker.getSampList(list)
     this.lastTime = lastTime
     this.setCharts(UData, IData)
   }
@@ -369,8 +361,6 @@ export default class TrendChart extends Vue {
       this.setCharts()
     })
   }
-
-  beforeDestroy() {}
 }
 </script>
 

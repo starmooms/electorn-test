@@ -11,22 +11,63 @@
       <div class="tab-content">
         <div class="channel-details">
           <div class="tab-l">
-            <title-box name="通道信息">
-              <div class="channel-msg">
+            <title-box class="channel-msg-box" name="通道信息">
+              <div class="steps-now">
                 <span>机柜：</span>
                 <span>{{ portItem.masterId + 1 }}</span>
               </div>
-              <div class="channel-msg">
+              <div class="steps-now">
                 <span>从控：</span>
                 <span>{{ portItem.slaverId + 1 }}</span>
               </div>
-              <div class="channel-msg">
+              <div class="steps-now">
                 <span>通道：</span>
                 <span>{{ portItem.channelId + 1 }}</span>
               </div>
             </title-box>
+            <title-box name="当前工步信息">
+              <p class="steps-now">当前工步：{{ workerIdNow + 1 }}</p>
+              <p class="steps-now">当前工步状态：{{ workerStatus }}</p>
+            </title-box>
+            <title-box name="操作" class="action-box">
+              <el-button
+                v-for="item in btnList"
+                :key="item.name"
+                @click="setStatus(item.action)"
+                type="primary"
+              >
+                {{ item.name }}
+              </el-button>
+              <el-button @click="calOpen" type="primary">局部设置</el-button>
+              <el-button @click="workStepsOpen" type="primary">
+                编辑工步
+              </el-button>
+            </title-box>
           </div>
-          <div class="tab-r"></div>
+          <div class="tab-r">
+            <div class="tab-nav-container">
+              <ul class="tab-nav">
+                <li
+                  v-for="(item, index) in tabList"
+                  :key="item"
+                  class="tab-nav-item"
+                  :class="{ active: tabActive === index }"
+                  @click="tabActive = index"
+                >
+                  {{ item }}
+                </li>
+              </ul>
+              <div class="tab-pane-box">
+                <div class="pane-echart" v-show="tabActive === 0">
+                  <samp-chart
+                    v-if="channelId !== null"
+                    :channelId="channelId"
+                    ref="chart"
+                  ></samp-chart>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <el-divider content-position="left">信息</el-divider>
         <p v-if="portItem">
@@ -113,12 +154,6 @@
             </el-form-item>
           </el-form>
         </title-box>
-
-        <samp-chart
-          v-if="channelId !== null"
-          :channelId="channelId"
-          ref="sampChart"
-        ></samp-chart>
       </div>
     </el-tabs>
 
@@ -136,18 +171,18 @@ import {
   getWorkStep,
   getChannelList,
   changeStatus
-} from '../ipc/channel'
-import command from '../command'
+} from '@/renderer/ipc/channel'
+import command from '@/renderer/command'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
 // import TrendChart from '@/renderer/components/TrendChart.vue'
 import SampChart from '@/renderer/components/SampChart.vue'
 import { deepClone } from '@/shared/utils'
 import { GET_PROTECT_FORM, PROTECT } from '@/shared/config/port'
-import { ChannelStatus } from '../store/modules/Channel'
+import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import dayjs from 'dayjs'
-import { getSamp } from '../ipc/db'
-import { stepListUtil } from '../utils/util'
+import { getSamp } from '@/renderer/ipc/db'
+import { stepListUtil } from '@/renderer/utils/util'
 
 @Component({
   components: {
@@ -159,6 +194,7 @@ import { stepListUtil } from '../utils/util'
 export default class WorkerSee extends Vue {
   public $refs!: {
     sampChart: SampChart
+    chart: SampChart
   }
 
   portItem: ipcReq.PortItem | null = null
@@ -177,6 +213,11 @@ export default class WorkerSee extends Vue {
   workerIdNow: number | null = null
   workerStatus: string | null = null
 
+  chartData!: Port.SampItem[]
+
+  tabActive = 0
+  tabList = ['1.曲线图', '2.详细数据', '3.工步查看', '4.保护参数']
+
   get btnList() {
     return ChannelStatus.statusList
   }
@@ -190,6 +231,18 @@ export default class WorkerSee extends Vue {
     const newChannelId = Number(newValue)
     if (this.portItem && this.portItem.channelId !== newChannelId) {
       this.changeChannelId(newChannelId)
+    }
+  }
+
+  @Watch('tabActive')
+  changeTabPan(v) {
+    if (v === 0) {
+      setInterval(() => {
+        if (this.$refs.chart) {
+          console.log(this.$refs.chart)
+          this.$refs.chart?.resize()
+        }
+      }, 2000)
     }
   }
 
@@ -242,7 +295,7 @@ export default class WorkerSee extends Vue {
   async getWorkStep() {
     if (!this.portItem) return
     this.sampStop = true
-    this.$refs.sampChart.setBaseList([])
+    this.$refs.chart.setBaseList([])
     this.nowStepList = []
     const { channelId } = this.portItem!
     const data = await getWorkStep({
@@ -284,9 +337,11 @@ export default class WorkerSee extends Vue {
       })
       if (samp.status) {
         const sampData = samp.data?.[slaverId]?.[channelId]
-        console.log(samp.data)
         if (sampData) {
-          this.$refs.sampChart.setBaseList(sampData)
+          this.chartData = sampData
+          if (this.$refs.chart) {
+            this.$refs.chart.setBaseList(sampData)
+          }
         }
       }
     } catch (err) {
@@ -309,8 +364,13 @@ export default class WorkerSee extends Vue {
         if (item) {
           this.workerIdNow = item.workerId
           this.workerStatus = item.workerStatus.name
+
           if (item.workerCode !== '00') {
-            this.$refs.sampChart.update([item])
+            if (!this.chartData) {
+              this.chartData = []
+            }
+            this.chartData.push(item)
+            this.$refs.chart.update([item])
           }
         }
       },
@@ -353,14 +413,65 @@ export default class WorkerSee extends Vue {
     display: flex;
     .tab-l {
       width: 200px;
-      ::v-deep .channel-msg-box {
-        margin-top: 0;
+      margin-right: 20px;
+      align-content: top;
+      .channel-msg-box {
+        margin: 0;
         .channel-msg {
           display: flex;
         }
       }
+      .action-box {
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: space-between;
+        .el-button {
+          margin: 0;
+          margin-bottom: 10px;
+          // width: 40%;
+          // // margin: 0;
+          // margin-bottom: 10px;
+          // flex: 1 1 auto;
+        }
+      }
     }
     .tab-r {
+      flex: 1;
+      .tab-nav-container {
+        border: 1px solid #dcdfe6;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12),
+          0 0 6px 0 rgba(0, 0, 0, 0.04);
+      }
+      .tab-nav {
+        display: flex;
+        background-color: #f5f7fa;
+        color: #909399;
+        line-height: 40px;
+        margin: 0;
+
+        .tab-nav-item {
+          padding: 0 18px;
+          font-weight: bold;
+          cursor: pointer;
+
+          &:hover {
+            color: #409eff;
+          }
+          &.active {
+            color: #409eff;
+            background-color: #fff;
+            border-left: 1px solid #dcdfe6;
+            border-right: 1px solid #dcdfe6;
+            &:first-child {
+              border-left: transparent;
+            }
+          }
+        }
+      }
+
+      .tab-pane-box {
+        padding: 10px;
+      }
     }
   }
 }
@@ -368,6 +479,7 @@ export default class WorkerSee extends Vue {
 .echart-box {
   margin-top: 40px;
   width: 800px;
+  min-width: 200px;
   height: 620px;
   background-color: #f3f3f3;
   border: 1px solid #ccc;

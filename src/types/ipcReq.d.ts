@@ -1,5 +1,3 @@
-import { Port } from './Port'
-
 /** ipc 通讯相关 */
 declare namespace ipcReq {
   interface PortBase {

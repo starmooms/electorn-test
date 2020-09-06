@@ -1,6 +1,5 @@
 import { ipcRenderer } from 'electron'
 import Vue from 'vue'
-import { ipcReq } from '@/types/ipcReq'
 
 interface EmitList {
   [eventName: string]: {

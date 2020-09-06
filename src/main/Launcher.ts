@@ -17,6 +17,7 @@ import SlaverTrend from './window/SlaverTrend'
 import './core/ConfigManage'
 import RedisServer from './core/redis/RedisServer'
 import redisClient, { RedisClient } from './core/redis/RedisClient'
+import logger from './core/Logger'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -137,9 +138,11 @@ export default class Launcher {
         this.updateManager.check()
       }
     })
-    const id = powerSaveBlocker.start('prevent-display-sleep')
-    // console.log(powerSaveBlocker.isStarted(id), id)
-    powerSaveBlocker.stop(id)
+    const id = powerSaveBlocker.start('prevent-app-suspension')
+    // setInterval(() => {
+    //   logger.debug('powerSaveBlocker', powerSaveBlocker.isStarted(id), id)
+    // }, 1000)
+    // powerSaveBlocker.stop(id)
 
     ipcManage.on('/createdWin', (event, data: any) => {
       switch (data.type) {

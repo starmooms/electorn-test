@@ -1,6 +1,12 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  powerMonitor,
+  powerSaveBlocker
+} from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 // import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Launcher from './Launcher'

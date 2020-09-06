@@ -103,7 +103,6 @@
 
 <script lang="ts">
 import { Component, Vue, PropSync, Prop, Watch } from 'vue-property-decorator'
-import { Port } from '@/types/Port'
 import { getStepsOpts, getStepsInputMap } from '@/renderer/utils/getConfig'
 import { setSteps } from '@/renderer/ipc/channel'
 import StepTplSave from './StepTplSave.vue'
@@ -135,7 +134,7 @@ export default class StepSetModal extends Vue {
     SelectChannel: SelectChannel
   }
 
-  list: Port.Item[] = []
+  list: any[] = []
 
   tplSaveShow = false
   tplUseShow = false

@@ -1,6 +1,4 @@
 import dayjs from 'dayjs'
-import { ipcReq } from '@/types/ipcReq'
-import { Port } from '@/types/Port'
 
 export const formatTimeStr = 'YYYY-MM-DD HH:mm:ss'
 

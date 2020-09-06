@@ -1,5 +1,3 @@
-import { Port } from '@/types/Port'
-
 /** 工步 */
 export const workSteps = {
   ICi: { name: '恒流充电', value: 'A1', input: ['U', 'I'], limt: {} },

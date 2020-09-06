@@ -18,7 +18,6 @@ import 'echarts/lib/component/graphic'
 import { merge } from '@/shared/utils'
 import { SettingStatus } from '../store/modules/Setting'
 import getSampWorker from '@/renderer/utils/getSampWorker'
-import { ipcReq } from '@/types/ipcReq'
 import dayjs from 'dayjs'
 import { formatTimeStr } from '../utils/util'
 
@@ -43,9 +42,8 @@ export default class SampChart extends Vue {
   }
 
   xData!: string[]
-  UData!: [string, number][]
-  IData!: [string, number][]
   sampling = SettingStatus.sampling
+  sampData: Port.SampItem[] = []
 
   chartSamp!: string | null
   polar!: any
@@ -55,40 +53,54 @@ export default class SampChart extends Vue {
     this.setCharts()
   }
 
-  setCharts(data: any[] = []) {
-    this.xData = []
-    // this.UData = UData
-    // this.IData = IData
+  checkList(list: Port.SampItem[]) {
+    return list.map(item => {
+      if (!item.createTimeStr) {
+        item.createTimeStr = dayjs.unix(item.createTime).format(formatTimeStr)
+      }
+      return item
+    })
+  }
 
+  setCharts(data: any[] = []) {
+    this.sampData = data
     let sizeOpts: any = {}
     if (this.size === 'min') {
       sizeOpts = {
-        grid: { left: 60, right: 60 },
+        grid: { width: '50%' },
         dataZoom: [
           {
-            height: 20,
-            bottom: 0
+            textStyle: {
+              fontSize: 8
+            }
           },
           {
-            width: 20,
-            left: 0
+            textStyle: {
+              fontSize: 8
+            },
+            left: '4%'
           },
           {
-            width: 20,
-            right: 0
+            textStyle: {
+              fontSize: 8
+            },
+            right: '4%'
           }
         ],
+        legend: {
+          show: false
+        },
         xAxis: {
           splitNumber: 5
         },
         yAxis: [
           {
             splitNumber: 10,
-            axisLabel: { fontSize: 10 }
+            axisLabel: { fontSize: 8 }
           },
           {
             splitNumber: 10,
-            axisLabel: { fontSize: 10 }
+            axisLabel: { fontSize: 8 }
           }
         ]
       }
@@ -97,7 +109,6 @@ export default class SampChart extends Vue {
     const polar = merge(
       {
         dataset: {
-          dimensions: ['createTimeStr', 'U', 'I'],
           source: data
         },
         tooltip: {
@@ -106,52 +117,46 @@ export default class SampChart extends Vue {
           padding: 10,
           textStyle: {
             fontSize: 12
-            // color: '#000'
           },
           confine: true,
           extraCssText: 'width: 170px',
           formatter(params, ticket, callback) {
             let htmlStr = ''
-            console.log(params)
             for (let i = 0; i < params.length; i++) {
-              const param = params[i]
+              const { seriesName, marker, value, dimensionNames } = params[i]
               if (i === 0) {
-                const xName = param.value[0] // x轴的名称
-                htmlStr += xName + '<br/>' // x轴的名称
+                const xName = value[dimensionNames[0]] // 时间
+                const workerId = `工步ID：${value.workerId + 1}`
+                const workerStatus = `工步信息：${value.workerStatus.name}`
+                htmlStr += `${xName}</br>${workerId}</br>${workerStatus}</br>`
               }
-              const seriesName = param.seriesName // 图例名称
-              const value = param.value[1] // y轴值
+              const yValue = value[dimensionNames[1]] // y轴值
               const unit = i === 0 ? 'mV' : 'mA'
-              htmlStr += `<div>${param.marker} ${seriesName}：${value} ${unit}</div>`
+              htmlStr += `<div>${marker} ${seriesName}：${yValue} ${unit}</div>`
             }
             return htmlStr
           }
         },
         legend: {
-          show: true
+          show: true,
+          top: '2%'
+        },
+        dataZoom: [
+          { type: 'slider', xAxisIndex: [0], bottom: '2%', height: '4%' },
+          { type: 'slider', yAxisIndex: [0], left: '2%', width: '4%' },
+          { type: 'slider', yAxisIndex: [1], right: '2%', width: '4%' },
+          { type: 'inside' }
+        ],
+        grid: {
+          x: 'center',
+          y: 'center',
+          width: '74%',
+          height: '76%',
+          containLabel: false
         },
         xAxis: {
           type: 'time'
         },
-        dataZoom: [
-          {
-            type: 'slider',
-            xAxisIndex: [0]
-          },
-          {
-            type: 'slider',
-            yAxisIndex: [0],
-            left: 'left'
-          },
-          {
-            type: 'slider',
-            yAxisIndex: [1],
-            right: 'right'
-          },
-          {
-            type: 'inside'
-          }
-        ],
         yAxis: [
           {
             name: '电压(mV)',
@@ -173,22 +178,22 @@ export default class SampChart extends Vue {
         series: [
           {
             name: '电压',
-            seriesLayoutBy: 'column',
+            seriesLayoutBy: 'row',
+            dimensions: ['createTimeStr', 'U'],
             type: 'line',
             yAxisIndex: 0,
             lineStyle: { color: 'green' },
             itemStyle: { color: 'green' },
-            sampling: this.chartSamp,
             showSymbol: false
           },
           {
             name: '电流',
             type: 'line',
             yAxisIndex: 1,
+            dimensions: ['createTimeStr', 'I'],
             lineStyle: { color: 'red' },
             itemStyle: { color: 'red' },
-            sampling: this.chartSamp,
-            seriesLayoutBy: 'column',
+            seriesLayoutBy: 'row',
             showSymbol: false
           }
         ]
@@ -202,100 +207,26 @@ export default class SampChart extends Vue {
     this.$refs.echart.mergeOptions(polar)
   }
 
-  async update(data?: UpdateOpts) {
-    // let text = ''
-    // let sampling: string | null = this.chartSamp
-    // if (this.UData.length === 0 && this.IData.length === 0) {
-    //   text = '暂无数据'
-    //   sampling = null
-    // }
-    const { UData, IData, lastTime, lastX } = await getSampWorker.getSampList(
-      [data],
-      this.lastTime
-    )
-    this.lastTime = lastTime
-    // this.xData.shift()
-    // this.xData.push(lastX)
-    this.UData.shift()
-    this.IData.shift()
-    this.UData = [...this.UData, ...UData]
-    this.IData = [...this.IData, ...IData]
-    this.$refs.echart.mergeOptions({
-      xAxis: { data: this.xData },
-      series: [{ data: this.UData }, { data: this.IData }],
-      graphic: [
-        {
-          style: { text: [''] }
+  async update(data?: Port.SampItem[]) {
+    if (data && data.length > 0) {
+      this.sampData = [...this.sampData, ...this.checkList(data)]
+      this.$refs.echart.mergeOptions({
+        dataset: {
+          source: this.sampData
         }
-      ]
-    })
-    // if (data) {
-    //   const { UData, IData, lastTime, lastX } = await getSampWorker.getSampList(
-    //     [data],
-    //     this.lastTime
-    //   )
-    //   if (this.lastTime >= lastTime) return
-    //   this.lastTime = lastTime
-    //   this.xData[this.xData.length - 1] = lastX
-    //   if (this.$refs.echart.chart) {
-    //     // this.$refs.echart.chart.appendData({
-    //     //   seriesIndex: '0',
-    //     //   data: UData
-    //     // })
-    //     // this.$refs.echart.chart.appendData({
-    //     //   seriesIndex: '1',
-    //     //   data: IData
-    //     // })
-    //     // this.$refs.echart.mergeOptions({
-    //     //   xAxis: { data: this.xData }
-    //     //   // graphic: [
-    //     //   //   {
-    //     //   //     style: { text: [''] }
-    //     //   //   }
-    //     //   // ]
-    //     // })
-    //     // this.$refs.echart.mergeOptions({
-    //     //   xAxis: { data: this.xData },
-    //     //   series: [{ data: this.UData }, { data: this.IData }],
-    //     //   graphic: [
-    //     //     {
-    //     //       style: { text: [''] }
-    //     //     }
-    //     //   ]
-    //     // })
-    //   }
-    // } else {
-    //   // let text = ''
-    //   // let sampling: string | null = this.chartSamp
-    //   // if (this.UData.length === 0 && this.IData.length === 0) {
-    //   //   text = '暂无数据'
-    //   //   sampling = null
-    //   // }
-    //   // this.$refs.echart.mergeOptions({
-    //   //   xAxis: { data: [] },
-    //   //   series: [
-    //   //     { data: this.UData, sampling },
-    //   //     { data: this.IData, sampling }
-    //   //   ],
-    //   //   graphic: [
-    //   //     {
-    //   //       style: { text: [text] }
-    //   //     }
-    //   //   ]
-    //   // })
-    // }
+      })
+    }
   }
 
   /** 采样数据整理 */
   async setBaseList(list: Port.SampItem[]) {
-    // const { UData, IData, lastTime } = await getSampWorker.getSampList(list)
-    // this.lastTime = lastTime
-    this.setCharts(
-      list.map(item => {
-        item.createTimeStr = dayjs.unix(item.createTime).format(formatTimeStr)
-        return item
-      })
-    )
+    this.setCharts(this.checkList(list))
+  }
+
+  resize(opts: any) {
+    console.log(this.$refs)
+    console.log(this.$refs.echart?.chart?.resize)
+    this.$refs.echart?.resize(opts)
   }
 
   @Watch('sampling')

@@ -1,6 +1,5 @@
 import $command from '@/renderer/command'
 import { SettingStatus } from '../store/modules/Setting'
-import { ipcReq } from '@/types/ipcReq'
 
 export async function mode<T>(channel: string, ...args: any[]) {
   const path = SettingStatus.portPath

@@ -9,7 +9,6 @@ import {
 import store from '@/renderer/store'
 import { channelList } from '@/shared/config/port'
 import { deepClone } from '@/shared/utils'
-import { Port } from '@/types/Port'
 import { getChannelList } from '@/renderer/ipc/channel'
 import { SettingStatus } from './Setting'
 

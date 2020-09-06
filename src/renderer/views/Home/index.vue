@@ -72,76 +72,87 @@
                   v-for="(slaver, sKey) in activeMaster.slaverList"
                   :key="sKey"
                 >
-                  <div class="slaver-item-l">{{ slaver.name }}</div>
-                  <ul class="channel-list">
-                    <li
-                      class="channel-item"
-                      v-for="(channel, ckey) in slaver.list"
-                      :span="3"
-                      :key="ckey"
-                      :class="[
-                        channel.trend.workerStatus.status,
-                        { error: channel.trend.errorMsg }
-                      ]"
-                      @click="showChannel(activeMaster, channel, slaver)"
-                    >
-                      <ContextMenu @open="openMenu(channel)">
-                        <div class="channel-box">
-                          <div class="sigh-box" v-if="channel.trend.errorMsg">
-                            <svg-icon icon-class="sigh"></svg-icon>
-                          </div>
-                          <div class="tip-box">
-                            <div class="tip-box-wrap">
-                              电压: {{ channel.trend.U }}
-                              <br />
-                              电流: {{ channel.trend.I }}
-                              <br />
-                              当前工步：{{ channel.trend.workerId }}
-                              <template v-if="channel.trend.errorMsg">
-                                <br />
-                                错误信息：{{ channel.trend.errorMsg }}
-                              </template>
+                  <div class="slaver-channel-box">
+                    <div class="slaver-item-l">{{ slaver.name }}</div>
+                    <ul class="channel-list">
+                      <li
+                        class="channel-item"
+                        v-for="(channel, ckey) in slaver.list"
+                        :span="3"
+                        :key="ckey"
+                        :class="[
+                          channel.trend.workerStatus.status,
+                          { error: channel.trend.errorMsg }
+                        ]"
+                        @click="showChannel(activeMaster, channel, slaver)"
+                      >
+                        <ContextMenu @open="openMenu(channel)">
+                          <div class="channel-box">
+                            <div class="sigh-box" v-if="channel.trend.errorMsg">
+                              <svg-icon icon-class="sigh"></svg-icon>
                             </div>
+                            <div class="tip-box">
+                              <div class="tip-box-wrap">
+                                电压: {{ channel.trend.U }}
+                                <br />
+                                电流: {{ channel.trend.I }}
+                                <br />
+                                当前工步：{{ channel.trend.workerId }}
+                                <template v-if="channel.trend.errorMsg">
+                                  <br />
+                                  错误信息：{{ channel.trend.errorMsg }}
+                                </template>
+                              </div>
+                            </div>
+                            <svg-icon
+                              class="channel-icon"
+                              icon-class="batter"
+                            ></svg-icon>
                           </div>
-                          <svg-icon
-                            class="channel-icon"
-                            icon-class="batter"
-                          ></svg-icon>
-                        </div>
-                        <template v-slot:menu>
-                          <a
-                            href="javascript:;"
-                            v-for="menu in batteryCtxMenu"
-                            :key="menu.action"
-                            @click="
-                              changeStatus(
-                                menu.action,
-                                channel,
-                                slaver,
-                                activeMaster
-                              )
-                            "
-                          >
-                            {{ menu.name }}
-                          </a>
-                          <a
-                            href="javascript:;"
-                            @click="calOpen(channel, slaver, activeMaster)"
-                          >
-                            局部设置
-                          </a>
-                          <a
-                            href="javascript:;"
-                            @click="stepsSetShow(channel, slaver, activeMaster)"
-                          >
-                            编辑工步
-                          </a>
-                        </template>
-                      </ContextMenu>
-                    </li>
-                  </ul>
+                          <template v-slot:menu>
+                            <a
+                              href="javascript:;"
+                              v-for="menu in batteryCtxMenu"
+                              :key="menu.action"
+                              @click="
+                                changeStatus(
+                                  menu.action,
+                                  channel,
+                                  slaver,
+                                  activeMaster
+                                )
+                              "
+                            >
+                              {{ menu.name }}
+                            </a>
+                            <a
+                              href="javascript:;"
+                              @click="calOpen(channel, slaver, activeMaster)"
+                            >
+                              局部设置
+                            </a>
+                            <a
+                              href="javascript:;"
+                              @click="
+                                stepsSetShow(channel, slaver, activeMaster)
+                              "
+                            >
+                              编辑工步
+                            </a>
+                          </template>
+                        </ContextMenu>
+                      </li>
+                    </ul>
+                    <el-button @click="slaverDetails(slaver)">查看</el-button>
+                  </div>
+                  <el-collapse-transition name="el-fade-in">
+                    <slaver-details
+                      v-if="slaver.showDetails"
+                      :channel-list="slaver.list"
+                    ></slaver-details>
+                  </el-collapse-transition>
 
-                  <div class="slaver-item-r">
+                  <!-- <div class="slaver-item-r">
                     <el-dropdown>
                       <el-button type="text">
                         操作
@@ -156,7 +167,7 @@
                         <el-dropdown-item>批量操作通道</el-dropdown-item>
                       </el-dropdown-menu>
                     </el-dropdown>
-                  </div>
+                  </div> -->
                 </li>
               </ul>
             </el-card>
@@ -190,7 +201,7 @@ import SelectMaster from '@/renderer/components/SelectMaster.vue'
 import BatchModal from './components/BatchModal.vue'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
-import { deprecate } from 'util'
+import SlaverDetails from './components/SlaverDetails.vue'
 
 @Component({
   name: 'Home',
@@ -199,6 +210,7 @@ import { deprecate } from 'util'
     StepSetModal,
     CalModal,
     BatchModal,
+    SlaverDetails,
     SelectMaster
   }
 })
@@ -324,6 +336,10 @@ export default class Home extends Vue {
     channel.tipShow = false
   }
 
+  slaverDetails(slaver: any) {
+    slaver.showDetails = !slaver.showDetails
+  }
+
   async setTranslate() {
     await SettingStatus.toggleReadTranslate()
   }
@@ -334,6 +350,7 @@ export default class Home extends Vue {
       const master = trendList[mKey]
       Object.keys(master.slaverList).forEach(sKey => {
         const slaver = master.slaverList[sKey]
+        slaver.showDetails = false
         Object.keys(slaver.list).forEach(cKey => {
           const channel = slaver.list[cKey]
           channel.trend = {
@@ -390,6 +407,7 @@ export default class Home extends Vue {
       const master = trendList[mKey]
       Object.keys(master.slaverList).forEach(sKey => {
         const slaver = master.slaverList[sKey]
+        slaver.showDetails = false
         Object.keys(slaver.list).forEach(cKey => {
           const channel = slaver.list[cKey]
           channel.trend = {
@@ -469,18 +487,23 @@ export default class Home extends Vue {
   margin: 0;
 }
 .slaver-item {
-  display: flex;
-  align-items: center;
   border-bottom: 1px solid #ccc;
   padding: 14px 10px;
   background-color: #eff0f1;
   &:last-child {
     border-bottom: none;
   }
+  .slaver-channel-box {
+    display: flex;
+    align-items: center;
 
-  .slaver-item-l {
-    flex: 0 0 60px;
+    .slaver-item-l {
+      flex: 0 0 60px;
+    }
   }
+  // .slaver-details-box {
+  //   height: 800px;
+  // }
 
   .channel-list {
     flex: 1 0 auto;

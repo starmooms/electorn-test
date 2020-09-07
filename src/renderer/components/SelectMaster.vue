@@ -1,14 +1,21 @@
 <template>
-  <div :is="groupName.group" class="master-group" v-model="activeId">
-    <component
-      class="master-group-item"
-      :is="groupName.item"
-      v-for="(master, mKey) in list"
-      :key="mKey"
-      :label="labelKey ? mKey : master.id"
+  <div>
+    <div
+      v-if="list"
+      :is="groupName.group"
+      class="master-group"
+      v-model="activeId"
     >
-      {{ master.name }}
-    </component>
+      <component
+        class="master-group-item"
+        :is="groupName.item"
+        v-for="(master, mKey) in list"
+        :key="mKey"
+        :label="labelKey ? mKey : master.id"
+      >
+        {{ master.name }}
+      </component>
+    </div>
   </div>
 </template>
 

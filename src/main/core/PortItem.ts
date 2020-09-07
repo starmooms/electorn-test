@@ -346,17 +346,19 @@ export default class PortItem {
             // const a = `00000800000000000000000000000000010000000afffffff60000000200000014ffffffec000000030000001effffffe20000000400000028ffffffd80000000500000032ffffffce000000060000003cffffffc40000000700000046ffffffba0000` // eslint-disable-line
             let t = Math.floor(Math.random() * 10)
             if (t >= 10) t = 0
+            const d = t >= 5 ? '01' : '02'
+            const d2 = t >= 6 ? '00' : '01'
             const g = String(t)
-            const a = `0000080000a1000${g}0000000${g}000000000100000204000000000000000200000000000000000000000300000000000000000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000` // eslint-disable-line
+            const a = `0000080000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0000000000000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
-            logger.info('读采样发送', writeModel.buf.toString('hex'))
+            // logger.info('读采样发送', writeModel.buf.toString('hex'))
             resultBuf = await this.post({
               code: controlCode.master.translateRead,
               data: writeModel.buf,
               masterId
             })
-            logger.info('读采样返回', resultBuf.toString('hex'))
+            // logger.info('读采样返回', resultBuf.toString('hex'))
           }
 
           const readModel = new BufWriteModel2({
@@ -366,7 +368,7 @@ export default class PortItem {
 
           const nowUnix = dayjs().unix()
           const list: any[] = []
-          const channelStatus: any[] = []
+          const channelStatus: Port.ChannelChangeItem[] = []
 
           readModel.ecahList('sampList', readItem => {
             const workerCode = readItem.readHex('workerCode')
@@ -400,7 +402,8 @@ export default class PortItem {
                     masterId,
                     slaverId: samp.slaverId,
                     channelId: samp.channelId,
-                    start: nowUnix
+                    start: nowUnix,
+                    end: null
                   })
                 } else {
                   channel.workerStart = null
@@ -416,11 +419,11 @@ export default class PortItem {
             }
           })
 
-          logger.info('存储redis', readModel.buf.toString('hex'))
+          // // logger.info('存储redis', readModel.buf.toString('hex'))
           await redisClient.setSamp(masterId, list)
           if (channelStatus.length > 0) {
-            await redisClient.channelSetStart(channelStatus)
-            ipcManage.commonMsg('updateChannelList')
+            // await redisClient.channelSetStart(channelStatus)
+            ipcManage.commonMsg('updateChannelList', channelStatus)
           }
 
           if (translate) {

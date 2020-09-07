@@ -83,7 +83,7 @@ export class RedisClient {
           throw item[0]
         }
       })
-      logger.info('redis存储成功')
+      // logger.info('redis存储成功')
     } catch (err) {
       logger.warn('redis存储失败', err)
     }

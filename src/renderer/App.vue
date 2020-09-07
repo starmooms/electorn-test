@@ -28,11 +28,12 @@ export default class App extends Vue {
   }
 
   mounted() {
-    ipcRenderer.on('commomMsg', (event, channel) => {
+    ChannelStatus.getList()
+    ipcRenderer.on('commomMsg', (event, channel, data) => {
       switch (channel) {
         case 'updateChannelList':
           // 更新通道列表
-          ChannelStatus.getList()
+          ChannelStatus.UPDATE_CHANNELLIST(data)
           break
         default:
           console.error(`${channel} undefined`)

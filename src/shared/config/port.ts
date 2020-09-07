@@ -122,10 +122,10 @@ export const ERR_STATUS = {
 
 // prettier-ignore
 export const CHANNEL_STATUS = {
-  '00': { name: '等待', status: 'null' },
+  '00': { name: '空置', status: 'vacant' },
   '01': { name: '保护', status: 'protect' },
   '02': { name: '停止', status: 'stop' },
-  '03': { name: '结束', status: 'end' },
+  '03': { name: '完成', status: 'end' },
   '04': { name: '暂停', status: 'pause' },
   '90': { name: '搁置', status: 'run' },
   'a0': { name: '恒流预充', status: 'run' },

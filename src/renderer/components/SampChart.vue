@@ -36,6 +36,7 @@ interface UpdateOpts {
 export default class SampChart extends Vue {
   @Prop({ type: Number, default: null }) channelId!: number
   @Prop({ type: String, default: 'default' }) size!: string
+  @Prop({ type: Boolean, default: true }) autoResize!: boolean
 
   public $refs!: {
     echart: ECharts
@@ -223,10 +224,10 @@ export default class SampChart extends Vue {
     this.setCharts(this.checkList(list))
   }
 
-  resize(opts: any) {
-    console.log(this.$refs)
-    console.log(this.$refs.echart?.chart?.resize)
-    this.$refs.echart?.resize(opts)
+  resize() {
+    setTimeout(() => {
+      this.setCharts(this.sampData)
+    }, 180)
   }
 
   @Watch('sampling')
@@ -248,10 +249,7 @@ export default class SampChart extends Vue {
 </script>
 
 <style lang="scss">
-.echart-box {
-  width: 100%;
-  height: 100%;
-}
+.echart-box,
 .echarts {
   width: 100%;
   height: 100%;

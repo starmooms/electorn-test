@@ -89,9 +89,9 @@ class IpcManage {
     }
   }
 
-  commonMsg(channel: string) {
+  commonMsg(channel: string, ...args: any[]) {
     winManager.winList.forEach(win => {
-      win.webContents.send('commomMsg', channel)
+      win.webContents.send('commomMsg', channel, ...args)
     })
   }
 }

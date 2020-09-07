@@ -58,102 +58,132 @@
                 </li>
               </ul>
               <div class="tab-pane-box">
-                <div class="pane-echart" v-show="tabActive === 0">
-                  <samp-chart
-                    v-if="channelId !== null"
-                    :channelId="channelId"
-                    ref="chart"
-                  ></samp-chart>
+                <div class="echart-box" v-show="tabActive === 0">
+                  <div class="pane-echart">
+                    <samp-chart
+                      v-if="channelId !== null"
+                      :channelId="channelId"
+                      ref="chart"
+                    ></samp-chart>
+                  </div>
+                </div>
+
+                <!-- 表格数据 -->
+                <div class="samp-data-tab" v-if="tabActive === 1">
+                  <div class="spam-head">
+                    <div class="spam-item">
+                      <div class="samp-w-box">
+                        <div class="spam-text date-r">日期</div>
+                        <div class="spam-text u-r">电压</div>
+                        <div class="spam-text i-r">电流</div>
+                        <div class="spam-text status-r">执行工步</div>
+                        <div class="spam-text workeId-r">工步ID</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    v-if="sampData.length === 0"
+                    style="text-align: center;padding:10px;"
+                  >
+                    暂无数据
+                  </div>
+                  <RecycleScroller
+                    v-else
+                    :items="sampData"
+                    class="spam-table"
+                    key-field="createTime"
+                    :item-size="32"
+                    ref="recycleScroller"
+                    @visible="scrollBottom"
+                  >
+                    <template v-slot="{ item, index }">
+                      <div class="spam-item" :class="{ even: index % 2 }">
+                        <div class="samp-w-box">
+                          <div class="spam-text date-r">
+                            <span>{{ item.createTimeStr }}</span>
+                          </div>
+                          <div class="spam-text u-r">{{ item.U }}</div>
+                          <div class="spam-text i-r">{{ item.I }}</div>
+                          <div class="spam-text status-r">
+                            {{ item.workerStatus.name }}
+                          </div>
+                          <div class="spam-text workeId-r">
+                            {{ item.workerId + 1 }}
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </RecycleScroller>
+                </div>
+
+                <!-- 工步查看 -->
+                <div class="steps-list" v-if="tabActive === 2">
+                  <el-table
+                    border
+                    max-height="40vh"
+                    :data="nowStepList"
+                    :row-class-name="stepsTableRow"
+                  >
+                    <el-table-column label="工步信息">
+                      <template slot-scope="{ row }">
+                        <span class="step-now-icon">
+                          <svg-icon icon-class="right"></svg-icon>
+                        </span>
+                        <span>{{ row.msg }}</span>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="工步工作条件">
+                      <template slot-scope="{ row }">
+                        <el-tag
+                          :disable-transitions="true"
+                          effect="dark"
+                          class="tag-item"
+                          v-for="item in row.worker"
+                          :key="item.label"
+                        >
+                          {{ item.label }}
+                        </el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="工步限制条件" prop="limt">
+                      <template slot-scope="{ row }">
+                        <el-tag
+                          effect="dark"
+                          class="tag-item"
+                          :disable-transitions="true"
+                          v-for="item in row.limt"
+                          :key="item.label"
+                        >
+                          {{ item.label }}
+                        </el-tag>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </div>
+
+                <!-- 保护参数 -->
+                <div class="protect-tab" v-if="tabActive === 3">
+                  <el-form
+                    class="protect-form"
+                    :model="protectForm"
+                    label-width="200px"
+                  >
+                    <el-form-item
+                      v-for="item in protectList"
+                      :key="item.index"
+                      :label="item.name"
+                    >
+                      <el-input
+                        v-model.number="protectForm[item.type]"
+                        :disabled="true"
+                      ></el-input>
+                    </el-form-item>
+                  </el-form>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <el-divider content-position="left">信息</el-divider>
-        <p v-if="portItem">
-          串口： {{ portItem.path }}
-          <br />
-          主控：{{ portItem.masterId + 1 }}
-          <br />
-          从控: {{ portItem.slaverId + 1 }}
-          <br />
-          通道: {{ portItem.channelId + 1 }}
-        </p>
-
-        <el-divider content-position="left">操作</el-divider>
-        <div>
-          <el-button
-            v-for="item in btnList"
-            :key="item.name"
-            @click="setStatus(item.action)"
-          >
-            {{ item.name }}
-          </el-button>
-          <el-button @click="calOpen">局部设置</el-button>
-          <el-button @click="workStepsOpen">编辑工步</el-button>
-        </div>
-
-        <title-box name="工步信息">
-          <p class="steps-now">当前工步：{{ workerIdNow + 1 }}</p>
-          <p class="steps-now">当前工步状态：{{ workerStatus }}</p>
-          <div class="steps-list">
-            <el-table border max-height="40vh" :data="nowStepList">
-              <el-table-column label="工步信息">
-                <template slot-scope="{ row }">
-                  <span class="step-now-icon">
-                    {{ row.id === workerIdNow ? '*' : '' }}
-                  </span>
-                  <span>{{ row.msg }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column label="工步工作条件">
-                <template slot-scope="{ row }">
-                  <el-tag
-                    :disable-transitions="true"
-                    effect="dark"
-                    class="tag-item"
-                    v-for="item in row.worker"
-                    :key="item.label"
-                  >
-                    {{ item.label }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="工步限制条件" prop="limt">
-                <template slot-scope="{ row }">
-                  <el-tag
-                    effect="dark"
-                    class="tag-item"
-                    :disable-transitions="true"
-                    v-for="item in row.limt"
-                    :key="item.label"
-                  >
-                    {{ item.label }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-        </title-box>
-
-        <title-box name="保护参数" style="width: 400px;">
-          <el-form
-            class="protect-form"
-            :model="protectForm"
-            label-width="200px"
-          >
-            <el-form-item
-              v-for="item in protectList"
-              :key="item.index"
-              :label="item.name"
-            >
-              <el-input
-                v-model.number="protectForm[item.type]"
-                :disabled="true"
-              ></el-input>
-            </el-form-item>
-          </el-form>
-        </title-box>
       </div>
     </el-tabs>
 
@@ -183,18 +213,21 @@ import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import dayjs from 'dayjs'
 import { getSamp } from '@/renderer/ipc/db'
 import { stepListUtil } from '@/renderer/utils/util'
+import { RecycleScroller } from 'vue-virtual-scroller'
 
 @Component({
   components: {
     SampChart,
     StepSetModal,
-    CalModal
+    CalModal,
+    RecycleScroller
   }
 })
 export default class WorkerSee extends Vue {
   public $refs!: {
     sampChart: SampChart
     chart: SampChart
+    recycleScroller: RecycleScroller
   }
 
   portItem: ipcReq.PortItem | null = null
@@ -213,7 +246,7 @@ export default class WorkerSee extends Vue {
   workerIdNow: number | null = null
   workerStatus: string | null = null
 
-  chartData!: Port.SampItem[]
+  sampData: Port.SampItem[] = []
 
   tabActive = 0
   tabList = ['1.曲线图', '2.详细数据', '3.工步查看', '4.保护参数']
@@ -236,14 +269,25 @@ export default class WorkerSee extends Vue {
 
   @Watch('tabActive')
   changeTabPan(v) {
-    if (v === 0) {
-      setInterval(() => {
-        if (this.$refs.chart) {
-          console.log(this.$refs.chart)
-          this.$refs.chart?.resize()
-        }
-      }, 2000)
+    this.$nextTick(() => {
+      if (v === 0 && this.$refs.chart) {
+        this.$refs.chart.resize()
+      }
+      console.log(this.$refs.recycleScroller)
+      if (v === 1 && this.$refs.recycleScroller) {
+        this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
+      }
+    })
+  }
+
+  scrollBottom() {
+    if (this.$refs.recycleScroller) {
+      this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
     }
+  }
+
+  stepsTableRow({ row }) {
+    return row.id === this.workerIdNow ? 'worker-row' : ''
   }
 
   changeChannelId(channelId: number) {
@@ -296,6 +340,7 @@ export default class WorkerSee extends Vue {
     if (!this.portItem) return
     this.sampStop = true
     this.$refs.chart.setBaseList([])
+    this.sampData = []
     this.nowStepList = []
     const { channelId } = this.portItem!
     const data = await getWorkStep({
@@ -338,7 +383,7 @@ export default class WorkerSee extends Vue {
       if (samp.status) {
         const sampData = samp.data?.[slaverId]?.[channelId]
         if (sampData) {
-          this.chartData = sampData
+          this.sampData = sampData
           if (this.$refs.chart) {
             this.$refs.chart.setBaseList(sampData)
           }
@@ -348,6 +393,26 @@ export default class WorkerSee extends Vue {
       console.error(err)
     } finally {
       this.sampStop = false
+    }
+  }
+
+  addSampData(data: Port.SampItem) {
+    this.sampData.push(data)
+    if (this.$refs.recycleScroller) {
+      const pool = this.$refs.recycleScroller.pool
+      if (pool.length > 2) {
+        const poolLast = pool[pool.length - 1]
+        const sampLast = this.sampData[this.sampData.length - 2]
+        if (
+          poolLast &&
+          sampLast &&
+          poolLast.item.createTime === sampLast.createTime
+        ) {
+          this.$nextTick(() => {
+            this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
+          })
+        }
+      }
     }
   }
 
@@ -366,10 +431,7 @@ export default class WorkerSee extends Vue {
           this.workerStatus = item.workerStatus.name
 
           if (item.workerCode !== '00') {
-            if (!this.chartData) {
-              this.chartData = []
-            }
-            this.chartData.push(item)
+            this.addSampData(item)
             this.$refs.chart.update([item])
           }
         }
@@ -412,7 +474,7 @@ export default class WorkerSee extends Vue {
   .channel-details {
     display: flex;
     .tab-l {
-      width: 200px;
+      flex: 0 0 200px;
       margin-right: 20px;
       align-content: top;
       .channel-msg-box {
@@ -436,7 +498,7 @@ export default class WorkerSee extends Vue {
       }
     }
     .tab-r {
-      flex: 1;
+      flex: 1 1 auto;
       .tab-nav-container {
         border: 1px solid #dcdfe6;
         box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12),
@@ -471,19 +533,84 @@ export default class WorkerSee extends Vue {
 
       .tab-pane-box {
         padding: 10px;
+
+        .pane-echart {
+          width: 100%;
+          height: 620px;
+          background-color: #f3f3f3;
+          border: 1px solid #ccc;
+        }
+
+        .steps-list {
+          .el-table ::v-deep {
+            .step-now-icon {
+              display: none;
+              color: #409eff;
+              margin-right: 4px;
+            }
+            .worker-row {
+              background: #f0f9eb;
+              .step-now-icon {
+                display: inline-block;
+              }
+            }
+          }
+        }
+
+        .samp-data-tab {
+          max-width: 600px;
+          border: 1px solid #dcdfe6;
+          .spam-item {
+            height: 32px;
+            line-height: 32px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #dcdfe6;
+            .samp-w-box {
+              display: flex;
+              .spam-text {
+                border-right: 1px solid #dcdfe6;
+                padding-left: 10px;
+                box-sizing: border-box;
+                &:last-child {
+                  border-right: none;
+                }
+              }
+              .date-r {
+                min-width: 200px;
+              }
+              .u-r,
+              .i-r,
+              .workeId-r {
+                min-width: 80px;
+              }
+              .status-r {
+                min-width: 140px;
+              }
+            }
+          }
+
+          .spam-table {
+            height: 60vh;
+            margin: 0;
+            width: 100%;
+            .even {
+              background-color: #f5f7fa;
+            }
+          }
+        }
       }
     }
   }
 }
 
-.echart-box {
+/* .echart-box {
   margin-top: 40px;
   width: 800px;
   min-width: 200px;
   height: 620px;
   background-color: #f3f3f3;
   border: 1px solid #ccc;
-}
+} */
 
 .protect-form {
   max-width: 800px;
@@ -494,8 +621,5 @@ export default class WorkerSee extends Vue {
 .steps-now {
   margin-top: 0;
   margin-bottom: 10px;
-}
-.step-now-icon {
-  color: red;
 }
 </style>

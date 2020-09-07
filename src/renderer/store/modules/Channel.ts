@@ -14,11 +14,11 @@ import { SettingStatus } from './Setting'
 
 config.rawError = true
 
-const listObj = deepClone(channelList)
+// const listObj = deepClone(channelList)
 
 @Module({ dynamic: true, store, name: 'channel' })
 export default class ChannelImpl extends VuexModule {
-  public list: Port.MasterList = listObj
+  public list: Port.MasterList | null = null
   public statusList = [
     { name: '开始', action: 'start' },
     { name: '暂停', action: 'pause' },
@@ -27,8 +27,28 @@ export default class ChannelImpl extends VuexModule {
     { name: '关闭', action: 'close' }
   ]
 
+  public workerStatus = {
+    vacant: '空置',
+    pause: '暂停',
+    stop: '停止',
+    end: '完成',
+    run: '运行',
+    protect: '保护',
+    error: '异常'
+  }
+
   @Mutation
-  UPDATE_CHANNELLIST(list: Port.MasterList) {
+  UPDATE_CHANNELLIST(list: Port.ChannelChangeItem[]) {
+    if (this.list) {
+      list.forEach(item => {
+        const channel = this.list![item.masterId].slaverList[item.slaverId].list[item.channelId] // eslint-disable-line
+        channel.workerStart = item.start
+      })
+    }
+  }
+
+  @Mutation
+  SET_CHANNELLIST(list: Port.MasterList) {
     this.list = list
   }
 
@@ -40,7 +60,7 @@ export default class ChannelImpl extends VuexModule {
         path: SettingStatus.portPath
       })
       if (data.status) {
-        this.context.commit('UPDATE_CHANNELLIST', data.data)
+        this.context.commit('SET_CHANNELLIST', data.data)
       }
     } catch (err) {
       console.error(err)

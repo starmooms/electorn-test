@@ -46,4 +46,13 @@ declare namespace Port {
     /**  */
     createTimeStr?: string
   }
+
+  /** 通道状态改变时触发 */
+  interface ChannelChangeItem {
+    masterId: number
+    slaverId: number
+    channelId: number
+    start: number | null
+    end: number | null
+  }
 }

@@ -32,6 +32,7 @@
             </title-box>
 
             <title-box name="操作" class="action-box">
+              <el-button @click="refresh" type="primary">刷新</el-button>
               <el-button
                 v-for="item in btnList"
                 :key="item.name"
@@ -264,7 +265,7 @@ export default class WorkerSee extends Vue {
   tabActive = 0
   tabList = ['1.曲线图', '2.详细数据', '3.工步查看', '4.保护参数']
 
-  history = null
+  history: any = null
   historyList = []
 
   get btnList() {
@@ -289,7 +290,6 @@ export default class WorkerSee extends Vue {
       if (v === 0 && this.$refs.chart) {
         this.$refs.chart.resize()
       }
-      console.log(this.$refs.recycleScroller)
       if (v === 1 && this.$refs.recycleScroller) {
         this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
       }
@@ -297,9 +297,8 @@ export default class WorkerSee extends Vue {
   }
 
   @Watch('history')
-  changeHistory(v) {
-    if (v) {
-    }
+  changeHistory() {
+    this.refresh()
   }
 
   scrollBottom() {
@@ -325,6 +324,12 @@ export default class WorkerSee extends Vue {
 
   nowStepShow() {
     this.nowStepDialog = true
+  }
+
+  refresh() {
+    if (this.history) {
+      this.getSampData(this.history.start, this.history.end)
+    }
   }
 
   async setStatus(status: string) {
@@ -364,6 +369,7 @@ export default class WorkerSee extends Vue {
     this.$refs.chart.setBaseList([])
     this.sampData = []
     this.nowStepList = []
+    this.history = null
     const { channelId } = this.portItem!
     const data = await getWorkStep({
       ...this.portItem,
@@ -375,17 +381,17 @@ export default class WorkerSee extends Vue {
         this.protectForm = protect
         this.nowStepList = stepList.map(stepListUtil)
       }
-      this.getSampData()
+      // this.getSampData()
     }
   }
 
   /** 获取采样 */
-  async getSampData() {
+  async getSampData(start: number, end: number) {
     try {
-      const start = dayjs()
-        .subtract(15, 'minute')
-        .unix()
-      const end = dayjs().unix()
+      // const start = dayjs()
+      //   .subtract(15, 'minute')
+      //   .unix()
+      // const end = dayjs().unix()
       const { masterId, slaverId, channelId } = this.portItem!
       const samp = await getSamp({
         start,
@@ -414,7 +420,7 @@ export default class WorkerSee extends Vue {
     } catch (err) {
       console.error(err)
     } finally {
-      this.sampStop = false
+      // this.sampStop = false
     }
   }
 

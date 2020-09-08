@@ -104,11 +104,11 @@ export default class PortItem {
     })
     port.on('error', err => {
       logger.warn('串口触发error', err)
-      port.flush()
+      // port.flush()
     })
     port.on('close', err => {
       logger.warn('串口触发close', err)
-      port.flush()
+      // port.flush()
     })
     this.port = port
     this.parser = parser
@@ -350,16 +350,17 @@ export default class PortItem {
             const d2 = testKey % 300 === 0 ? '00' : '01'
             const g = String(t)
             testKey += 1
-            const a = `0000080000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0${g}0000000${g}000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000` // eslint-disable-line
+            //const a = `0000080000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0${g}0000000${g}000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000` // eslint-disable-line
+            const a = `000008000002000c220000000000000001000000080000000a0000000202000d8dfffffffe00000003000000020000000000000004000000020000000e00000005000000010000000100000006000000020000001900000007000000020000001d0000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
-            // logger.info('读采样发送', writeModel.buf.toString('hex'))
+            logger.info('读采样发送', writeModel.buf.toString('hex'))
             resultBuf = await this.post({
               code: controlCode.master.translateRead,
               data: writeModel.buf,
               masterId
             })
-            // logger.info('读采样返回', resultBuf.toString('hex'))
+            logger.info('读采样返回', resultBuf.toString('hex'))
           }
 
           const readModel = new BufWriteModel2({

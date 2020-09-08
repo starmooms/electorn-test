@@ -25,10 +25,12 @@
                 <span>{{ portItem.channelId + 1 }}</span>
               </div>
             </title-box>
+
             <title-box name="当前工步信息">
               <p class="steps-now">当前工步：{{ workerIdNow + 1 }}</p>
               <p class="steps-now">当前工步状态：{{ workerStatus }}</p>
             </title-box>
+
             <title-box name="操作" class="action-box">
               <el-button
                 v-for="item in btnList"
@@ -42,6 +44,17 @@
               <el-button @click="workStepsOpen" type="primary">
                 编辑工步
               </el-button>
+            </title-box>
+
+            <title-box name="查看历史数据">
+              <el-select v-model="history" placeholder="请选择">
+                <el-option
+                  v-for="item in historyList"
+                  :key="item.value"
+                  :label="item.value"
+                  :value="item"
+                ></el-option>
+              </el-select>
             </title-box>
           </div>
           <div class="tab-r">
@@ -211,8 +224,8 @@ import { deepClone } from '@/shared/utils'
 import { GET_PROTECT_FORM, PROTECT } from '@/shared/config/port'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import dayjs from 'dayjs'
-import { getSamp } from '@/renderer/ipc/db'
-import { stepListUtil } from '@/renderer/utils/util'
+import { getChannelHistory, getSamp } from '@/renderer/ipc/db'
+import { formatTimeStr, stepListUtil } from '@/renderer/utils/util'
 import { RecycleScroller } from 'vue-virtual-scroller'
 
 @Component({
@@ -251,6 +264,9 @@ export default class WorkerSee extends Vue {
   tabActive = 0
   tabList = ['1.曲线图', '2.详细数据', '3.工步查看', '4.保护参数']
 
+  history = null
+  historyList = []
+
   get btnList() {
     return ChannelStatus.statusList
   }
@@ -278,6 +294,12 @@ export default class WorkerSee extends Vue {
         this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
       }
     })
+  }
+
+  @Watch('history')
+  changeHistory(v) {
+    if (v) {
+    }
   }
 
   scrollBottom() {
@@ -416,6 +438,26 @@ export default class WorkerSee extends Vue {
     }
   }
 
+  /** 获取历史数据 */
+  async getHistory() {
+    const data = await getChannelHistory({
+      masterId: this.portItem!.masterId,
+      slaverId: this.portItem!.slaverId,
+      channelId: this.portItem!.channelId
+    })
+    if (data.status) {
+      this.historyList = data.data.map(item => {
+        const val = JSON.parse(item)
+        const start = dayjs.unix(val.start).format(formatTimeStr)
+        const end = val.end
+          ? dayjs.unix(val.end).format(formatTimeStr)
+          : '未知结束'
+        val.value = `${start} - ${end}`
+        return val
+      })
+    }
+  }
+
   setCharts() {
     if (!this.portItem) return
     const { path, masterId, slaverId } = this.portItem
@@ -440,6 +482,11 @@ export default class WorkerSee extends Vue {
     })
   }
 
+  init() {
+    this.getWorkStep()
+    this.getHistory()
+  }
+
   mounted() {
     this.portItem = {
       path: this.$route.params.path,
@@ -450,13 +497,13 @@ export default class WorkerSee extends Vue {
     this.tabChannel = this.$route.params.channelId
     this.getList()
     this.$nextTick(() => {
-      this.getWorkStep()
+      this.init()
       this.setCharts()
     })
   }
 
   beforeRouteUpdate(to: Route, from: Route, next: Function) {
-    this.getWorkStep()
+    this.init()
     next()
   }
 }

@@ -41,3 +41,23 @@ export function merge<T, S>(source1: T, source2: S): T & S {
   })
   return targetObj
 }
+
+/**
+ *
+ * @param val 设置对象的内容
+ * @param keys 要设置对象的路径索引
+ * @param target 源对象
+ */
+export function setDeep(val: any, keys: string[] | number[], target = {}) {
+  let setTarget = target
+  if (keys.length >= 2) {
+    for (let i = 0; i < keys.length - 1; i++) {
+      if (!setTarget[keys[i]]) {
+        setTarget[keys[i]] = {}
+      }
+      setTarget = setTarget[keys[i]]
+    }
+  }
+  setTarget[keys[keys.length - 1]] = val
+  return target
+}

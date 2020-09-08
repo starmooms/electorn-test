@@ -19,7 +19,7 @@ import { Promise as Bluebird } from 'bluebird'
 
 import winManager from './WinManager'
 import ipcManage from './IpcManage'
-import is from 'electron-is'
+import is, { mas } from 'electron-is'
 import { typedKeys } from '@/shared/utils'
 import { RedisClient } from './redis/RedisClient'
 import dayjs from 'dayjs'
@@ -77,7 +77,6 @@ export default class PortItem {
   constructor(path: string) {
     this.path = path
     this.created(path)
-    this.channelList = channelList
   }
 
   created(path: string) {
@@ -331,6 +330,7 @@ export default class PortItem {
       samp.winArr.add('mainWin')
     }
     let timer: NodeJS.Timeout
+    let testKey = 0
     const getData = () => {
       timer = setTimeout(async () => {
         const translate = this.translate.get(masterId)
@@ -347,9 +347,10 @@ export default class PortItem {
             let t = Math.floor(Math.random() * 10)
             if (t >= 10) t = 0
             const d = t >= 5 ? '01' : '02'
-            const d2 = t >= 6 ? '00' : '01'
+            const d2 = testKey % 300 === 0 ? '00' : '01'
             const g = String(t)
-            const a = `0000080000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0000000000000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000` // eslint-disable-line
+            testKey += 1
+            const a = `0000080000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0${g}0000000${g}000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
             // logger.info('读采样发送', writeModel.buf.toString('hex'))
@@ -391,12 +392,19 @@ export default class PortItem {
             const lastSamp = channel.samp // eslint-disable-line
             channel.samp = samp
 
-            if (lastSamp.workerCode !== samp.workerCode) {
+            if (!lastSamp || lastSamp.workerCode !== samp.workerCode) {
               // 判断是否启动、或结束过度
-              const lastStatus = CHANNEL_STATUS_END.includes(lastSamp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
+              let lastStatus = ''
+              if (lastSamp) {
+                lastStatus = CHANNEL_STATUS_END.includes(lastSamp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
+              } else {
+                // 不存在上次采样说明为刚启动时， 通过判断是否有启动时刻，来判断运行状态
+                lastStatus = channel.workerStart ? 'RUN' : 'END'
+              }
               const nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
+
               if (lastStatus !== nowStatus) {
-                if (lastStatus === 'RUN') {
+                if (nowStatus === 'RUN') {
                   channel.workerStart = nowUnix
                   channelStatus.push({
                     masterId,
@@ -406,7 +414,6 @@ export default class PortItem {
                     end: null
                   })
                 } else {
-                  channel.workerStart = null
                   channelStatus.push({
                     masterId,
                     slaverId: samp.slaverId,
@@ -414,6 +421,7 @@ export default class PortItem {
                     start: channel.workerStart,
                     end: nowUnix
                   })
+                  channel.workerStart = null
                 }
               }
             }
@@ -422,7 +430,7 @@ export default class PortItem {
           // // logger.info('存储redis', readModel.buf.toString('hex'))
           await redisClient.setSamp(masterId, list)
           if (channelStatus.length > 0) {
-            // await redisClient.channelSetStart(channelStatus)
+            await redisClient.channelSetStart(this.port.path, channelStatus)
             ipcManage.commonMsg('updateChannelList', channelStatus)
           }
 
@@ -554,11 +562,38 @@ export default class PortItem {
     return { list }
   }
 
+  /** 创建通道列表 */
+  async initChannelStatusList() {
+    if (this.channelList) {
+      return this.channelList
+    }
+    const redisClient = RedisClient.getInstance()
+    this.channelList = channelList
+    const channelStatus = await redisClient.getChannelList(this.port.path)
+    Object.entries(channelStatus).forEach(([mKey, masterItem]) => {
+      const master = this.channelList[mKey]
+
+      Object.entries(masterItem).forEach(([sKey, slaverItem]) => {
+        const slaver = master.slaverList[sKey]
+
+        Object.entries(slaverItem).forEach(([cKey, channelItem]) => {
+          if (channelItem.start && !channelItem.end) {
+            const channel = slaver.list[cKey]
+            channel.workerStart = channelItem.start
+          }
+        })
+      })
+    })
+
+    return this.channelList
+  }
+
   /** 获取列表 */
   async getChannelList(opts: any) {
+    const channelList = await this.initChannelStatusList()
     if (opts.type) {
       const { masterId, slaverId } = opts
-      const masterList = this.channelList[`${masterId}`]
+      const masterList = channelList[`${masterId}`]
       if (!masterList) {
         throw new Error(`不存在主控 ${masterId}`)
       }
@@ -568,7 +603,7 @@ export default class PortItem {
       }
       return slaverList
     }
-    return this.channelList
+    return channelList
   }
 
   /** 设置状态 */

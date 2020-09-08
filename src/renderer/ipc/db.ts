@@ -1,7 +1,7 @@
 import $command from '@/renderer/command'
 import { SettingStatus } from '../store/modules/Setting'
 
-export async function mode<T>(channel: string, ...args: any[]) {
+export async function mode<T = any>(channel: string, ...args: any[]) {
   const path = SettingStatus.portPath
   if (!SettingStatus.portPath) {
     const msg = '请先设置串口'
@@ -13,4 +13,8 @@ export async function mode<T>(channel: string, ...args: any[]) {
 
 export async function getSamp(data: any) {
   return mode<ipcReq.SampReadDB>('/db/getSamp', data)
+}
+
+export async function getChannelHistory(data: any) {
+  return mode('/db/history', data)
 }

@@ -2,16 +2,35 @@ import Redis from 'ioredis'
 import dayjs from 'dayjs'
 import logger from '../Logger'
 import ipcManage from '../IpcManage'
+import _merge from 'lodash/merge'
+import configManage from '../ConfigManage'
+import { setDeep } from '@/shared/utils'
+import { resolve } from 'bluebird'
+import { pipeline } from 'serialport'
 
 interface SetTranslateOpts {
   masterId: number
   slaverId: number
 }
 
+interface ChannelStatusList {
+  [key: string]: {
+    [key: string]: {
+      [key: string]: {
+        start: number | null
+        end: number | null
+      }
+    }
+  }
+}
+
 export class RedisClient {
   private static _instance: RedisClient | null = null
   redis!: Redis.Redis
   errorIsSend = false
+  channelList: any = {}
+  waitRedisRes: any
+  redisIsReady = false
 
   constructor() {
     this.init()
@@ -27,6 +46,9 @@ export class RedisClient {
   init() {
     ipcManage.handle('/db/getSamp', async (event, path: string, data: any) => {
       return await this.getSamp(data)
+    })
+    ipcManage.handle('/db/history', async (event, path: string, data: any) => {
+      return await this.channelGetStartList(path, data)
     })
   }
 
@@ -46,11 +68,24 @@ export class RedisClient {
     this.redis.on('ready', err => {
       logger.info('RedisClient Ready', err)
       this.errorIsSend = false
+      this.redisIsReady = true
+      if (this.waitRedisRes) {
+        this.waitRedisRes()
+      }
     })
     // this.redis.on('close', err => {
     //   logger.info('RedisClient Close', err)
     //   this.errorIsSend = false
     // })
+  }
+
+  async waitRedisInit() {
+    if (this.redisIsReady) {
+      return true
+    }
+    return new Promise((resolve, reject) => {
+      this.waitRedisRes = resolve
+    })
   }
 
   async close() {
@@ -61,6 +96,34 @@ export class RedisClient {
       } catch (err) {
         logger.error('RedisClient Close Error', err)
       }
+    }
+  }
+
+  async getChannelList(path: string): Promise<ChannelStatusList> {
+    await this.waitRedisInit()
+    let channelList = this.channelList[path]
+    if (!channelList) {
+      const data = await this.redis.get(`${path}_channel_status`)
+      if (!data) {
+        this.channelList[path] = {}
+      } else {
+        this.channelList[path] = JSON.parse(data)
+      }
+      channelList = this.channelList[path]
+    }
+    return channelList
+  }
+
+  async setChannelList(path: string, newList: any) {
+    try {
+      const channelList = await this.getChannelList(path)
+      this.channelList[path] = _merge(channelList, newList)
+      await this.redis.set(
+        `${path}_channel_status`,
+        JSON.stringify(this.channelList[path])
+      )
+    } catch (err) {
+      logger.error('RedisClint 通道记录当前启动时刻失败', err)
     }
   }
 
@@ -144,23 +207,55 @@ export class RedisClient {
     return slaverList
   }
 
-  async channelSetStart(channelStartList: any[]) {
+  async channelSetStart(portPath: string, channelStartList: any[]) {
     const pipeline = this.redis.pipeline()
+    const newChannelList = {}
     channelStartList.forEach(item => {
-      pipeline.lpush(
-        `status_${item.masterId}_${item.slaverId}_${item.channelId}`,
-        JSON.stringify({
+      const { masterId, slaverId, channelId } = item
+      const time = {
+        start: item.start,
+        end: item.end || null
+      }
+
+      if (time.start && time.end) {
+        const startTime = {
           start: item.start,
-          end: item.end || null
-        })
+          end: null
+        }
+        pipeline.lrem(
+          `${portPath}_status_${masterId}_${slaverId}_${channelId}`,
+          1,
+          JSON.stringify(startTime)
+        )
+      }
+
+      pipeline.lpush(
+        `${portPath}_status_${masterId}_${slaverId}_${channelId}`,
+        JSON.stringify(time)
       )
+      setDeep(time, [masterId, slaverId, channelId], newChannelList)
     })
-    const result = await pipeline.exec()
+
+    const [result, setNewChannel] = await Promise.all([
+      pipeline.exec(),
+      this.setChannelList(portPath, newChannelList)
+    ])
+
     result.forEach(([err]) => {
       if (err) {
         throw err
       }
     })
+  }
+
+  async channelGetStartList(portPath: string, params: any) {
+    const { masterId, slaverId, channelId } = params
+    const data = await this.redis.lrange(
+      `${portPath}_status_${masterId}_${slaverId}_${channelId}`,
+      0,
+      -1
+    )
+    return data
   }
 }
 

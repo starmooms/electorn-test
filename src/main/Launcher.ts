@@ -131,7 +131,7 @@ export default class Launcher {
     })
   }
 
-  beforeWin() {
+  async beforeWin() {
     const menu = new MenuManager()
     menu.on('updateCheck', () => {
       if (this.updateManager) {
@@ -157,20 +157,18 @@ export default class Launcher {
           throw new Error(`${data.type} win no defined`)
       }
     })
+
+    this.redisServer = RedisServer.getInstance()
+    this.redisServer.start().finally(() => {
+      redisClient.initRedis()
+    })
   }
 
   afterWin() {
-    this.redisServer = RedisServer.getInstance()
-    this.redisServer
-      .start()
-      .then(() => {
-        // setInterval(() => {
-        //   redisClient.redis.set(Date.now().toString(), 'bb')
-        // }, 1000)
-      })
-      .finally(() => {
-        redisClient.initRedis()
-      })
+    // this.redisServer = RedisServer.getInstance()
+    // this.redisServer.start().finally(() => {
+    //   redisClient.initRedis()
+    // })
   }
 
   async destoryWin(destroy = true) {

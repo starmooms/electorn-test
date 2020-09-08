@@ -23,7 +23,7 @@ declare namespace ipcReq {
     err?: any
   }
 
-  type Response<T> =
+  type Response<T = any> =
     | {
         status: true
         data: T
@@ -36,4 +36,11 @@ declare namespace ipcReq {
       [key: string]: Port.SampItem[]
     }
   }
+
+  // /** redis存储历史 */
+  // interface ChannelHistory {
+  //   [key: string]: {
+
+  //   }
+  // }
 }

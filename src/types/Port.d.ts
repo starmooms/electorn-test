@@ -6,7 +6,7 @@ declare namespace Port {
   interface ChannelItem {
     id: number
     name: string
-    samp: any
+    samp: null | SampItem
     workerStart: number | null
     workerEnd: number | null
   }

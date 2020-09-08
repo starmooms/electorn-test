@@ -152,9 +152,7 @@ for (let i = 0; i < 20; i++) {
     for (let k = 0; k < 8; k++) {
       obj[k] = {
         id: k,
-        samp: {
-          workerCode: '00'
-        },
+        samp: null,
         workerStart: null,
         workerEnd: null
       }

@@ -5,7 +5,6 @@ import is from 'electron-is'
 import logger from '@/main/core/Logger'
 import forever from 'forever-monitor'
 import { exec } from 'child_process'
-import configManage from '../ConfigManage'
 
 export default class RedisServer {
   private static _instance: RedisServer | null = null

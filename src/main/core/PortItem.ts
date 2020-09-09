@@ -1,5 +1,5 @@
 import SerialPort from 'serialport'
-import agreement from './Agreement'
+import agreement, { ReadResult } from './Agreement'
 import logger from './Logger'
 import {
   workStepsInput,
@@ -10,9 +10,10 @@ import {
   PROTECT,
   WORKSTEPS_TYPE_MAP,
   WORKSTEPSINPUT,
-  ERR_STATUS,
+  CHANNEL_ERR_STATUS,
   CHANNEL_STATUS,
-  CHANNEL_STATUS_END
+  CHANNEL_STATUS_END,
+  ERROR_STATUS
 } from '@/shared/config/port'
 import { BufWriteModel as BufWriteModel2 } from '../utils/bufModel'
 import { Promise as Bluebird } from 'bluebird'
@@ -70,7 +71,7 @@ export default class PortItem {
   parser!: TransfromParser
   sampIsRead = false
   translate = new Map<number, MasterTranslate>()
-  emitList = new Map<string, (dataBuf: Buffer) => any>()
+  emitList = new Map<string, (result: ReadResult) => any>()
   channelList!: Port.MasterList
   noWorkerStatus = { name: '未知工作状态', status: 'error' }
 
@@ -93,7 +94,7 @@ export default class PortItem {
       const result = agreement.readData(buf)
       if (this.emitList.has(result.sId)) {
         const fun = this.emitList.get(result.sId)
-        if (fun) fun(result.buf)
+        if (fun) fun(result)
         this.emitList.delete(result.sId)
         return
       }
@@ -104,15 +105,12 @@ export default class PortItem {
     })
     port.on('error', err => {
       logger.warn('串口触发error', err)
-      // port.flush()
     })
     port.on('close', err => {
       logger.warn('串口触发close', err)
-      // port.flush()
     })
     this.port = port
     this.parser = parser
-    // this.masterMode = new MasterMode(this)
     return
   }
 
@@ -143,12 +141,16 @@ export default class PortItem {
       const sId = agrData.sId
       const setError = (msg: string) => {
         this.emitList.delete(sId)
-        reject(new Error('POST Error:' + msg))
+        reject(new Error(`${this.port.path} POST Error：` + msg))
         this.checkOpen()
         clearTimeout(timer)
       }
 
-      this.emitList.set(sId, buf => {
+      this.emitList.set(sId, ({ errCode, buf }) => {
+        if (errCode !== '00') {
+          setError(`Error_Code ${ERROR_STATUS[errCode]}`)
+          return
+        }
         resolve(buf)
         clearTimeout(timer)
       })
@@ -156,7 +158,7 @@ export default class PortItem {
       const status = this.port.write(agrData.buf, err => {
         if (err) {
           logger.error(err)
-          setError(`Writer Error ${err.message}`)
+          setError(`Writer_Error ${err.message}`)
         }
       })
       logger.info('write Status', status)
@@ -350,7 +352,7 @@ export default class PortItem {
             const d2 = testKey % 300 === 0 ? '00' : '01'
             const g = String(t)
             testKey += 1
-            const a = `0000080000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0${g}0000000${g}000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000` // eslint-disable-line
+            const a = `000008000000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0${g}0000000${g}000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000` // eslint-disable-line
             // const a = `000008000002000c220000000000000001000000080000000a0000000202000d8dfffffffe00000003000000020000000000000004000000020000000e00000005000000010000000100000006000000020000001900000007000000020000001d0000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
@@ -384,7 +386,7 @@ export default class PortItem {
               I: readItem.read('I'),
               endStatus: readItem.read('endCode'),
               errorCode: errCode,
-              errorMsg: errCode !== '00' ? ERR_STATUS[errCode] : '',
+              errorMsg: errCode !== '00' ? CHANNEL_ERR_STATUS[errCode] : '',
               workerStatus: CHANNEL_STATUS[workerCode] || this.noWorkerStatus,
               createTime: nowUnix
             }
@@ -428,12 +430,28 @@ export default class PortItem {
             }
           })
 
+          const errorList: Port.SampErrorItem[] = []
+          readModel.ecahList('errorList', readItem => {
+            const errCode = readItem.readHex('errCode')
+            errorList.push({
+              masterId: readItem.read('masterId'),
+              slaverId: readItem.read('slaverId'),
+              channelId: readItem.read('channelId'),
+              errCode,
+              params1: readItem.readHex('params1'),
+              params2: readItem.readHex('params2'),
+              errorMsg: ERROR_STATUS[errCode]
+            })
+          })
+
           // // logger.info('存储redis', readModel.buf.toString('hex'))
           await redisClient.setSamp(masterId, list)
           if (channelStatus.length > 0) {
             await redisClient.channelSetStart(this.port.path, channelStatus)
             ipcManage.commonMsg('updateChannelList', channelStatus)
           }
+
+          // if(errorList.length > 0){}
 
           if (translate) {
             const winArr = translate.winArr

@@ -55,4 +55,15 @@ declare namespace Port {
     start: number | null
     end: number | null
   }
+
+  /** 采样错误列表 */
+  interface SampErrorItem {
+    masterId: number
+    slaverId: number
+    channelId: number
+    errCode: string
+    params1: string
+    params2: string
+    errorMsg: string
+  }
 }

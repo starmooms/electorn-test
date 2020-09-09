@@ -122,6 +122,7 @@ export const SAMP_MODEL: Model[] = [
   { name: 'version', bytLen: 1 },
   { name: 'masterId', bytLen: 1 },
   { name: 'sampLen', bytLen: 1 },
+  { name: 'errorLen', bytLen: 1 },
   {
     name: 'sampList',
     type: 'list',
@@ -135,6 +136,19 @@ export const SAMP_MODEL: Model[] = [
       { name: 'I', bytLen: 4, type: 'int' },
       { name: 'endCode', bytLen: 1 },
       { name: 'errCode', bytLen: 1 }
+    ]
+  },
+  {
+    name: 'errorList',
+    type: 'list',
+    len: 'errorLen',
+    model: [
+      { name: 'masterId', bytLen: 1 },
+      { name: 'slaverId', bytLen: 1 },
+      { name: 'channelId', bytLen: 1 },
+      { name: 'errCode', bytLen: 1 },
+      { name: 'params1', bytLen: 4 },
+      { name: 'params2', bytLen: 4 }
     ]
   }
 ]

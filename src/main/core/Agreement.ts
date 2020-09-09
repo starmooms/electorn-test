@@ -1,6 +1,6 @@
 import { toHex, FixZero } from '../utils'
 
-export type ReadDataBack = ReturnType<Agreement['readData']>
+export type ReadResult = ReturnType<Agreement['readData']>
 export type SetDataBack = ReturnType<Agreement['setData']>
 export interface CreateData {
   data?: Buffer | string
@@ -147,7 +147,8 @@ class Agreement {
     // logger.info('流水号', toHex(buf.readUInt16BE(8), 2))
     return {
       buf: buf.slice(dataStart, dataEndLen),
-      sId: toHex(buf.readUInt16BE(8), 2)
+      sId: toHex(buf.readUInt16BE(8), 2),
+      errCode: toHex(buf.readInt8(7), 1)
     }
   }
 }

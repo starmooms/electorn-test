@@ -149,7 +149,7 @@ export default class ChannelItem extends Vue {
     return {
       masterId: this.masterId,
       slaverId: this.slaverId,
-      channel: this.id
+      channelId: this.id
     }
   }
 

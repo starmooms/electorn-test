@@ -56,14 +56,30 @@ declare namespace Port {
     end: number | null
   }
 
+  interface BaseError {
+    errCode: string
+    errMsg: string
+    createTime: number
+    createTimeStr?: number
+  }
+
   /** 采样错误列表 */
-  interface SampErrorItem {
+  interface SampErrorItem extends BaseError {
     masterId: number
     slaverId: number
     channelId: number
-    errCode: string
     params1: string
     params2: string
-    errorMsg: string
+    type: 'SampError'
   }
+
+  /** 通讯错误列表 */
+  interface PostError extends BaseError {
+    postBuf: string
+    backBuf: string
+    type: 'PostError'
+  }
+
+  type SaveErrorItem = SampErrorItem | PostError
+  type SaveError = SaveErrorItem[]
 }

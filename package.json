@@ -2,7 +2,7 @@
   "name": "upper-computer",
   "author": "GXM",
   "description": "upper computer for battery detection",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "private": true,
   "engines": {
     "node": ">=12.18.2"

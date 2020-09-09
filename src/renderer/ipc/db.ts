@@ -18,3 +18,7 @@ export async function getSamp(data: any) {
 export async function getChannelHistory(data: any) {
   return mode('/db/history', data)
 }
+
+export async function getErrorLog() {
+  return $command.invoke<Port.SaveError>('/db/errorLog')
+}

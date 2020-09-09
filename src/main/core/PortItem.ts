@@ -22,7 +22,7 @@ import winManager from './WinManager'
 import ipcManage from './IpcManage'
 import is, { mas } from 'electron-is'
 import { typedKeys } from '@/shared/utils'
-import { RedisClient } from './redis/RedisClient'
+import redisClient, { RedisClient } from './redis/RedisClient'
 import dayjs from 'dayjs'
 import TransfromParser from '../utils/transfromParser'
 import {
@@ -129,7 +129,6 @@ export default class PortItem {
   /** 串口通讯 */
   post({ timeout, data, masterId, code }: PostOpts): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      let timer: NodeJS.Timeout // eslint-disable-line
       const agrData = agreement.createData({
         slaverId: 0xff,
         type: 0x02,
@@ -137,7 +136,7 @@ export default class PortItem {
         code,
         data
       })
-
+      let timer: NodeJS.Timeout // eslint-disable-line
       const sId = agrData.sId
       const setError = (msg: string) => {
         this.emitList.delete(sId)
@@ -146,9 +145,20 @@ export default class PortItem {
         clearTimeout(timer)
       }
 
-      this.emitList.set(sId, ({ errCode, buf }) => {
+      this.emitList.set(sId, ({ errCode, buf, originBuf }) => {
         if (errCode !== '00') {
-          setError(`Error_Code ${ERROR_STATUS[errCode]}`)
+          const errMsg = ERROR_STATUS[errCode]
+          redisClient.saveError([
+            {
+              postBuf: agrData.buf.toString('hex'),
+              backBuf: originBuf.toString('hex'),
+              errCode,
+              errMsg,
+              createTime: dayjs().valueOf(),
+              type: 'PostError'
+            }
+          ])
+          setError(`Error_Code ${errMsg}`)
           return
         }
         resolve(buf)
@@ -308,7 +318,6 @@ export default class PortItem {
   /** 读采样 */
   readTranslate() {
     if (this.sampIsRead) return
-    const redisClient = RedisClient.getInstance()
     const masterId = 0
     const slaverId = 0
 
@@ -352,7 +361,7 @@ export default class PortItem {
             const d2 = testKey % 300 === 0 ? '00' : '01'
             const g = String(t)
             testKey += 1
-            const a = `000008000000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0${g}0000000${g}000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000` // eslint-disable-line
+            const a = `000008010000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0${g}0000000${g}000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000000100010000000000000000` // eslint-disable-line
             // const a = `000008000002000c220000000000000001000000080000000a0000000202000d8dfffffffe00000003000000020000000000000004000000020000000e00000005000000010000000100000006000000020000001900000007000000020000001d0000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
@@ -371,6 +380,7 @@ export default class PortItem {
           })
 
           const nowUnix = dayjs().unix()
+          const nowTime = dayjs().valueOf()
           const list: any[] = []
           const channelStatus: Port.ChannelChangeItem[] = []
 
@@ -440,7 +450,9 @@ export default class PortItem {
               errCode,
               params1: readItem.readHex('params1'),
               params2: readItem.readHex('params2'),
-              errorMsg: ERROR_STATUS[errCode]
+              createTime: nowTime,
+              type: 'SampError',
+              errMsg: ERROR_STATUS[errCode]
             })
           })
 
@@ -451,7 +463,9 @@ export default class PortItem {
             ipcManage.commonMsg('updateChannelList', channelStatus)
           }
 
-          // if(errorList.length > 0){}
+          if (errorList.length > 0) {
+            redisClient.saveError(errorList)
+          }
 
           if (translate) {
             const winArr = translate.winArr
@@ -586,7 +600,6 @@ export default class PortItem {
     if (this.channelList) {
       return this.channelList
     }
-    const redisClient = RedisClient.getInstance()
     this.channelList = channelList
     const channelStatus = await redisClient.getChannelList(this.port.path)
     Object.entries(channelStatus).forEach(([mKey, masterItem]) => {

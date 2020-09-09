@@ -20,6 +20,11 @@ const routes: Array<RouteConfig> = [
         path: '/setting',
         name: 'setting',
         component: () => import('@/renderer/views/Setting/index.vue')
+      },
+      {
+        path: '/errorLog',
+        name: 'errorLog',
+        component: () => import('@/renderer/views/ErrorLog/index.vue')
       }
     ]
   },

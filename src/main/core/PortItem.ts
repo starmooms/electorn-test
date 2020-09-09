@@ -632,8 +632,7 @@ export default class PortItem {
       throw new Error(`${data.status} Error`)
     }
     const slaverIds = data.slaverId
-    const channelIds = data.slaverId
-    const setStartList: any[] = []
+    const channelIds = data.channelId
     const writerModel = new BufWriteModel2({
       model: data.status === 'start' ? WORKER_START_MODEL : WORKER_SATUS_MODEL
     })

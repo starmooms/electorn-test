@@ -33,6 +33,7 @@ import {
   CAL_MODEL,
   COMMON_READ
 } from '@/shared/model'
+import NotifyUtil from '../utils/notifyUtil'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -75,6 +76,11 @@ export default class PortItem {
   channelList!: Port.MasterList
   noWorkerStatus = { name: '未知工作状态', status: 'error' }
 
+  // ipcNotify 控制
+  closeNotify = new NotifyUtil()
+  errorNotify = new NotifyUtil()
+  openErrNotify = new NotifyUtil()
+
   constructor(path: string) {
     this.path = path
     this.created(path)
@@ -91,6 +97,8 @@ export default class PortItem {
     port.pipe(parser)
     parser.on('data', buf => {
       logger.info('串口返回数据', buf.toString('hex'))
+      this.errorNotify.notify()
+
       const result = agreement.readData(buf)
       if (this.emitList.has(result.sId)) {
         const fun = this.emitList.get(result.sId)
@@ -100,14 +108,21 @@ export default class PortItem {
       }
       logger.warn(`流水号回调${result.sId} 不存在`)
     })
+
     port.on('open', data => {
       logger.info('串口触发open', data)
+      this.openErrNotify.notify()
+      this.closeNotify.notify(`${this.path} 重连成功`)
     })
+
     port.on('error', err => {
       logger.warn('串口触发error', err)
+      this.errorNotify.error(`${this.path} ${err.message}`)
     })
+
     port.on('close', err => {
       logger.warn('串口触发close', err)
+      this.closeNotify.error(`${this.path} 连接断开`)
     })
     this.port = port
     this.parser = parser
@@ -121,6 +136,7 @@ export default class PortItem {
       this.port.open(err => {
         if (err) {
           logger.error(`${path} open Error`, err)
+          this.openErrNotify.error(`${this.path}重连失败${err.message}`)
         }
       })
     }

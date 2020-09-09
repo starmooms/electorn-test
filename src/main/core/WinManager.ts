@@ -49,7 +49,7 @@ class WinManager {
       height: 600,
       // backgroundColor: '#2e2c29',
       webPreferences: {
-        backgroundThrottling: false,
+        // backgroundThrottling: false,
         nodeIntegration: (process.env
           .ELECTRON_NODE_INTEGRATION as unknown) as boolean
       },

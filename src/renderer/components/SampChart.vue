@@ -224,6 +224,15 @@ export default class SampChart extends Vue {
     this.setCharts(this.checkList(list))
   }
 
+  refresh(data) {
+    this.sampData = data
+    this.$refs.echart.mergeOptions({
+      dataset: {
+        source: this.sampData
+      }
+    })
+  }
+
   resize() {
     setTimeout(() => {
       this.setCharts(this.sampData)

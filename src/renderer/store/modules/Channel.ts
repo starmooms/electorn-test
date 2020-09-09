@@ -8,7 +8,7 @@ import {
 } from 'vuex-module-decorators'
 import store from '@/renderer/store'
 import { channelList } from '@/shared/config/port'
-import { deepClone } from '@/shared/utils'
+import { deepClone, setDeep } from '@/shared/utils'
 import { getChannelList } from '@/renderer/ipc/channel'
 import { SettingStatus } from './Setting'
 
@@ -16,9 +16,18 @@ config.rawError = true
 
 // const listObj = deepClone(channelList)
 
+interface ChannelMap {
+  [key: string]: {
+    [key: string]: {
+      [key: string]: Port.ChannelItem
+    }
+  }
+}
+
 @Module({ dynamic: true, store, name: 'channel' })
 export default class ChannelImpl extends VuexModule {
   public list: Port.MasterList | null = null
+  public channelMap: ChannelMap | null = null
   public statusList = [
     { name: '开始', action: 'start' },
     { name: '暂停', action: 'pause' },
@@ -50,6 +59,15 @@ export default class ChannelImpl extends VuexModule {
   @Mutation
   SET_CHANNELLIST(list: Port.MasterList) {
     this.list = list
+    const channelMap = {}
+    Object.entries(this.list).forEach(([mKey, master]) => {
+      Object.entries(master.slaverList).forEach(([sKey, slaver]) => {
+        Object.entries(slaver.list).forEach(([cKey, channel]) => {
+          setDeep(channel, [mKey, sKey, cKey], channelMap)
+        })
+      })
+    })
+    this.channelMap = channelMap
   }
 
   @Action

@@ -277,7 +277,7 @@ export class RedisClient {
     if (data) {
       list = data.map(item => {
         const val = JSON.parse(item)
-        val.createTimeStr = dayjs().format(TIME_FORMAT)
+        val.createTimeStr = dayjs(val.createTime).format(TIME_FORMAT)
         return val
       })
     }

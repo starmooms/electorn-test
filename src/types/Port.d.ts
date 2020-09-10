@@ -57,6 +57,8 @@ declare namespace Port {
   }
 
   interface BaseError {
+    masterId: number
+    action: string
     errCode: string
     errMsg: string
     createTime: number
@@ -65,7 +67,6 @@ declare namespace Port {
 
   /** 采样错误列表 */
   interface SampErrorItem extends BaseError {
-    masterId: number
     slaverId: number
     channelId: number
     params1: string

@@ -149,7 +149,8 @@ class Agreement {
       originBuf: buf,
       buf: buf.slice(dataStart, dataEndLen),
       sId: toHex(buf.readUInt16BE(8), 2),
-      errCode: toHex(buf.readInt8(7), 1)
+      errCode: toHex(buf.readInt8(7), 1),
+      masterId: buf.readInt8(4)
     }
   }
 }

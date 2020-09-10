@@ -3,7 +3,6 @@ import agreement, { ReadResult } from './Agreement'
 import logger from './Logger'
 import {
   workStepsInput,
-  controlCode,
   WORKSTEPS_MAP,
   getCalList,
   channelList,
@@ -13,7 +12,8 @@ import {
   CHANNEL_ERR_STATUS,
   CHANNEL_STATUS,
   CHANNEL_STATUS_END,
-  ERROR_STATUS
+  ERROR_STATUS,
+  CONTROL_CODE
 } from '@/shared/config/port'
 import { BufWriteModel as BufWriteModel2 } from '../utils/bufModel'
 import { Promise as Bluebird } from 'bluebird'
@@ -46,7 +46,10 @@ interface MasterTranslate {
 interface PostOpts {
   timeout?: number
   data: Buffer
-  code: number
+  control: {
+    code: number
+    name: string
+  }
   masterId: number
 }
 
@@ -143,13 +146,13 @@ export default class PortItem {
   }
 
   /** 串口通讯 */
-  post({ timeout, data, masterId, code }: PostOpts): Promise<Buffer> {
+  post({ timeout, data, masterId, control }: PostOpts): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       const agrData = agreement.createData({
         slaverId: 0xff,
         type: 0x02,
         masterId,
-        code,
+        code: control.code,
         data
       })
       let timer: NodeJS.Timeout // eslint-disable-line
@@ -161,15 +164,17 @@ export default class PortItem {
         clearTimeout(timer)
       }
 
-      this.emitList.set(sId, ({ errCode, buf, originBuf }) => {
+      this.emitList.set(sId, ({ masterId, errCode, buf, originBuf }) => {
         if (errCode !== '00') {
           const errMsg = ERROR_STATUS[errCode]
           redisClient.saveError([
             {
               postBuf: agrData.buf.toString('hex'),
               backBuf: originBuf.toString('hex'),
+              masterId,
               errCode,
               errMsg,
+              action: control.name,
               createTime: dayjs().valueOf(),
               type: 'PostError'
             }
@@ -238,7 +243,7 @@ export default class PortItem {
 
     logger.info('写工步', writerModel.buf.toString('hex'))
     return this.post({
-      code: controlCode.master.stepsSet,
+      control: CONTROL_CODE.stepsSet,
       data: writerModel.buf,
       masterId
     })
@@ -276,7 +281,7 @@ export default class PortItem {
       resultBuf = Buffer.from(b, 'hex')
     } else {
       resultBuf = await this.post({
-        code: controlCode.master.stepsRead,
+        control: CONTROL_CODE.stepsRead,
         data: writeMdoel.buf,
         masterId
       })
@@ -374,16 +379,17 @@ export default class PortItem {
             let t = Math.floor(Math.random() * 10)
             if (t >= 10) t = 0
             const d = t >= 5 ? '01' : '02'
-            const d2 = testKey % 300 === 0 ? '00' : '01'
+            const d2 = testKey % 20 === 0 ? '00' : '01'
             const g = String(t)
             testKey += 1
             const a = `000008010000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0${g}0000000${g}000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000000100010000000000000000` // eslint-disable-line
+            // const a = `000008000000900307360000055f00000001030405f7000005b700000002030405da0000058f00000003020005f400000000000000040200079a0000000000000005020006060000000000000006020005be000000000000000702000cf4000002ad0000` // eslint-disable-line
             // const a = `000008000002000c220000000000000001000000080000000a0000000202000d8dfffffffe00000003000000020000000000000004000000020000000e00000005000000010000000100000006000000020000001900000007000000020000001d0000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
           } else {
             logger.info('读采样发送', writeModel.buf.toString('hex'))
             resultBuf = await this.post({
-              code: controlCode.master.translateRead,
+              control: CONTROL_CODE.sampRead,
               data: writeModel.buf,
               masterId
             })
@@ -463,6 +469,7 @@ export default class PortItem {
               masterId: readItem.read('masterId'),
               slaverId: readItem.read('slaverId'),
               channelId: readItem.read('channelId'),
+              action: '实时数据错误列表返回',
               errCode,
               params1: readItem.readHex('params1'),
               params2: readItem.readHex('params2'),
@@ -568,7 +575,7 @@ export default class PortItem {
     })
     logger.info('写校准发送', writerModel.buf.toString('hex'))
     await this.post({
-      code: controlCode.master.calSet,
+      control: CONTROL_CODE.calSet,
       data: writerModel.buf,
       masterId
     })
@@ -590,7 +597,7 @@ export default class PortItem {
       resultBuf = Buffer.from('0001000000e3388e3fe3380e4040555547408e38e30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040f8e37e410e38da411ffff6411ffff7', 'hex') // eslint-disable-line
     } else {
       resultBuf = await this.post({
-        code: controlCode.master.calRead,
+        control: CONTROL_CODE.calRead,
         data: writeModel.buf,
         masterId
       })
@@ -656,8 +663,8 @@ export default class PortItem {
 
   /** 设置状态 */
   async setStatus(data: any) {
-    const code = controlCode.master.status[data.status]
-    if (!code) {
+    const control = CONTROL_CODE.status[data.status]
+    if (!control) {
       throw new Error(`${data.status} Error`)
     }
     const slaverIds = data.slaverId
@@ -682,7 +689,7 @@ export default class PortItem {
       writerModel.writer('masterId', masterId)
       logger.info('改变状态', writerModel.buf.toString('hex'))
       await this.post({
-        code,
+        control,
         data: writerModel.buf,
         masterId
       })

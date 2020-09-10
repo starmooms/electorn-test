@@ -31,9 +31,9 @@
               <p class="steps-now">当前工步状态：{{ workerStatus }}</p>
             </title-box> -->
 
-            <title-box name="操作" class="action-box">
+            <title-box name="操作" class="action-box" v-if="isRun">
               <el-button @click="refresh(true)" type="primary">刷新</el-button>
-              <!-- <el-button
+              <el-button
                 v-for="item in btnList"
                 :key="item.name"
                 @click="setStatus(item.action)"
@@ -41,7 +41,7 @@
               >
                 {{ item.name }}
               </el-button>
-              <el-button @click="calOpen" type="primary">局部设置</el-button>
+              <!-- <el-button @click="calOpen" type="primary">局部设置</el-button>
               <el-button @click="workStepsOpen" type="primary">
                 编辑工步
               </el-button> -->
@@ -284,6 +284,16 @@ export default class WorkerSee extends Vue {
       : null
   }
 
+  get channelNowStart() {
+    return this.channelData ? this.channelData.workerStart : null
+  }
+
+  get isRun() {
+    return this.channelNowStart && this.history
+      ? this.channelNowStart === this.history.start
+      : false
+  }
+
   @Watch('tabChannel')
   changeTab(newValue) {
     const newChannelId = Number(newValue)
@@ -306,7 +316,16 @@ export default class WorkerSee extends Vue {
 
   @Watch('history')
   changeHistory() {
-    this.refresh()
+    this.getSampData()
+  }
+
+  @Watch('channelData', { deep: true })
+  changeNowStart(val: Port.ChannelItem | null, old: Port.ChannelItem | null) {
+    if (val && old) {
+      if (val.id === old.id) {
+        this.getHistory(true)
+      }
+    }
   }
 
   scrollBottom() {
@@ -334,10 +353,9 @@ export default class WorkerSee extends Vue {
     this.nowStepDialog = true
   }
 
-  refresh(isRefresh = false) {
-    if (this.history) {
-      this.getSampData(this.history.start, this.history.end, isRefresh)
-    }
+  refresh() {
+    this.getSampData(true)
+    this.getWorkStep()
   }
 
   async setStatus(status: string) {
@@ -371,13 +389,18 @@ export default class WorkerSee extends Vue {
     }
   }
 
-  async getWorkStep() {
-    if (!this.portItem) return
+  /** 重置 */
+  reset() {
     this.sampStop = true
     this.$refs.chart.setBaseList([])
     this.sampData = []
     this.nowStepList = []
     this.history = null
+  }
+
+  /** 获取工步 */
+  async getWorkStep() {
+    if (!this.portItem) return
     const { channelId } = this.portItem!
     const data = await getWorkStep({
       ...this.portItem,
@@ -389,13 +412,14 @@ export default class WorkerSee extends Vue {
         this.protectForm = protect
         this.nowStepList = stepList.map(stepListUtil)
       }
-      // this.getSampData()
     }
   }
 
   /** 获取采样 */
-  async getSampData(start: number, end: number, isRefresh = false) {
+  async getSampData(isRefresh = false) {
     try {
+      if (!this.history) return
+      const { start, end } = this.history
       const { masterId, slaverId, channelId } = this.portItem!
       const samp = await getSamp({
         start,
@@ -443,25 +467,6 @@ export default class WorkerSee extends Vue {
     }
   }
 
-  // addSampData(data: Port.SampItem) {
-  //   this.sampData.push(data)
-  //   if (this.$refs.recycleScroller) {
-  //     const pool = this.$refs.recycleScroller.pool
-  //     if (pool.length > 2) {
-  //       const poolLast = pool[pool.length - 1]
-  //       const sampLast = this.sampData[this.sampData.length - 2]
-  //       if (
-  //         poolLast &&
-  //         sampLast &&
-  //         poolLast.item.createTime === sampLast.createTime
-  //       ) {
-  //         this.$nextTick(() => {
-  //           this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
-  //         })
-  //       }
-  //     }
-  //   }
-  // }
   autoScrollEnd(lastEnd: number) {
     if (this.$refs.recycleScroller && lastEnd) {
       const pool = this.$refs.recycleScroller.pool
@@ -477,7 +482,7 @@ export default class WorkerSee extends Vue {
   }
 
   /** 获取历史数据 */
-  async getHistory() {
+  async getHistory(isRefresh = false) {
     const data = await getChannelHistory({
       masterId: this.portItem!.masterId,
       slaverId: this.portItem!.slaverId,
@@ -496,14 +501,21 @@ export default class WorkerSee extends Vue {
 
       // 当前有进行中在工步直接显示
       if (
-        this.historyList.length > 0 &&
         this.history === null &&
+        this.historyList.length > 0 &&
         this.channelData
       ) {
         const first = this.historyList[0]
         if (first.start === this.channelData.workerStart) {
           this.history = first
         }
+      } else if (isRefresh && this.history) {
+        const history = this.historyList.find(item => {
+          return item.start === this.history.start
+        })
+        this.$nextTick(() => {
+          this.history = history || null
+        })
       }
     }
   }
@@ -533,6 +545,7 @@ export default class WorkerSee extends Vue {
   // }
 
   init() {
+    this.reset()
     this.getWorkStep()
     this.getHistory()
   }
@@ -548,7 +561,6 @@ export default class WorkerSee extends Vue {
     this.getList()
     this.$nextTick(() => {
       this.init()
-      // this.setCharts()
     })
   }
 

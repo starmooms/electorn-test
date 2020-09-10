@@ -16,11 +16,11 @@
         <div class="tip-box" v-if="tipShow">
           <div class="tip-box-wrap">
             状态：{{ sampData.workerStatus.name }}
+            <br />
+            电压: {{ sampData.U }}
+            <br />
+            电流: {{ sampData.I }}
             <template v-if="waitStatus.indexOf(sampData.workerCode) < 0">
-              <br />
-              电压: {{ sampData.U }}
-              <br />
-              电流: {{ sampData.I }}
               <br />
               启动时刻：{{ channelData.workerStart }}
               <br />

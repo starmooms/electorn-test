@@ -132,7 +132,7 @@ export const END_STATUS = {
   '0a': '无电池或电池接触不良',
   '0b': '不良电池',
   '0c': '补充电容量到结束',
-  ff: '未知结束'
+  'ff': '未知结束'
 }
 
 // prettier-ignore
@@ -287,5 +287,50 @@ export const controlCode = {
     },
     calSet: 0xaa,
     calRead: 0x8a
+  }
+}
+
+export const CONTROL_CODE = {
+  stepsSet: {
+    code: 0xa9,
+    name: '设置工步'
+  },
+  stepsRead: {
+    code: 0x89,
+    name: '读工步'
+  },
+  sampRead: {
+    code: 0x85,
+    name: '读实时数据'
+  },
+  status: {
+    start: {
+      code: 0xa5,
+      name: '通道开启'
+    },
+    pause: {
+      code: 0xa6,
+      name: '通道暂停'
+    },
+    continued: {
+      code: 0xa7,
+      name: '通道继续'
+    },
+    close: {
+      code: 0xa8,
+      name: '通道关闭'
+    },
+    reset: {
+      code: 0xa4,
+      name: '通道复位'
+    }
+  },
+  calSet: {
+    code: 0xaa,
+    name: '设置校准'
+  },
+  calRead: {
+    code: 0x8a,
+    name: '读校准'
   }
 }

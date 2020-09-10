@@ -51,7 +51,7 @@ export default class ChannelImpl extends VuexModule {
     if (this.list) {
       list.forEach(item => {
         const channel = this.list![item.masterId].slaverList[item.slaverId].list[item.channelId] // eslint-disable-line
-        channel.workerStart = item.start
+        channel.workerStart = item.start && item.end ? null : item.start
       })
     }
   }

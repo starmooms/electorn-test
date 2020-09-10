@@ -69,7 +69,7 @@
                   <el-collapse-transition name="el-fade-in">
                     <slaver-details
                       v-if="showSlaverDetail === slaver.id"
-                      :channel-list="slaver.list"
+                      :slaver="slaver"
                     ></slaver-details>
                   </el-collapse-transition>
                 </li>
@@ -101,7 +101,7 @@ import SelectMaster from '@/renderer/components/SelectMaster.vue'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import BatchModal from './components/BatchModal.vue'
-import SlaverDetails from './components/SlaverDetails.vue'
+import SlaverDetails from './components/SlaverDetails/index.vue'
 import ChannelItem from './components/ChannelItem.vue'
 
 @Component({

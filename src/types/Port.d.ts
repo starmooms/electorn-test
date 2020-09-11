@@ -83,4 +83,42 @@ declare namespace Port {
 
   type SaveErrorItem = SampErrorItem | PostError
   type SaveError = SaveErrorItem[]
+
+  /** 工步列表 */
+  interface StepInput {
+    data: number
+    unit: string
+    name: string
+    type: string
+  }
+
+  interface StepListItem {
+    id: number
+    type: string
+    name: string
+    worker: StepInput[]
+    limt: StepInput[]
+  }
+
+  interface Protect {
+    UCi: number
+    ICi: number
+    IDisCi: number
+    UMax: number
+    UMin: number
+    TimeMin: number
+    warnVal: number
+  }
+
+  type StepsList = StepListItem[]
+  interface StepsDataItem {
+    protect: Protect
+    stepList: StepListItem[]
+  }
+
+  interface StepsData {
+    stepData: {
+      [key: string]: StepsDataItem
+    }
+  }
 }

@@ -69,6 +69,7 @@
                   <el-collapse-transition name="el-fade-in">
                     <slaver-details
                       v-if="showSlaverDetail === slaver.id"
+                      :master-id="activeMasterId"
                       :slaver="slaver"
                     ></slaver-details>
                   </el-collapse-transition>
@@ -224,10 +225,14 @@ export default class Home extends Vue {
         data.list.forEach(item => {
           const slaver = this.activeMaster?.slaverList[item.slaverId]
           if (slaver) {
-            const component = this.$refs[`${this.activeMasterId}_${item.slaverId}_${item.channelId}`][0] // eslint-disable-line
-            if (component) {
-              component.updateSamp(item)
-            }
+            ChannelStatus.SET_SAMPMAP({
+              masterId: this.activeMasterId!,
+              samp: item
+            })
+            // const component = this.$refs[`${this.activeMasterId}_${item.slaverId}_${item.channelId}`][0] // eslint-disable-line
+            // if (component) {
+            //   component.updateSamp(item)
+            // }
           }
         })
       },
@@ -235,8 +240,6 @@ export default class Home extends Vue {
     })
     this.trendUnRegister = unRegister
   }
-
-  mounted() {}
 }
 </script>
 
@@ -262,28 +265,6 @@ export default class Home extends Vue {
           background-color: $val;
         }
       }
-
-      /* &.null .color-icon {
-        background-color: $--color-null;
-      }
-      &.pause .color-icon {
-        background-color: $--color-pause;
-      }
-      &.protect .color-icon {
-        background-color: $--color-protect;
-      }
-      &.stop .color-icon {
-        background-color: $--color-stop;
-      }
-      &.end .color-icon {
-        background-color: $--color-end;
-      }
-      &.run .color-icon {
-        background-color: $--color-run;
-      }
-      &.error .color-icon {
-        background-color: $--color-error;
-      } */
     }
   }
 }

@@ -203,16 +203,21 @@ export class BufWriteModel {
 
   /** 直接读数值 */
   read(name: string) {
-    const target = this.getTarget(name)
-    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
-    const offset = this.start + target.offset
-    if (target.type === 'float') {
-      return this.buf.readFloatBE(offset)
+    try {
+      const target = this.getTarget(name)
+      if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+      const offset = this.start + target.offset
+      if (target.type === 'float') {
+        return this.buf.readFloatBE(offset)
+      }
+      if (target.type === 'int') {
+        return this.buf.readIntBE(offset, target.bytLen)
+      }
+      return this.buf.readUIntBE(offset, target.bytLen)
+    } catch (err) {
+      console.log(name)
+      throw err
     }
-    if (target.type === 'int') {
-      return this.buf.readIntBE(offset, target.bytLen)
-    }
-    return this.buf.readUIntBE(offset, target.bytLen)
   }
 
   /** 读16进制数值 */

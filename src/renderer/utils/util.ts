@@ -68,18 +68,18 @@ export const getSampChartList = async (
   }
 }
 
-export const stepListSetInput = (item: any) => {
-  return {
-    label: `${item.name}：${item.data}${item.unit}`
-  }
-}
-
 export const setSampChartList = (list: Port.SampItem[]) => {
   list.map(item => {
     const time =
       item.createTimeStr || dayjs.unix(item.createTime).format(formatTimeStr)
     return [time, item.U, item.I]
   })
+}
+
+export const stepListSetInput = (item: any) => {
+  return {
+    label: `${item.name}：${item.data}${item.unit}`
+  }
 }
 
 /** 工步列表处理 */
@@ -91,5 +91,67 @@ export const stepListUtil = (item: any) => {
     msg: `${item.id + 1}.${item.name}`,
     worker,
     limt
+  }
+}
+
+// /** try catch修饰器 */
+// export function CatchError() {
+//   return function(target: Function) {}
+//   // try {
+
+//   // } catch (err) {
+//   //   console.error(err)
+//   // } finally {
+
+//   // }
+// }
+
+export function getDefatulSamp() {
+  return {
+    U: 0,
+    I: 0,
+    workerId: null,
+    errorMsg: '',
+    workerCode: '00',
+    workerStatus: {
+      name: '',
+      status: ''
+    }
+  }
+}
+
+export function stepListSimple(stepData?: Port.StepsDataItem) {
+  let loopNow: number | null = null
+  let stepList: {
+    id: number
+    msg: string
+  }[] = []
+
+  if (stepData) {
+    stepList = stepData.stepList.map(item => {
+      let msg = `${item.id + 1}、${item.name}`
+      if (item.type === 'loop') {
+        const hasLoopNow = item.worker.find(work => work.type === 'loopNow')
+        if (hasLoopNow !== void 0) {
+          loopNow = hasLoopNow.data
+        }
+      } else {
+        const workers = item.worker
+          .map(work => {
+            return `${work.data}${work.unit}`
+          })
+          .join('、')
+        msg += `（${workers}）`
+      }
+      return {
+        id: item.id,
+        msg
+      }
+    })
+  }
+
+  return {
+    loopNow,
+    stepList
   }
 }

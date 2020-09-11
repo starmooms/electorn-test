@@ -258,7 +258,8 @@ export default class PortItem {
     return {
       data,
       unit: inputItem.unit,
-      name: inputItem.name.replace(/\(.+\)/, '')
+      name: inputItem.name.replace(/\(.+\)/, ''),
+      type: key
     }
   }
 
@@ -382,7 +383,7 @@ export default class PortItem {
             const d2 = testKey % 20 === 0 ? '00' : '01'
             const g = String(t)
             testKey += 1
-            const a = `000008010000a1000${g}0000000${g}0000000001000002040000000000000002000000000000000000000003${d2}${d}0${g}0000000${g}000000000400000000000000000000000500000000000000000000000600000000000000000000000700000000000000000000000100010000000000000000` // eslint-disable-line
+            const a = `000008010000a1000${g}0000000${g}0000000000000100000204000000000000000000020000000000000000000000000003${d2}${d}0${g}0000000${g}00000000000004000000000000000000000000000500000000000000000000000000060000000000000000000000000007000000000000000000000000000100010000000000000000` // eslint-disable-line
             // const a = `000008000000900307360000055f00000001030405f7000005b700000002030405da0000058f00000003020005f400000000000000040200079a0000000000000005020006060000000000000006020005be000000000000000702000cf4000002ad0000` // eslint-disable-line
             // const a = `000008000002000c220000000000000001000000080000000a0000000202000d8dfffffffe00000003000000020000000000000004000000020000000e00000005000000010000000100000006000000020000001900000007000000020000001d0000` // eslint-disable-line
             resultBuf = Buffer.from(a, 'hex')
@@ -412,11 +413,12 @@ export default class PortItem {
             const samp = {
               slaverId: readItem.read('slaverId'),
               channelId: readItem.read('channelId'),
-              workerCode: workerCode,
               workerId: readItem.read('workerId'),
               U: readItem.read('U'),
               I: readItem.read('I'),
               endStatus: readItem.read('endCode'),
+              stepsId: readItem.read('stepsId'),
+              workerCode: workerCode,
               errorCode: errCode,
               errorMsg: errCode !== '00' ? CHANNEL_ERR_STATUS[errCode] : '',
               workerStatus: CHANNEL_STATUS[workerCode] || this.noWorkerStatus,

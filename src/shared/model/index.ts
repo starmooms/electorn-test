@@ -135,7 +135,8 @@ export const SAMP_MODEL: Model[] = [
       { name: 'U', bytLen: 2 },
       { name: 'I', bytLen: 4, type: 'int' },
       { name: 'endCode', bytLen: 1 },
-      { name: 'errCode', bytLen: 1 }
+      { name: 'errCode', bytLen: 1 },
+      { name: 'stepsId', bytLen: 2 }
     ]
   },
   {

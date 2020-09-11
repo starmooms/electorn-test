@@ -60,6 +60,7 @@ import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { Vue, Component, Prop } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
+import { getDefatulSamp } from '@/renderer/utils/util'
 
 declare type SampData = Pick<
   Port.SampItem,
@@ -79,17 +80,6 @@ export default class ChannelItem extends Vue {
   @Prop({ type: Object, required: true }) channelData!: Port.ChannelItem
 
   tipShow = false
-  sampData: SampData = {
-    U: 0,
-    I: 0,
-    workerId: null,
-    errorMsg: '',
-    workerCode: '00',
-    workerStatus: {
-      name: '',
-      status: ''
-    }
-  }
   waitStatus = ['00', '02']
 
   get id() {
@@ -104,6 +94,13 @@ export default class ChannelItem extends Vue {
     return ChannelStatus.statusList
   }
 
+  get sampData() {
+    return (
+      ChannelStatus.sampMap[`${this.masterId}_${this.slaverId}_${this.id}`] ||
+      getDefatulSamp()
+    )
+  }
+
   /** 打开右键菜单 */
   openMenu() {
     this.tipShow = true
@@ -111,26 +108,30 @@ export default class ChannelItem extends Vue {
 
   /** 改变状态 */
   async changeStatus(status) {
-    await changeStatus({
-      path: this.portPath,
-      slaverId: [this.slaverId],
-      channelId: [this.id],
-      masterId: this.masterId,
-      status
-    })
+    await changeStatus(
+      {
+        path: this.portPath,
+        slaverId: [this.slaverId],
+        channelId: [this.id],
+        masterId: this.masterId,
+        status
+      },
+      true,
+      this
+    )
   }
 
-  /** 更新采样 */
-  updateSamp(sampData: Port.SampItem) {
-    this.sampData = {
-      U: sampData.U,
-      I: sampData.I,
-      workerId: sampData.workerId,
-      errorMsg: sampData.errorMsg,
-      workerStatus: sampData.workerStatus,
-      workerCode: sampData.workerCode
-    }
-  }
+  // /** 更新采样 */
+  // updateSamp(sampData: Port.SampItem) {
+  //   // this.sampData = {
+  //   //   U: sampData.U,
+  //   //   I: sampData.I,
+  //   //   workerId: sampData.workerId,
+  //   //   errorMsg: sampData.errorMsg,
+  //   //   workerStatus: sampData.workerStatus,
+  //   //   workerCode: sampData.workerCode
+  //   // }
+  // }
 
   /** 打开通道详细页面 */
   showChannel() {

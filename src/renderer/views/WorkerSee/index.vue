@@ -362,8 +362,8 @@ export default class WorkerSee extends Vue {
     if (!this.portItem) return
     await changeStatus({
       path: this.portItem.path,
-      slaverId: [this.portItem.slaverId],
-      channelId: [this.portItem.channelId],
+      slaverId: this.portItem.slaverId,
+      channelId: this.portItem.channelId,
       masterId: this.portItem.masterId,
       status
     })

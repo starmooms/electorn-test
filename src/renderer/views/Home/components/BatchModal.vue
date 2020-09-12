@@ -75,8 +75,8 @@ export default class BatchModal extends Vue {
     await changeStatus({
       path: this.portPath,
       masterIdList: this.masterIdList,
-      slaverId: this.slaverId,
-      channelId: this.channelId,
+      slaverIdList: this.slaverId,
+      channelIdList: this.channelId,
       status
     })
   }

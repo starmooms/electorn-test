@@ -55,12 +55,13 @@
   </div>
 </template>
 <script lang="ts">
-import { changeStatus } from '@/renderer/ipc/channel'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { Vue, Component, Prop } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { getDefatulSamp } from '@/renderer/utils/util'
+import setChannelStatus from '@/renderer/utils/setChannelStatus'
+import setChannelStatus from '@/renderer/utils/setChannelStatus.vue'
 
 declare type SampData = Pick<
   Port.SampItem,
@@ -108,11 +109,11 @@ export default class ChannelItem extends Vue {
 
   /** 改变状态 */
   async changeStatus(status) {
-    await changeStatus(
+    await setChannelStatus(
       {
         path: this.portPath,
-        slaverId: [this.slaverId],
-        channelId: [this.id],
+        slaverId: this.slaverId,
+        channelId: this.id,
         masterId: this.masterId,
         status
       },

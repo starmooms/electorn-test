@@ -60,15 +60,6 @@ import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { Vue, Component, Prop } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { getDefatulSamp } from '@/renderer/utils/util'
-import setChannelStatus from '@/renderer/utils/setChannelStatus'
-import setChannelStatus from '@/renderer/utils/setChannelStatus.vue'
-
-declare type SampData = Pick<
-  Port.SampItem,
-  'U' | 'I' | 'errorMsg' | 'workerStatus' | 'workerCode'
-> & {
-  workerId: number | null
-}
 
 @Component({
   components: {
@@ -108,18 +99,17 @@ export default class ChannelItem extends Vue {
   }
 
   /** 改变状态 */
-  async changeStatus(status) {
-    await setChannelStatus(
-      {
+  changeStatus(status) {
+    this.$emit('setChannelStatus', {
+      params: {
         path: this.portPath,
         slaverId: this.slaverId,
         channelId: this.id,
         masterId: this.masterId,
         status
       },
-      true,
-      this
-    )
+      isSingle: true
+    })
   }
 
   // /** 更新采样 */

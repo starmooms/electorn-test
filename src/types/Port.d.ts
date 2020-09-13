@@ -7,6 +7,7 @@ declare namespace Port {
     id: number
     name: string
     samp: null | SampItem
+    fullId: string
     workerStart: number | null
     workerEnd: number | null
   }

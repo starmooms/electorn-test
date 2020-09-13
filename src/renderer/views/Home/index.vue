@@ -60,6 +60,7 @@
                         :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
                         @stepEditOpen="stepsSetShow"
                         @calEditOpen="calOpen"
+                        @setChannelStatus="setChannelStatus"
                       ></channel-item>
                     </div>
                     <el-button @click="slaverDetails(slaver.id)">
@@ -88,7 +89,13 @@
 
       <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
 
-      <BatchModal ref="batchModal" :show.sync="batchShow"></BatchModal>
+      <BatchModal
+        ref="batchModal"
+        :show.sync="batchShow"
+        @setChannelStatus="setChannelStatus"
+      ></BatchModal>
+
+      <SetChannelStatus ref="setChannelStatus"></SetChannelStatus>
     </div>
     <div v-else>请先设置串口</div>
   </div>
@@ -103,6 +110,7 @@ import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import BatchModal from './components/BatchModal.vue'
 import SlaverDetails from './components/SlaverDetails/index.vue'
+import SetChannelStatus from '@/renderer/components/SetChannelStatus.vue'
 import ChannelItem from './components/ChannelItem.vue'
 
 @Component({
@@ -113,12 +121,14 @@ import ChannelItem from './components/ChannelItem.vue'
     BatchModal,
     SlaverDetails,
     SelectMaster,
-    ChannelItem
+    ChannelItem,
+    SetChannelStatus
   }
 })
 export default class Home extends Vue {
   $refs!: {
     batchModal: BatchModal
+    setChannelStatus: SetChannelStatus
   }
   batteryShow = []
 
@@ -199,6 +209,10 @@ export default class Home extends Vue {
 
   openBatch() {
     this.batchShow = true
+  }
+
+  setChannelStatus(data: any) {
+    this.$refs.setChannelStatus.changeStatus(data)
   }
 
   slaverDetails(slaverId: number) {

@@ -124,14 +124,28 @@ export default class SlaverDetails extends Vue {
     return samp || getDefatulSamp()
   }
 
+  setList() {
+    this.list = Object.entries(this.slaver.list).map(([key, channel]) => {
+      const channelId = channel.id
+      const samp = this.getSamp(channelId)
+      return {
+        channelId,
+        stepList: [],
+        samp,
+        loopNow: null,
+        status: ''
+      }
+    })
+  }
+
   /** 获取工步列表 */
   async getWorkerSteps() {
     if (this.loading) return
     try {
       this.loading = true
 
-      const channelIds = Object.entries(this.slaver.list).map(([key, val]) => {
-        return val.id
+      const channelIds = this.list.map(item => {
+        return item.channelId
       })
       const data = await getWorkStep({
         masterId: this.masterId,
@@ -141,17 +155,13 @@ export default class SlaverDetails extends Vue {
 
       if (data.status) {
         const stepData = data.data.stepData
-        this.list = Object.entries(this.slaver.list).map(([key, channel]) => {
-          const channelId = channel.id
+        this.list.forEach(item => {
+          const channelId = item.channelId
           const samp = this.getSamp(channelId)
           const { stepList, loopNow } = this.getStepList(stepData[channelId])
-          return {
-            channelId,
-            stepList,
-            samp,
-            loopNow,
-            status: this.workerStatus[samp.workerStatus.status] || '未初始化'
-          }
+          item.samp = samp
+          item.loopNow = loopNow
+          item.stepList = stepList
         })
       }
     } catch (err) {
@@ -166,6 +176,7 @@ export default class SlaverDetails extends Vue {
   }
 
   mounted() {
+    this.setList()
     this.getWorkerSteps()
   }
 }

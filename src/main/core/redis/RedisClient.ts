@@ -275,9 +275,10 @@ export class RedisClient {
     const data = await this.redis.lrange(`error_log`, 0, -1)
     let list: any[] = []
     if (data) {
-      list = data.map(item => {
+      list = data.map((item, index) => {
         const val = JSON.parse(item)
         val.createTimeStr = dayjs(val.createTime).format(TIME_FORMAT)
+        val.id = index
         return val
       })
     }

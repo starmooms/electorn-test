@@ -1,4 +1,5 @@
 import { Transform, TransformOptions } from 'stream'
+import logger from '../core/Logger'
 
 interface Opts extends TransformOptions {
   delimiter: Buffer
@@ -26,6 +27,7 @@ export default class TransfromParser extends Transform {
   _transform(chunk, encoding, cb) {
     let data = Buffer.concat([this.buffer, chunk])
     let canWhile = true
+    logger.info('_transform', chunk.toString('hex'))
     while (data.indexOf(this.delimiter) !== -1 && canWhile) {
       const len = data.readInt16BE(10) + 18 // 数据域长度 + 其他数据位长度
       if (data.length >= len) {

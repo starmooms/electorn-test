@@ -121,7 +121,7 @@ export const CAL_MODEL: Model[] = [
 export const SAMP_MODEL: Model[] = [
   { name: 'version', bytLen: 1 },
   { name: 'masterId', bytLen: 1 },
-  { name: 'sampLen', bytLen: 1 },
+  { name: 'sampLen', bytLen: 2 },
   { name: 'errorLen', bytLen: 1 },
   {
     name: 'sampList',

@@ -1,6 +1,14 @@
 <template>
   <div>
     <h4>错误日志</h4>
+    <el-button
+      class="refresh-btn"
+      type="primary"
+      icon="el-icon-refresh"
+      @click="getErrorList"
+    >
+      刷新
+    </el-button>
     <div class="virtual-table err-table">
       <div class="th-head">
         <div class="th-item">
@@ -20,12 +28,12 @@
       >
         暂无数据
       </div>
-      <DynamicScroller
+      <RecycleScroller
         v-else
         class="th-body"
         :items="errorList"
-        :min-item-size="32"
-        key-field="createTime"
+        :item-size="32"
+        key-field="id"
       >
         <template v-slot="{ item, index }">
           <div class="th-item" :class="{ even: index % 2 }">
@@ -52,59 +60,18 @@
             </div> -->
           </div>
         </template>
-      </DynamicScroller>
+      </RecycleScroller>
     </div>
-
-    <!-- <el-table
-      class="err-table"
-      header-row-class-name="t-header"
-      :data="errorList"
-      height="80vh"
-      border
-      style="width: 800px;"
-    >
-      <el-table-column
-        prop="createTimeStr"
-        label="创建日期"
-        width="180"
-      ></el-table-column>
-      <el-table-column label="错误类型" width="100">
-        <template slot-scope="{ row }">
-          {{ row.type === 'SampError' ? '采样错误' : '串口交互错误' }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        prop="errCode"
-        label="错误码"
-        width="60"
-      ></el-table-column>
-      <el-table-column prop="errMsg" label="错误信息"></el-table-column>
-      <el-table-column label="机柜号" width="60">
-        <template slot-scope="{ row }">
-          {{ row.masterId != null ? row.masterId + 1 : '-' }}
-        </template>
-      </el-table-column>
-      <el-table-column label="从控号" width="60">
-        <template slot-scope="{ row }">
-          {{ row.slaverId != null ? row.slaverId + 1 : '-' }}
-        </template>
-      </el-table-column>
-      <el-table-column label="通道号" width="60">
-        <template slot-scope="{ row }">
-          {{ row.channelId != null ? row.channelId + 1 : '-' }}
-        </template>
-      </el-table-column>
-    </el-table> -->
   </div>
 </template>
 <script lang="ts">
 import { getErrorLog } from '@/renderer/ipc/db'
 import { Vue, Component } from 'vue-property-decorator'
-import { DynamicScroller } from 'vue-virtual-scroller'
+import { RecycleScroller } from 'vue-virtual-scroller'
 
 @Component({
   components: {
-    DynamicScroller
+    RecycleScroller
   }
 })
 export default class ErrorLog extends Vue {

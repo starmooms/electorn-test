@@ -92,7 +92,7 @@ export default class PortItem {
   created(path: string) {
     logger.info('创建串口', path)
     const port = new SerialPort(path, {
-      baudRate: 921600
+      baudRate: is.dev() ? 115200 : 921600
     })
     const parser = new SelfParser({
       delimiter: agreement.getEnd()
@@ -242,12 +242,17 @@ export default class PortItem {
       })
     })
 
-    logger.info('写工步', writerModel.buf.toString('hex'))
-    return this.post({
-      control: CONTROL_CODE.stepsSet,
-      data: writerModel.buf,
-      masterId
+    const list = [data.masterId]
+    await Bluebird.mapSeries(list, async (masterId: number) => {
+      writerModel.writer('masterId', masterId)
+      logger.info('写工步', writerModel.buf.toString('hex'))
+      await this.post({
+        control: CONTROL_CODE.stepsSet,
+        data: writerModel.buf,
+        masterId
+      })
     })
+    return true
   }
 
   readStepsInput(readItem: BufWriteModel2, key: string) {
@@ -689,6 +694,7 @@ export default class PortItem {
     }
 
     const list = data.masterIdList || [data.masterId]
+
     await Bluebird.mapSeries(list, async (masterId: number) => {
       writerModel.writer('masterId', masterId)
       logger.info('改变状态', writerModel.buf.toString('hex'))
@@ -697,28 +703,6 @@ export default class PortItem {
         data: writerModel.buf,
         masterId
       })
-      // if (data.status === 'start') {
-      //   slaverIds.forEach(slaverId => {
-      //     channelIds.forEach(channelId => {
-      //       const channel = this.channelList[masterId].slaverList[slaverId].list[channelId] // eslint-disable-line
-      //       if (channel && !channel.workStart) {
-      //         channel.workStart = now
-      //         setStartList.push({
-      //           masterId,
-      //           slaverId: slaverId,
-      //           channelId: channelId,
-      //           start: now
-      //         })
-      //       }
-      //     })
-      //   })
-      // }
     })
-
-    // if (setStartList.length > 0) {
-    //   ipcManage.commonMsg('updateChannelList', this.channelList)
-    //   // const redisClient = RedisClient.getInstance()
-    //   // await redisClient.channelSetStart(setStartList)
-    // }
   }
 }

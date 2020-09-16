@@ -18,6 +18,7 @@ import './core/ConfigManage'
 import RedisServer from './core/redis/RedisServer'
 import redisClient, { RedisClient } from './core/redis/RedisClient'
 import logger from './core/Logger'
+import mainDb from './core/sqlite/MainDb'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -144,7 +145,7 @@ export default class Launcher {
     //   logger.debug('powerSaveBlocker', powerSaveBlocker.isStarted(id), id)
     // }, 1000)
     // powerSaveBlocker.stop(id)
-
+    await mainDb.connect()
     ipcManage.on('/createdWin', (event, data: any) => {
       switch (data.type) {
         case 'channel':

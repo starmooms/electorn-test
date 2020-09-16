@@ -87,6 +87,7 @@ export default class Launcher {
     }
     this.win = winManager.createdWin('mainWin')
     this.win.on('close', event => {
+      logger.info(winManager.winList)
       if (this.win) {
         event.preventDefault()
         dialog

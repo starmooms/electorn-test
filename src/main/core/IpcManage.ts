@@ -35,9 +35,23 @@ class IpcManage {
           })
         : err
     if (win) {
-      win.webContents.send('errorMsg', msg)
+      win.webContents.send('errorMsg', 'msg', msg)
     } else {
       dialog.showErrorBox('IPC Error', msg)
+    }
+  }
+
+  ipcNotify(opts: any, win?: BrowserWindow) {
+    if (!win) {
+      const mainWin = winManager.getWin('mainWin')
+      if (mainWin) {
+        win = mainWin
+      }
+    }
+    if (win) {
+      win.webContents.send('errorMsg', 'notify', opts)
+    } else {
+      dialog.showErrorBox('IPC Error', opts.message)
     }
   }
 

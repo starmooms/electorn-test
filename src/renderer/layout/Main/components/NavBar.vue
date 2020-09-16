@@ -6,6 +6,11 @@
           <router-link to="/">端口调试</router-link>
         </li>
         <li class="nav-item">
+          <router-link to="/errorLog">
+            错误日志
+          </router-link>
+        </li>
+        <li class="nav-item">
           <router-link to="/setting">
             <svg-icon icon-class="setting"></svg-icon>
             设置

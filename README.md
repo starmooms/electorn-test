@@ -60,3 +60,22 @@ https://docs.mongodb.com/manual/reference/configuration-options/#windows-service
 
 ## mac
 sudo ifconfig lo0 alias 127.0.0.21 netmask 0xFFFFFFFF
+
+
+### 中文乱码
+https://www.yht7.com/news/110534
+https://blog.csdn.net/hnlgzb/article/details/81911824
+注册表查看(具体查看 HKEY_CURRENT_USER\Console )
+[HKEY_CURRENT_USER\Console\%SystemRoot%_system32_cmd.exe]
+
+```
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Console\%SystemRoot%_system32_cmd.exe]
+"CodePage"=dword:0000fde9
+```
+
+``` 
+# 验证
+chcp
+```

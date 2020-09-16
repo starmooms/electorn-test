@@ -37,6 +37,26 @@ declare namespace ipcReq {
     }
   }
 
+  /** 设置通道状态参数 */
+  interface SetStatus {
+    path: string
+    masterId?: number
+    masterIdList?: number[]
+    slaverId?: number
+    slaverIdList?: number[]
+    channelId?: number
+    channelIdList?: number[]
+    startId?: number
+    status: string
+  }
+
+  interface Position {
+    path: string
+    masterId: number
+    slaverId: number
+    channelId: number
+  }
+
   // /** redis存储历史 */
   // interface ChannelHistory {
   //   [key: string]: {

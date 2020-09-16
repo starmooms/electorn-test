@@ -60,6 +60,7 @@
                         :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
                         @stepEditOpen="stepsSetShow"
                         @calEditOpen="calOpen"
+                        @setChannelStatus="setChannelStatus"
                       ></channel-item>
                     </div>
                     <el-button @click="slaverDetails(slaver.id)">
@@ -69,7 +70,8 @@
                   <el-collapse-transition name="el-fade-in">
                     <slaver-details
                       v-if="showSlaverDetail === slaver.id"
-                      :channel-list="slaver.list"
+                      :master-id="activeMasterId"
+                      :slaver="slaver"
                     ></slaver-details>
                   </el-collapse-transition>
                 </li>
@@ -87,7 +89,13 @@
 
       <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
 
-      <BatchModal ref="batchModal" :show.sync="batchShow"></BatchModal>
+      <BatchModal
+        ref="batchModal"
+        :show.sync="batchShow"
+        @setChannelStatus="setChannelStatus"
+      ></BatchModal>
+
+      <SetChannelStatus ref="setChannelStatus"></SetChannelStatus>
     </div>
     <div v-else>请先设置串口</div>
   </div>
@@ -101,7 +109,8 @@ import SelectMaster from '@/renderer/components/SelectMaster.vue'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import BatchModal from './components/BatchModal.vue'
-import SlaverDetails from './components/SlaverDetails.vue'
+import SlaverDetails from './components/SlaverDetails/index.vue'
+import SetChannelStatus from '@/renderer/components/SetChannelStatus.vue'
 import ChannelItem from './components/ChannelItem.vue'
 
 @Component({
@@ -112,12 +121,14 @@ import ChannelItem from './components/ChannelItem.vue'
     BatchModal,
     SlaverDetails,
     SelectMaster,
-    ChannelItem
+    ChannelItem,
+    SetChannelStatus
   }
 })
 export default class Home extends Vue {
   $refs!: {
     batchModal: BatchModal
+    setChannelStatus: SetChannelStatus
   }
   batteryShow = []
 
@@ -200,6 +211,10 @@ export default class Home extends Vue {
     this.batchShow = true
   }
 
+  setChannelStatus(data: any) {
+    this.$refs.setChannelStatus.changeStatus(data)
+  }
+
   slaverDetails(slaverId: number) {
     this.showSlaverDetail = this.showSlaverDetail === slaverId ? null : slaverId
   }
@@ -224,10 +239,14 @@ export default class Home extends Vue {
         data.list.forEach(item => {
           const slaver = this.activeMaster?.slaverList[item.slaverId]
           if (slaver) {
-            const component = this.$refs[`${this.activeMasterId}_${item.slaverId}_${item.channelId}`][0] // eslint-disable-line
-            if (component) {
-              component.updateSamp(item)
-            }
+            ChannelStatus.SET_SAMPMAP({
+              masterId: this.activeMasterId!,
+              samp: item
+            })
+            // const component = this.$refs[`${this.activeMasterId}_${item.slaverId}_${item.channelId}`][0] // eslint-disable-line
+            // if (component) {
+            //   component.updateSamp(item)
+            // }
           }
         })
       },
@@ -235,8 +254,6 @@ export default class Home extends Vue {
     })
     this.trendUnRegister = unRegister
   }
-
-  mounted() {}
 }
 </script>
 
@@ -262,28 +279,6 @@ export default class Home extends Vue {
           background-color: $val;
         }
       }
-
-      /* &.null .color-icon {
-        background-color: $--color-null;
-      }
-      &.pause .color-icon {
-        background-color: $--color-pause;
-      }
-      &.protect .color-icon {
-        background-color: $--color-protect;
-      }
-      &.stop .color-icon {
-        background-color: $--color-stop;
-      }
-      &.end .color-icon {
-        background-color: $--color-end;
-      }
-      &.run .color-icon {
-        background-color: $--color-run;
-      }
-      &.error .color-icon {
-        background-color: $--color-error;
-      } */
     }
   }
 }

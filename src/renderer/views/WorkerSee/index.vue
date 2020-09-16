@@ -1,225 +1,176 @@
 <template>
-  <div class="worker-see" v-if="portItem">
-    <el-tabs type="border-card" v-model="tabChannel">
-      <el-tab-pane
-        v-for="item in channelList"
-        :key="item.id"
-        :label="`通道${item.id + 1}`"
-        :name="String(item.id)"
-      ></el-tab-pane>
+  <div class="worker-see">
+    <div class="tab-content">
+      <div class="channel-details">
+        <div class="tab-l">
+          <ch-position
+            :position="position"
+            @changeData="changeChannel"
+          ></ch-position>
 
-      <div class="tab-content">
-        <div class="channel-details">
-          <div class="tab-l">
-            <title-box class="channel-msg-box" name="通道信息">
-              <div class="steps-now">
-                <span>机柜：</span>
-                <span>{{ portItem.masterId + 1 }}</span>
-              </div>
-              <div class="steps-now">
-                <span>从控：</span>
-                <span>{{ portItem.slaverId + 1 }}</span>
-              </div>
-              <div class="steps-now">
-                <span>通道：</span>
-                <span>{{ portItem.channelId + 1 }}</span>
-              </div>
-            </title-box>
+          <ch-action
+            :isRun="isRun"
+            :position="position"
+            @refresh="refresh"
+          ></ch-action>
 
-            <!-- <title-box name="当前工步信息">
-              <p class="steps-now">当前工步：{{ workerIdNow + 1 }}</p>
-              <p class="steps-now">当前工步状态：{{ workerStatus }}</p>
-            </title-box> -->
-
-            <title-box name="操作" class="action-box">
-              <el-button @click="refresh(true)" type="primary">刷新</el-button>
-              <!-- <el-button
-                v-for="item in btnList"
-                :key="item.name"
-                @click="setStatus(item.action)"
-                type="primary"
+          <ch-history
+            v-model="history"
+            :position="position"
+            :channelData="channelData"
+            ref="chHistory"
+          ></ch-history>
+        </div>
+        <div class="tab-r">
+          <div class="tab-nav-container">
+            <ul class="tab-nav">
+              <li
+                v-for="(item, index) in tabList"
+                :key="item"
+                class="tab-nav-item"
+                :class="{ active: tabActive === index }"
+                @click="tabActive = index"
               >
-                {{ item.name }}
-              </el-button>
-              <el-button @click="calOpen" type="primary">局部设置</el-button>
-              <el-button @click="workStepsOpen" type="primary">
-                编辑工步
-              </el-button> -->
-            </title-box>
-
-            <title-box name="查看历史数据">
-              <el-select v-model="history" placeholder="请选择">
-                <el-option
-                  v-for="item in historyList"
-                  :key="item.value"
-                  :label="item.value"
-                  :value="item"
-                ></el-option>
-              </el-select>
-            </title-box>
-          </div>
-          <div class="tab-r">
-            <div class="tab-nav-container">
-              <ul class="tab-nav">
-                <li
-                  v-for="(item, index) in tabList"
-                  :key="item"
-                  class="tab-nav-item"
-                  :class="{ active: tabActive === index }"
-                  @click="tabActive = index"
-                >
-                  {{ item }}
-                </li>
-              </ul>
-              <div class="tab-pane-box">
-                <div class="echart-box" v-show="tabActive === 0">
-                  <div class="pane-echart">
-                    <samp-chart
-                      v-if="channelId !== null"
-                      :channelId="channelId"
-                      ref="chart"
-                    ></samp-chart>
-                  </div>
+                {{ item }}
+              </li>
+            </ul>
+            <div class="tab-pane-box">
+              <div class="echart-box" v-show="tabActive === 0">
+                <div class="pane-echart">
+                  <samp-chart
+                    v-if="channelId !== null"
+                    :channelId="channelId"
+                    ref="chart"
+                  ></samp-chart>
                 </div>
+              </div>
 
-                <!-- 表格数据 -->
-                <div class="samp-data-tab" v-if="tabActive === 1">
-                  <div class="spam-head">
-                    <div class="spam-item">
-                      <div class="samp-w-box">
-                        <div class="spam-text date-r">日期</div>
-                        <div class="spam-text u-r">电压</div>
-                        <div class="spam-text i-r">电流</div>
-                        <div class="spam-text status-r">执行工步</div>
-                        <div class="spam-text workeId-r">工步ID</div>
-                      </div>
+              <!-- 表格数据 -->
+              <div class="samp-data-tab" v-if="tabActive === 1">
+                <div class="spam-head">
+                  <div class="spam-item">
+                    <div class="samp-w-box">
+                      <div class="spam-text date-r">日期</div>
+                      <div class="spam-text u-r">电压</div>
+                      <div class="spam-text i-r">电流</div>
+                      <div class="spam-text status-r">执行工步</div>
+                      <div class="spam-text workeId-r">工步ID</div>
                     </div>
                   </div>
-                  <div
-                    v-if="sampData.length === 0"
-                    style="text-align: center;padding:10px;"
-                  >
-                    暂无数据
-                  </div>
-                  <RecycleScroller
-                    v-else
-                    :items="sampData"
-                    class="spam-table"
-                    key-field="createTime"
-                    :item-size="32"
-                    ref="recycleScroller"
-                    @visible="scrollBottom"
-                  >
-                    <template v-slot="{ item, index }">
-                      <div class="spam-item" :class="{ even: index % 2 }">
-                        <div class="samp-w-box">
-                          <div class="spam-text date-r">
-                            <span>{{ item.createTimeStr }}</span>
-                          </div>
-                          <div class="spam-text u-r">{{ item.U }}</div>
-                          <div class="spam-text i-r">{{ item.I }}</div>
-                          <div class="spam-text status-r">
-                            {{ item.workerStatus.name }}
-                          </div>
-                          <div class="spam-text workeId-r">
-                            {{ item.workerId + 1 }}
-                          </div>
+                </div>
+                <div
+                  v-if="sampData.length === 0"
+                  style="text-align: center;padding:10px;"
+                >
+                  暂无数据
+                </div>
+                <RecycleScroller
+                  v-else
+                  :items="sampData"
+                  class="spam-table"
+                  key-field="createTime"
+                  :item-size="32"
+                  ref="recycleScroller"
+                  @visible="scrollBottom"
+                >
+                  <template v-slot="{ item, index }">
+                    <div class="spam-item" :class="{ even: index % 2 }">
+                      <div class="samp-w-box">
+                        <div class="spam-text date-r">
+                          <span>{{ item.createTimeStr }}</span>
+                        </div>
+                        <div class="spam-text u-r">{{ item.U }}</div>
+                        <div class="spam-text i-r">{{ item.I }}</div>
+                        <div class="spam-text status-r">
+                          {{ item.workerStatus.name }}
+                        </div>
+                        <div class="spam-text workeId-r">
+                          {{ item.workerId + 1 }}
                         </div>
                       </div>
+                    </div>
+                  </template>
+                </RecycleScroller>
+              </div>
+
+              <!-- 工步查看 -->
+              <div class="steps-list" v-if="tabActive === 2">
+                <el-table
+                  border
+                  max-height="40vh"
+                  :data="nowStepList"
+                  :row-class-name="stepsTableRow"
+                >
+                  <el-table-column label="工步信息">
+                    <template slot-scope="{ row }">
+                      <span class="step-now-icon">
+                        <svg-icon icon-class="right"></svg-icon>
+                      </span>
+                      <span>{{ row.msg }}</span>
                     </template>
-                  </RecycleScroller>
-                </div>
+                  </el-table-column>
+                  <el-table-column label="工步工作条件">
+                    <template slot-scope="{ row }">
+                      <el-tag
+                        :disable-transitions="true"
+                        effect="dark"
+                        class="tag-item"
+                        v-for="item in row.worker"
+                        :key="item.label"
+                      >
+                        {{ item.label }}
+                      </el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="工步限制条件" prop="limt">
+                    <template slot-scope="{ row }">
+                      <el-tag
+                        effect="dark"
+                        class="tag-item"
+                        :disable-transitions="true"
+                        v-for="item in row.limt"
+                        :key="item.label"
+                      >
+                        {{ item.label }}
+                      </el-tag>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
 
-                <!-- 工步查看 -->
-                <div class="steps-list" v-if="tabActive === 2">
-                  <el-table
-                    border
-                    max-height="40vh"
-                    :data="nowStepList"
-                    :row-class-name="stepsTableRow"
+              <!-- 保护参数 -->
+              <div class="protect-tab" v-if="tabActive === 3">
+                <el-form
+                  class="protect-form"
+                  :model="protectForm"
+                  label-width="200px"
+                >
+                  <el-form-item
+                    v-for="item in protectList"
+                    :key="item.index"
+                    :label="item.name"
                   >
-                    <el-table-column label="工步信息">
-                      <template slot-scope="{ row }">
-                        <span class="step-now-icon">
-                          <svg-icon icon-class="right"></svg-icon>
-                        </span>
-                        <span>{{ row.msg }}</span>
-                      </template>
-                    </el-table-column>
-                    <el-table-column label="工步工作条件">
-                      <template slot-scope="{ row }">
-                        <el-tag
-                          :disable-transitions="true"
-                          effect="dark"
-                          class="tag-item"
-                          v-for="item in row.worker"
-                          :key="item.label"
-                        >
-                          {{ item.label }}
-                        </el-tag>
-                      </template>
-                    </el-table-column>
-                    <el-table-column label="工步限制条件" prop="limt">
-                      <template slot-scope="{ row }">
-                        <el-tag
-                          effect="dark"
-                          class="tag-item"
-                          :disable-transitions="true"
-                          v-for="item in row.limt"
-                          :key="item.label"
-                        >
-                          {{ item.label }}
-                        </el-tag>
-                      </template>
-                    </el-table-column>
-                  </el-table>
-                </div>
-
-                <!-- 保护参数 -->
-                <div class="protect-tab" v-if="tabActive === 3">
-                  <el-form
-                    class="protect-form"
-                    :model="protectForm"
-                    label-width="200px"
-                  >
-                    <el-form-item
-                      v-for="item in protectList"
-                      :key="item.index"
-                      :label="item.name"
-                    >
-                      <el-input
-                        v-model.number="protectForm[item.type]"
-                        :disabled="true"
-                      ></el-input>
-                    </el-form-item>
-                  </el-form>
-                </div>
+                    <el-input
+                      v-model.number="protectForm[item.type]"
+                      :disabled="true"
+                    ></el-input>
+                  </el-form-item>
+                </el-form>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </el-tabs>
-
-    <StepSetModal :show.sync="stepsShow" :showItem="portItem"></StepSetModal>
-
-    <CalModal :show.sync="calShow" :showItem="portItem"></CalModal>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Route } from 'vue-router'
-import {
-  setChannelStatus,
-  getWorkStep,
-  getChannelList,
-  changeStatus
-} from '@/renderer/ipc/channel'
-import command from '@/renderer/command'
+import { getWorkStep, getChannelList } from '@/renderer/ipc/channel'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
-// import TrendChart from '@/renderer/components/TrendChart.vue'
 import SampChart from '@/renderer/components/SampChart.vue'
 import { deepClone } from '@/shared/utils'
 import { GET_PROTECT_FORM, PROTECT } from '@/shared/config/port'
@@ -228,13 +179,19 @@ import dayjs from 'dayjs'
 import { getChannelHistory, getSamp } from '@/renderer/ipc/db'
 import { formatTimeStr, stepListUtil } from '@/renderer/utils/util'
 import { RecycleScroller } from 'vue-virtual-scroller'
+import ChPosition from './components/ChPosition.vue'
+import ChAction from './components/ChAction.vue'
+import ChHistory from './components/ChHistory.vue'
 
 @Component({
   components: {
     SampChart,
     StepSetModal,
     CalModal,
-    RecycleScroller
+    RecycleScroller,
+    ChPosition,
+    ChAction,
+    ChHistory
   }
 })
 export default class WorkerSee extends Vue {
@@ -242,17 +199,14 @@ export default class WorkerSee extends Vue {
     sampChart: SampChart
     chart: SampChart
     recycleScroller: RecycleScroller
+    chHistory: ChHistory
   }
 
-  portItem: ipcReq.PortItem | null = null
   stepsShow = false
   calShow = false
-  tabChannel = '0'
-  channelList: any[] = []
   sampStop = true
 
   // 2
-  nowStepDialog = false
   nowStepList: any[] = []
 
   protectList = deepClone(PROTECT)
@@ -266,30 +220,35 @@ export default class WorkerSee extends Vue {
   tabList = ['1.曲线图', '2.详细数据', '3.工步查看', '4.保护参数']
 
   history: any = null
-  historyList: any[] = []
 
-  get btnList() {
-    return ChannelStatus.statusList
+  position = {
+    path: '',
+    masterId: 0,
+    slaverId: 0,
+    channelId: 0
   }
 
   get channelId() {
-    return this.portItem ? this.portItem.channelId : null
+    return this.position.channelId
   }
 
+  /** 当前通道信息 */
   get channelData() {
-    return this.channelId !== null && ChannelStatus.channelMap
-      ? ChannelStatus.channelMap[this.portItem!.masterId][
-          this.portItem!.slaverId
+    return ChannelStatus.channelMap
+      ? ChannelStatus.channelMap[this.position.masterId][
+          this.position.slaverId
         ][this.channelId]
       : null
   }
 
-  @Watch('tabChannel')
-  changeTab(newValue) {
-    const newChannelId = Number(newValue)
-    if (this.portItem && this.portItem.channelId !== newChannelId) {
-      this.changeChannelId(newChannelId)
-    }
+  get channelNowStart() {
+    return this.channelData ? this.channelData.workerStart : null
+  }
+
+  get isRun() {
+    return this.channelNowStart && this.history
+      ? this.channelNowStart === this.history.start
+      : false
   }
 
   @Watch('tabActive')
@@ -305,8 +264,20 @@ export default class WorkerSee extends Vue {
   }
 
   @Watch('history')
-  changeHistory() {
-    this.refresh()
+  changeHistory(v, old) {
+    if (v && old && v.start === old.start && v.end === old.end) return
+    if (v) {
+      this.getSampData()
+    }
+  }
+
+  @Watch('channelData', { deep: true })
+  changeNowStart(val: Port.ChannelItem | null, old: Port.ChannelItem | null) {
+    if (val && old) {
+      if (val.fullId === old.fullId) {
+        this.$refs.chHistory.getHistory(true)
+      }
+    }
   }
 
   scrollBottom() {
@@ -319,68 +290,42 @@ export default class WorkerSee extends Vue {
     return row.id === this.workerIdNow ? 'worker-row' : ''
   }
 
-  changeChannelId(channelId: number) {
-    if (!this.portItem) return
-    const { path, masterId, slaverId } = this.portItem
-    this.portItem.channelId = channelId
+  changeChannel(newPosition: any) {
+    this.position = {
+      ...this.position,
+      ...newPosition
+    }
     this.$router.push({
-      path: `/port/WorkerSee/${encodeURIComponent(
-        path
-      )}/${masterId}/${slaverId}/${channelId}`
+      name: 'WorkerSee',
+      params: {
+        path: encodeURIComponent(this.position.path),
+        masterId: String(this.position.masterId),
+        slaverId: String(this.position.slaverId),
+        channelId: String(this.position.channelId)
+      }
     })
   }
 
-  nowStepShow() {
-    this.nowStepDialog = true
+  refresh() {
+    this.getSampData(true)
+    this.getWorkStep()
   }
 
-  refresh(isRefresh = false) {
-    if (this.history) {
-      this.getSampData(this.history.start, this.history.end, isRefresh)
-    }
-  }
-
-  async setStatus(status: string) {
-    if (!this.portItem) return
-    await changeStatus({
-      path: this.portItem.path,
-      slaverId: [this.portItem.slaverId],
-      channelId: [this.portItem.channelId],
-      masterId: this.portItem.masterId,
-      status
-    })
-  }
-
-  calOpen() {
-    this.calShow = true
-  }
-
-  workStepsOpen() {
-    this.stepsShow = true
-  }
-
-  async getList() {
-    const data = await getChannelList({
-      type: 'slaver',
-      path: this.portItem!.path,
-      masterId: this.portItem!.masterId,
-      slaverId: this.portItem!.slaverId
-    })
-    if (data.status) {
-      this.channelList = data.data.list
-    }
-  }
-
-  async getWorkStep() {
-    if (!this.portItem) return
+  /** 重置 */
+  reset() {
     this.sampStop = true
     this.$refs.chart.setBaseList([])
+    this.protectForm = GET_PROTECT_FORM()
     this.sampData = []
     this.nowStepList = []
     this.history = null
-    const { channelId } = this.portItem!
+  }
+
+  /** 获取工步 */
+  async getWorkStep() {
+    const { channelId } = this.position
     const data = await getWorkStep({
-      ...this.portItem,
+      ...this.position,
       channelId: [channelId]
     })
     if (data.status) {
@@ -389,14 +334,15 @@ export default class WorkerSee extends Vue {
         this.protectForm = protect
         this.nowStepList = stepList.map(stepListUtil)
       }
-      // this.getSampData()
     }
   }
 
   /** 获取采样 */
-  async getSampData(start: number, end: number, isRefresh = false) {
+  async getSampData(isRefresh = false) {
     try {
-      const { masterId, slaverId, channelId } = this.portItem!
+      if (!this.history) return
+      const { start, end } = this.history
+      const { masterId, slaverId, channelId } = this.position
       const samp = await getSamp({
         start,
         end,
@@ -443,25 +389,6 @@ export default class WorkerSee extends Vue {
     }
   }
 
-  // addSampData(data: Port.SampItem) {
-  //   this.sampData.push(data)
-  //   if (this.$refs.recycleScroller) {
-  //     const pool = this.$refs.recycleScroller.pool
-  //     if (pool.length > 2) {
-  //       const poolLast = pool[pool.length - 1]
-  //       const sampLast = this.sampData[this.sampData.length - 2]
-  //       if (
-  //         poolLast &&
-  //         sampLast &&
-  //         poolLast.item.createTime === sampLast.createTime
-  //       ) {
-  //         this.$nextTick(() => {
-  //           this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
-  //         })
-  //       }
-  //     }
-  //   }
-  // }
   autoScrollEnd(lastEnd: number) {
     if (this.$refs.recycleScroller && lastEnd) {
       const pool = this.$refs.recycleScroller.pool
@@ -476,85 +403,30 @@ export default class WorkerSee extends Vue {
     }
   }
 
-  /** 获取历史数据 */
-  async getHistory() {
-    const data = await getChannelHistory({
-      masterId: this.portItem!.masterId,
-      slaverId: this.portItem!.slaverId,
-      channelId: this.portItem!.channelId
-    })
-    if (data.status) {
-      this.historyList = data.data.map(item => {
-        const val = JSON.parse(item)
-        const start = dayjs.unix(val.start).format(formatTimeStr)
-        const end = val.end
-          ? dayjs.unix(val.end).format(formatTimeStr)
-          : '未知结束'
-        val.value = `${start} - ${end}`
-        return val
-      })
-
-      // 当前有进行中在工步直接显示
-      if (
-        this.historyList.length > 0 &&
-        this.history === null &&
-        this.channelData
-      ) {
-        const first = this.historyList[0]
-        if (first.start === this.channelData.workerStart) {
-          this.history = first
-        }
-      }
-    }
-  }
-
-  // setCharts() {
-  //   if (!this.portItem) return
-  //   const { path, masterId, slaverId } = this.portItem
-  //   command.on({
-  //     eventName: `/port/translate/${encodeURIComponent(
-  //       path
-  //     )}/${masterId}/${slaverId}`,
-  //     onEmit: (data: any) => {
-  //       if (this.sampStop) return
-  //       const item = data.list[this.portItem!.channelId + slaverId * 8]
-  //       if (item) {
-  //         this.workerIdNow = item.workerId
-  //         this.workerStatus = item.workerStatus.name
-
-  //         if (item.workerCode !== '00') {
-  //           this.addSampData(item)
-  //           this.$refs.chart.update([item])
-  //         }
-  //       }
-  //     },
-  //     vm: this
-  //   })
-  // }
-
   init() {
+    this.reset()
     this.getWorkStep()
-    this.getHistory()
+    this.$refs.chHistory.getHistory()
   }
 
   mounted() {
-    this.portItem = {
+    this.position = {
       path: this.$route.params.path,
       masterId: Number(this.$route.params.masterId),
       slaverId: Number(this.$route.params.slaverId),
       channelId: Number(this.$route.params.channelId)
     }
-    this.tabChannel = this.$route.params.channelId
-    this.getList()
+
     this.$nextTick(() => {
       this.init()
-      // this.setCharts()
     })
   }
 
   beforeRouteUpdate(to: Route, from: Route, next: Function) {
-    this.init()
-    next()
+    this.$nextTick(() => {
+      this.init()
+      next()
+    })
   }
 }
 </script>
@@ -578,19 +450,6 @@ export default class WorkerSee extends Vue {
         margin: 0;
         .channel-msg {
           display: flex;
-        }
-      }
-      .action-box {
-        display: flex;
-        flex-flow: row wrap;
-        justify-content: space-between;
-        .el-button {
-          margin: 0;
-          margin-bottom: 10px;
-          // width: 40%;
-          // // margin: 0;
-          // margin-bottom: 10px;
-          // flex: 1 1 auto;
         }
       }
     }

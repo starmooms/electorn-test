@@ -1,10 +1,13 @@
 import { BrowserWindow } from 'electron'
+import logger from './Logger'
 
 class WinManager {
   win: BrowserWindow | null = null
   winList = new Map<string, BrowserWindow>()
 
-  // constructor() {}
+  constructor() {
+    logger.info('init windManager')
+  }
 
   getWin(name: string, show = false) {
     const hasWin = this.winList.get(name) || null
@@ -64,7 +67,7 @@ class WinManager {
 
     this.winList.set(name, win)
     win.loadURL(`${protocolPath}${path}`)
-    win.on('close', () => {
+    win.on('closed', () => {
       this.winList.delete(name)
     })
     return win

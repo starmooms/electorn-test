@@ -33,9 +33,22 @@ class Command {
     }
   }
 
+  notify(opts: any) {
+    Vue.prototype.$notify({
+      duration: 0,
+      ...opts
+    })
+  }
+
   init() {
-    ipcRenderer.on('errorMsg', (event, msg) => {
-      this.errorMsg(msg)
+    ipcRenderer.on('errorMsg', (event, type, data) => {
+      switch (type) {
+        case 'notify':
+          this.notify(data)
+          break
+        default:
+          this.errorMsg(data)
+      }
     })
     ipcRenderer.on('ipcManage:send', (event, eventName, ...args) => {
       const emitMap = this.emitList[eventName]

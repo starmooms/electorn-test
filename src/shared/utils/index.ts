@@ -61,3 +61,5 @@ export function setDeep(val: any, keys: string[] | number[], target = {}) {
   setTarget[keys[keys.length - 1]] = val
   return target
 }
+
+export const TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss'

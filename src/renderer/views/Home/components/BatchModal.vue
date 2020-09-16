@@ -31,7 +31,6 @@
 <script lang="ts">
 import { Vue, Component, PropSync, Watch } from 'vue-property-decorator'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
-import { changeStatus } from '@/renderer/ipc/channel'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import SelectChannel from '@/renderer/components/SelectChannel.vue'
 
@@ -72,12 +71,14 @@ export default class BatchModal extends Vue {
     if (msg) {
       return this.$message.warning(msg)
     }
-    await changeStatus({
-      path: this.portPath,
-      masterIdList: this.masterIdList,
-      slaverId: this.slaverId,
-      channelId: this.channelId,
-      status
+    this.$emit('setChannelStatus', {
+      params: {
+        path: this.portPath,
+        masterIdList: this.masterIdList,
+        slaverIdList: this.slaverId,
+        channelIdList: this.channelId,
+        status
+      }
     })
   }
 

@@ -86,6 +86,37 @@ export const WORKSTEPSINPUT = workStepsInput
 // }
 
 /* eslint-disable quote-props */
+
+// prettier-ignore
+export const ERROR_STATUS = {
+  '00': '正确',
+  '01': '通讯失败',
+  '02': '没有收到数据',
+  '03': '帧格式错误',
+  '04': '数据格式错误',
+  '05': '版本错误',
+  '06': '地址错误',
+  '07': '控制码错误',
+  '08': '数据长度不够',
+  '09': '校验码错误',
+  '0a': '无效数据',
+  '0b': '数值超出范围',
+  '0c': '串口已关闭',
+  '0d': '没有工步信息',
+  '0e': '工步未运行',
+  '0f': '工步已运行',
+  '10': '数据存储空间不够',
+  '11': '没有数据可以发送',
+  '12': '从控号错误',
+  '13': '内存不够',
+  '14': '流水号错误',
+  '15': '主控号错误',
+  '16': '从控号错误',
+  '17': '通道号错误',
+  '18': '固定字节错误(前后缀)',
+  'ff': '未知错误'
+}
+
 // prettier-ignore
 export const END_STATUS = {
   '00': '未结束',
@@ -105,7 +136,7 @@ export const END_STATUS = {
 }
 
 // prettier-ignore
-export const ERR_STATUS = {
+export const CHANNEL_ERR_STATUS = {
   '00': '无',
   '01': '寄存',
   '02': '漏电流异常',
@@ -152,6 +183,7 @@ for (let i = 0; i < 20; i++) {
     for (let k = 0; k < 8; k++) {
       obj[k] = {
         id: k,
+        fullId: `${i}_${j}_${k}`,
         samp: null,
         workerStart: null,
         workerEnd: null
@@ -256,5 +288,50 @@ export const controlCode = {
     },
     calSet: 0xaa,
     calRead: 0x8a
+  }
+}
+
+export const CONTROL_CODE = {
+  stepsSet: {
+    code: 0xa9,
+    name: '设置工步'
+  },
+  stepsRead: {
+    code: 0x89,
+    name: '读工步'
+  },
+  sampRead: {
+    code: 0x85,
+    name: '读实时数据'
+  },
+  status: {
+    start: {
+      code: 0xa5,
+      name: '通道开启'
+    },
+    pause: {
+      code: 0xa6,
+      name: '通道暂停'
+    },
+    continued: {
+      code: 0xa7,
+      name: '通道继续'
+    },
+    close: {
+      code: 0xa8,
+      name: '通道关闭'
+    },
+    reset: {
+      code: 0xa4,
+      name: '通道复位'
+    }
+  },
+  calSet: {
+    code: 0xaa,
+    name: '设置校准'
+  },
+  calRead: {
+    code: 0x8a,
+    name: '读校准'
   }
 }

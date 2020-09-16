@@ -4,7 +4,7 @@ import logger from '../Logger'
 import ipcManage from '../IpcManage'
 import _merge from 'lodash/merge'
 import configManage from '../ConfigManage'
-import { setDeep } from '@/shared/utils'
+import { setDeep, TIME_FORMAT } from '@/shared/utils'
 import { resolve } from 'bluebird'
 import { pipeline } from 'serialport'
 
@@ -49,6 +49,9 @@ export class RedisClient {
     })
     ipcManage.handle('/db/history', async (event, path: string, data: any) => {
       return await this.channelGetStartList(path, data)
+    })
+    ipcManage.handle('/db/errorLog', async (event, data: any) => {
+      return await this.getErrorLog()
     })
   }
 
@@ -256,6 +259,30 @@ export class RedisClient {
       -1
     )
     return data
+  }
+
+  /** 存储错误 */
+  async saveError(errData: Port.SaveError) {
+    try {
+      const value = errData.map(item => JSON.stringify(item))
+      await this.redis.lpush(`error_log`, value)
+    } catch (err) {
+      logger.warn('redis存储错误失败', errData)
+    }
+  }
+
+  async getErrorLog() {
+    const data = await this.redis.lrange(`error_log`, 0, -1)
+    let list: any[] = []
+    if (data) {
+      list = data.map((item, index) => {
+        const val = JSON.parse(item)
+        val.createTimeStr = dayjs(val.createTime).format(TIME_FORMAT)
+        val.id = index
+        return val
+      })
+    }
+    return list
   }
 }
 

@@ -11,6 +11,7 @@ import { channelList } from '@/shared/config/port'
 import { deepClone, setDeep } from '@/shared/utils'
 import { getChannelList } from '@/renderer/ipc/channel'
 import { SettingStatus } from './Setting'
+import Vue from 'vue'
 
 config.rawError = true
 
@@ -22,6 +23,14 @@ interface ChannelMap {
       [key: string]: Port.ChannelItem
     }
   }
+}
+interface SampMap {
+  [key: string]: Port.SampItem
+}
+
+interface SetSamp {
+  masterId: number
+  samp: Port.SampItem
 }
 
 @Module({ dynamic: true, store, name: 'channel' })
@@ -35,6 +44,7 @@ export default class ChannelImpl extends VuexModule {
     { name: '重新启动', action: 'reset' },
     { name: '关闭', action: 'close' }
   ]
+  public sampMap: SampMap = {}
 
   public workerStatus = {
     vacant: '空置',
@@ -51,7 +61,7 @@ export default class ChannelImpl extends VuexModule {
     if (this.list) {
       list.forEach(item => {
         const channel = this.list![item.masterId].slaverList[item.slaverId].list[item.channelId] // eslint-disable-line
-        channel.workerStart = item.start
+        channel.workerStart = item.start && item.end ? null : item.start
       })
     }
   }
@@ -68,6 +78,12 @@ export default class ChannelImpl extends VuexModule {
       })
     })
     this.channelMap = channelMap
+  }
+
+  @Mutation
+  SET_SAMPMAP({ masterId, samp }: SetSamp) {
+    const key = `${masterId}_${samp.slaverId}_${samp.channelId}`
+    Vue.set(this.sampMap, key, samp)
   }
 
   @Action

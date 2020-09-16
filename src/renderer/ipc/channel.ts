@@ -1,12 +1,17 @@
 import $command from '@/renderer/command'
 import Vue from 'vue'
+import { SettingStatus } from '../store/modules/Setting'
+import { stepListSimple } from '@/renderer/utils/util'
+import { kMaxLength } from 'buffer'
 
 interface SetStatus {
   path: string
-  slaverId?: number[]
-  channelId?: number[]
   masterId?: number
   masterIdList?: number[]
+  slaverId?: number
+  slaverIdList?: number[]
+  channelId?: number
+  channelIdList?: number[]
   startId?: number
   status: string
 }
@@ -29,45 +34,63 @@ interface ChannelListOpts {
 }
 
 interface ReadSteps {
-  path: string
+  path?: string
   masterId: number
   slaverId: number
   channelId: number[]
 }
 
+// interface StepInputItem {
+//   data: number
+//   unit: string
+//   name: string
+// }
+
+// interface StepsData {
+//   stepData: {
+//     [key: string]: {
+//       protect: {
+//         UCi: number
+//         ICi: number
+//         IDisCi: number
+//         UMax: number
+//         UMin: number
+//         TimeMin: number
+//         warnVal: number
+//       }
+//       stepList: {
+//         id: number
+//         type: string
+//         name: string
+//         worker: StepInputItem[]
+//         limt: StepInputItem[]
+//       }[]
+//     }
+//   }
+// }
+
 export function setChannelStatus(data: SetStatus) {
   return $command.invoke('/port/slaver/setStatus', data)
 }
 
-export async function changeStatus(params: SetStatus) {
-  const set = async (startId?: number) => {
-    const data = await setChannelStatus({
-      ...params,
-      startId
-    })
-    if (data.status) {
-      Vue.prototype.$message.success(`成功`)
+/** 自动检测portPath */
+export function portPathRequest<T = any>(path: string, data: any) {
+  if (!data.path) {
+    const path = SettingStatus.portPath
+    if (!path) {
+      const msg = '请先设置串口'
+      $command.errorMsg('请先设置串口')
+      return {
+        status: false,
+        err: msg
+      } as ipcReq.ResponseError
+    }
+    data = {
+      path,
+      ...data
     }
   }
-  if (params.status === 'start') {
-    const data = await Vue.prototype
-      .$prompt('请输入起始工步', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputPattern: /\d+/,
-        inputErrorMessage: '工步id格式不正确'
-      })
-      .catch(err => {
-        return {
-          action: err
-        }
-      })
-    if (data.action === 'confirm') {
-      return set(Number(data.value))
-    }
-  } else {
-    return set()
-  }
+  return $command.invoke<T>('/port/readWorkSteps', data)
 }
 
 /** 写工步 */
@@ -77,7 +100,7 @@ export function setSteps(data: SetSteps) {
 
 /** 读工步 */
 export function getWorkStep(data: ReadSteps) {
-  return $command.invoke('/port/readWorkSteps', data)
+  return portPathRequest<Port.StepsData>('/port/readWorkSteps', data)
 }
 
 /** 开启/关闭 采样 */

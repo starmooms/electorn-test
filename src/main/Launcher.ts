@@ -86,9 +86,6 @@ export default class Launcher {
       this.beforeMainWin()
     }
     this.win = winManager.createdWin('mainWin')
-    setInterval(() => {
-      console.log(winManager.winList)
-    }, 2000)
     this.win.on('close', event => {
       logger.info(winManager.winList)
       if (this.win) {

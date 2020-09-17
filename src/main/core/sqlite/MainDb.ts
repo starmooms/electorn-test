@@ -4,26 +4,27 @@ import * as path from 'path'
 import logger from '../Logger'
 import ipcManage from '../IpcManage'
 import dayjs from 'dayjs'
+import HistoryDb from './HistoryDb'
 
 interface TableName {
   name: string
 }
 
-interface WorkStart {
-  projectId: number
-  masterIds: string
-  slaverIds: string
-  channelIds: string
-  filePath: string
-}
+// interface WorkStart {
+//   projectId: number
+//   masterIds: string
+//   slaverIds: string
+//   channelIds: string
+//   filePath: string
+// }
 
 class MainDb {
   sqlite: Sqlite
   tables = {
     channelStatus: 'channel_status',
-    channelHistory: 'channel_history',
-    startHistory: 'start_history'
+    channelHistory: 'channel_history'
   }
+  projectId = 0
 
   constructor() {
     const basePath = app.getPath('userData')
@@ -45,6 +46,8 @@ class MainDb {
       logger.error('mainDB Error', err)
     }
   }
+
+  async getProjectId() {}
 
   async createTable(tables: TableName[]) {
     let sql = ''
@@ -89,6 +92,8 @@ class MainDb {
       CREATE INDEX "project_id" ON "${channelStatus}" ("projectId");
       CREATE INDEX "start_time" ON "${channelStatus}" ("startTime");
       `
+    } else {
+      await this.getProjectId()
     }
 
     // // 工程id启动历史
@@ -120,21 +125,33 @@ class MainDb {
     )
   }
 
-  async workStart(
-    projectId: number,
-    masterIds: string,
-    slaverIds: string,
-    channelIds: string,
-    filePath: string
-  ) {
+  async workStart(params: ipcReq.WriteSteps) {
     const { channelHistory } = this.tables
+    const { masterIds, slaverIds, channelIds, filePath } = params
     const now = dayjs()
     const startTime = now.valueOf()
-    const startId = now.format('YYYYMMDDHHmmssSSS')
+    const fileId = now.format('YYYYMMDDHHmmssSSS')
     await this.sqlite.run(
-      `INSERT INTO ${channelHistory} (startId, startTime, endTime, masterIds, slaverIds, channelIds, filePath, projectId)
-      VALUES (${startId}, ${startTime}, null, ${masterIds}, ${slaverIds}, ${channelIds}, ${filePath}, ${projectId});`
+      `INSERT INTO ${channelHistory} (startId, startTime, masterIds, slaverIds, channelIds, filePath, projectId)
+      VALUES (
+        ${fileId},
+        ${startTime},
+        "${masterIds.join(',')}",
+        "${slaverIds.join(',')}",
+        "${channelIds}",
+        "${filePath}",
+        ${0}
+      );`
     )
+    const historyDb = new HistoryDb(fileId, filePath)
+    await historyDb.created(params)
+    const maxId = `MAX(id)`
+    const data = await this.sqlite.get(
+      `SELECT ${maxId} FROM ${channelHistory};`
+    )
+    logger.info(maxId)
+    return data[maxId]
+
     // const historyLen = await this.sqlite.get<number>(
     //   `SELECT count(*) FROM ${startHistory};`
     // )
@@ -149,7 +166,7 @@ class MainDb {
     //   sql += `INSERT INTO ${startHistory} (projectId,filePath) VALUES (${projectId}, ${filePath});`
     // }
 
-    this.sqlite.exec(sql)
+    // this.sqlite.exec(sql)
   }
 }
 

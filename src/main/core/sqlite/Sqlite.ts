@@ -5,6 +5,7 @@ const sqlite = sqlite3.verbose()
 export default class Sqlite {
   db!: sqlite3.Database
   fileName: string
+  isConnect = false
 
   constructor(fileName: string) {
     this.fileName = fileName
@@ -25,6 +26,7 @@ export default class Sqlite {
           reject(err)
         }
       })
+      this.isConnect = true
     })
   }
 
@@ -87,6 +89,7 @@ export default class Sqlite {
         if (err) {
           reject(err)
         } else {
+          this.isConnect = false
           resolve(err)
         }
       })

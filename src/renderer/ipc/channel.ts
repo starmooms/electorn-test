@@ -18,9 +18,9 @@ interface SetStatus {
 
 interface SetSteps {
   path: string
-  masterId: number
-  slaverId: number[]
-  channelId: number[]
+  masterIds: number[]
+  slaverIds: number[]
+  channelIds: number[]
   list: any[]
   protect: any
 }
@@ -94,7 +94,7 @@ export function portPathRequest<T = any>(path: string, data: any) {
 }
 
 /** 写工步 */
-export function setSteps(data: SetSteps) {
+export function setSteps(data: ipcReq.WriteSteps) {
   return $command.invoke('/port/writeWorkSteps', data)
 }
 

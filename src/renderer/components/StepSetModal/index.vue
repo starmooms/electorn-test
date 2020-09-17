@@ -16,11 +16,51 @@
       </template>
 
       <title-box name="通道工步编辑">
-        <el-button type="text" @click="stepsAdd">添加工步</el-button>
-        <el-button type="text" @click="tplSaveOpen">保存工步模板</el-button>
-        <el-button type="text" @click="tplUseOpen">应用工步模板</el-button>
+        <div>
+          <el-button type="primary" @click="tplSaveOpen">
+            保存工步模板
+          </el-button>
+          <el-button type="primary" @click="tplUseOpen">应用工步模板</el-button>
+        </div>
+
+        <div class="data-save-box">
+          <el-divider content-position="left">数据记录条件</el-divider>
+          <el-form class="data-save-form" :inline="true" v-if="dataSave">
+            <el-form-item
+              class="data-save-item"
+              v-for="item in dataSaveList"
+              :key="item.index"
+            >
+              <div
+                v-if="dataSave[item.type]"
+                :class="{ disable: !dataSave[item.type].enable }"
+              >
+                <el-checkbox v-model="dataSave[item.type].enable"></el-checkbox>
+                <span class="lable">{{ item.label }}：</span>
+                <el-input
+                  class="data-save-input"
+                  :disabled="!dataSave[item.type].enable"
+                  v-model.number="dataSave[item.type].value"
+                ></el-input>
+                <span>{{ item.unit }}</span>
+              </div>
+            </el-form-item>
+          </el-form>
+        </div>
+
         <div class="steps-edit-box">
           <el-divider content-position="left">工步编辑</el-divider>
+          <div class="step-edit-set-box">
+            <el-button type="primary" @click="stepsAdd">添加工步</el-button>
+            <div class="set-start">
+              <span>设置第</span>
+              <el-input
+                class="set-start-input"
+                v-model.number="startId"
+              ></el-input>
+              <span>为起始工步</span>
+            </div>
+          </div>
           <div class="table-wrapper">
             <el-table :data="stepsList">
               <el-table-column
@@ -74,8 +114,9 @@
         <div>
           <el-divider content-position="left">保护参数</el-divider>
           <el-form
+            v-if="protect"
             class="protect-form"
-            :model="protectForm"
+            :model="protect"
             label-width="200px"
           >
             <el-form-item
@@ -83,16 +124,25 @@
               :key="item.index"
               :label="item.name"
             >
-              <el-input v-model.number="protectForm[item.type]"></el-input>
+              <el-input v-model.number="protect[item.type]"></el-input>
             </el-form-item>
           </el-form>
         </div>
+
+        <el-divider content-position="left">备注</el-divider>
+        <el-form label-width="100px">
+          <el-form-item label="历史文件路径">
+            <el-input placeholder="" v-model="filePath">
+              <file-select slot="append" v-model="filePath"></file-select>
+            </el-input>
+          </el-form-item>
+        </el-form>
       </title-box>
 
       <div slot="footer">
         <el-button @click="stepsDialog = false">取 消</el-button>
         <el-button type="primary" @click="stepsSubmit">
-          确 定
+          启动
         </el-button>
       </div>
     </el-dialog>
@@ -114,13 +164,15 @@ import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import { PROTECT, GET_PROTECT_FORM } from '@/shared/config/port'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import SelectChannel from '@/renderer/components/SelectChannel.vue'
+import FileSelect from '@/renderer/components/FileSelect.vue'
 
 @Component({
   components: {
     StepTplSave,
     StepTplUse,
     SelectMaster,
-    SelectChannel
+    SelectChannel,
+    FileSelect
   }
 })
 export default class StepSetModal extends Vue {
@@ -145,22 +197,49 @@ export default class StepSetModal extends Vue {
   stepsId = 0
 
   protectList = deepClone(PROTECT)
-  protectForm = GET_PROTECT_FORM()
+  protect: any = null
 
   batchMasterId = 0
   batchSlaverId: number[] = []
   batchChannelId: number[] = []
 
+  dataSave: any = null
+  dataSaveList = [
+    {
+      label: '时间',
+      type: 'time',
+      unit: 's'
+    },
+    {
+      label: '电压间隔',
+      type: 'U',
+      unit: 'mV'
+    },
+    {
+      label: '电流间隔',
+      type: 'I',
+      unit: 'mA'
+    }
+  ]
+  startId: null | number = null
+
+  filePath = ''
+
   get tplData() {
     return {
       stepsList: this.stepsList,
-      protectForm: this.protectForm
+      protect: this.protect,
+      dataSave: this.dataSave
     }
   }
 
   set tplData(tpl: any) {
     this.stepsList = tpl.stepsList
-    this.protectForm = tpl.protectForm
+    this.protect = tpl.protect
+    if (tpl.dataSave) {
+      this.dataSave = tpl.dataSave
+    }
+    this.startId = null
   }
 
   get channelList() {
@@ -183,9 +262,9 @@ export default class StepSetModal extends Vue {
 
   async stepsSubmit() {
     let msg = ''
-    let masterId = 0
-    let slaverId: number[] = []
-    let channelId: number[] = []
+    let masterIds: number[] = []
+    let slaverIds: number[] = []
+    let channelIds: number[] = []
     if (this.isBatch) {
       if (!this.batchMasterId && this.batchMasterId != 0) {
         msg = '请先选择机柜'
@@ -194,17 +273,17 @@ export default class StepSetModal extends Vue {
       } else if (this.batchChannelId.length === 0) {
         msg = '请先选择通道'
       } else {
-        masterId = this.batchMasterId
-        slaverId = this.batchSlaverId
-        channelId = this.batchChannelId
+        masterIds = [this.batchMasterId]
+        slaverIds = this.batchSlaverId
+        channelIds = this.batchChannelId
       }
     } else {
       if (!this.showItem) {
         msg = 'showItem 参数错误'
       } else {
-        masterId = this.showItem.masterId
-        slaverId = [this.showItem.slaverId]
-        channelId = [this.showItem.channelId]
+        masterIds = this.showItem.masterIds
+        slaverIds = this.showItem.slaverIds
+        channelIds = this.showItem.channelIds
       }
     }
 
@@ -228,22 +307,39 @@ export default class StepSetModal extends Vue {
       this.$message.warning(msg)
       return
     }
-
     if (list.length === 0) {
-      this.$message.error('请正确设置工步')
+      this.$message.error('请正确设置工步列表')
       return
     }
-    const data = await setSteps({
-      path: this.portPath,
-      list,
-      masterId,
-      slaverId,
-      channelId,
-      protect: this.protectForm
-    })
-    if (data.status) {
-      this.$message.success('设置工步成功')
-      this.closeModal()
+    if (!this.startId) {
+      return this.$message.error('请设置起始工步')
+    }
+    if (!this.filePath) {
+      return this.$message.error('请设置历史文件路径')
+    }
+
+    const startId = this.startId - 1
+    if (!(startId <= this.stepsList.length)) {
+      return this.$message.error('起始工步应该在当前工步列表范围内')
+    }
+
+    const confirm = await this.$elConfirm('确定应用并启动工步')
+    if (confirm) {
+      const data = await setSteps({
+        path: this.portPath,
+        stepsList: this.list,
+        masterIds,
+        slaverIds,
+        channelIds,
+        protect: this.protect,
+        dataSave: this.dataSave,
+        startId: startId,
+        filePath: this.filePath
+      })
+      if (data.status) {
+        this.$message.success('设置工步成功')
+        this.closeModal()
+      }
     }
   }
 
@@ -254,29 +350,40 @@ export default class StepSetModal extends Vue {
   @Watch('stepsDialog')
   stepsDialogChange(v) {
     if (v === true) {
-      this.stepsList = []
+      this.reset()
       this.stepsAdd()
-      Object.keys(this.protectForm).forEach(key => {
-        this.$set(this.protectForm, key, null)
-      })
       // if (this.isBatch) {
       //   this.$refs.SelectChannel.reset()
       // }
     }
   }
 
-  // @Watch('asyncShow')
-  // asyncShowChange(v: boolean) {
-  //   if (v) {
-  //     this.stepsDialog = true
-  //   }
-  // }
+  /** 重置 */
+  reset() {
+    this.dataSave = {
+      time: {
+        enable: true,
+        value: 1
+      },
+      U: {
+        enable: false,
+        value: null
+      },
+      I: {
+        enable: false,
+        value: null
+      }
+    }
+    this.stepsList = []
+    this.protect = GET_PROTECT_FORM()
+  }
 
   tplUseOpen() {
     this.tplUseShow = true
   }
 
   tplUse(tpl: any) {
+    this.reset()
     this.tplData = tpl
   }
 
@@ -319,6 +426,10 @@ export default class StepSetModal extends Vue {
       this.stepsList.splice(index, 1)
       this.stepsList.push(row)
     }
+  }
+
+  mounted() {
+    this.reset()
   }
 }
 </script>
@@ -363,10 +474,41 @@ export default class StepSetModal extends Vue {
     display: flex;
     flex-flow: row wrap;
   }
+
+  .data-save-box {
+    .data-save-item {
+      margin-right: 32px;
+      .disable {
+        color: #adadad;
+      }
+      .lable {
+        margin-left: 10px;
+      }
+      .data-save-input {
+        width: 80px;
+        margin-right: 4px;
+      }
+    }
+  }
 }
 
 .steps-edit-box {
-  margin: 20px 0;
+  // margin: 20px 0;
+  .step-edit-set-box {
+    margin: 10px 0;
+    display: flex;
+    .set-start {
+      margin-left: 10px;
+      .set-start-input {
+        display: inline;
+        margin: 0 6px;
+        ::v-deep .el-input__inner {
+          width: 36px;
+          padding: 0 4px;
+        }
+      }
+    }
+  }
 }
 
 .table-wrapper {

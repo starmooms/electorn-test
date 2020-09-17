@@ -59,6 +59,7 @@
                         :channel-data="channel"
                         :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
                         @stepEditOpen="stepsSetShow"
+                        @start="channelStart"
                         @calEditOpen="calOpen"
                         @setChannelStatus="setChannelStatus"
                       ></channel-item>
@@ -190,6 +191,12 @@ export default class Home extends Vue {
       path: this.portPath,
       ...channelMsg
     }
+    this.stepsBatch = false
+    this.stepsShow = true
+  }
+
+  stepStart(data: any) {
+    this.stepsShowItem = data
     this.stepsBatch = false
     this.stepsShow = true
   }

@@ -63,4 +63,44 @@ declare namespace ipcReq {
 
   //   }
   // }
+
+  interface StepDataSave {
+    enable: boolean
+    value: null | number
+  }
+
+  type ProtectItem = number | null
+  interface Protect {
+    UCi: ProtectItem
+    ICi: ProtectItem
+    IDisCi: ProtectItem
+    UMax: ProtectItem
+    UMin: ProtectItem
+    TimeMin: ProtectItem
+    warnVal: ProtectItem
+  }
+
+  interface WriteSteps {
+    path: string
+    masterIds: number[]
+    slaverIds: number[]
+    channelIds: number[]
+    stepsList: any[]
+    protect: {
+      UCi: ProtectItem
+      ICi: ProtectItem
+      IDisCi: ProtectItem
+      UMax: ProtectItem
+      UMin: ProtectItem
+      TimeMin: ProtectItem
+      warnVal: ProtectItem
+    }
+    dataSave: {
+      time: StepDataSave
+      U: StepDataSave
+      I: StepDataSave
+    }
+    startId: number
+    filePath: string
+  }
 }

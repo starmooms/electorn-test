@@ -47,9 +47,9 @@
         <a href="javascript:;" @click="calEditOpen">
           局部设置
         </a>
-        <a href="javascript:;" @click="stepEditOpen">
+        <!-- <a href="javascript:;" @click="stepEditOpen">
           编辑工步
-        </a>
+        </a> -->
       </template>
     </ContextMenu>
   </div>
@@ -99,17 +99,26 @@ export default class ChannelItem extends Vue {
   }
 
   /** 改变状态 */
-  changeStatus(status) {
-    this.$emit('setChannelStatus', {
-      params: {
+  changeStatus(status: string) {
+    if (status === 'start') {
+      this.$emit('start', {
         path: this.portPath,
-        slaverId: this.slaverId,
-        channelId: this.id,
-        masterId: this.masterId,
-        status
-      },
-      isSingle: true
-    })
+        slaverIds: [this.slaverId],
+        channelIds: [this.id],
+        masterIds: [this.masterId]
+      })
+    } else {
+      this.$emit('setChannelStatus', {
+        params: {
+          path: this.portPath,
+          slaverId: this.slaverId,
+          channelId: this.id,
+          masterId: this.masterId,
+          status
+        },
+        isSingle: true
+      })
+    }
   }
 
   // /** 更新采样 */

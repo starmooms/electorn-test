@@ -20,6 +20,8 @@ export const WORKER_STEP_MODEL: Model[] = [
   { name: 'masterId', bytLen: 1 },
   { name: 'slaverId', bytLen: 4 },
   { name: 'channelId', bytLen: 1 },
+  { name: 'projectId', bytLen: 4 },
+  { name: 'workStart', bytLen: 1 },
   { name: 'protectLen', bytLen: 1 },
   { name: 'workerLen', bytLen: 1 },
   {

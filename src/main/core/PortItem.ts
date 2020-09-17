@@ -34,6 +34,7 @@ import {
   COMMON_READ
 } from '@/shared/model'
 import NotifyUtil from '../utils/notifyUtil'
+import mainDb from './sqlite/MainDb'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -202,9 +203,12 @@ export default class PortItem {
   }
 
   /** 写工步 */
-  async writeSteps(data: WStepsOpts) {
-    const masterId = data.masterId
-    const listLen = data.list.length
+  async writeSteps(data: ipcReq.WriteSteps) {
+    const listLen = data.stepsList.length
+    const projectId = mainDb.projectId + 1
+    const slaverIds = data.slaverIds
+    const channelIds = data.channelIds
+    const masterIds = data.masterIds
     const writerModel = new BufWriteModel2({
       model: WORKER_STEP_MODEL,
       listLen: {
@@ -212,9 +216,10 @@ export default class PortItem {
         workerList: listLen
       }
     })
-    writerModel.writer('masterId', data.masterId)
-    writerModel.writerBit('slaverId', data.slaverId)
-    writerModel.writerBit('channelId', data.channelId)
+    writerModel.writerBit('slaverId', slaverIds)
+    writerModel.writerBit('channelId', channelIds)
+    writerModel.writer('projectId', projectId)
+    writerModel.writer('workStart', data.startId)
     writerModel.writer('protectLen', 1)
     writerModel.writer('workerLen', listLen)
     writerModel.ecahList('protectList', writeItem => {
@@ -223,7 +228,7 @@ export default class PortItem {
       })
     })
     writerModel.ecahList('workerList', (writeItem, index) => {
-      const item = data.list[index]
+      const item = data.stepsList[index]
       const step = WORKSTEPS_TYPE_MAP[item.type]
       if (!step || !step.input) {
         throw new Error(`step ${item.type} NO defind`)
@@ -242,8 +247,9 @@ export default class PortItem {
       })
     })
 
-    const list = [data.masterId]
-    await Bluebird.mapSeries(list, async (masterId: number) => {
+    await mainDb.workStart(data)
+
+    await Bluebird.mapSeries(masterIds, async (masterId: number) => {
       writerModel.writer('masterId', masterId)
       logger.info('写工步', writerModel.buf.toString('hex'))
       await this.post({

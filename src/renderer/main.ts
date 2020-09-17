@@ -9,6 +9,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import '@/renderer/style/index.scss'
 
 import command from '@/renderer/command'
+import ElConfirm from '@/renderer/components/ElConfirm'
 import TitleBox from '@/renderer/components/TitleBox.vue'
 import '@/renderer/icons'
 import { SettingStatus } from './store/modules/Setting'
@@ -21,6 +22,7 @@ const init = () => {
 
   Vue.use(command)
   Vue.component('title-box', TitleBox)
+  Vue.use(ElConfirm)
 
   new Vue({
     router,

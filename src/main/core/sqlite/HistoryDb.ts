@@ -1,7 +1,6 @@
 import Sqlite from './sqlite'
 import path from 'path'
 import dayjs from 'dayjs'
-import logger from '../Logger'
 
 interface TableName {
   name: string
@@ -16,7 +15,7 @@ export default class HistoryDb {
   }
 
   constructor(fileId: string, filePath: string) {
-    this.sqlite = new Sqlite(path.resolve(filePath, `${fileId}.db`))
+    this.sqlite = new Sqlite(path.resolve(filePath, `${fileId}`))
   }
 
   async connect() {
@@ -36,10 +35,11 @@ export default class HistoryDb {
     if (!tableName.includes(stepsInfo)) {
       sql += `CREATE TABLE "${stepsInfo}" (
         "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "historyId" INTEGER NOT NULL,
+        "startId" INTEGER NOT NULL,
         "stepList" TEXT NOT NULL,
         "protect" TEXT NOT NULL,
         "dataSave" TEXT NOT NULL,
-        "startId" INTEGER NOT NULL,
         "createTime" INTEGER NOT NULL
       );`
     }
@@ -49,8 +49,8 @@ export default class HistoryDb {
       sql += `CREATE TABLE "${channelInfo}" (
         "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "masterId" INTEGER NOT NULL,
-        "channelId" INTEGER NOT NULL,
         "slaverId" INTEGER NOT NULL,
+        "channelId" INTEGER NOT NULL,
         "startTime" INTEGER,
         "endTime" INTEGER,
         "createTime" INTEGER NOT NULL
@@ -63,11 +63,13 @@ export default class HistoryDb {
       );`
     }
 
+    // 采样数据
     if (!tableName.includes(sampData)) {
       sql += `CREATE TABLE "${sampData}" (
         "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "masterId" INTEGER NOT NULL,
         "slaverId" INTEGER NOT NULL,
+        "channelId" INTEGER NOT NULL,
         "U" INTEGER NOT NULL,
         "I" REAL NOT NULL,
         "workCode" TEXT NOT NULL,
@@ -89,34 +91,87 @@ export default class HistoryDb {
     }
   }
 
-  setJson(data: any) {
-    return JSON.stringify(data).replace(/"/g, '`')
-  }
-
-  async created({ stepsList, protect, dataSave, startId }: ipcReq.WriteSteps) {
+  /** 创建 */
+  async created(
+    {
+      stepsList,
+      protect,
+      dataSave,
+      startId,
+      masterIds,
+      slaverIds,
+      channelIds
+    }: ipcReq.WriteSteps,
+    historyId: number
+  ) {
     if (!this.sqlite.isConnect) {
       await this.connect()
     }
-    const { stepsInfo } = this.tables
-    let sql = ''
+    const { stepsInfo, channelInfo } = this.tables
     const now = dayjs().valueOf()
-    // \`${JSON.stringify(stepsList)}\`,
-    //   \`${JSON.stringify(protect)}\`,
-    //   \`${JSON.stringify(dataSave)}\`,
-    sql += `INSERT INTO ${stepsInfo} (stepList, protect, dataSave, startId, createTime)
+
+    // 写入模板
+    const insertTeplSql = `INSERT INTO ${stepsInfo} (historyId, startId, stepList, protect, dataSave, createTime)
     VALUES (
-      '${JSON.stringify(stepsList)}',
-      '${JSON.stringify(protect)}',
-      $dataSave,
+      ${historyId},
       ${startId},
+      $stepsList,
+      $protect,
+      $dataSave,
       ${now}
-    )`
-    logger.info(sql)
-    await this.sqlite.run(sql, {
-      // $stepsList: JSON.stringify(stepsList),
-      // $protect: JSON.stringify(protect),
+    );`
+    await this.sqlite.run(insertTeplSql, {
+      $stepsList: JSON.stringify(stepsList),
+      $protect: JSON.stringify(protect),
       $dataSave: JSON.stringify(dataSave)
     })
-    // await this.sqlite.exec(sql)
+
+    // 创建列表
+    let insertChannelInfo = `INSERT INTO ${channelInfo} (masterId, slaverId, channelId, createTime) VALUES`
+    masterIds.forEach(masterId => {
+      slaverIds.forEach(slaverId => {
+        channelIds.forEach(channelId => {
+          insertChannelInfo += `(${masterId}, ${slaverId}, ${channelId}, ${now}),`
+        })
+      })
+    })
+    insertChannelInfo = insertChannelInfo.replace(/,$/, ';')
+    // 备用方案限制只能同时写入500条 (https://stackoverflow.com/questions/1609637/is-it-possible-to-insert-multiple-rows-at-a-time-in-an-sqlite-database/1734067#)
+    // let insertChannelInfo = `INSERT INTO ${channelInfo} (masterId, slaverId, channelId, createTime) SELECT '${masterIds[0]}' AS masterId, '${slaverIds[0]}' AS slaverId, '${channelIds[0]}' AS channelId, '${now}' AS createTime`
+    // masterIds.forEach(masterId => {
+    //   slaverIds.forEach(slaverId => {
+    //     channelIds.forEach(channelId => {
+    //       insertChannelInfo += ` UNION ALL SELECT '${masterId}','${slaverId}','${channelId}','${now}'`
+    //     })
+    //   })
+    // })
+    // insertChannelInfo += ';'
+    await this.sqlite.run(insertChannelInfo)
+  }
+
+  /** 打开已有文件 */
+  async open() {}
+
+  /** 保存采样 */
+  async saveSamp(sampList: Db.sampList) {
+    const { sampData } = this.tables
+    let insertSql = `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, workCode, errorCode, endCode, stepId, createTime) VALUES`
+    sampList.forEach(item => {
+      insertSql += `(
+        ${item.masterId},
+        ${item.slaverId},
+        ${item.channelId},
+        ${item.U},
+        ${item.I},
+        ${item.workerCode},
+        ${item.errorCode},
+        ${item.endStatus},
+        ${item.workerId},
+        ${item.createTime}
+      ),`
+    })
+    insertSql = insertSql.replace(/,$/, ';')
+    await this.sqlite.run(insertSql)
+    return true
   }
 }

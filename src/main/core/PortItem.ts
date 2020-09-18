@@ -35,6 +35,7 @@ import {
 } from '@/shared/model'
 import NotifyUtil from '../utils/notifyUtil'
 import mainDb from './sqlite/MainDb'
+import historyDbCache from './sqlite/HistoryDBCache'
 const isDev = is.dev()
 
 interface MasterTranslate {
@@ -205,10 +206,11 @@ export default class PortItem {
   /** 写工步 */
   async writeSteps(data: ipcReq.WriteSteps) {
     const listLen = data.stepsList.length
-    const projectId = mainDb.projectId + 1
     const slaverIds = data.slaverIds
     const channelIds = data.channelIds
     const masterIds = data.masterIds
+    const projectId = await mainDb.workStart(data)
+
     const writerModel = new BufWriteModel2({
       model: WORKER_STEP_MODEL,
       listLen: {
@@ -246,8 +248,6 @@ export default class PortItem {
         }
       })
     })
-
-    await mainDb.workStart(data)
 
     await Bluebird.mapSeries(masterIds, async (masterId: number) => {
       writerModel.writer('masterId', masterId)
@@ -424,18 +424,20 @@ export default class PortItem {
           const nowTime = dayjs().valueOf()
           const list: any[] = []
           const channelStatus: Port.ChannelChangeItem[] = []
+          const saveSampData: Port.SaveSampData = {}
 
           readModel.ecahList('sampList', readItem => {
             const workerCode = readItem.readHex('workerCode')
             const errCode = readItem.readHex('errCode')
-            const samp = {
+            const samp: Port.SampItem = {
+              masterId: masterId,
               slaverId: readItem.read('slaverId'),
               channelId: readItem.read('channelId'),
               workerId: readItem.read('workerId'),
               U: readItem.read('U'),
               I: readItem.read('I'),
               endStatus: readItem.read('endCode'),
-              stepsId: readItem.read('stepsId'),
+              projectId: readItem.read('projectId'),
               workerCode: workerCode,
               errorCode: errCode,
               errorMsg: errCode !== '00' ? CHANNEL_ERR_STATUS[errCode] : '',
@@ -447,38 +449,63 @@ export default class PortItem {
             const lastSamp = channel.samp // eslint-disable-line
             channel.samp = samp
 
-            if (!lastSamp || lastSamp.workerCode !== samp.workerCode) {
-              // 判断是否启动、或结束过度
-              let lastStatus = ''
-              if (lastSamp) {
-                lastStatus = CHANNEL_STATUS_END.includes(lastSamp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
-              } else {
-                // 不存在上次采样说明为刚启动时， 通过判断是否有启动时刻，来判断运行状态
-                lastStatus = channel.workerStart ? 'RUN' : 'END'
-              }
-              const nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
+            let shouldSaveSamp = false // 是否保存采样
+            let nowStatus = channel.nowStatus // 通道状态
 
+            // 判断状态变化
+            if (
+              !nowStatus ||
+              !lastSamp ||
+              lastSamp.workerCode !== samp.workerCode
+            ) {
+              const lastStatus = channel.nowStatus
+              nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
               if (lastStatus !== nowStatus) {
+                shouldSaveSamp = true
+                channel.nowStatus = nowStatus
+                const changeStatus: Port.ChannelChangeItem = {
+                  masterId,
+                  slaverId: samp.slaverId,
+                  channelId: samp.channelId,
+                  start: null,
+                  end: null,
+                  status: nowStatus
+                }
                 if (nowStatus === 'RUN') {
-                  channel.workerStart = nowUnix
-                  channelStatus.push({
-                    masterId,
-                    slaverId: samp.slaverId,
-                    channelId: samp.channelId,
-                    start: nowUnix,
-                    end: null
-                  })
+                  changeStatus.start = nowTime
                 } else {
-                  channelStatus.push({
-                    masterId,
-                    slaverId: samp.slaverId,
-                    channelId: samp.channelId,
-                    start: channel.workerStart,
-                    end: nowUnix
-                  })
-                  channel.workerStart = null
+                  changeStatus.end = nowTime
+                }
+                channelStatus.push(changeStatus)
+              }
+            }
+
+            // 判断是否需要存储采样
+            if (!shouldSaveSamp) {
+              if (!lastSamp) {
+                shouldSaveSamp = true
+              } else if (nowStatus === 'RUN') {
+                const saveConf = historyDbCache.getSaveConf(samp.projectId)
+                if (
+                  !channel.lastSaveTime ||
+                  nowTime - channel.lastSaveTime >= saveConf.time
+                ) {
+                  shouldSaveSamp = true
+                } else if (saveConf.I && lastSamp.I - samp.I >= saveConf.I) {
+                  shouldSaveSamp = true
+                } else if (saveConf.U && lastSamp.U - samp.U >= saveConf.U) {
+                  shouldSaveSamp = true
                 }
               }
+            }
+
+            if (shouldSaveSamp) {
+              if (!saveSampData[samp.projectId]) {
+                saveSampData[samp.projectId] = []
+              }
+              channel.lastSaveTime = nowTime
+              const saveSampItem = saveSampData[samp.projectId]
+              saveSampItem.push(samp)
             }
           })
 
@@ -500,11 +527,21 @@ export default class PortItem {
           })
 
           // // logger.info('存储redis', readModel.buf.toString('hex'))
-          await redisClient.setSamp(masterId, list)
-          if (channelStatus.length > 0) {
-            await redisClient.channelSetStart(this.port.path, channelStatus)
-            ipcManage.commonMsg('updateChannelList', channelStatus)
-          }
+          // await redisClient.setSamp(masterId, list)
+          // if (channelStatus.length > 0) {
+          //   await redisClient.channelSetStart(this.port.path, channelStatus)
+          //   ipcManage.commonMsg('updateChannelList', channelStatus)
+          // }
+
+          const saveSampList = Object.entries(saveSampData).map(
+            ([key, val]) => {
+              return {
+                projectId: Number(key),
+                sampList: val
+              }
+            }
+          )
+          await historyDbCache.saveSamp(saveSampList)
 
           if (errorList.length > 0) {
             redisClient.saveError(errorList)

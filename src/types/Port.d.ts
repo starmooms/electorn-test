@@ -10,6 +10,8 @@ declare namespace Port {
     fullId: string
     workerStart: number | null
     workerEnd: number | null
+    nowStatus: null | 'RUN' | 'END'
+    lastSaveTime: number | null
   }
 
   interface SlaverItem {
@@ -33,6 +35,7 @@ declare namespace Port {
 
   /** 采样 */
   interface SampItem {
+    masterId: number
     slaverId: number
     channelId: number
     workerCode: string
@@ -44,6 +47,7 @@ declare namespace Port {
     errorMsg: string
     workerStatus: { name: string; status: string }
     createTime: number
+    projectId: number
     /**  */
     createTimeStr?: string
   }
@@ -55,6 +59,7 @@ declare namespace Port {
     channelId: number
     start: number | null
     end: number | null
+    status: 'RUN' | 'END'
   }
 
   interface BaseError {
@@ -121,5 +126,9 @@ declare namespace Port {
     stepData: {
       [key: string]: StepsDataItem
     }
+  }
+
+  interface SaveSampData {
+    [key: string]: SampItem[]
   }
 }

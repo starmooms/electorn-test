@@ -64,7 +64,7 @@ declare namespace ipcReq {
   //   }
   // }
 
-  interface StepDataSave {
+  interface StepDataSaveItem {
     enable: boolean
     value: null | number
   }
@@ -78,6 +78,12 @@ declare namespace ipcReq {
     UMin: ProtectItem
     TimeMin: ProtectItem
     warnVal: ProtectItem
+  }
+
+  interface StepsDataSave {
+    time: StepDataSaveItem
+    U: StepDataSaveItem
+    I: StepDataSaveItem
   }
 
   interface WriteSteps {
@@ -95,11 +101,7 @@ declare namespace ipcReq {
       TimeMin: ProtectItem
       warnVal: ProtectItem
     }
-    dataSave: {
-      time: StepDataSave
-      U: StepDataSave
-      I: StepDataSave
-    }
+    dataSave: StepsDataSave
     startId: number
     filePath: string
   }

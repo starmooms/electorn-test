@@ -14,7 +14,7 @@ export default class Sqlite {
   /** 连接数据库 */
   connect() {
     return new Promise<null>((resolve, reject) => {
-      logger.info(this.fileName)
+      logger.info('sql connect', this.fileName)
       if (!this.fileName) {
         reject(`connect fileName undefined`)
         return

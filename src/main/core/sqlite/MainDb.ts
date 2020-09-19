@@ -164,11 +164,11 @@ class MainDb {
     // this.sqlite.exec(sql)
   }
 
-  /** 获取历史列表 */
+  /** 根据id获取单条历史记录 */
   async getHistory(historyId: number) {
     const { channelHistory } = this.tables
     return this.sqlite.get<any>(
-      `SELECT * FROM ${channelHistory} WHERE historyId=${historyId}`
+      `SELECT * FROM ${channelHistory} WHERE id=${historyId}`
     )
   }
 }

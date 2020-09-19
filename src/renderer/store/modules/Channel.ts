@@ -38,7 +38,7 @@ export default class ChannelImpl extends VuexModule {
   public list: Port.MasterList | null = null
   public channelMap: ChannelMap | null = null
   public statusList = [
-    { name: '开始', action: 'start' },
+    // { name: '启动', action: 'start' },
     { name: '暂停', action: 'pause' },
     { name: '继续', action: 'continued' },
     { name: '重新启动', action: 'reset' },

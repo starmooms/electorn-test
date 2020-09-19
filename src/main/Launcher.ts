@@ -12,6 +12,7 @@ import MenuManager from './MenuManager'
 import winManager from './core/WinManager'
 import ipcManage from './core/IpcManage'
 import WorkStepSee from './window/WorkStepSee'
+import createHistoryWin from './window/HistoryWin'
 import UpdateManager from './core/UpdateManager'
 import SlaverTrend from './window/SlaverTrend'
 import './core/ConfigManage'
@@ -154,6 +155,9 @@ export default class Launcher {
           break
         case 'slaverTrend':
           new SlaverTrend(data.data, this.usbManager)
+          break
+        case 'history':
+          createHistoryWin(data.data)
           break
         default:
           throw new Error(`${data.type} win no defined`)

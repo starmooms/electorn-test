@@ -1,5 +1,6 @@
 import HistoryDb from './HistoryDb'
 import mainDb from './MainDb'
+import logger from '../Logger'
 
 interface CreateHistory {
   fileId: string
@@ -22,6 +23,7 @@ class HistoryDbCache {
     }
   >()
 
+  /** 添加缓存 */
   set(historyId: number, HistoryDb: HistoryDb, saveConf: ipcReq.StepsDataSave) {
     const dataSave = {
       U: null,
@@ -40,34 +42,37 @@ class HistoryDbCache {
       }
     }
 
-    this.historyDbMap.set(historyId, {
+    const cache = {
       db: HistoryDb,
       dataSave
-    })
-  }
-
-  async getItemAsync(historyId) {
-    const item = this.historyDbMap.get(historyId)
-    if (!item) {
-      const data = await mainDb.getHistory(historyId)
-      const historyDb = new HistoryDb(data.fileId, data.filePath)
     }
+    this.historyDbMap.set(historyId, cache)
+    return cache
   }
 
   getItem(historyId: number) {
-    const item = this.historyDbMap.get(historyId)
-    if (!item) {
-      throw new Error(`${historyId} historyDb no defined`)
-    }
-    return item
+    return this.historyDbMap.get(historyId)
   }
 
-  getDb(historyId: number) {
-    return this.getItem(historyId).db
+  /** 获取缓存，不存在则根据historyId，尝试打开 */
+  async getItemAsync(historyId) {
+    const cache = this.getItem(historyId)
+    if (cache) return cache
+    const data = await mainDb.getHistory(historyId)
+    const historyDb = new HistoryDb(data.fileId, data.filePath)
+    const stepInfo = await historyDb.open()
+    return this.set(historyId, historyDb, stepInfo.dataSave)
+  }
+
+  async getDb(historyId: number) {
+    const cache = await this.getItemAsync(historyId)
+    return cache.db
   }
 
   getSaveConf(historyId: number) {
-    return this.getItem(historyId).dataSave
+    const cache = this.getItem(historyId)
+    if (!cache) return null
+    return cache.dataSave
   }
 
   async createdHistory({ params, fileId, filePath, historyId }: CreateHistory) {
@@ -79,8 +84,13 @@ class HistoryDbCache {
   /** 保存采样 */
   async saveSamp(list: Db.SaveSampList[]) {
     const promiseArr = list.map(async item => {
-      const db = this.getDb(item.projectId)
-      return db.saveSamp(item.sampList)
+      try {
+        const db = await this.getDb(item.projectId)
+        return db.saveSamp(item.sampList)
+      } catch (err) {
+        logger.error(err)
+        return false
+      }
     })
     await Promise.all(promiseArr)
   }

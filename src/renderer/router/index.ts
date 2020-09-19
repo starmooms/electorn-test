@@ -42,6 +42,11 @@ const routes: Array<RouteConfig> = [
         path: '/port/SlaverTrend/:path/:masterId/:slaverId',
         name: 'SlaverTrend',
         component: () => import('@/renderer/views/SlaverTrend.vue')
+      },
+      {
+        path: '/history/:filePath',
+        name: 'History',
+        component: () => import('@/renderer/views/History/index.vue')
       }
     ]
   }

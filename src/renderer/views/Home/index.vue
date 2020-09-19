@@ -6,11 +6,18 @@
           {{ readTranslate ? '关闭采样' : '打开采样' }}
         </el-button>
         <el-button type="primary" @click="stepsBatchOpen">
-          机柜批量编辑工步
+          机柜批量启动
         </el-button>
         <el-button type="primary" @click="openBatch">
           机柜批量操作
         </el-button>
+        <div>
+          <file-select openType="file" @change="importHistory">
+            <el-button type="primary">
+              导入外部文件
+            </el-button>
+          </file-select>
+        </div>
       </el-form>
 
       <div class="color-box">
@@ -113,11 +120,13 @@ import BatchModal from './components/BatchModal.vue'
 import SlaverDetails from './components/SlaverDetails/index.vue'
 import SetChannelStatus from '@/renderer/components/SetChannelStatus.vue'
 import ChannelItem from './components/ChannelItem.vue'
+import FileSelect from '@/renderer/components/FileSelect.vue'
 
 @Component({
   name: 'Home',
   components: {
     StepSetModal,
+    FileSelect,
     CalModal,
     BatchModal,
     SlaverDetails,
@@ -195,7 +204,7 @@ export default class Home extends Vue {
     this.stepsShow = true
   }
 
-  stepStart(data: any) {
+  channelStart(data: any) {
     this.stepsShowItem = data
     this.stepsBatch = false
     this.stepsShow = true
@@ -228,6 +237,15 @@ export default class Home extends Vue {
 
   async setTranslate() {
     await SettingStatus.toggleReadTranslate()
+  }
+
+  importHistory(filePath: string) {
+    this.$command.send('/createdWin', {
+      type: 'history',
+      data: {
+        filePath
+      }
+    })
   }
 
   trendChange() {

@@ -1,9 +1,20 @@
 import Sqlite from './sqlite'
 import path from 'path'
 import dayjs from 'dayjs'
+import logger from '../Logger'
 
 interface TableName {
   name: string
+}
+
+interface StepInfoItem {
+  id: number
+  historyId: number
+  startId: number
+  stepList: []
+  protect: Port.Protect
+  dataSave: ipcReq.StepsDataSave
+  createTime: number
 }
 
 export default class HistoryDb {
@@ -19,6 +30,7 @@ export default class HistoryDb {
   }
 
   async connect() {
+    if (this.sqlite.isConnect) return
     await this.sqlite.connect()
     const data = await this.sqlite.all<TableName[]>(
       `SELECT name FROM sqlite_master`
@@ -72,10 +84,10 @@ export default class HistoryDb {
         "channelId" INTEGER NOT NULL,
         "U" INTEGER NOT NULL,
         "I" REAL NOT NULL,
+        "stepId" INTEGER NOT NULL,
         "workCode" TEXT NOT NULL,
         "errorCode" TEXT NOT NULL,
         "endCode" TEXT NOT NULL,
-        "stepId" INTEGER NOT NULL,
         "createTime" INTEGER NOT NULL
       );
       CREATE INDEX "samp_data_channel_id"
@@ -104,9 +116,7 @@ export default class HistoryDb {
     }: ipcReq.WriteSteps,
     historyId: number
   ) {
-    if (!this.sqlite.isConnect) {
-      await this.connect()
-    }
+    await this.connect()
     const { stepsInfo, channelInfo } = this.tables
     const now = dayjs().valueOf()
 
@@ -149,29 +159,36 @@ export default class HistoryDb {
     await this.sqlite.run(insertChannelInfo)
   }
 
-  /** 打开已有文件 */
-  async open() {}
+  /** 打开已有文件, 返回工步信息 */
+  async open() {
+    await this.connect()
+    const { stepsInfo } = this.tables
+    const data = await this.sqlite.get(`SELECT * FROM ${stepsInfo}`)
+    data.dataSave = JSON.parse(data.dataSave)
+    data.stepList = JSON.parse(data.stepList)
+    data.protect = JSON.parse(data.protect)
+    return data as StepInfoItem
+  }
 
   /** 保存采样 */
   async saveSamp(sampList: Db.sampList) {
     const { sampData } = this.tables
-    let insertSql = `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, workCode, errorCode, endCode, stepId, createTime) VALUES`
+    let insertSql = `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, stepId, workCode, errorCode, endCode, createTime) VALUES`
     sampList.forEach(item => {
       insertSql += `(
-        ${item.masterId},
-        ${item.slaverId},
-        ${item.channelId},
-        ${item.U},
-        ${item.I},
-        ${item.workerCode},
-        ${item.errorCode},
-        ${item.endStatus},
-        ${item.workerId},
-        ${item.createTime}
-      ),`
+          ${item.masterId},
+          ${item.slaverId},
+          ${item.channelId},
+          ${item.U},
+          ${item.I},
+          ${item.workerId},
+          '${item.workerCode}',
+          '${item.errorCode}',
+          '${item.endCode}',
+          ${item.createTime}
+        ),`
     })
     insertSql = insertSql.replace(/,$/, ';')
     await this.sqlite.run(insertSql)
-    return true
   }
 }

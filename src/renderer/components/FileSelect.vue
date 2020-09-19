@@ -1,21 +1,31 @@
 <template>
-  <el-button class="select-directory" @click.stop="onFolderClick">
-    <svg-icon icon-class="filedir"></svg-icon>
-  </el-button>
+  <div class="select-file" @click.stop="onFolderClick">
+    <slot>
+      <el-button class="select-directory">
+        <svg-icon class="directory-icon" icon-class="filedir"></svg-icon>
+      </el-button>
+    </slot>
+  </div>
 </template>
 
 <script lang="ts">
-import { remote } from 'electron'
-import { Component, Vue, Model } from 'vue-property-decorator'
+import { remote, OpenDialogOptions } from 'electron'
+import { Component, Vue, Model, Prop } from 'vue-property-decorator'
 
 @Component
 export default class FileSelect extends Vue {
   @Model('change', { type: String }) readonly path!: string
+  @Prop({ type: String }) readonly openType!: string
 
   onFolderClick() {
+    const properties: OpenDialogOptions['properties'] =
+      this.openType === 'file'
+        ? ['openFile']
+        : ['openDirectory', 'createDirectory']
+
     remote.dialog
       .showOpenDialog({
-        properties: ['openDirectory', 'createDirectory']
+        properties: properties
       })
       .then(({ canceled, filePaths }) => {
         if (canceled || filePaths.length === 0) {
@@ -28,4 +38,8 @@ export default class FileSelect extends Vue {
 }
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.directory-icon {
+  font-size: 14px;
+}
+</style>

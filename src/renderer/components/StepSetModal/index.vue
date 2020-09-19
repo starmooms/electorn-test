@@ -307,6 +307,7 @@ export default class StepSetModal extends Vue {
       this.$message.warning(msg)
       return
     }
+
     if (list.length === 0) {
       this.$message.error('请正确设置工步列表')
       return

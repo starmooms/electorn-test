@@ -42,7 +42,7 @@ declare namespace Port {
     workerId: number
     U: number
     I: number
-    endStatus: number
+    endCode: string
     errorCode: string
     errorMsg: string
     workerStatus: { name: string; status: string }

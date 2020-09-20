@@ -1,9 +1,13 @@
 <template>
   <div v-loading="loading">
+    <div class="channel-select">
+      <ChannelPosition @changeData="changeChannelPos"></ChannelPosition>
+      <el-button @click="getSampData" type="primary">刷新</el-button>
+    </div>
     <split-pane class="main-box" split="vertical">
       <template slot="paneL">
         <div class="left-container pane-container">
-          <samp-chart></samp-chart>
+          <samp-chart ref="sampChart"></samp-chart>
         </div>
       </template>
       <template slot="paneR">
@@ -23,16 +27,23 @@ import SampList from './components/SampList.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
 import dayjs from 'dayjs'
 import { formatTimeStr } from '@/renderer/utils/util'
+import { WORKSTEPS_MAP } from '@/shared/config/port'
+import ChannelPosition from './components/ChannelPosition.vue'
 
 @Component({
   components: {
     RecycleScroller,
     SplitPane,
     SampChart,
-    SampList
+    SampList,
+    ChannelPosition
   }
 })
 export default class History extends Vue {
+  $refs!: {
+    sampChart: SampChart
+  }
+
   sampData: any[] = []
   filePath = ''
   db!: HistoryDb
@@ -43,7 +54,6 @@ export default class History extends Vue {
       this.loading = true
       this.filePath = filePath
       this.db = new HistoryDb(this.filePath)
-      console.log(this.db)
       await this.db.connect()
       this.getSampData()
     } catch (err) {
@@ -53,25 +63,33 @@ export default class History extends Vue {
     }
   }
 
-  async getSampData() {
+  async getSampData(params: any) {
     try {
       this.loading = true
       const data = await this.db.getSampData({
-        $masterId: 0,
-        $slaverId: 0,
-        $channelId: 0
+        $masterId: params.masterId,
+        $slaverId: params.masterId,
+        $channelId: params.masterId
       })
+      console.log(data)
       this.sampData = data.map(item => {
+        const worker = WORKSTEPS_MAP[item.workCode]
         return {
-          createTimeStr: dayjs(item.createTime).format(formatTimeStr),
+          createTimeStr: dayjs.unix(item.createTime).format(formatTimeStr),
+          workerName: worker?.name,
           ...item
         }
       })
+      this.$refs.sampChart.setCharts(this.sampData)
     } catch (err) {
       console.error(err)
     } finally {
       this.loading = false
     }
+  }
+
+  changeChannelPos(data: any) {
+    console.log(data)
   }
 
   mounted() {
@@ -87,12 +105,16 @@ export default class History extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.channel-select {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
 .main-box {
   height: 80vh;
 
   .pane-container {
     overflow: hidden;
-    padding: 10px;
+    padding: 20px;
   }
 
   .left-container {
@@ -103,50 +125,6 @@ export default class History extends Vue {
 
   .right-container {
     overflow: hidden;
-    .samp-data-tab {
-      max-width: 600px;
-      border: 1px solid #dcdfe6;
-      overflow: auto;
-
-      .spam-item {
-        height: 32px;
-        line-height: 32px;
-        box-sizing: border-box;
-        min-width: 580px;
-        border-bottom: 1px solid #dcdfe6;
-        .samp-w-box {
-          display: flex;
-          .spam-text {
-            border-right: 1px solid #dcdfe6;
-            padding-left: 10px;
-            box-sizing: border-box;
-            &:last-child {
-              border-right: none;
-            }
-          }
-          .date-r {
-            min-width: 200px;
-          }
-          .u-r,
-          .i-r,
-          .workeId-r {
-            min-width: 80px;
-          }
-          .status-r {
-            min-width: 140px;
-          }
-        }
-      }
-
-      .spam-table {
-        height: 60vh;
-        margin: 0;
-        width: 100%;
-        .even {
-          background-color: #f5f7fa;
-        }
-      }
-    }
   }
 }
 </style>

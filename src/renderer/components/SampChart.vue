@@ -127,8 +127,8 @@ export default class SampChart extends Vue {
               const { seriesName, marker, value, dimensionNames } = params[i]
               if (i === 0) {
                 const xName = value[dimensionNames[0]] // 时间
-                const workerId = `工步ID：${value.workerId + 1}`
-                const workerStatus = `工步信息：${value.workerStatus.name}`
+                const workerId = `工步ID：${value.stepId + 1}`
+                const workerStatus = `工步信息：${value.workerName}`
                 htmlStr += `${xName}</br>${workerId}</br>${workerStatus}</br>`
               }
               const yValue = value[dimensionNames[1]] // y轴值
@@ -202,9 +202,9 @@ export default class SampChart extends Vue {
       sizeOpts
     )
     this.polar = polar
-    if (this.$refs.echart.chart) {
-      this.$refs.echart.chart.clear()
-    }
+    // if (this.$refs.echart.chart) {
+    //   this.$refs.echart.chart.clear()
+    // }
     this.$refs.echart.mergeOptions(polar)
   }
 

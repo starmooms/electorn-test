@@ -47,8 +47,6 @@ class MainDb {
     }
   }
 
-  async getProjectId() {}
-
   async createTable(tables: TableName[]) {
     let sql = ''
     const tableName = tables.map(item => item.name)

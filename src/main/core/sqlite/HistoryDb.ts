@@ -2,6 +2,7 @@ import Sqlite from './sqlite'
 import path from 'path'
 import dayjs from 'dayjs'
 import logger from '../Logger'
+import { channelList } from '@/shared/config/port'
 
 interface TableName {
   name: string
@@ -24,9 +25,11 @@ export default class HistoryDb {
     channelInfo: 'channel_info',
     sampData: 'samp_data'
   }
+  filePath = ''
 
   constructor(fileId: string, filePath: string) {
-    this.sqlite = new Sqlite(path.resolve(filePath, `${fileId}`))
+    this.filePath = path.resolve(filePath, `${fileId}`)
+    this.sqlite = new Sqlite(this.filePath)
   }
 
   async connect() {
@@ -63,10 +66,12 @@ export default class HistoryDb {
         "masterId" INTEGER NOT NULL,
         "slaverId" INTEGER NOT NULL,
         "channelId" INTEGER NOT NULL,
+        "fullId" TEXT NOT NULL,
         "startTime" INTEGER,
         "endTime" INTEGER,
         "createTime" INTEGER NOT NULL
       );
+      CREATE INDEX "channel_info_channel_full_id" ON "${channelInfo}" ("fullId");
       CREATE INDEX "channel_info_channel_id"
       ON "${channelInfo}" (
         "masterId",
@@ -137,11 +142,11 @@ export default class HistoryDb {
     })
 
     // 创建列表
-    let insertChannelInfo = `INSERT INTO ${channelInfo} (masterId, slaverId, channelId, createTime) VALUES`
+    let insertChannelInfo = `INSERT INTO ${channelInfo} (masterId, slaverId, channelId, fullId, createTime) VALUES`
     masterIds.forEach(masterId => {
       slaverIds.forEach(slaverId => {
         channelIds.forEach(channelId => {
-          insertChannelInfo += `(${masterId}, ${slaverId}, ${channelId}, ${now}),`
+          insertChannelInfo += `(${masterId}, ${slaverId}, ${channelId}, '${masterId}_${slaverId}_${channelId}', ${now}),`
         })
       })
     })
@@ -181,7 +186,7 @@ export default class HistoryDb {
           ${item.channelId},
           ${item.U},
           ${item.I},
-          ${item.workerId},
+          ${item.workerId + 1},
           '${item.workerCode}',
           '${item.errorCode}',
           '${item.endCode}',
@@ -189,6 +194,22 @@ export default class HistoryDb {
         ),`
     })
     insertSql = insertSql.replace(/,$/, ';')
+
+    // if (changeStatus.length > 0) {
+    //   const startTimeUpdate = ''
+    //   const endTimeUpdate = ''
+    //   changeStatus.forEach(item => {
+    //     if (item.status === 'RUN') {
+    //       startTimeUpdate = ``
+    //     } else if (item.status === 'END') {
+    //     }
+    //   })
+    // }
     await this.sqlite.run(insertSql)
   }
+
+  // async saveChannelStatus(channelStatus: any[]) {
+  //   const { channelInfo } = this.tables
+  //   let updateSql = `UPDATE ${channelInfo} SET startTime=`
+  // }
 }

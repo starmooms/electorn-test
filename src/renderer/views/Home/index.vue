@@ -11,7 +11,7 @@
         <el-button type="primary" @click="openBatch">
           机柜批量操作
         </el-button>
-        <div>
+        <div class="select-file-btn">
           <file-select openType="file" @change="importHistory">
             <el-button type="primary">
               导入外部文件
@@ -366,5 +366,10 @@ export default class Home extends Vue {
       padding: 0;
     }
   }
+}
+
+.select-file-btn {
+  display: inline-block;
+  margin-left: 10px;
 }
 </style>

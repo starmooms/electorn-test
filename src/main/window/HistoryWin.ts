@@ -6,12 +6,14 @@ interface Opts {
 
 export default function createHistoryWin(opts: Opts) {
   const winName = `history`
-  if (winManager.getWin(winName, true)) {
+  const win = winManager.getWin(winName, true)
+  if (win) {
+    win.webContents.send('/history/changeFile', opts)
     return true
   }
   winManager.createdWin(
     winName,
-    `${winName}/${encodeURIComponent(opts.filePath)}`
+    `${winName}/historyFile/${encodeURIComponent(opts.filePath)}`
   )
 }
 

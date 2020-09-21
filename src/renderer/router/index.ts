@@ -46,6 +46,17 @@ const routes: Array<RouteConfig> = [
       {
         path: '/history/:filePath',
         name: 'History',
+        props: {
+          isHistory: true
+        },
+        component: () => import('@/renderer/views/History/index.vue')
+      },
+      {
+        path: '/nowChannel/:masterId/:slaverId/:channelId',
+        name: 'nowChannel',
+        props: {
+          isHistory: false
+        },
         component: () => import('@/renderer/views/History/index.vue')
       }
     ]

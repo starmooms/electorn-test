@@ -60,13 +60,9 @@ class MainDb {
         "masterId" integer NOT NULL,
         "slaverId" integer NOT NULL,
         "channelId" integer NOT NULL,
-        "workStartTime" integer DEFAULT NULL,
-        "workFilePath" TEXT,
-        "sampU" integer,
-        "sampI" real,
-        "sampTime" integer
+        "status" text DEFAULT NULL
       );
-      CREATE INDEX "channel_index"
+      CREATE INDEX "channel_status_channel_index"
       ON "${channelStatus}" (
         "masterId",
         "slaverId",
@@ -168,6 +164,37 @@ class MainDb {
     return this.sqlite.get<any>(
       `SELECT * FROM ${channelHistory} WHERE id=${historyId}`
     )
+  }
+
+  /** 记录通道状态 */
+  async saveChannelStatus(list: Port.ChannelChangeItem[]) {
+    const runStatus: string[] = []
+    const endStatus: string[] = []
+    list.forEach(item => {
+      const sql = `(masterId=${item.masterId} AND slaverId=${item.slaverId} AND channelId=${item.channelId})`
+      if (item.status === 'RUN') {
+        runStatus.push(sql)
+      } else if (item.status === 'END') {
+        endStatus.push(sql)
+      }
+    })
+
+    let updateSql = ''
+    const { channelStatus } = this.tables
+    if (runStatus.length > 0) {
+      updateSql += `UPDATE ${channelStatus} SET status='RUN' WHERE ${runStatus.join(
+        'OR'
+      )};`
+    }
+    if (endStatus.length > 0) {
+      updateSql += `UPDATE ${channelStatus} SET status='END' WHERE ${endStatus.join(
+        'OR'
+      )};`
+    }
+    if (updateSql) {
+      await this.sqlite.exec(updateSql)
+    }
+    return
   }
 }
 

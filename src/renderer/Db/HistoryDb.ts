@@ -30,10 +30,6 @@ export default class HistoryDb {
   async connect() {
     if (this.sqlite.isConnect) return
     await this.sqlite.connect()
-    const data = await this.sqlite.all<TableName[]>(
-      `SELECT name FROM sqlite_master`
-    )
-    console.log(data)
   }
 
   async close() {
@@ -42,9 +38,20 @@ export default class HistoryDb {
 
   async getSampData(params) {
     const { sampData } = this.tables
-    return this.sqlite.all(
+    const data = await this.sqlite.all(
       `SELECT * FROM ${sampData} WHERE masterId=$masterId and slaverId=$slaverId and channelId=$channelId`,
       params
     )
+    return data
+  }
+
+  async getChannelList() {
+    const { channelInfo } = this.tables
+    return this.sqlite.all(`SELECT * FROM ${channelInfo}`)
+  }
+
+  async getWorkStep() {
+    const { stepsInfo } = this.tables
+    return this.sqlite.get(`SELECT * FROM ${stepsInfo} WHERE id=1`)
   }
 }

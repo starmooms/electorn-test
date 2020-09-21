@@ -22,26 +22,29 @@ export default class WorkStepSee {
   createdWin() {
     const { path, slaverId, masterId, channelId } = this.opts
     const basePath = `${encodeURIComponent(path)}/${masterId}/${slaverId}`
-    const winName = `port/WorkerSee/${basePath}`
-    if (winManager.getWin(winName, true)) {
-      return true
-    }
-    const portItem = this.usbManager.getPortData(path)
-    if (!portItem) {
-      return false
-    }
+    const winName = 'nowChannel'
+    const winPath = `nowChannel/0/0/0`
+    winManager.createdWin(winName, winPath)
+    // const winName = `port/WorkerSee/${basePath}`
+    // if (winManager.getWin(winName, true)) {
+    //   return true
+    // }
+    // const portItem = this.usbManager.getPortData(path)
+    // if (!portItem) {
+    //   return false
+    // }
 
-    const win = winManager.createdWin(winName, `${winName}/${channelId}`)
+    // const win = winManager.createdWin(winName, `${winName}/${channelId}`)
 
-    /** 读采样 */
-    const closeTranslate = portItem.emitTranslate({
-      masterId,
-      slaverId,
-      winName
-    })
+    // /** 读采样 */
+    // const closeTranslate = portItem.emitTranslate({
+    //   masterId,
+    //   slaverId,
+    //   winName
+    // })
 
-    win.on('closed', () => {
-      closeTranslate()
-    })
+    // win.on('closed', () => {
+    //   closeTranslate()
+    // })
   }
 }

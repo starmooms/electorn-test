@@ -289,7 +289,9 @@ export default class StepSetModal extends Vue {
 
     let list: any = []
     if (!msg) {
+      console.log(this.stepsList)
       list = this.stepsList.filter(item => {
+        console.log(item)
         if (item.name) {
           const hasNull = Object.keys(item.input).find(
             key => !item.input[key] && item.input[key] !== 0
@@ -328,7 +330,7 @@ export default class StepSetModal extends Vue {
     if (confirm) {
       const data = await setSteps({
         path: this.portPath,
-        stepsList: this.list,
+        stepsList: list,
         masterIds,
         slaverIds,
         channelIds,

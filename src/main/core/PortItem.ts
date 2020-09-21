@@ -85,6 +85,7 @@ export default class PortItem {
   closeNotify = new NotifyUtil()
   errorNotify = new NotifyUtil()
   openErrNotify = new NotifyUtil()
+  channelMap = new Map<string, Port.ChannelItem>()
 
   constructor(path: string) {
     this.path = path
@@ -425,6 +426,7 @@ export default class PortItem {
           const nowTime = dayjs().valueOf()
           const list: any[] = []
           const channelStatus: Port.ChannelChangeItem[] = []
+          const channelStatusMap: Port.ChannelChangeMap = {}
           const saveSampData: Port.SaveSampData = {}
 
           readModel.ecahList('sampList', readItem => {
@@ -446,12 +448,20 @@ export default class PortItem {
               createTime: nowUnix
             }
             list.push(samp)
-            const channel = this.channelList[masterId].slaverList[samp.slaverId].list[samp.channelId] // eslint-disable-line
+            // const channel = this.channelList[masterId].slaverList[samp.slaverId].list[samp.channelId] // eslint-disable-line
+            const channel = this.channelMap.get(`${masterId}_${samp.slaverId}_${samp.channelId}`) // eslint-disable-line
+            if (!channel) {
+              logger.warn(
+                `spam channel ${masterId}_${samp.slaverId}_${samp.channelId} no found`
+              )
+              return
+            }
             const lastSamp = channel.samp // eslint-disable-line
             channel.samp = samp
 
             let shouldSaveSamp = false // 是否保存采样
             let nowStatus = channel.nowStatus // 通道状态
+            let changeChannel: Port.ChannelChangeItem | null = null
 
             // 判断状态变化
             if (
@@ -464,20 +474,20 @@ export default class PortItem {
               if (lastStatus !== nowStatus) {
                 shouldSaveSamp = true
                 channel.nowStatus = nowStatus
-                const changeStatus: Port.ChannelChangeItem = {
+                changeChannel = {
                   masterId,
                   slaverId: samp.slaverId,
                   channelId: samp.channelId,
-                  start: null,
-                  end: null,
-                  status: nowStatus
+                  time: nowTime,
+                  status: nowStatus,
+                  filePath: ''
                 }
-                if (nowStatus === 'RUN') {
-                  changeStatus.start = nowTime
-                } else {
-                  changeStatus.end = nowTime
+                const projectId = samp.projectId
+                if (channelStatusMap[projectId]) {
+                  channelStatusMap[projectId] = []
                 }
-                channelStatus.push(changeStatus)
+                channelStatusMap[projectId].push(changeChannel)
+                channelStatus.push(changeChannel)
               }
             }
 
@@ -540,11 +550,13 @@ export default class PortItem {
             ([key, val]) => {
               return {
                 projectId: Number(key),
-                sampList: val
+                sampList: val,
+                changeStatusList: channelStatusMap[key] || []
               }
             }
           )
           await historyDbCache.saveSamp(saveSampList)
+          await mainDb.saveChannelStatus()
 
           if (errorList.length > 0) {
             redisClient.saveError(errorList)
@@ -684,21 +696,29 @@ export default class PortItem {
       return this.channelList
     }
     this.channelList = channelList
-    const channelStatus = await redisClient.getChannelList(this.port.path)
-    Object.entries(channelStatus).forEach(([mKey, masterItem]) => {
-      const master = this.channelList[mKey]
-
-      Object.entries(masterItem).forEach(([sKey, slaverItem]) => {
-        const slaver = master.slaverList[sKey]
-
-        Object.entries(slaverItem).forEach(([cKey, channelItem]) => {
-          if (channelItem.start && !channelItem.end) {
-            const channel = slaver.list[cKey]
-            channel.workerStart = channelItem.start
-          }
+    Object.entries(this.channelList).forEach(([, masterItem]) => {
+      Object.entries(masterItem.slaverList).forEach(([, slaverItem]) => {
+        Object.entries(slaverItem.list).forEach(([, channelItem]) => {
+          this.channelMap.set(channelItem.fullId, channelItem)
         })
       })
     })
+
+    // const channelStatus = await redisClient.getChannelList(this.port.path)
+    // Object.entries(channelStatus).forEach(([mKey, masterItem]) => {
+    //   const master = this.channelList[mKey]
+
+    //   Object.entries(masterItem).forEach(([sKey, slaverItem]) => {
+    //     const slaver = master.slaverList[sKey]
+
+    //     Object.entries(slaverItem).forEach(([cKey, channelItem]) => {
+    //       if (channelItem.start && !channelItem.end) {
+    //         const channel = slaver.list[cKey]
+    //         channel.workerStart = channelItem.start
+    //       }
+    //     })
+    //   })
+    // })
 
     return this.channelList
   }

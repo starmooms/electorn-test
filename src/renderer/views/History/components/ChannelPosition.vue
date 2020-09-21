@@ -38,7 +38,7 @@ export default class ChPosition extends Vue {
     default() {
       return {
         masterId: 0,
-        slaverId: 1,
+        slaverId: 0,
         channelId: 0
       }
     }
@@ -80,7 +80,7 @@ export default class ChPosition extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.el-input-number-mini {
-  width: 100px;
+.el-input-number {
+  width: 90px;
 }
 </style>

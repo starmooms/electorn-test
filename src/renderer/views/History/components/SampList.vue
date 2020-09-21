@@ -3,19 +3,21 @@
     <RecycleScroller
       class="th-body spam-table"
       ref="recycleScroller"
-      key-field="createTime"
-      :items="sampData"
-      :item-size="32"
+      key-field="sIndex"
+      :items="list"
+      :item-size="24"
     >
       <template #before>
         <div>
           <div class="th-head spam-head">
             <div class="th-item spam-item">
-              <div class="th-td td-date">日期</div>
+              <div class="th-td td-index"></div>
+              <div class="th-td td-extend"></div>
               <div class="th-td td-u">电压</div>
               <div class="th-td td-i">电流</div>
               <div class="th-td td-work">执行工步</div>
               <div class="th-td td-work-id">工步ID</div>
+              <div class="th-td td-date">日期</div>
             </div>
           </div>
           <div
@@ -27,17 +29,33 @@
         </div>
       </template>
       <template v-slot="{ item, index }">
-        <div class="th-item spam-item" :class="{ even: index % 2 }">
-          <div class="th-td td-date">
-            <span>{{ item.createTimeStr }}</span>
+        <div class="th-item spam-item spam-step" v-if="item.type === 'step'">
+          <div class="th-td td-index"></div>
+          <div class="th-td td-extend">
+            <svg-icon
+              @click="stepSubSet(item, index)"
+              class="icon"
+              :icon-class="item.show ? 'extend-hide' : 'extend-show'"
+            ></svg-icon>
           </div>
+
+          <div class="th-td td-step-msg">
+            {{ item.msg }}
+          </div>
+        </div>
+        <div class="th-item spam-item" v-else :class="{ even: index % 2 }">
+          <div class="th-td td-index">{{ item.sIndex }}</div>
+          <div class="th-td td-extend"></div>
           <div class="th-td td-u">{{ item.U }}</div>
           <div class="th-td td-i">{{ item.I }}</div>
           <div class="th-td td-work">
             {{ item.workerName }}
           </div>
           <div class="th-td td-work-id">
-            {{ item.stepId + 1 }}
+            {{ item.stepId }}
+          </div>
+          <div class="th-td td-date">
+            <span>{{ item.createTimeStr }}</span>
           </div>
         </div>
       </template>
@@ -45,7 +63,7 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator'
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 import { RecycleScroller } from 'vue-virtual-scroller'
 
 @Component({
@@ -55,6 +73,40 @@ import { RecycleScroller } from 'vue-virtual-scroller'
 })
 export default class SampList extends Vue {
   @Prop({ type: Array }) sampData!: any[]
+  @Prop({ type: Array }) stepList!: any[]
+
+  list: any[] = []
+
+  @Watch('sampData')
+  changeList() {
+    let list: any[] = []
+    this.stepList.forEach((item, index) => {
+      console.log(item)
+      const sub = this.sampData.slice(item.start, item.end)
+      list.push({
+        ...item,
+        sIndex: `step-${index}`,
+        type: 'step',
+        show: true,
+        subList: [],
+        length: sub.length
+      })
+      list = list.concat(sub)
+    })
+    this.list = list
+    console.log(this.list)
+  }
+
+  stepSubSet(step, index) {
+    const status = !step.show
+    if (status) {
+      this.list.splice(index + 1, 0, ...step.subList)
+    } else {
+      const list = this.list.splice(index + 1, step.length)
+      step.subList = list
+    }
+    step.show = status
+  }
 
   mounted() {
     console.log(this.sampData)
@@ -63,6 +115,9 @@ export default class SampList extends Vue {
 </script>
 
 <style lang="scss" scoped>
+$oBackground: #fffbf0;
+$td-h: 24px;
+
 .virtual-table {
   border: 1px solid #dcdfe6;
   .th-item {
@@ -79,8 +134,8 @@ export default class SampList extends Vue {
       border-bottom: 1px solid #dcdfe6;
       font-size: 12px;
       position: relative;
-      height: 32px;
-      line-height: 32px;
+      height: $td-h;
+      line-height: $td-h;
       /* &:after {
         content: '';
         position: absolute;
@@ -119,7 +174,7 @@ export default class SampList extends Vue {
   ::v-deep
     .vue-recycle-scroller.direction-vertical
     .vue-recycle-scroller__item-wrapper {
-    min-width: 546px;
+    min-width: 600px;
   }
 
   ::v-deep .vue-recycle-scroller__slot {
@@ -130,25 +185,56 @@ export default class SampList extends Vue {
   .th-head {
     .th-item {
       background-color: #fff;
+      .td-extend {
+        background-color: transparent;
+      }
     }
   }
 
   .th-item {
+    padding-right: 0;
     .th-td {
       // flex: 1 0;
-      flex-grow: 1;
-      box-sizing: border-box;
+      // flex-grow: 1;
+      // box-sizing: border-box;
     }
     .td-date {
-      flex-basis: 160px;
+      flex-grow: 1;
+      min-width: 160px;
+    }
+    .td-index {
+      width: 36px;
+      text-align: center;
+      padding-left: 0;
     }
     .td-u,
     .td-i,
     .td-work-id {
-      flex-basis: 80px;
+      width: 80px;
     }
     .td-work {
-      flex-basis: 140px;
+      width: 140px;
+    }
+
+    .td-extend {
+      width: 24px;
+      min-width: 24px;
+      background-color: $oBackground;
+      text-align: center;
+      padding-left: 0;
+    }
+    .td-step-msg {
+      flex-grow: 1;
+    }
+  }
+
+  .spam-step {
+    background-color: $oBackground;
+    display: flex;
+    .td-extend {
+      .icon {
+        cursor: pointer;
+      }
     }
   }
 }

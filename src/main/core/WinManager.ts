@@ -62,10 +62,20 @@ class WinManager {
     let protocolPath = `app://./`
     if (devUrl) {
       protocolPath = devUrl
-      if (!process.env.IS_TEST) win.webContents.openDevTools()
+      if (!process.env.IS_TEST) {
+        win.webContents.openDevTools()
+        // https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/698
+        // const finishLoadListener = () => {
+        //   logger.info('reload ====>')
+        //   win.webContents.reload()
+        //   win.webContents.removeListener('did-finish-load', finishLoadListener)
+        // }
+        // win.webContents.on('did-finish-load', finishLoadListener)
+      }
     }
 
     this.winList.set(name, win)
+
     win.loadURL(`${protocolPath}${path}`)
     win.on('closed', () => {
       this.winList.delete(name)

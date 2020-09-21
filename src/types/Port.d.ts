@@ -57,9 +57,13 @@ declare namespace Port {
     masterId: number
     slaverId: number
     channelId: number
-    start: number | null
-    end: number | null
+    time: number
     status: 'RUN' | 'END'
+    filePath: string
+  }
+
+  interface ChannelChangeMap {
+    [projectId: string]: ChannelChangeItem[]
   }
 
   interface BaseError {

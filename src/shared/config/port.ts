@@ -62,11 +62,11 @@ WORKSTEPS.forEach(item => {
 
 /** 工步input字节序号 */
 export const workStepsInput = {
-  time: { len: 4, serial: 5, unit: 's', name: '时间(秒)' },
-  U: { len: 2, serial: 6, unit: 'mV', name: '电压(mV)' },
-  I: { len: 4, serial: 7, unit: 'mA', name: '电流(mA)' },
-  W: { len: 4, serial: 8, unit: 'W', name: '功率(W)' },
-  R: { len: 4, serial: 9, unit: 'mΩ', name: '电阻(mΩ)' },
+  time: { len: 4, serial: 5, unit: 's', name: '时间' },
+  U: { len: 2, serial: 6, unit: 'mV', name: '电压' },
+  I: { len: 4, serial: 7, unit: 'mA', name: '电流' },
+  W: { len: 4, serial: 8, unit: 'W', name: '功率' },
+  R: { len: 4, serial: 9, unit: 'mΩ', name: '电阻' },
   loopNum: { len: 4, serial: 10, unit: '', name: '循环次数' },
   loopStart: { len: 1, serial: 11, unit: '', name: '循环起始' },
   loopNow: { len: 1, serial: 12, unit: '', name: '当前循环次数' },
@@ -186,7 +186,10 @@ for (let i = 0; i < 20; i++) {
         fullId: `${i}_${j}_${k}`,
         samp: null,
         workerStart: null,
-        workerEnd: null
+        workerEnd: null,
+        filePath: '',
+        lastSamp: null,
+        nowStatus: null
       }
     }
     slaverObj[j] = {

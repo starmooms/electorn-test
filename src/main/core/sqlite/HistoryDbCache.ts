@@ -86,7 +86,7 @@ class HistoryDbCache {
     const promiseArr = list.map(async item => {
       try {
         const db = await this.getDb(item.projectId)
-        return db.saveSamp(item.sampList)
+        return db.saveSamp(item.sampList, item.changeStatusList)
       } catch (err) {
         logger.error(err)
         return false

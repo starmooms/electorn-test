@@ -61,7 +61,7 @@ export default class ChannelImpl extends VuexModule {
     if (this.list) {
       list.forEach(item => {
         const channel = this.list![item.masterId].slaverList[item.slaverId].list[item.channelId] // eslint-disable-line
-        channel.workerStart = item.start && item.end ? null : item.start
+        // channel.workerStart = item.start && item.end ? null : item.start
       })
     }
   }
@@ -69,11 +69,12 @@ export default class ChannelImpl extends VuexModule {
   @Mutation
   SET_CHANNELLIST(list: Port.MasterList) {
     this.list = list
-    const channelMap = {}
+    const channelMap: any = {}
     Object.entries(this.list).forEach(([mKey, master]) => {
       Object.entries(master.slaverList).forEach(([sKey, slaver]) => {
         Object.entries(slaver.list).forEach(([cKey, channel]) => {
-          setDeep(channel, [mKey, sKey, cKey], channelMap)
+          channelMap[`${mKey}_${sKey}_${cKey}`] = channel
+          // setDeep(channel, [mKey, sKey, cKey], channelMap)
         })
       })
     })

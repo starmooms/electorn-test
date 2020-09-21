@@ -556,7 +556,7 @@ export default class PortItem {
             }
           )
           await historyDbCache.saveSamp(saveSampList)
-          await mainDb.saveChannelStatus()
+          await mainDb.saveChannelStatus(channelStatus)
 
           if (errorList.length > 0) {
             redisClient.saveError(errorList)

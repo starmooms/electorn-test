@@ -82,7 +82,7 @@ class BufModel<T = any> {
           }
 
           if (readBuf.length > 0) {
-            len = readBuf.readIntBE(lenTarget.offset, lenTarget.bytLen)
+            len = readBuf.readUIntBE(lenTarget.offset, lenTarget.bytLen)
           }
         } else if (!listLen || listLen[target.name] === void 0) {
           throw new Error(`${target.name} listlen undefined`)

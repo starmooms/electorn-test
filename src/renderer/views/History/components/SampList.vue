@@ -15,6 +15,8 @@
               <div class="th-td td-extend"></div>
               <div class="th-td td-u">电压</div>
               <div class="th-td td-i">电流</div>
+              <div class="th-td td-vol">容量</div>
+              <div class="th-td td-epower">电量</div>
               <div class="th-td td-work">执行工步</div>
               <div class="th-td td-work-id">工步ID</div>
               <div class="th-td td-date">日期</div>
@@ -48,6 +50,8 @@
           <div class="th-td td-extend"></div>
           <div class="th-td td-u">{{ item.U }}</div>
           <div class="th-td td-i">{{ item.I }}</div>
+          <div class="th-td td-vol">{{ item.vol }}</div>
+          <div class="th-td td-epower">{{ item.epower }}</div>
           <div class="th-td td-work">
             {{ item.workerName }}
           </div>
@@ -81,7 +85,6 @@ export default class SampList extends Vue {
   changeList() {
     let list: any[] = []
     this.stepList.forEach((item, index) => {
-      console.log(item)
       const sub = this.sampData.slice(item.start, item.end)
       list.push({
         ...item,
@@ -94,7 +97,6 @@ export default class SampList extends Vue {
       list = list.concat(sub)
     })
     this.list = list
-    console.log(this.list)
   }
 
   stepSubSet(step, index) {
@@ -209,8 +211,10 @@ $td-h: 24px;
     }
     .td-u,
     .td-i,
+    .td-vol,
+    .td-epower,
     .td-work-id {
-      width: 80px;
+      width: 60px;
     }
     .td-work {
       width: 140px;

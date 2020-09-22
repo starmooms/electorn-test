@@ -61,3 +61,10 @@ a {
   height: 100% ;
   min-width: 1000px;
 }
+
+.el-radio-button:focus:not(.is-focus):not(:active):not(.is-disabled){
+  box-shadow: none;
+}
+.el-checkbox__inner::after{
+  transition: none;
+}

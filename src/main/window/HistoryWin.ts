@@ -13,7 +13,7 @@ export default function createHistoryWin(opts: Opts) {
   }
   winManager.createdWin(
     winName,
-    `${winName}/historyFile/${encodeURIComponent(opts.filePath)}`
+    `${winName}/${encodeURIComponent(opts.filePath)}`
   )
 }
 

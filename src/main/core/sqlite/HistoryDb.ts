@@ -89,10 +89,12 @@ export default class HistoryDb {
         "channelId" INTEGER NOT NULL,
         "U" INTEGER NOT NULL,
         "I" REAL NOT NULL,
+        "vol" REAL NOT NULL,
+        "epower" REAL NOT NULL,
         "stepId" INTEGER NOT NULL,
         "workCode" TEXT NOT NULL,
         "errorCode" TEXT NOT NULL,
-        "endCode" TEXT NOT NULL,
+        "endCode" TEXT,
         "createTime" INTEGER NOT NULL
       );
       CREATE INDEX "samp_data_channel_id"
@@ -178,7 +180,7 @@ export default class HistoryDb {
   /** 保存采样 */
   async saveSamp(sampList: Db.sampList) {
     const { sampData } = this.tables
-    let insertSql = `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, stepId, workCode, errorCode, endCode, createTime) VALUES`
+    let insertSql = `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepId, workCode, errorCode, createTime) VALUES`
     sampList.forEach(item => {
       insertSql += `(
           ${item.masterId},
@@ -186,10 +188,11 @@ export default class HistoryDb {
           ${item.channelId},
           ${item.U},
           ${item.I},
-          ${item.workerId + 1},
+          ${item.vol},
+          ${item.epower},
+          ${item.workerId},
           '${item.workerCode}',
           '${item.errorCode}',
-          '${item.endCode}',
           ${item.createTime}
         ),`
     })

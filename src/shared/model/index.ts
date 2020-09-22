@@ -57,7 +57,7 @@ export const WORKER_STEP_MODEL: Model[] = [
       { name: 'loopNum', bytLen: 4 },
       { name: 'loopStart', bytLen: 1 },
       { name: 'loopNow', bytLen: 4 },
-      { name: 'IEnd', bytLen: 4 }
+      { name: 'stopI', bytLen: 4 }
     ]
   }
 ]
@@ -134,9 +134,10 @@ export const SAMP_MODEL: Model[] = [
       { name: 'channelId', bytLen: 1 },
       { name: 'workerCode', bytLen: 1 },
       { name: 'workerId', bytLen: 1 },
-      { name: 'U', bytLen: 2 },
+      { name: 'U', bytLen: 4, type: 'int' },
       { name: 'I', bytLen: 4, type: 'int' },
-      { name: 'endCode', bytLen: 1 },
+      { name: 'vol', bytLen: 4, type: 'int' },
+      { name: 'epower', bytLen: 4, type: 'int' },
       { name: 'errCode', bytLen: 1 },
       { name: 'projectId', bytLen: 4 }
     ]

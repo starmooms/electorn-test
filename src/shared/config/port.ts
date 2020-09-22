@@ -1,14 +1,14 @@
-/** 工步 */
-export const workSteps = {
-  ICi: { name: '恒流充电', value: 'A1', input: ['U', 'I'], limt: {} },
-  UCi: { name: '恒压充电', value: 'A2', input: ['U', 'I'] },
-  IUCi: { name: '恒流恒压充电', value: 'A3', input: ['U', 'I', 'IEnd'] },
-  IDisCi: { name: '恒流放电', value: 'B0', input: ['U', 'I'] },
-  shelve: { name: '搁置', value: '90', input: ['time'] },
-  loop: { name: '循环', value: '70', input: ['loopStart', 'loopNum'] }
-  // IPerCi: { name: '恒流预充', value: 'A0', input: null },
-  // WCi: { name: '恒功率充电', value: 'A4', input: null }
-}
+// /** 工步 */
+// export const workSteps = {
+//   ICi: { name: '恒流充电', value: 'A1', input: ['U', 'I'], limt: {} },
+//   UCi: { name: '恒压充电', value: 'A2', input: ['U', 'I'] },
+//   IUCi: { name: '恒流恒压充电', value: 'A3', input: ['U', 'I', 'IEnd'] },
+//   IDisCi: { name: '恒流放电', value: 'B0', input: ['U', 'I'] },
+//   shelve: { name: '搁置', value: '90', input: ['time'] },
+//   loop: { name: '循环', value: '70', input: ['loopStart', 'loopNum'] }
+//   // IPerCi: { name: '恒流预充', value: 'A0', input: null },
+//   // WCi: { name: '恒功率充电', value: 'A4', input: null }
+// }
 
 /** 工步 */
 export const WORKSTEPS = [
@@ -16,25 +16,25 @@ export const WORKSTEPS = [
     name: '恒流充电',
     type: 'ICi',
     key: 'a1',
-    input: { worker: ['I'], limt: ['U'] }
+    input: { worker: ['IStart'], limt: ['UEnd'] }
   },
   {
     name: '恒压充电',
     type: 'UCi',
     key: 'a2',
-    input: { worker: ['U'], limt: ['I'] }
+    input: { worker: ['UStart'], limt: ['IEnd'] }
   },
   {
     name: '恒流恒压充电',
     type: 'IUCi',
     key: 'a3',
-    input: { worker: ['I', 'U'], limt: ['IEnd'] }
+    input: { worker: ['IStart', 'UEnd'], limt: ['stopI'] }
   },
   {
     name: '恒流放电',
     type: 'IDisCi',
     key: 'b0',
-    input: { worker: ['I'], limt: ['U'] }
+    input: { worker: ['IStart'], limt: ['UEnd'] }
   },
   {
     name: '搁置',
@@ -60,20 +60,34 @@ WORKSTEPS.forEach(item => {
   WORKSTEPS_TYPE_MAP[item.type] = item
 })
 
-/** 工步input字节序号 */
-export const workStepsInput = {
-  time: { len: 4, serial: 5, unit: 's', name: '时间' },
-  U: { len: 2, serial: 6, unit: 'mV', name: '电压' },
-  I: { len: 4, serial: 7, unit: 'mA', name: '电流' },
-  W: { len: 4, serial: 8, unit: 'W', name: '功率' },
-  R: { len: 4, serial: 9, unit: 'mΩ', name: '电阻' },
-  loopNum: { len: 4, serial: 10, unit: '', name: '循环次数' },
-  loopStart: { len: 1, serial: 11, unit: '', name: '循环起始' },
-  loopNow: { len: 1, serial: 12, unit: '', name: '当前循环次数' },
-  IEnd: { len: 4, serial: 13, unit: 'mA', name: '截止电流' }
-}
+/** 工步输入参数对应信息 */
+// export const WORKSTEPSINPUT = {
+//   time: { unit: 's', name: '时间' },
+//   U: { unit: 'mV', name: '电压' },
+//   I: { unit: 'mA', name: '电流' },
+//   W: { unit: 'W', name: '功率' },
+//   R: { unit: 'mΩ', name: '电阻' },
+//   loopNum: { unit: '', name: '循环次数' },
+//   loopStart: { unit: '', name: '循环起始' },
+//   loopNow: { unit: '', name: '当前循环次数' },
+//   IEnd: { unit: 'mA', name: '截止电流' }
+// }
 
-export const WORKSTEPSINPUT = workStepsInput
+export const WORKSTEPSINPUT = {
+  time: { unit: 's', name: '时间' },
+  // U: { unit: 'mV', name: '电压' },
+  // I: { unit: 'mA', name: '电流' },
+  W: { unit: 'W', name: '功率' },
+  R: { unit: 'mΩ', name: '电阻' },
+  loopNum: { unit: '', name: '循环次数' },
+  loopStart: { unit: '', name: '循环起始' },
+  loopNow: { unit: '', name: '当前循环次数' },
+  stopI: { unit: 'mA', name: '截止电流' },
+  IStart: { unit: 'mA', name: '起始电流', type: 'I' },
+  IEnd: { unit: 'mA', name: '截止电流', type: 'I' },
+  UStart: { unit: 'mA', name: '起始电压', type: 'U' },
+  UEnd: { unit: 'mA', name: '截止电压', type: 'U' }
+}
 
 // /** 读工步数据 */
 // export const workStepsRead = {

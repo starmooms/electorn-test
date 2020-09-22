@@ -39,7 +39,7 @@
             <el-card class="box-card" shadow="never">
               <div slot="header" class="box-card-header">
                 <span>{{ activeMaster.name }}</span>
-                <el-dropdown>
+                <!-- <el-dropdown>
                   <el-button type="text">
                     操作
                     <i class="el-icon-arrow-down el-icon--right"></i>
@@ -47,7 +47,7 @@
                   <el-dropdown-menu slot="dropdown">
                     <el-dropdown-item>批量操作从控</el-dropdown-item>
                   </el-dropdown-menu>
-                </el-dropdown>
+                </el-dropdown> -->
               </div>
               <ul class="slaver-list">
                 <li

@@ -57,7 +57,7 @@ module.exports = {
       nodeIntegration: true,
       mainProcessFile: 'src/main/background.ts',
       mainProcessWatch: ['src/main'],
-      externals: ['serialport', 'usb-detection', 'forever-monitor'],
+      externals: ['serialport', 'usb-detection', 'forever-monitor', 'sqlite3'],
       builderOptions: {
         // productName: '中文名',
         electronDownload: {

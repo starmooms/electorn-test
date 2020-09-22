@@ -157,7 +157,6 @@ import { getStepsOpts, getStepsInputMap } from '@/renderer/utils/getConfig'
 import { setSteps } from '@/renderer/ipc/channel'
 import StepTplSave from './StepTplSave.vue'
 import StepTplUse from './StepTplUse.vue'
-import isEqual from 'lodash/isEqual'
 import { deepClone } from '@/shared/utils'
 import SelectMaster from '@/renderer/components/SelectMaster.vue'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
@@ -287,37 +286,33 @@ export default class StepSetModal extends Vue {
       }
     }
 
-    let list: any = []
+    const list: any = []
     if (!msg) {
-      console.log(this.stepsList)
-      list = this.stepsList.filter(item => {
-        console.log(item)
+      this.stepsList.forEach((item, index) => {
         if (item.name) {
           const hasNull = Object.keys(item.input).find(
-            key => !item.input[key] && item.input[key] !== 0
+            key => item.input[key] === null
           )
           if (hasNull) {
             msg = '工步中有参数未设置'
+          } else {
+            list.push({
+              ...item,
+              id: index
+            })
           }
-          console.log(hasNull)
-          return !hasNull
         }
-        return false
       })
     }
     if (msg) {
-      this.$message.warning(msg)
-      return
+      return this.$message.warning(msg)
     }
 
     if (list.length === 0) {
-      this.$message.error('请正确设置工步列表')
-      return
-    }
-    if (!this.startId) {
+      return this.$message.error('请正确设置工步列表')
+    } else if (!this.startId) {
       return this.$message.error('请设置起始工步')
-    }
-    if (!this.filePath) {
+    } else if (!this.filePath) {
       return this.$message.error('请设置历史文件路径')
     }
 

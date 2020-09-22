@@ -47,7 +47,7 @@ import { ChannelStatus } from '@/renderer/store/modules/Channel'
   }
 })
 export default class History extends Vue {
-  @Prop({ type: Boolean, default: true }) isHistory!: false
+  @Prop({ type: Boolean, default: true }) isHistory!: boolean
 
   $refs!: {
     sampChart: SampChart
@@ -116,18 +116,17 @@ export default class History extends Vue {
       const dataEnd = data.length - 1
 
       this.sampTableList = []
-
       this.sampData = data.map((item, index) => {
         const worker = WORKSTEPS_MAP[item.workCode]
 
         if (lastStepIdId !== item.stepId) {
           lastStepIdId = item.stepId
-          const steps = this.stepList[item.stepId - 1]
+          const steps = this.stepList[item.stepId]
           let msgData = ''
+
           Object.entries(steps.input).forEach(([key, val]) => {
             const valData: any = WORKSTEPSINPUT[key]
             if (valData) {
-              console.log(valData)
               msgData += `${valData.name}${val}${valData.unit}，`
             }
           })
@@ -139,8 +138,9 @@ export default class History extends Vue {
           }
           stepLoop[steps.id] += 1
           const loop = stepLoop[steps.id]
+          const showStepId = steps.id + 1
           const nowStep = {
-            msg: `工序： ${steps.id}（${steps.id}-${loop}）${steps.name}：${msgData}`,
+            msg: `工序： ${showStepId}（${showStepId}-${loop}）${steps.name}：${msgData}`,
             start: index,
             end: dataEnd
           }

@@ -18,11 +18,7 @@ config.rawError = true
 // const listObj = deepClone(channelList)
 
 interface ChannelMap {
-  [key: string]: {
-    [key: string]: {
-      [key: string]: Port.ChannelItem
-    }
-  }
+  [key: string]: Port.ChannelItem
 }
 interface SampMap {
   [key: string]: Port.SampItem
@@ -58,10 +54,13 @@ export default class ChannelImpl extends VuexModule {
 
   @Mutation
   UPDATE_CHANNELLIST(list: Port.ChannelChangeItem[]) {
-    if (this.list) {
+    if (this.channelMap) {
       list.forEach(item => {
-        const channel = this.list![item.masterId].slaverList[item.slaverId].list[item.channelId] // eslint-disable-line
-        // channel.workerStart = item.start && item.end ? null : item.start
+        const channel = this.channelMap![`${item.masterId}_${item.slaverId}_${item.channelId}`] // eslint-disable-line
+        if (channel) {
+          channel.filePath = item.filePath
+          channel.nowStatus = item.status
+        }
       })
     }
   }

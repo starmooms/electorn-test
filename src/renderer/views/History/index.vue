@@ -33,7 +33,11 @@ import SampList from './components/SampList.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
 import dayjs from 'dayjs'
 import { formatTimeStr } from '@/renderer/utils/util'
-import { WORKSTEPSINPUT, WORKSTEPS_MAP } from '@/shared/config/port'
+import {
+  CHANNEL_STATUS,
+  WORKSTEPSINPUT,
+  WORKSTEPS_MAP
+} from '@/shared/config/port'
 import ChannelPosition from './components/ChannelPosition.vue'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
 
@@ -57,7 +61,7 @@ export default class History extends Vue {
   sampTableList: any[] = []
 
   filePath = ''
-  db!: HistoryDb
+  db!: HistoryDb | null
   loading = false
   position = {
     masterId: 0,
@@ -76,18 +80,24 @@ export default class History extends Vue {
 
   async closeDb() {
     if (this.db) {
+      this.stepList = []
       await this.db.close()
+      this.db = null
     }
   }
 
   async openDb(filePath: string) {
     try {
       this.loading = true
-      this.filePath = filePath
-      this.db = new HistoryDb(this.filePath)
-      await this.db.connect()
-      // await this.db.getChannelList()
-      await this.getWorkStep()
+      if (this.filePath !== filePath) {
+        await this.closeDb()
+        this.filePath = filePath
+        if (this.filePath) {
+          this.db = new HistoryDb(this.filePath)
+          await this.db.connect()
+          await this.getWorkStep()
+        }
+      }
       this.getSampData()
     } catch (err) {
       console.error(err)
@@ -97,12 +107,17 @@ export default class History extends Vue {
   }
 
   async getWorkStep() {
+    if (!this.db) return
     const data = await this.db.getWorkStep()
     this.stepList = JSON.parse(data.stepList)
   }
 
   async getSampData() {
     try {
+      if (!this.db) {
+        this.reset()
+        return
+      }
       this.loading = true
       const data = await this.db.getSampData({
         $masterId: this.position.masterId,
@@ -112,49 +127,43 @@ export default class History extends Vue {
 
       let lastStepIdId: any = null
       let lastStep: any = null
-      const stepLoop = {}
       const dataEnd = data.length - 1
 
       this.sampTableList = []
       this.sampData = data.map((item, index) => {
-        const worker = WORKSTEPS_MAP[item.workCode]
-
         if (lastStepIdId !== item.stepId) {
           lastStepIdId = item.stepId
           const steps = this.stepList[item.stepId]
-          let msgData = ''
-
-          Object.entries(steps.input).forEach(([key, val]) => {
-            const valData: any = WORKSTEPSINPUT[key]
-            if (valData) {
-              msgData += `${valData.name}${val}${valData.unit}，`
+          if (steps && steps.type !== 'loop') {
+            let msgData = ''
+            Object.entries(steps.input).forEach(([key, val]) => {
+              const valData: any = WORKSTEPSINPUT[key]
+              if (valData) {
+                msgData += `${valData.name}${val}${valData.unit}，`
+              }
+            })
+            if (msgData) {
+              msgData = msgData.slice(0, -1)
             }
-          })
-          if (msgData) {
-            msgData = msgData.slice(0, -1)
+            const showStepId = steps.id + 1
+            const nowStep = {
+              msg: `工序： ${showStepId}（${showStepId}-${item.loopNum + 1}）${
+                steps.name
+              }：${msgData}`,
+              start: index,
+              end: dataEnd
+            }
+            this.sampTableList.push(nowStep)
+            if (lastStep) {
+              lastStep.end = index - 1
+            }
+            lastStep = nowStep
           }
-          if (!stepLoop[steps.id]) {
-            stepLoop[steps.id] = 0
-          }
-          stepLoop[steps.id] += 1
-          const loop = stepLoop[steps.id]
-          const showStepId = steps.id + 1
-          const nowStep = {
-            msg: `工序： ${showStepId}（${showStepId}-${loop}）${steps.name}：${msgData}`,
-            start: index,
-            end: dataEnd
-          }
-          this.sampTableList.push(nowStep)
-          if (lastStep) {
-            lastStep.end = index
-          }
-          lastStep = nowStep
         }
-
         return {
           sIndex: index + 1,
           createTimeStr: dayjs.unix(item.createTime).format(formatTimeStr),
-          workerName: worker?.name,
+          workerName: CHANNEL_STATUS[item.workCode]?.name,
           ...item
         }
       })
@@ -168,19 +177,24 @@ export default class History extends Vue {
   }
 
   refresh() {
-    this.getSampData()
+    if (!this.isHistory && !this.db) {
+      this.changeChannel()
+    } else {
+      this.getSampData()
+    }
   }
 
   reset() {
     this.sampData = []
-    this.stepList = []
+    this.sampTableList = []
+    this.$refs.sampChart.setCharts(this.sampData)
   }
 
   @Watch('nowChannel')
-  changeChannelHandle() {
-    this.reset()
+  changeChannel() {
+    console.log(this.nowChannel, '?c')
     if (this.nowChannel) {
-      console.log(this.nowChannel, 'now??')
+      this.openDb(this.nowChannel.filePath)
     }
   }
 
@@ -196,7 +210,6 @@ export default class History extends Vue {
       eventName: '/history/changeFile',
       onEmit: async (opt: any) => {
         if (opt.filePath) {
-          await this.closeDb()
           this.openDb(opt.filePath)
         }
       },
@@ -204,19 +217,36 @@ export default class History extends Vue {
     })
   }
 
+  changeChannelHandle() {
+    this.$command.on({
+      eventName: '/channel/channelPosition',
+      onEmit: (opt: any) => {
+        this.position = opt
+      },
+      vm: this
+    })
+  }
+
+  setPosition() {
+    this.position = {
+      masterId: Number(this.$route.params.masterId),
+      slaverId: Number(this.$route.params.slaverId),
+      channelId: Number(this.$route.params.slaverId)
+    }
+  }
+
   mounted() {
     if (this.isHistory) {
       this.openDb(this.$route.params.filePath)
       this.changeFileHandle()
     } else {
+      this.setPosition()
       this.changeChannelHandle()
     }
   }
 
   beforeDestroy() {
-    if (this.db) {
-      this.db.close()
-    }
+    this.closeDb()
   }
 }
 </script>

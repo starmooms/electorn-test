@@ -12,6 +12,7 @@ declare namespace Port {
     workerEnd: number | null
     nowStatus: null | 'RUN' | 'END'
     lastSaveTime: number | null
+    filePath: string
   }
 
   interface SlaverItem {
@@ -44,6 +45,7 @@ declare namespace Port {
     I: number
     vol: number
     epower: number
+    loopNum: number
     errorCode: string
     errorMsg: string
     workerStatus: { name: string; status: string }
@@ -60,6 +62,13 @@ declare namespace Port {
     channelId: number
     time: number
     status: 'RUN' | 'END'
+    filePath: string
+  }
+
+  interface ChannelChangeFilePath {
+    masterId: number
+    slaverId: number
+    channelId: number
     filePath: string
   }
 

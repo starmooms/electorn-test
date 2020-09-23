@@ -259,7 +259,7 @@ export default class Home extends Vue {
     const { unRegister } = this.$command.on({
       eventName: `/port/translate/${encodeURIComponent(this.portPath)}/${
         this.activeMasterId
-      }/0`,
+      }`,
       onEmit: data => {
         data.list.forEach(item => {
           const slaver = this.activeMaster?.slaverList[item.slaverId]

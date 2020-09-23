@@ -1,100 +1,129 @@
 <template>
-  <div class="samp-table virtual-table">
-    <RecycleScroller
-      class="th-body spam-table"
-      ref="recycleScroller"
-      key-field="sIndex"
-      :items="list"
-      :item-size="24"
-    >
-      <template #before>
-        <div>
-          <div class="th-head spam-head">
-            <div class="th-item spam-item">
-              <div class="th-td td-index"></div>
-              <div class="th-td td-extend"></div>
-              <div class="th-td td-u">电压</div>
-              <div class="th-td td-i">电流</div>
-              <div class="th-td td-vol">容量</div>
-              <div class="th-td td-epower">电量</div>
-              <div class="th-td td-work">执行工步</div>
-              <div class="th-td td-work-id">工步ID</div>
-              <div class="th-td td-date">日期</div>
+  <div>
+    <div class="action-box">
+      <el-button type="primary" @click="showDetails">详细数据</el-button>
+      <el-button type="primary" @click="showSteps">过程数据</el-button>
+    </div>
+    <div class="samp-table virtual-table">
+      <DynamicScroller
+        class="th-body spam-table"
+        ref="recycleScroller"
+        key-field="sIndex"
+        :items="list"
+        :min-item-size="24"
+      >
+        <template #before>
+          <div>
+            <div class="th-head spam-head">
+              <div class="th-item spam-item">
+                <div class="th-td td-index"></div>
+                <div class="th-td td-extend"></div>
+                <div class="th-td td-u">电压</div>
+                <div class="th-td td-i">电流</div>
+                <div class="th-td td-vol">容量</div>
+                <div class="th-td td-epower">电量</div>
+                <div class="th-td td-work">执行工步</div>
+                <!-- <div class="th-td td-work-id">工步ID</div> -->
+                <div class="th-td td-date">日期</div>
+              </div>
+            </div>
+            <div
+              v-if="sampData.length === 0"
+              style="text-align: center;padding:10px;"
+            >
+              暂无数据
             </div>
           </div>
-          <div
-            v-if="sampData.length === 0"
-            style="text-align: center;padding:10px;"
+        </template>
+        <template v-slot="{ item, index, active }">
+          <DynamicScrollerItem
+            :item="item"
+            :active="active"
+            :data-index="index"
           >
-            暂无数据
-          </div>
-        </div>
-      </template>
-      <template v-slot="{ item, index }">
-        <div class="th-item spam-item spam-step" v-if="item.type === 'step'">
-          <div class="th-td td-index"></div>
-          <div class="th-td td-extend">
-            <svg-icon
-              @click="stepSubSet(item, index)"
-              class="icon"
-              :icon-class="item.show ? 'extend-hide' : 'extend-show'"
-            ></svg-icon>
-          </div>
+            <div
+              class="th-item spam-item spam-step"
+              v-if="item.type === 'step'"
+            >
+              <div class="th-td td-index"></div>
+              <div class="th-td td-extend">
+                <svg-icon
+                  @click="stepSubSet(item, index)"
+                  class="icon"
+                  :icon-class="item.show ? 'extend-hide' : 'extend-show'"
+                ></svg-icon>
+              </div>
 
-          <div class="th-td td-step-msg">
-            {{ item.msg }}
-          </div>
-        </div>
-        <div class="th-item spam-item" v-else :class="{ even: index % 2 }">
-          <div class="th-td td-index">{{ item.sIndex }}</div>
-          <div class="th-td td-extend"></div>
-          <div class="th-td td-u">{{ item.U }}</div>
-          <div class="th-td td-i">{{ item.I }}</div>
-          <div class="th-td td-vol">{{ item.vol }}</div>
-          <div class="th-td td-epower">{{ item.epower }}</div>
-          <div class="th-td td-work">
-            {{ item.workerName }}
-          </div>
-          <div class="th-td td-work-id">
-            {{ item.stepId }}
-          </div>
-          <div class="th-td td-date">
-            <span>{{ item.createTimeStr }}</span>
-          </div>
-        </div>
-      </template>
-    </RecycleScroller>
+              <div class="th-td td-step-msg">
+                {{ item.msg }}
+              </div>
+            </div>
+            <div class="th-item spam-item" v-else :class="{ even: index % 2 }">
+              <div class="th-td td-index">{{ item.sIndex }}</div>
+              <div class="th-td td-extend"></div>
+              <div class="th-td td-u">{{ item.U }}</div>
+              <div class="th-td td-i">{{ item.I }}</div>
+              <div class="th-td td-vol">{{ item.vol }}</div>
+              <div class="th-td td-epower">{{ item.epower }}</div>
+              <div class="th-td td-work">
+                {{ item.workerName }}
+              </div>
+              <!-- <div class="th-td td-work-id">
+              {{ item.stepId }}
+            </div> -->
+              <div class="th-td td-date">
+                <span>{{ item.createTimeStr }}</span>
+              </div>
+            </div>
+          </DynamicScrollerItem>
+        </template>
+      </DynamicScroller>
+    </div>
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-import { RecycleScroller } from 'vue-virtual-scroller'
+import {
+  RecycleScroller,
+  DynamicScroller,
+  DynamicScrollerItem
+} from 'vue-virtual-scroller'
 
 @Component({
   components: {
-    RecycleScroller
+    RecycleScroller,
+    DynamicScroller,
+    DynamicScrollerItem
   }
 })
 export default class SampList extends Vue {
   @Prop({ type: Array }) sampData!: any[]
   @Prop({ type: Array }) stepList!: any[]
 
+  stepShow: boolean[] = []
   list: any[] = []
 
   @Watch('sampData')
   changeList() {
     let list: any[] = []
     this.stepList.forEach((item, index) => {
-      const sub = this.sampData.slice(item.start, item.end)
-      list.push({
+      const sub = this.sampData.slice(item.start, item.end + 1)
+      const show = this.stepShow[index]
+      const stepItem = {
         ...item,
+        stepIndex: index,
         sIndex: `step-${index}`,
         type: 'step',
-        show: true,
+        show,
         subList: [],
         length: sub.length
-      })
-      list = list.concat(sub)
+      }
+      list.push(stepItem)
+      if (stepItem.show) {
+        list = list.concat(sub)
+      } else {
+        stepItem.subList = sub
+      }
     })
     this.list = list
   }
@@ -107,7 +136,31 @@ export default class SampList extends Vue {
       const list = this.list.splice(index + 1, step.length)
       step.subList = list
     }
+    this.$set(this.stepShow, step.stepIndex, status)
     step.show = status
+  }
+
+  /** 显示详细数据 */
+  showDetails() {
+    for (let i = 0; i <= this.list.length; i++) {
+      const item = this.list[i]
+      if (item && item.type === 'step') {
+        if (item.show === false) {
+          this.stepSubSet(item, i)
+        }
+        i += item.end - item.start + 1
+      }
+    }
+  }
+
+  /** 显示过程数据 */
+  showSteps() {
+    for (let i = 0; i <= this.list.length; i++) {
+      const item = this.list[i]
+      if (item && item.type === 'step' && item.show === true) {
+        this.stepSubSet(item, i)
+      }
+    }
   }
 
   mounted() {
@@ -167,7 +220,7 @@ $td-h: 24px;
   // }
 
   .th-body {
-    height: 80vh;
+    height: calc(80vh - 60px);
   }
 }
 
@@ -232,9 +285,15 @@ $td-h: 24px;
     }
   }
 
-  .spam-step {
+  .th-item.spam-step {
     background-color: $oBackground;
     display: flex;
+
+    .th-td {
+      height: 26px;
+      line-height: 26px !important;
+    }
+
     .td-extend {
       .icon {
         cursor: pointer;
@@ -246,48 +305,7 @@ $td-h: 24px;
   min-width: 400px;
 }
 
-// .samp-data-tab {
-//   max-width: 600px;
-//   border: 1px solid #dcdfe6;
-//   overflow: auto;
-
-//   .spam-item {
-//     height: 32px;
-//     line-height: 32px;
-//     box-sizing: border-box;
-//     min-width: 580px;
-//     border-bottom: 1px solid #dcdfe6;
-//     .samp-w-box {
-//       display: flex;
-//       .spam-text {
-//         border-right: 1px solid #dcdfe6;
-//         padding-left: 10px;
-//         box-sizing: border-box;
-//         &:last-child {
-//           border-right: none;
-//         }
-//       }
-//       .date-item {
-//         min-width: 200px;
-//       }
-//       .u-r,
-//       .i-r,
-//       .workeId-r {
-//         min-width: 80px;
-//       }
-//       .status-r {
-//         min-width: 140px;
-//       }
-//     }
-//   }
-
-//   .spam-table {
-//     height: 60vh;
-//     margin: 0;
-//     width: 100%;
-//     .even {
-//       background-color: #f5f7fa;
-//     }
-//   }
-// }
+.action-box {
+  margin-bottom: 20px;
+}
 </style>

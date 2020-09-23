@@ -87,10 +87,11 @@ export default class HistoryDb {
         "masterId" INTEGER NOT NULL,
         "slaverId" INTEGER NOT NULL,
         "channelId" INTEGER NOT NULL,
-        "U" INTEGER NOT NULL,
+        "U" REAL NOT NULL,
         "I" REAL NOT NULL,
         "vol" REAL NOT NULL,
         "epower" REAL NOT NULL,
+        "loopNum" REAL NOT NULL,
         "stepId" INTEGER NOT NULL,
         "workCode" TEXT NOT NULL,
         "errorCode" TEXT NOT NULL,
@@ -180,7 +181,7 @@ export default class HistoryDb {
   /** 保存采样 */
   async saveSamp(sampList: Db.sampList) {
     const { sampData } = this.tables
-    let insertSql = `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepId, workCode, errorCode, createTime) VALUES`
+    let insertSql = `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, loopNum, stepId, workCode, errorCode, createTime) VALUES`
     sampList.forEach(item => {
       insertSql += `(
           ${item.masterId},
@@ -190,6 +191,7 @@ export default class HistoryDb {
           ${item.I},
           ${item.vol},
           ${item.epower},
+          ${item.loopNum},
           ${item.workerId},
           '${item.workerCode}',
           '${item.errorCode}',

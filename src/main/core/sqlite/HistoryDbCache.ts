@@ -19,6 +19,7 @@ class HistoryDbCache {
     number,
     {
       db: HistoryDb
+      filePath: string
       dataSave: DataSave
     }
   >()
@@ -44,6 +45,7 @@ class HistoryDbCache {
 
     const cache = {
       db: HistoryDb,
+      filePath: HistoryDb.filePath,
       dataSave
     }
     this.historyDbMap.set(historyId, cache)
@@ -69,12 +71,21 @@ class HistoryDbCache {
     return cache.db
   }
 
+  /** 获取通道保存信息 */
   getSaveConf(historyId: number) {
     const cache = this.getItem(historyId)
     if (!cache) return null
     return cache.dataSave
   }
 
+  /** 获取通道保存信息 */
+  getFilePath(historyId: number) {
+    const cache = this.getItem(historyId)
+    if (!cache) return ''
+    return cache.filePath
+  }
+
+  /** 工步启动时创建历史文件 */
   async createdHistory({ params, fileId, filePath, historyId }: CreateHistory) {
     const historyDb = new HistoryDb(fileId, filePath)
     await historyDb.created(params, historyId)

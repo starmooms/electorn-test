@@ -184,7 +184,7 @@ export const CHANNEL_STATUS = {
   '70': { name: '循环', status: 'run' },
 }
 
-export const CHANNEL_STATUS_END = ['00', '02', '03']
+export const CHANNEL_STATUS_END = ['00', '01', '02', '03']
 
 /* eslint-enable quote-props */
 

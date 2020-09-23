@@ -4,8 +4,8 @@ import * as path from 'path'
 import logger from '../Logger'
 import ipcManage from '../IpcManage'
 import dayjs from 'dayjs'
-import HistoryDb from './HistoryDb'
 import historyDbCache from './HistoryDBCache'
+import { channelList } from '@/shared/config/port'
 
 interface TableName {
   name: string
@@ -60,14 +60,25 @@ class MainDb {
         "masterId" integer NOT NULL,
         "slaverId" integer NOT NULL,
         "channelId" integer NOT NULL,
+        "fullId" text NOT NULL,
         "status" text DEFAULT NULL
       );
+      CREATE INDEX "channel_status_fullId_index" ON "${channelStatus}" ("fullId");
       CREATE INDEX "channel_status_channel_index"
       ON "${channelStatus}" (
         "masterId",
         "slaverId",
         "channelId"
       );`
+      let insertChannel = `INSERT INTO ${channelStatus} (masterId, slaverId, channelId, fullId) VALUES`
+      for (let i = 0; i < 20; i++) {
+        for (let j = 0; j < 32; j++) {
+          for (let k = 0; k < 8; k++) {
+            insertChannel += `(${i},${j},${k},'${i}_${j}_${k}'),`
+          }
+        }
+      }
+      sql += insertChannel.replace(/,$/, ';')
     }
 
     // 通道启动历史

@@ -220,7 +220,7 @@ export default class StepSetModal extends Vue {
       unit: 'mA'
     }
   ]
-  startId: null | number = null
+  startId: null | number = 1
 
   filePath = ''
 
@@ -238,7 +238,6 @@ export default class StepSetModal extends Vue {
     if (tpl.dataSave) {
       this.dataSave = tpl.dataSave
     }
-    this.startId = null
   }
 
   get channelList() {
@@ -374,6 +373,7 @@ export default class StepSetModal extends Vue {
     }
     this.stepsList = []
     this.protect = GET_PROTECT_FORM()
+    this.startId = 1
   }
 
   tplUseOpen() {

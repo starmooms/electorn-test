@@ -143,9 +143,26 @@ export default class SampChart extends Vue {
           top: '2%'
         },
         dataZoom: [
-          { type: 'slider', xAxisIndex: [0], bottom: '2%', height: '4%' },
-          { type: 'slider', yAxisIndex: [0], left: '2%', width: '4%' },
-          { type: 'slider', yAxisIndex: [1], right: '2%', width: '4%' },
+          {
+            type: 'slider',
+            xAxisIndex: [0],
+            bottom: '2%',
+            height: '4%'
+          },
+          {
+            type: 'slider',
+            filterMode: 'none',
+            yAxisIndex: [0],
+            left: '2%',
+            width: '4%'
+          },
+          {
+            type: 'slider',
+            filterMode: 'none',
+            yAxisIndex: [1],
+            right: '2%',
+            width: '4%'
+          },
           { type: 'inside' }
         ],
         grid: {

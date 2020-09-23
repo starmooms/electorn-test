@@ -125,6 +125,7 @@ export const SAMP_MODEL: Model[] = [
   { name: 'masterId', bytLen: 1 },
   { name: 'sampLen', bytLen: 2 },
   { name: 'errorLen', bytLen: 1 },
+  { name: 'endStatusLen', bytLen: 1 },
   {
     name: 'sampList',
     type: 'list',
@@ -134,12 +135,13 @@ export const SAMP_MODEL: Model[] = [
       { name: 'channelId', bytLen: 1 },
       { name: 'workerCode', bytLen: 1 },
       { name: 'workerId', bytLen: 1 },
-      { name: 'U', bytLen: 4, type: 'int' },
+      { name: 'U', bytLen: 4 },
       { name: 'I', bytLen: 4, type: 'int' },
-      { name: 'vol', bytLen: 4, type: 'int' },
-      { name: 'epower', bytLen: 4, type: 'int' },
+      { name: 'vol', bytLen: 4 },
+      { name: 'epower', bytLen: 4 },
       { name: 'errCode', bytLen: 1 },
-      { name: 'projectId', bytLen: 4 }
+      { name: 'projectId', bytLen: 4 },
+      { name: 'loopNum', bytLen: 1 }
     ]
   },
   {
@@ -153,6 +155,18 @@ export const SAMP_MODEL: Model[] = [
       { name: 'errCode', bytLen: 1 },
       { name: 'params1', bytLen: 4 },
       { name: 'params2', bytLen: 4 }
+    ]
+  },
+  {
+    name: 'endStatusList',
+    type: 'list',
+    len: 'endStatusLen',
+    model: [
+      { name: 'slaverId', bytLen: 1 },
+      { name: 'channelId', bytLen: 1 },
+      { name: 'projectId', bytLen: 4 },
+      { name: 'workerId', bytLen: 1 },
+      { name: 'errCode', bytLen: 1 }
     ]
   }
 ]

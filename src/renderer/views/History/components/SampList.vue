@@ -23,6 +23,7 @@
                 <div class="th-td td-vol">容量</div>
                 <div class="th-td td-epower">电量</div>
                 <div class="th-td td-work">执行工步</div>
+                <div class="th-td td-endStatus">结束标志</div>
                 <!-- <div class="th-td td-work-id">工步ID</div> -->
                 <div class="th-td td-date">日期</div>
               </div>
@@ -58,7 +59,11 @@
                 {{ item.msg }}
               </div>
             </div>
-            <div class="th-item spam-item" v-else :class="{ even: index % 2 }">
+            <div
+              class="th-item spam-item"
+              v-else
+              :class="{ even: item.sIndex % 2 }"
+            >
               <div class="th-td td-index">{{ item.sIndex }}</div>
               <div class="th-td td-extend"></div>
               <div class="th-td td-u">{{ item.U }}</div>
@@ -67,6 +72,9 @@
               <div class="th-td td-epower">{{ item.epower }}</div>
               <div class="th-td td-work">
                 {{ item.workerName }}
+              </div>
+              <div class="th-td td-endStatus">
+                {{ item.endStatus }}
               </div>
               <!-- <div class="th-td td-work-id">
               {{ item.stepId }}
@@ -108,7 +116,7 @@ export default class SampList extends Vue {
     let list: any[] = []
     this.stepList.forEach((item, index) => {
       const sub = this.sampData.slice(item.start, item.end + 1)
-      const show = this.stepShow[index]
+      const show = this.stepShow[index] || false
       const stepItem = {
         ...item,
         stepIndex: index,
@@ -229,7 +237,7 @@ $td-h: 24px;
   ::v-deep
     .vue-recycle-scroller.direction-vertical
     .vue-recycle-scroller__item-wrapper {
-    min-width: 600px;
+    min-width: 662px;
   }
 
   ::v-deep .vue-recycle-scroller__slot {
@@ -269,8 +277,9 @@ $td-h: 24px;
     .td-work-id {
       width: 60px;
     }
-    .td-work {
-      width: 140px;
+    .td-work,
+    .td-endStatus {
+      width: 100px;
     }
 
     .td-extend {

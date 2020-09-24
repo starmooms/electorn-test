@@ -34,7 +34,9 @@ import HistoryDb from '@/renderer/Db/HistoryDb'
 import dayjs from 'dayjs'
 import { formatTimeStr } from '@/renderer/utils/util'
 import {
+  CHANNEL_ERR_STATUS,
   CHANNEL_STATUS,
+  END_STATUS,
   WORKSTEPSINPUT,
   WORKSTEPS_MAP
 } from '@/shared/config/port'
@@ -125,14 +127,14 @@ export default class History extends Vue {
         $channelId: this.position.channelId
       })
 
-      let lastStepIdId: any = null
+      let lastStepIdId: null | number = null
+      let lastLoopNum: null | number = null
       let lastStep: any = null
       const dataEnd = data.length - 1
 
       this.sampTableList = []
       this.sampData = data.map((item, index) => {
-        if (lastStepIdId !== item.stepId) {
-          lastStepIdId = item.stepId
+        if (lastStepIdId !== item.stepId || item.loopNum !== lastLoopNum) {
           const steps = this.stepList[item.stepId]
           if (steps && steps.type !== 'loop') {
             let msgData = ''
@@ -145,11 +147,13 @@ export default class History extends Vue {
             if (msgData) {
               msgData = msgData.slice(0, -1)
             }
-            const showStepId = steps.id + 1
+
+            const stepId = steps.id
+            const showStepId = stepId + 1
+            const loopNum = item.loopNum
             const nowStep = {
-              msg: `工序： ${showStepId}（${showStepId}-${item.loopNum + 1}）${
-                steps.name
-              }：${msgData}`,
+              msg: `工序： ${showStepId}（${showStepId}-${loopNum}）${steps.name}：${msgData}`,
+              loopNum,
               start: index,
               end: dataEnd
             }
@@ -157,6 +161,8 @@ export default class History extends Vue {
             if (lastStep) {
               lastStep.end = index - 1
             }
+            lastStepIdId = stepId
+            lastLoopNum = loopNum
             lastStep = nowStep
           }
         }
@@ -164,6 +170,7 @@ export default class History extends Vue {
           sIndex: index + 1,
           createTimeStr: dayjs.unix(item.createTime).format(formatTimeStr),
           workerName: CHANNEL_STATUS[item.workCode]?.name,
+          endStatus: item.endCode ? END_STATUS[item.endCode] : '',
           ...item
         }
       })
@@ -231,7 +238,7 @@ export default class History extends Vue {
     this.position = {
       masterId: Number(this.$route.params.masterId),
       slaverId: Number(this.$route.params.slaverId),
-      channelId: Number(this.$route.params.slaverId)
+      channelId: Number(this.$route.params.channelId)
     }
   }
 

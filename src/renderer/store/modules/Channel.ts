@@ -58,8 +58,8 @@ export default class ChannelImpl extends VuexModule {
       list.forEach(item => {
         const channel = this.channelMap![`${item.masterId}_${item.slaverId}_${item.channelId}`] // eslint-disable-line
         if (channel) {
-          channel.filePath = item.filePath
           channel.nowStatus = item.status
+          channel.filePath = item.status === 'RUN' ? channel.filePath : ''
         }
       })
     }

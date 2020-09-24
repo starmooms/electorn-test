@@ -104,6 +104,17 @@ declare namespace Port {
   type SaveErrorItem = SampErrorItem | PostError
   type SaveError = SaveErrorItem[]
 
+  interface SampEndStatus {
+    masterId: number
+    slaverId: number
+    channelId: number
+    workerId: number
+    endCode: string
+  }
+  interface SampEndStatusMap {
+    [porjectId: string]: SampEndStatus[]
+  }
+
   /** 工步列表 */
   interface StepInput {
     data: number
@@ -142,7 +153,14 @@ declare namespace Port {
     }
   }
 
+  interface SaveSampItem {
+    projectId: number
+    sampList: SampItem[]
+    changeStatusList: ChannelChangeItem[]
+    endStatusList: SampEndStatus[]
+  }
+
   interface SaveSampData {
-    [key: string]: SampItem[]
+    [projectId: string]: SaveSampItem
   }
 }

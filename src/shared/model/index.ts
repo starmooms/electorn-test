@@ -54,9 +54,9 @@ export const WORKER_STEP_MODEL: Model[] = [
       { name: 'I', bytLen: 4, type: 'int' },
       { name: 'W', bytLen: 4 },
       { name: 'R', bytLen: 4 },
-      { name: 'loopNum', bytLen: 4 },
+      { name: 'loopNum', bytLen: 2 },
       { name: 'loopStart', bytLen: 1 },
-      { name: 'loopNow', bytLen: 4 },
+      { name: 'loopNow', bytLen: 2 },
       { name: 'stopI', bytLen: 4 }
     ]
   }
@@ -141,7 +141,7 @@ export const SAMP_MODEL: Model[] = [
       { name: 'epower', bytLen: 4 },
       { name: 'errCode', bytLen: 1 },
       { name: 'projectId', bytLen: 4 },
-      { name: 'loopNum', bytLen: 1 }
+      { name: 'loopNum', bytLen: 2 }
     ]
   },
   {

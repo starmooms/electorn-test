@@ -601,13 +601,19 @@ export default class PortItem {
             return val
           })
 
-          await historyDbCache.saveSamp(saveSampList)
-          if (channelStatus.length > 0 || changeFilePath.length > 0) {
-            await mainDb.saveChannelStatus(channelStatus)
-            ipcManage.commonMsg('updateChannelList', [
-              ...channelStatus,
-              ...changeFilePath
-            ])
+          try {
+            await historyDbCache.saveSamp(saveSampList)
+            if (channelStatus.length > 0) {
+              await mainDb.saveChannelStatus(channelStatus)
+            }
+            if (channelStatus.length > 0 || changeFilePath.length > 0) {
+              ipcManage.commonMsg('updateChannelList', [
+                ...channelStatus,
+                ...changeFilePath
+              ])
+            }
+          } catch (err) {
+            logger.error(err)
           }
 
           // await mainDb.saveChannelStatus(channelStatus)

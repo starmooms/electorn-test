@@ -56,14 +56,39 @@ class HistoryDbCache {
     return this.historyDbMap.get(historyId)
   }
 
+  closeHistoryDb(historyId: number) {
+    logger.info('关闭db', historyId)
+    const dbItem = this.historyDbMap.get(historyId)
+    if (dbItem) {
+      this.historyDbMap.delete(historyId)
+    }
+  }
+
   /** 获取缓存，不存在则根据historyId，尝试打开 */
   async getItemAsync(historyId) {
-    const cache = this.getItem(historyId)
-    if (cache) return cache
-    const data = await mainDb.getHistory(historyId)
-    const historyDb = new HistoryDb(data.fileId, data.filePath)
-    const stepInfo = await historyDb.open()
-    return this.set(historyId, historyDb, stepInfo.dataSave)
+    try {
+      const cache = this.getItem(historyId)
+      if (cache) return cache
+      const data = await mainDb.getHistory(historyId)
+      const historyDb = new HistoryDb(data.fileId, data.filePath, () => {
+        this.closeHistoryDb(historyId)
+      })
+      const stepInfo = await historyDb.open()
+      logger.info('打开db', historyId)
+      return this.set(historyId, historyDb, stepInfo.dataSave)
+    } catch (err) {
+      logger.error(`projectId:${historyId} 打开db失败`, err)
+      throw err
+    }
+  }
+
+  /** 工步启动时创建历史文件 */
+  async createdHistory({ params, fileId, filePath, historyId }: CreateHistory) {
+    const historyDb = new HistoryDb(fileId, filePath, () => {
+      this.closeHistoryDb(historyId)
+    })
+    await historyDb.created(params, historyId)
+    this.set(historyId, historyDb, params.dataSave)
   }
 
   async getDb(historyId: number) {
@@ -85,13 +110,6 @@ class HistoryDbCache {
     return cache.filePath
   }
 
-  /** 工步启动时创建历史文件 */
-  async createdHistory({ params, fileId, filePath, historyId }: CreateHistory) {
-    const historyDb = new HistoryDb(fileId, filePath)
-    await historyDb.created(params, historyId)
-    this.set(historyId, historyDb, params.dataSave)
-  }
-
   /** 保存采样 */
   async saveSamp(list: Db.SaveSampList[]) {
     const promiseArr = list.map(async item => {
@@ -104,7 +122,7 @@ class HistoryDbCache {
         )
         return true
       } catch (err) {
-        logger.error(err)
+        logger.error('HistoryDBCache saveSamp Error', err)
         return false
       }
     })

@@ -47,6 +47,12 @@ class MainDb {
     }
   }
 
+  async close() {
+    if (this.sqlite) {
+      this.sqlite.close()
+    }
+  }
+
   async createTable(tables: TableName[]) {
     let sql = ''
     const tableName = tables.map(item => item.name)

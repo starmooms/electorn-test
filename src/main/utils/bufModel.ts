@@ -207,6 +207,10 @@ export class BufWriteModel {
       const target = this.getTarget(name)
       if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
       const offset = this.start + target.offset
+      // logger.info(
+      //   target.name,
+      //   this.buf.slice(offset, offset + target.bytLen).toString('hex')
+      // )
       if (target.type === 'float') {
         return this.buf.readFloatBE(offset)
       }

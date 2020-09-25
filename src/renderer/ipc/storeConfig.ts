@@ -22,3 +22,7 @@ export function setStoreConfig(data: ConfigSet) {
 export function delStoreConfig(data: ConfigSet) {
   return $command.invoke(`/config/del`, data)
 }
+
+export function beforeRender() {
+  return $command.invoke(`/startRender`)
+}

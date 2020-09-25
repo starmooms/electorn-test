@@ -13,6 +13,7 @@ import ElConfirm from '@/renderer/components/ElConfirm'
 import TitleBox from '@/renderer/components/TitleBox.vue'
 import '@/renderer/icons'
 import { SettingStatus } from './store/modules/Setting'
+import { beforeRender } from './ipc/storeConfig'
 
 const init = () => {
   Vue.config.productionTip = false
@@ -31,11 +32,21 @@ const init = () => {
   }).$mount('#app')
 }
 
-SettingStatus.getUserConfg()
+beforeRender()
   .then(data => {
     if (!data.status) throw data.err || 'DATA STATUS ERROR'
+    SettingStatus.UPDATE_USERCONFIG(data.data.userConfig)
     init()
   })
   .catch(err => {
     alert(err)
   })
+
+// SettingStatus.getUserConfg()
+//   .then(data => {
+//     if (!data.status) throw data.err || 'DATA STATUS ERROR'
+//     init()
+//   })
+//   .catch(err => {
+//     alert(err)
+//   })

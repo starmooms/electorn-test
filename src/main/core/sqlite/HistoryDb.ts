@@ -18,6 +18,8 @@ interface StepInfoItem {
   createTime: number
 }
 
+type CloseCb = () => void
+
 export default class HistoryDb {
   sqlite: Sqlite
   tables = {
@@ -26,9 +28,11 @@ export default class HistoryDb {
     sampData: 'samp_data'
   }
   filePath = ''
+  closeCb: CloseCb | undefined
 
-  constructor(fileId: string, filePath: string) {
+  constructor(fileId: string, filePath: string, closeCb?: CloseCb) {
     this.filePath = path.resolve(filePath, `${fileId}`)
+    this.closeCb = closeCb
     this.sqlite = new Sqlite(this.filePath)
   }
 
@@ -39,6 +43,15 @@ export default class HistoryDb {
       `SELECT name FROM sqlite_master`
     )
     await this.createTable(data)
+  }
+
+  async closeDb() {
+    if (this.sqlite.isConnect) {
+      await this.sqlite.close()
+    }
+    if (this.closeCb) {
+      this.closeCb()
+    }
   }
 
   async createTable(tables: TableName[]) {
@@ -185,7 +198,7 @@ export default class HistoryDb {
     const startUpdate: string[] = []
     const endUpdate: string[] = []
     list.forEach(item => {
-      const fullId = `${item.masterId}_${item.slaverId}_${item.channelId}`
+      const fullId = `'${item.masterId}_${item.slaverId}_${item.channelId}'`
       if (item.status === 'RUN') {
         if (!startTime) startTime = item.time
         startUpdate.push(fullId)
@@ -202,10 +215,16 @@ export default class HistoryDb {
     }
   }
 
-  // /** 检查是否可以关闭数据库连接 */
-  // async checkCanClose() {
-
-  // }
+  /** 检查是否可以关闭数据库连接 */
+  async checkCanClose() {
+    const { channelInfo } = this.tables
+    const data = await this.sqlite.get(
+      `SELECT id FROM ${channelInfo} WHERE endTime is NULL LIMIT 1`
+    )
+    if (!data) {
+      await this.closeDb()
+    }
+  }
 
   /** 保存采样 */
   async saveSamp(
@@ -256,17 +275,20 @@ export default class HistoryDb {
         endUpdate
       } = this.handleChangeChannel(changeStatusList)
       if (startTime) {
-        sql += `UPDATE ${channelInfo} SET startTime=${startTime} WHERE fullId IN (${startUpdate.join(',')})` // eslint-disable-line
+        sql += `UPDATE ${channelInfo} SET startTime=${startTime} WHERE fullId IN (${startUpdate.join(',')}) AND startTime is NULL;` // eslint-disable-line
       }
       if (endTime) {
         hasEnd = true
-        sql += `UPDATE ${channelInfo} SET endTime=${endTime} WHERE fullId IN (${endUpdate.join(',')})` // eslint-disable-line
+        sql += `UPDATE ${channelInfo} SET endTime=${endTime} WHERE fullId IN (${endUpdate.join(',')}) AND endTime is NULL;` // eslint-disable-line
       }
     }
-    await this.sqlite.exec(sql)
-    // if (hasEnd) {
-    //   await this.checkCanClose()
-    // }
+
+    if (sql) {
+      await this.sqlite.exec(sql) // exec 连续执行语句，中间错误后中断
+    }
+    if (hasEnd) {
+      await this.checkCanClose()
+    }
   }
 
   // async saveChannelStatus(channelStatus: any[]) {

@@ -17,9 +17,6 @@ class ConfigManage {
       },
       base: {
         portPath: ''
-      },
-      x: {
-        DBPath: app.getPath('userData')
       }
     }
   })

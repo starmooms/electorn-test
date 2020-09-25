@@ -20,6 +20,7 @@ import RedisServer from './core/redis/RedisServer'
 import redisClient, { RedisClient } from './core/redis/RedisClient'
 import logger from './core/Logger'
 import mainDb from './core/sqlite/MainDb'
+import configManage from './core/ConfigManage'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -146,7 +147,8 @@ export default class Launcher {
     //   logger.debug('powerSaveBlocker', powerSaveBlocker.isStarted(id), id)
     // }, 1000)
     // powerSaveBlocker.stop(id)
-    await mainDb.connect()
+
+    // await mainDb.connect()
     ipcManage.on('/createdWin', (event, data: any) => {
       switch (data.type) {
         case 'channel':
@@ -168,6 +170,7 @@ export default class Launcher {
     this.redisServer.start().finally(() => {
       redisClient.initRedis()
     })
+    this.startRender()
   }
 
   afterWin() {
@@ -177,12 +180,33 @@ export default class Launcher {
     // })
   }
 
+  async beforeWinRender() {
+    try {
+      await mainDb.connect()
+    } catch (err) {
+      logger.error(err)
+      throw err
+    }
+  }
+
+  startRender() {
+    const handld = this.beforeWinRender()
+    ipcManage.handle('/startRender', async () => {
+      await handld
+      const userConfig = configManage.userConfig.store
+      return {
+        userConfig
+      }
+    })
+  }
+
   async destoryWin(destroy = true) {
     try {
       this.win!.hide()
       if (this.usbManager) {
         this.usbManager.destory()
       }
+      await mainDb.close()
       await redisClient.close()
       if (this.redisServer) {
         await this.redisServer.stop()

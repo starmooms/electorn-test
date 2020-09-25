@@ -54,7 +54,7 @@ export default class SettingImpl extends VuexModule {
   }
 
   @Mutation
-  private UPDATE_USERCONFIG(userConfig: UserConfig) {
+  UPDATE_USERCONFIG(userConfig: UserConfig) {
     this.userConfig = userConfig
   }
 

@@ -18,7 +18,7 @@ import SlaverTrend from './window/SlaverTrend'
 import './core/ConfigManage'
 import RedisServer from './core/redis/RedisServer'
 import redisClient, { RedisClient } from './core/redis/RedisClient'
-import logger from './core/Logger'
+import logger, { setLogIpc } from './core/Logger'
 import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
 
@@ -149,6 +149,7 @@ export default class Launcher {
     // powerSaveBlocker.stop(id)
 
     // await mainDb.connect()
+    setLogIpc()
     ipcManage.on('/createdWin', (event, data: any) => {
       switch (data.type) {
         case 'channel':

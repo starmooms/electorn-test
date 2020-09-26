@@ -58,12 +58,15 @@ module.exports = {
       mainProcessFile: 'src/main/background.ts',
       mainProcessWatch: ['src/main'],
       externals: ['serialport', 'usb-detection', 'forever-monitor', 'sqlite3'],
+      // preload: 'src/main/preload.ts',
       builderOptions: {
         // productName: '中文名',
         electronDownload: {
           mirror: 'https://npm.taobao.org/mirrors/electron/'
         },
         appId: 'com.xxx.app',
+        // compression: 'maximum',
+        compression: 'store',
         mac: {
           target: ['dmg', 'zip']
         },
@@ -73,12 +76,18 @@ module.exports = {
             from: './extra/win32/',
             to: './',
             filter: ['**/*']
+          },
+          extraFiles: {
+            from: './extra/localData/',
+            to: './',
+            filter: ['**/*']
           }
         },
         nsis: {
           oneClick: false,
           allowToChangeInstallationDirectory: true,
           perMachine: true
+          // customRemoveFiles: ,
           // oneClick: false, // 是否一键安装
           // allowElevation: true, // 允许请求提升。 如果为false，则用户必须使用提升的权限重新启动安装程序。
           // allowToChangeInstallationDirectory: true, // 允许修改安装目录

@@ -105,4 +105,10 @@ declare namespace ipcReq {
     startId: number
     filePath: string
   }
+
+  /** 获取日志信息 */
+  interface SysLogInfo {
+    start: string
+    filePath: string
+  }
 }

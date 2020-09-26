@@ -11,6 +11,9 @@
         <el-button type="primary" @click="openBatch">
           机柜批量操作
         </el-button>
+        <el-button type="primary" @click="sysLogOpen">
+          查看系统日志
+        </el-button>
         <div class="select-file-btn">
           <file-select openType="file" @change="importHistory">
             <el-button type="primary">
@@ -104,6 +107,7 @@
       ></BatchModal>
 
       <SetChannelStatus ref="setChannelStatus"></SetChannelStatus>
+      <sys-log :show.sync="sysLogShow"></sys-log>
     </div>
     <div v-else>请先设置串口</div>
   </div>
@@ -121,6 +125,7 @@ import SlaverDetails from './components/SlaverDetails/index.vue'
 import SetChannelStatus from '@/renderer/components/SetChannelStatus.vue'
 import ChannelItem from './components/ChannelItem.vue'
 import FileSelect from '@/renderer/components/FileSelect.vue'
+import SysLog from '@/renderer/components/SysLog/index.vue'
 
 @Component({
   name: 'Home',
@@ -132,7 +137,8 @@ import FileSelect from '@/renderer/components/FileSelect.vue'
     SlaverDetails,
     SelectMaster,
     ChannelItem,
-    SetChannelStatus
+    SetChannelStatus,
+    SysLog
   }
 })
 export default class Home extends Vue {
@@ -166,6 +172,8 @@ export default class Home extends Vue {
   activeMasterId: null | number = null
   trendUnRegister!: any
   showSlaverDetail: null | number = null
+
+  sysLogShow = false
 
   get batteryList() {
     return ChannelStatus.list
@@ -225,6 +233,10 @@ export default class Home extends Vue {
 
   openBatch() {
     this.batchShow = true
+  }
+
+  sysLogOpen() {
+    this.sysLogShow = true
   }
 
   setChannelStatus(data: any) {

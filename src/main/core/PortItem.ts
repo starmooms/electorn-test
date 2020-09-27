@@ -1,6 +1,6 @@
 import SerialPort from 'serialport'
 import agreement, { ReadResult } from './Agreement'
-import logger from './Logger'
+import logger, { sysLog } from './Logger'
 import {
   WORKSTEPS_MAP,
   getCalList,
@@ -68,6 +68,14 @@ interface WStepsOpts {
   masterId: number
 }
 
+interface ChannelInfo {
+  masterId: number
+  slaverId?: number
+  slaverIds?: number[]
+  channel?: number
+  channelIds?: number[]
+}
+
 const SelfParser = TransfromParser
 
 export default class PortItem {
@@ -86,9 +94,35 @@ export default class PortItem {
   openErrNotify = new NotifyUtil()
   channelMap = new Map<string, Port.ChannelItem>()
 
+  channelKeyName = {
+    masterId: '机柜',
+    slaverId: '丛控',
+    channelId: '通道',
+    slaverIds: '丛控',
+    channelIds: '通道'
+  }
+
   constructor(path: string) {
     this.path = path
     this.created(path)
+  }
+
+  channelLog(message: string, channelInfo?: ChannelInfo) {
+    let channelMsg = ''
+    if (channelInfo) {
+      ;['masterId', 'slaverId', 'channelId'].forEach(key => {
+        if (channelInfo[key] != null) {
+          channelMsg += `${this.channelKeyName[key]}${channelInfo[key] + 1}、`
+        }
+      })
+      ;['slaverIds', 'channelIds'].forEach(key => {
+        if (channelInfo[key]) {
+          const idArr = channelInfo[key].map(id => id + 1)
+          channelMsg += `${this.channelKeyName[key]}${idArr.join(',')}、`
+        }
+      })
+    }
+    sysLog.log(`${message} ${channelMsg}`)
   }
 
   created(path: string) {
@@ -118,6 +152,7 @@ export default class PortItem {
       logger.info('串口触发open', data)
       this.openErrNotify.notify()
       this.closeNotify.notify(`${this.path} 重连成功`)
+      sysLog.log(`${this.path}链接成功`)
     })
 
     port.on('error', err => {
@@ -128,6 +163,7 @@ export default class PortItem {
     port.on('close', err => {
       logger.warn('串口触发close', err)
       this.closeNotify.error(`${this.path} 连接断开`)
+      sysLog.log(`${this.path}链接断开`)
     })
     this.port = port
     this.parser = parser
@@ -210,6 +246,7 @@ export default class PortItem {
     const channelIds = data.channelIds
     const masterIds = data.masterIds
     const projectId = await mainDb.workStart(data)
+    masterIds.sort((a, b) => a - b)
 
     const writerModel = new BufWriteModel2({
       model: WORKER_STEP_MODEL,
@@ -252,13 +289,27 @@ export default class PortItem {
     })
 
     await Bluebird.mapSeries(masterIds, async (masterId: number) => {
-      writerModel.writer('masterId', masterId)
-      logger.info('写工步', writerModel.buf.toString('hex'))
-      await this.post({
-        control: CONTROL_CODE.stepsSet,
-        data: writerModel.buf,
-        masterId
-      })
+      try {
+        writerModel.writer('masterId', masterId)
+        logger.info('写工步', writerModel.buf.toString('hex'))
+        await this.post({
+          control: CONTROL_CODE.stepsSet,
+          data: writerModel.buf,
+          masterId
+        })
+
+        this.channelLog('启动成功', {
+          masterId,
+          channelIds,
+          slaverIds
+        })
+      } catch (err) {
+        this.channelLog(`启动失败，${err.message}`, {
+          masterId,
+          channelIds,
+          slaverIds
+        })
+      }
     })
     return true
   }
@@ -820,15 +871,28 @@ export default class PortItem {
     }
 
     const list = data.masterIdList || [data.masterId]
+    list.sort((a, b) => a - b)
+    const channelInfo = {
+      masterId: 0,
+      channelIds,
+      slaverIds
+    }
 
     await Bluebird.mapSeries(list, async (masterId: number) => {
-      writerModel.writer('masterId', masterId)
-      logger.info('改变状态', writerModel.buf.toString('hex'))
-      await this.post({
-        control,
-        data: writerModel.buf,
-        masterId
-      })
+      try {
+        writerModel.writer('masterId', masterId)
+        channelInfo.masterId = masterId
+        logger.info('改变状态', writerModel.buf.toString('hex'))
+        await this.post({
+          control,
+          data: writerModel.buf,
+          masterId
+        })
+        this.channelLog(`${control.name}成功`, channelInfo)
+      } catch (err) {
+        logger.warn(err)
+        this.channelLog(`${control.name}失败, ${err.message}`, channelInfo)
+      }
     })
   }
 }

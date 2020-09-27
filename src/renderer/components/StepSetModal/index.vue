@@ -9,6 +9,7 @@
       <template v-if="isBatch">
         <SelectChannel
           ref="SelectChannel"
+          isCheckboxMaster
           :masterId.sync="batchMasterId"
           :slaverId.sync="batchSlaverId"
           :channelId.sync="batchChannelId"
@@ -198,7 +199,7 @@ export default class StepSetModal extends Vue {
   protectList = deepClone(PROTECT)
   protect: any = null
 
-  batchMasterId = 0
+  batchMasterId: number[] = []
   batchSlaverId: number[] = []
   batchChannelId: number[] = []
 
@@ -264,14 +265,14 @@ export default class StepSetModal extends Vue {
     let slaverIds: number[] = []
     let channelIds: number[] = []
     if (this.isBatch) {
-      if (!this.batchMasterId && this.batchMasterId != 0) {
+      if (this.batchMasterId.length === 0) {
         msg = '请先选择机柜'
       } else if (this.batchSlaverId.length === 0) {
         msg = '请先选择从控'
       } else if (this.batchChannelId.length === 0) {
         msg = '请先选择通道'
       } else {
-        masterIds = [this.batchMasterId]
+        masterIds = this.batchMasterId
         slaverIds = this.batchSlaverId
         channelIds = this.batchChannelId
       }
@@ -322,7 +323,7 @@ export default class StepSetModal extends Vue {
 
     const confirm = await this.$elConfirm('确定应用并启动工步')
     if (confirm) {
-      const data = await setSteps({
+      setSteps({
         path: this.portPath,
         stepsList: list,
         masterIds,
@@ -333,10 +334,12 @@ export default class StepSetModal extends Vue {
         startId: startId,
         filePath: this.filePath
       })
-      if (data.status) {
-        this.$message.success('设置工步成功')
-        this.closeModal()
-      }
+      this.closeModal()
+      this.$emit('openSysLog')
+      // if (data.status) {
+      //   this.$message.success('设置工步成功')
+      //   this.closeModal()
+      // }
     }
   }
 
@@ -356,7 +359,7 @@ export default class StepSetModal extends Vue {
   }
 
   /** 重置 */
-  reset() {
+  reset(resetChannel = true) {
     this.dataSave = {
       time: {
         enable: true,
@@ -374,6 +377,9 @@ export default class StepSetModal extends Vue {
     this.stepsList = []
     this.protect = GET_PROTECT_FORM()
     this.startId = 1
+    if (this.$refs.SelectChannel && resetChannel) {
+      this.$refs.SelectChannel.reset()
+    }
   }
 
   tplUseOpen() {
@@ -381,7 +387,7 @@ export default class StepSetModal extends Vue {
   }
 
   tplUse(tpl: any) {
-    this.reset()
+    this.reset(false)
     this.tplData = tpl
   }
 

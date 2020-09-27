@@ -21,6 +21,7 @@ import redisClient, { RedisClient } from './core/redis/RedisClient'
 import logger, { setLogIpc } from './core/Logger'
 import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
+import udpManage from './core/connect/UdpManage'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -184,6 +185,7 @@ export default class Launcher {
   async beforeWinRender() {
     try {
       await mainDb.connect()
+      udpManage.start
     } catch (err) {
       logger.error(err)
       throw err

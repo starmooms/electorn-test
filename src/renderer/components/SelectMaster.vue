@@ -1,5 +1,10 @@
 <template>
   <div>
+    <div>
+      <el-checkbox v-if="isCheckbox" v-model="masterAll">
+        全选
+      </el-checkbox>
+    </div>
     <div
       v-if="list"
       :is="groupName.group"
@@ -27,11 +32,19 @@ import { ChannelStatus } from '@/renderer/store/modules/Channel'
   name: 'select-master'
 })
 export default class SelectMaster extends Vue {
-  @Model('change', { type: [Array, String, Number] }) readonly value!:
-    | string
-    | string[]
+  @Model('change', { type: [Array, Number] }) readonly value!: number | number[]
   @Prop({ type: Boolean, default: false }) isCheckbox!: boolean
   @Prop({ type: Boolean, default: false }) labelKey!: boolean
+
+  get masterAll() {
+    return this.isCheckbox
+      ? (this.value as number[]).length === this.listId.length
+      : false
+  }
+
+  set masterAll(v: boolean) {
+    this.activeId = v ? this.listId : []
+  }
 
   get list() {
     return ChannelStatus.list
@@ -43,7 +56,8 @@ export default class SelectMaster extends Vue {
       : { group: 'ElRadioGroup', item: 'ElRadioButton' }
   }
 
-  activeId: string | string[] = this.isCheckbox ? [] : ''
+  activeId: number | number[] | null = this.isCheckbox ? [] : null
+  listId: number[] = []
 
   @Watch('activeId')
   changeActiveId() {
@@ -55,8 +69,18 @@ export default class SelectMaster extends Vue {
     this.activeId = this.value
   }
 
+  @Watch('list')
+  changeList() {
+    if (this.listId.length === 0 && this.list) {
+      this.listId = Object.keys(this.list).map(key => {
+        return this.list![key].id
+      })
+    }
+  }
+
   mounted() {
     this.changeValue()
+    this.changeList()
   }
 }
 </script>
@@ -95,6 +119,7 @@ export default class SelectMaster extends Vue {
       border: none;
       border-right: 1px solid #ccc;
       border-radius: 0;
+      transition: none;
     }
   }
 }

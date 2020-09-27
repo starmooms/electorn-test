@@ -68,3 +68,13 @@ a {
 .el-checkbox__inner::after{
   transition: none;
 }
+.center-dialog{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .el-dialog{
+    margin: 0;
+    margin-top: 0 !important;
+  }
+}

@@ -1,4 +1,5 @@
 {
+  "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 20000,
   "editor.formatOnSave": false,
   "path-intellisense.mappings": {

@@ -96,6 +96,7 @@
         :show.sync="stepsShow"
         :showItem="stepsShowItem"
         :isBatch="stepsBatch"
+        @openSysLog="sysLogOpen"
       ></StepSetModal>
 
       <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
@@ -106,7 +107,10 @@
         @setChannelStatus="setChannelStatus"
       ></BatchModal>
 
-      <SetChannelStatus ref="setChannelStatus"></SetChannelStatus>
+      <SetChannelStatus
+        ref="setChannelStatus"
+        @openSysLog="sysLogOpen"
+      ></SetChannelStatus>
       <sys-log :show.sync="sysLogShow"></sys-log>
     </div>
     <div v-else>请先设置串口</div>

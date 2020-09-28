@@ -8,7 +8,7 @@ import {
 } from 'vuex-module-decorators'
 import store from '@/renderer/store'
 import { getStoreConfig } from '@/renderer/ipc/storeConfig'
-import { translateSet } from '@/renderer/ipc/channel'
+import { sampSetReadStatus } from '@/renderer/ipc/channel'
 config.rawError = true
 
 interface UserConfig {
@@ -77,8 +77,7 @@ export default class SettingImpl extends VuexModule {
   @Action
   async toggleReadTranslate() {
     const status = !this.readTranslate
-    const data = await translateSet({
-      path: this.portPath,
+    const data = await sampSetReadStatus({
       status
     })
     if (data.status) {

@@ -1,4 +1,5 @@
 import { BufModelT } from '@/types/BufModel'
+import { Model } from 'vue-property-decorator'
 declare type Model = BufModelT.OrginModel
 
 /**
@@ -7,12 +8,18 @@ declare type Model = BufModelT.OrginModel
  * 读校准时发送
  * 读工步发送
  *  */
-export const COMMON_READ: Model[] = [
+export const COMMON_READ = [
   { name: 'version', bytLen: 1 },
   { name: 'masterId', bytLen: 1 },
   { name: 'slaverBit', bytLen: 4 },
   { name: 'channelBit', bytLen: 1 }
 ]
+
+// declare type ElementType<
+//   T extends ReadonlyArray<Model>
+// > = T extends ReadonlyArray<infer ElementType> ? ElementType : never
+// declare type c = ElementType<typeof COMMON_READ>
+// declare type d = c['name']
 
 /** 工步 */
 export const WORKER_STEP_MODEL: Model[] = [

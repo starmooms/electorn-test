@@ -32,16 +32,16 @@ const routes: Array<RouteConfig> = [
     name: 'Default',
     component: Default,
     children: [
-      {
-        path: '/port/WorkerSee/:path/:masterId/:slaverId/:channelId',
-        name: 'WorkerSee',
-        component: () => import('@/renderer/views/WorkerSee/index.vue')
-      },
-      {
-        path: '/port/SlaverTrend/:path/:masterId/:slaverId',
-        name: 'SlaverTrend',
-        component: () => import('@/renderer/views/SlaverTrend.vue')
-      },
+      // {
+      //   path: '/port/WorkerSee/:path/:masterId/:slaverId/:channelId',
+      //   name: 'WorkerSee',
+      //   component: () => import('@/renderer/views/WorkerSee/index.vue')
+      // },
+      // {
+      //   path: '/port/SlaverTrend/:path/:masterId/:slaverId',
+      //   name: 'SlaverTrend',
+      //   component: () => import('@/renderer/views/SlaverTrend.vue')
+      // },
       {
         path: '/history/:filePath',
         name: 'History',

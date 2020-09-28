@@ -2,7 +2,7 @@
   "name": "upper-computer",
   "author": "GXM",
   "description": "upper computer for battery detection",
-  "version": "0.2.52",
+  "version": "0.2.53",
   "private": true,
   "engines": {
     "node": ">=12.18.2"
@@ -23,6 +23,7 @@
     "core-js": "^3.6.5",
     "dayjs": "^1.8.34",
     "electron-is": "^3.0.0",
+    "electron-rebuild": "^2.0.3",
     "electron-store": "^6.0.0",
     "electron-updater": "^4.3.4",
     "element-ui": "^2.13.2",

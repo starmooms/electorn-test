@@ -14,7 +14,6 @@ import ipcManage from './core/IpcManage'
 import WorkStepSee from './window/WorkStepSee'
 import createHistoryWin from './window/HistoryWin'
 import UpdateManager from './core/UpdateManager'
-import SlaverTrend from './window/SlaverTrend'
 import './core/ConfigManage'
 import RedisServer from './core/redis/RedisServer'
 import redisClient, { RedisClient } from './core/redis/RedisClient'
@@ -29,7 +28,7 @@ declare type beforeMainWin = () => void
 export default class Launcher {
   win: BrowserWindow | null = null
   update: Update | null = null
-  usbManager = this.initUSBManager()
+  usbManager!: USBManager
   beforeMainWin: beforeMainWin | null = null
   updateManager = this.initUpdaterManager()
   redisServer!: RedisServer
@@ -157,9 +156,6 @@ export default class Launcher {
           /** 查看通道 */
           new WorkStepSee(data.data, this.usbManager)
           break
-        case 'slaverTrend':
-          new SlaverTrend(data.data, this.usbManager)
-          break
         case 'history':
           createHistoryWin(data.data)
           break
@@ -185,6 +181,7 @@ export default class Launcher {
   async beforeWinRender() {
     try {
       await mainDb.connect()
+      this.usbManager = this.initUSBManager()
       udpManage.start
     } catch (err) {
       logger.error(err)

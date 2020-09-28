@@ -90,9 +90,7 @@ export default class ChannelImpl extends VuexModule {
   public async getList() {
     let data: any
     try {
-      data = await getChannelList({
-        path: SettingStatus.portPath
-      })
+      data = await getChannelList()
       if (data.status) {
         this.context.commit('SET_CHANNELLIST', data.data)
       }

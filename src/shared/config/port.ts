@@ -219,17 +219,9 @@ for (let i = 0; i < 20; i++) {
   }
 }
 
-interface CalItem {
-  name: string
-  key: string
-  index: number
-  value: number | string
-  nameKey: string
-}
-
 /** 校准列表 */
 export function getCalList() {
-  const list: CalItem[] = []
+  const list: Port.CalItem[] = []
   let index = 3
   ;[
     { name: '电压校准参数', key: 'U' },

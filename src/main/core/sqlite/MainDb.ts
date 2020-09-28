@@ -23,7 +23,8 @@ class MainDb {
   sqlite: Sqlite
   tables = {
     channelStatus: 'channel_status',
-    channelHistory: 'channel_history'
+    channelHistory: 'channel_history',
+    errorData: 'error_data'
   }
 
   constructor() {
@@ -57,7 +58,7 @@ class MainDb {
     let sql = ''
     const tableName = tables.map(item => item.name)
 
-    const { channelStatus, channelHistory } = this.tables
+    const { channelStatus, channelHistory, errorData } = this.tables
 
     // 通道状态记录
     if (!tableName.includes(channelStatus)) {
@@ -102,6 +103,23 @@ class MainDb {
       CREATE INDEX "channel_history_start_time" ON "${channelStatus}" ("startTime");
       `
     }
+
+    // 错误历史 type 1: 通讯错误 2：实时数据错误列表
+    // if (!tableName.includes(errorData)) {
+    //   sql += `CREATE TABLE "${errorData}" (
+    //     "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+    //     "masterId" text NOT NULL,
+    //     "slaverIds" text NOT NULL,
+    //     "channelIds" text NOT NULL,
+    //     "type" integer NOT NULL,
+    //     "action" text NOT NULL,
+    //     "errCode" text NOT NULL,
+    //     "params1" text DEFAULT NULL,
+    //     "params2" text DEFAULT NULL,
+    //     "createdTime" datetime NOT NULL DEFAULT(datetime('now', 'localtime'))
+    //   );
+    //   `
+    // }
 
     if (sql) {
       await this.sqlite.exec(sql)
@@ -212,6 +230,38 @@ class MainDb {
       await this.sqlite.exec(updateSql)
     }
     return
+  }
+
+  /** 获取通道记录 */
+  async getChannelStatus() {
+    const { channelStatus } = this.tables
+    const row = await this.sqlite.all(
+      `SELECT * FROM ${channelStatus} WHERE status='RUN'`
+    )
+    return row
+  }
+
+  /** 记录错误数据 */
+  async saveErrorList(errorList: Port.ErrorList) {
+    const { errorData } = this.tables
+    let sql = ''
+    errorList.forEach(item => {
+      sql += `(
+        '${item.masterId}',
+        '${item.slaverIds}',
+        '${item.channelIds}',
+        ${item.type},
+        '${item.action}',
+        '${item.errCode}',
+        ${item.params1 ? `${item.params1}` : 'NULL'},
+        ${item.params2 ? `${item.params2}` : 'NULL'}),`
+    })
+    if (sql) {
+      sql =
+        `INSERT INTO ${errorData} (masterId, slaverIds, channelIds, type, action, errCode, params1, params2) VALUES` +
+        Sqlite.replaceSql(sql, ';')
+      await this.sqlite.run(sql)
+    }
   }
 }
 

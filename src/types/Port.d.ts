@@ -76,6 +76,19 @@ declare namespace Port {
     [projectId: string]: ChannelChangeItem[]
   }
 
+  interface ErrorListItem {
+    masterId: number
+    slaverIds: string | number
+    channelIds: string | number
+    type: 1 | 2
+    action: string
+    errCode: string
+    params1?: string
+    params2?: string
+    createTime?: string
+  }
+  type ErrorList = ErrorListItem[]
+
   interface BaseError {
     masterId: number
     action: string
@@ -162,5 +175,14 @@ declare namespace Port {
 
   interface SaveSampData {
     [projectId: string]: SaveSampItem
+  }
+
+  /** 校准参数 */
+  interface CalItem {
+    name: string
+    key: string
+    index: number
+    value: number | string
+    nameKey: string
   }
 }

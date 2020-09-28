@@ -144,7 +144,7 @@ export default class ChannelItem extends Vue {
     })
   }
 
-  getChannelMsg() {
+  getChannelMsg(): ipcReq.PortItem {
     return {
       masterId: this.masterId,
       slaverId: this.slaverId,

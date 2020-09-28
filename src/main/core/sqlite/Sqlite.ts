@@ -95,4 +95,8 @@ export default class Sqlite {
       })
     })
   }
+
+  static replaceSql(sql: string, end = '') {
+    return sql.replace(/,$/, end)
+  }
 }

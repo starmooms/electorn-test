@@ -165,11 +165,7 @@ export default class Home extends Vue {
   }
 
   calShow = false
-  calShowItem: any = {
-    masterId: null,
-    slaverId: null,
-    channelId: null
-  }
+  calShowItem: ipcReq.CalOpts | null = null
 
   batchShow = false
 
@@ -227,11 +223,8 @@ export default class Home extends Vue {
     this.stepsShow = true
   }
 
-  calOpen(channelMsg: any) {
-    this.calShowItem = {
-      path: this.portPath,
-      ...channelMsg
-    }
+  calOpen(channelMsg: ipcReq.CalOpts) {
+    this.calShowItem = channelMsg
     this.calShow = true
   }
 
@@ -273,9 +266,7 @@ export default class Home extends Vue {
     }
 
     const { unRegister } = this.$command.on({
-      eventName: `/port/translate/${encodeURIComponent(this.portPath)}/${
-        this.activeMasterId
-      }`,
+      eventName: `/port/translate/${this.activeMasterId}`,
       onEmit: data => {
         data.list.forEach(item => {
           const slaver = this.activeMaster?.slaverList[item.slaverId]

@@ -114,7 +114,7 @@ export default class SetChannelStatus extends Vue {
       if (isSingle) {
         const { masterId, slaverId, channelId } = params
         const getStepData = await getWorkStep({
-          path: params.path,
+          // path: params.path,
           masterId: masterId,
           slaverId: slaverId,
           channelId: [channelId]

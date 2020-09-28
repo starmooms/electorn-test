@@ -249,10 +249,6 @@ export default class StepSetModal extends Vue {
   //   return this.channelList[this.batchMasterId] || null
   // }
 
-  get portPath() {
-    return SettingStatus.portPath
-  }
-
   get hasLoop() {
     return this.stepsList.find((item: any) => item.type === 'loop')
       ? true
@@ -324,7 +320,6 @@ export default class StepSetModal extends Vue {
     const confirm = await this.$elConfirm('确定应用并启动工步')
     if (confirm) {
       setSteps({
-        path: this.portPath,
         stepsList: list,
         masterIds,
         slaverIds,

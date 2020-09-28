@@ -19,9 +19,9 @@ import { Promise as Bluebird } from 'bluebird'
 
 import winManager from './WinManager'
 import ipcManage from './IpcManage'
-import is, { mas } from 'electron-is'
+import is from 'electron-is'
 import { typedKeys } from '@/shared/utils'
-import redisClient, { RedisClient } from './redis/RedisClient'
+import redisClient from './redis/RedisClient'
 import dayjs from 'dayjs'
 import TransfromParser from '../utils/transfromParser'
 import {
@@ -101,6 +101,7 @@ export default class PortItem {
     slaverIds: '丛控',
     channelIds: '通道'
   }
+  initChannelResolve!: Promise<any>
 
   constructor(path: string) {
     this.path = path
@@ -167,7 +168,14 @@ export default class PortItem {
     })
     this.port = port
     this.parser = parser
+    this.initChannelResolve = this.initChannelStatusList()
     return
+  }
+
+  close() {
+    if (this.port) {
+      this.port.close()
+    }
   }
 
   checkOpen() {
@@ -239,7 +247,7 @@ export default class PortItem {
     })
   }
 
-  /** 写工步 */
+  /** 写工步/并启动 */
   async writeSteps(data: ipcReq.WriteSteps) {
     const listLen = data.stepsList.length
     const slaverIds = data.slaverIds
@@ -330,7 +338,7 @@ export default class PortItem {
   }
 
   /** 读工步 */
-  async readSteps(opts: any) {
+  async readSteps(opts: ipcReq.ReadSteps) {
     const masterId = opts.masterId
     const writeMdoel = new BufWriteModel2({
       model: COMMON_READ
@@ -409,7 +417,7 @@ export default class PortItem {
   }
 
   /** 读采样 */
-  readTranslate() {
+  readSamp() {
     if (this.sampIsRead) return
     const masterId = 0
     const slaverId = 0
@@ -518,11 +526,10 @@ export default class PortItem {
             }
             list.push(samp)
             // const channel = this.channelList[masterId].slaverList[samp.slaverId].list[samp.channelId] // eslint-disable-line
-            const channel = this.channelMap.get(`${masterId}_${samp.slaverId}_${samp.channelId}`) // eslint-disable-line
+            const fullId = `${masterId}_${samp.slaverId}_${samp.channelId}` // eslint-disable-line
+            const channel = this.channelMap.get(fullId)
             if (!channel) {
-              logger.error(
-                `spam channel ${masterId}_${samp.slaverId}_${samp.channelId} no found`
-              )
+              logger.error(`spam channel ${fullId} no found`)
               return
             }
             const lastSamp = channel.samp // eslint-disable-line
@@ -530,7 +537,8 @@ export default class PortItem {
             if (samp.projectId === 0) return
 
             let shouldSaveSamp = false // 是否保存采样
-            let nowStatus = channel.nowStatus // 通道状态
+            const lastStatus = channel.nowStatus // 通道上次状态
+            let nowStatus = lastStatus // 通道当前状态，默认为上回状态，下面通过采样判断
             let changeChannel: Port.ChannelChangeItem | null = null
 
             // 判断状态变化
@@ -539,7 +547,6 @@ export default class PortItem {
               !lastSamp ||
               lastSamp.workerCode !== samp.workerCode
             ) {
-              const lastStatus = channel.nowStatus
               nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
               if (lastStatus !== nowStatus) {
                 shouldSaveSamp = true
@@ -564,8 +571,8 @@ export default class PortItem {
             }
 
             // 判断是否需要存储采样
-            if (!shouldSaveSamp) {
-              if (!lastSamp) {
+            if (!shouldSaveSamp && lastSamp) {
+              if (lastSamp.projectId !== samp.projectId) {
                 shouldSaveSamp = true
               } else if (nowStatus === 'RUN') {
                 const saveConf = historyDbCache.getSaveConf(samp.projectId)
@@ -629,6 +636,17 @@ export default class PortItem {
             })
           })
 
+          await mainDb.saveErrorList([
+            {
+              masterId: 0,
+              slaverIds: 0,
+              channelIds: 0,
+              type: 2,
+              action: '测试数据',
+              errCode: '01'
+            }
+          ])
+
           readModel.ecahList('endStatusList', readItem => {
             const projectId = readItem.read('projectId')
             const saveSampEnd = getProjectSamp(projectId, 'endStatusList')
@@ -640,13 +658,6 @@ export default class PortItem {
               endCode: readItem.readHex('endCode')
             })
           })
-
-          // // logger.info('存储redis', readModel.buf.toString('hex'))
-          // await redisClient.setSamp(masterId, list)
-          // if (channelStatus.length > 0) {
-          //   await redisClient.channelSetStart(this.port.path, channelStatus)
-          //   ipcManage.commonMsg('updateChannelList', channelStatus)
-          // }
 
           const saveSampList = Object.entries(projectSamp).map(([key, val]) => {
             return val
@@ -679,9 +690,7 @@ export default class PortItem {
               const win = winManager.getWin(winName)
               if (win) {
                 ipcManage.send(
-                  `/port/translate/${encodeURIComponent(
-                    this.path
-                  )}/${masterId}`,
+                  `/port/translate/${masterId}`,
                   () => {
                     return { list }
                   },
@@ -710,7 +719,7 @@ export default class PortItem {
   }
 
   /** 停止读采样 */
-  stopTranslate() {
+  stopSamp() {
     const masterId = 0
     const samp = this.translate.get(masterId)
     if (samp && samp.close) {
@@ -719,7 +728,7 @@ export default class PortItem {
   }
 
   /** 添加win */
-  emitTranslate(opts: any) {
+  emitSamp(opts: any) {
     const masterId = 0 // opts.masterId
     const winName = opts.winName
     const translate = this.translate.get(masterId)
@@ -739,7 +748,7 @@ export default class PortItem {
     }
   }
 
-  async setCal(opts: any) {
+  async setCal(opts: ipcReq.CalWriteOpts) {
     const masterId = opts.masterId
     const writerModel = new BufWriteModel2({
       model: CAL_MODEL,
@@ -765,7 +774,7 @@ export default class PortItem {
   }
 
   /** 读校准 */
-  async readCal(opts: any) {
+  async readCal(opts: ipcReq.CalOpts) {
     const masterId = opts.masterId
     const writeModel = new BufWriteModel2({
       model: COMMON_READ
@@ -814,42 +823,34 @@ export default class PortItem {
         })
       })
     })
-
-    // const channelStatus = await redisClient.getChannelList(this.port.path)
-    // Object.entries(channelStatus).forEach(([mKey, masterItem]) => {
-    //   const master = this.channelList[mKey]
-
-    //   Object.entries(masterItem).forEach(([sKey, slaverItem]) => {
-    //     const slaver = master.slaverList[sKey]
-
-    //     Object.entries(slaverItem).forEach(([cKey, channelItem]) => {
-    //       if (channelItem.start && !channelItem.end) {
-    //         const channel = slaver.list[cKey]
-    //         channel.workerStart = channelItem.start
-    //       }
-    //     })
-    //   })
-    // })
+    const channelStatus = await mainDb.getChannelStatus()
+    channelStatus.forEach((item: any) => {
+      const channel = this.channelMap.get(item.fullId)
+      if (channel) {
+        logger.info('change', item.status)
+        channel.nowStatus = item.status
+      }
+    })
 
     return this.channelList
   }
 
   /** 获取列表 */
-  async getChannelList(opts: any) {
-    const channelList = await this.initChannelStatusList()
-    if (opts.type) {
-      const { masterId, slaverId } = opts
-      const masterList = channelList[`${masterId}`]
-      if (!masterList) {
-        throw new Error(`不存在主控 ${masterId}`)
-      }
-      const slaverList = masterList.slaverList[`${slaverId}`]
-      if (!slaverList) {
-        throw new Error(`不存在从控 ${opts.master}`)
-      }
-      return slaverList
-    }
-    return channelList
+  async getChannelList() {
+    await this.initChannelResolve
+    // if (opts.type) {
+    //   const { masterId, slaverId } = opts
+    //   const masterList = channelList[`${masterId}`]
+    //   if (!masterList) {
+    //     throw new Error(`不存在主控 ${masterId}`)
+    //   }
+    //   const slaverList = masterList.slaverList[`${slaverId}`]
+    //   if (!slaverList) {
+    //     throw new Error(`不存在从控 ${opts.master}`)
+    //   }
+    //   return slaverList
+    // }
+    return this.channelList
   }
 
   /** 设置状态 */

@@ -13,7 +13,7 @@
         :key="index"
         :label="`${item.name}${item.key}`"
       >
-        <el-input v-model="item.value"></el-input>
+        <el-input v-model.number="item.value"></el-input>
       </el-form-item>
     </el-form>
 
@@ -36,18 +36,19 @@ export default class CalModal extends Vue {
   @PropSync('show', { type: Boolean, default: false })
   private dialog!: boolean
 
-  @Prop({ type: Object }) private showItem!: any | null
+  @Prop({ type: Object }) private showItem!: ipcReq.CalOpts
 
   list = getCalList()
 
   @Watch('dialog')
   async dialogChange(v) {
     if (v === true) {
-      if (this.showItem) {
-        const data = await readCal(this.showItem)
-        if (data.status) {
-          this.list = data.data.list
-        }
+      if (!this.showItem) {
+        this.$message.error('缺少通道参数')
+      }
+      const data = await readCal(this.showItem)
+      if (data.status) {
+        this.list = data.data.list
       }
     }
   }

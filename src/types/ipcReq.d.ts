@@ -1,10 +1,6 @@
 /** ipc 通讯相关 */
 declare namespace ipcReq {
-  interface PortBase {
-    path: string
-  }
-
-  interface PortMasterBase extends PortBase {
+  interface PortMasterBase {
     masterId: number
   }
 
@@ -86,8 +82,8 @@ declare namespace ipcReq {
     I: StepDataSaveItem
   }
 
+  /** 写工步并启动，传递参数 */
   interface WriteSteps {
-    path: string
     masterIds: number[]
     slaverIds: number[]
     channelIds: number[]
@@ -106,9 +102,55 @@ declare namespace ipcReq {
     filePath: string
   }
 
+  /** 读工步 */
+  interface ReadSteps {
+    masterId: number
+    slaverId: number
+    channelId: number[]
+  }
+
+  /** 是否读取采样 */
+  interface SampReadStatus {
+    status: boolean
+  }
+
   /** 获取日志信息 */
   interface SysLogInfo {
     start: string
     filePath: string
+  }
+
+  /** 读校准请求参数 */
+  interface CalOpts {
+    masterId: number
+    slaverId: number
+    channelId: number
+  }
+
+  /** 写校准请求参数 */
+  interface CalWriteOpts extends CalOpts {
+    list: Port.CalItem[]
+  }
+
+  /** 获取通道列表请求参数 */
+  interface ChannelListOpts {
+    type?: string
+    path: string
+    masterId?: number
+    slaverId?: number
+    channelId?: number
+  }
+
+  /** 改变通道状态请求参数 */
+  interface ChannelSetStatus {
+    path: string
+    masterId?: number
+    masterIdList?: number[]
+    slaverId?: number
+    slaverIdList?: number[]
+    channelId?: number
+    channelIdList?: number[]
+    startId?: number
+    status: string
   }
 }

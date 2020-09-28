@@ -18,13 +18,13 @@
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
-import Protect from './components/Protect.vue'
+// import Protect from './components/Protect.vue'
 import Sampling from './components/Sampling.vue'
 import Base from './components/Base.vue'
 
 @Component({
   components: {
-    Protect,
+    // Protect,
     Sampling,
     Base
   }
@@ -35,10 +35,10 @@ export default class Setting extends Vue {
       label: '基础设置',
       name: 'Base'
     },
-    {
-      label: '保护参数设置',
-      name: 'Protect'
-    },
+    // {
+    //   label: '保护参数设置',
+    //   name: 'Protect'
+    // },
     {
       label: '采样设置',
       name: 'Sampling'

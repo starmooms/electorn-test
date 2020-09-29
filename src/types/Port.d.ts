@@ -185,4 +185,13 @@ declare namespace Port {
     value: number | string
     nameKey: string
   }
+
+  /** 通道信息，日志 */
+  interface ChannelInfo {
+    masterId: number
+    slaverId?: number
+    slaverIds?: number[]
+    channel?: number
+    channelIds?: number[]
+  }
 }

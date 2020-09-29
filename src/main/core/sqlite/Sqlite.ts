@@ -96,6 +96,7 @@ export default class Sqlite {
     })
   }
 
+  /** 将sql最后一个‘,’，替换掉 */
   static replaceSql(sql: string, end = '') {
     return sql.replace(/,$/, end)
   }

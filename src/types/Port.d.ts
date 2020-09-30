@@ -80,7 +80,9 @@ declare namespace Port {
     masterId: number
     slaverIds: string | number
     channelIds: string | number
+    /** 1: 通讯错误 2：实时数据错误列表 */
     type: 1 | 2
+    /** 操作名称 */
     action: string
     errCode: string
     params1?: string

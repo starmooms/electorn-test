@@ -31,6 +31,7 @@ interface UserConfig {
 export default class SettingImpl extends VuexModule {
   public userConfig: UserConfig | null = null
   public $readTranslate = false
+  public mainDbPath = ''
 
   get sampling() {
     return this.userConfig!.sampling
@@ -56,6 +57,12 @@ export default class SettingImpl extends VuexModule {
   @Mutation
   UPDATE_USERCONFIG(userConfig: UserConfig) {
     this.userConfig = userConfig
+  }
+
+  /** 设置mainDb文件路径 */
+  @Mutation
+  UPDATE_MAINDBPATH(path: string) {
+    this.mainDbPath = path
   }
 
   @Action

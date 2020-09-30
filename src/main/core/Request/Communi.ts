@@ -1,9 +1,8 @@
-import dayjs from 'dayjs'
 import { ERROR_STATUS } from '@/shared/config/port'
 import agreement, { ReadResult } from '@/main/core/Agreement'
-import redisClient from '@/main/core/redis/RedisClient'
 import SerialPortRequest from '@/main/core/Request/SerialPortRequest'
 import configManage from '../ConfigManage'
+import mainDb from '../sqlite/MainDb'
 
 interface PostOpts {
   timeout?: number
@@ -18,15 +17,16 @@ interface PostOpts {
 export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
 
 /** 通讯方式 */
-export default class Communi {
+class Communi {
   emitList: CommuniEmitList = new Map()
   requestType: 'Port' | 'Tcp' = 'Port'
 
   portPath!: string
-  serialPort!: SerialPortRequest
+  serialPort: SerialPortRequest | null = null
 
   constructor() {
     this.createSerialPort()
+    this.changeConfig()
   }
 
   createSerialPort() {
@@ -35,8 +35,11 @@ export default class Communi {
     if (lastPortPath === this.portPath) return
     if (this.serialPort) {
       this.serialPort.close()
+      this.serialPort = null
     }
-    this.serialPort = new SerialPortRequest(this.portPath, this.emitList)
+    if (this.portPath) {
+      this.serialPort = new SerialPortRequest(this.portPath, this.emitList)
+    }
   }
 
   changeConfig() {
@@ -71,18 +74,17 @@ export default class Communi {
       this.emitList.set(sId, ({ masterId, errCode, buf, originBuf }) => {
         if (errCode !== '00') {
           const errMsg = ERROR_STATUS[errCode]
-          redisClient.saveError([
+          mainDb.saveErrorList([
             {
-              postBuf: agrData.buf.toString('hex'),
-              backBuf: originBuf.toString('hex'),
-              masterId,
-              errCode,
-              errMsg,
+              masterId: masterId,
+              slaverIds: '',
+              channelIds: '',
+              type: 1,
               action: control.name,
-              createTime: dayjs().valueOf(),
-              type: 'PostError'
+              errCode: errCode
             }
           ])
+
           setError(`Error_Code ${errMsg}`)
           return
         }
@@ -91,6 +93,10 @@ export default class Communi {
       })
 
       if (this.requestType === 'Port') {
+        if (!this.serialPort) {
+          setError('串口未初始化')
+          return
+        }
         this.serialPort.post(agrData.buf, setError)
       } else {
         setError(`requestType ${this.requestType} No Found`)
@@ -102,3 +108,7 @@ export default class Communi {
     })
   }
 }
+
+const communi = new Communi()
+
+export default communi

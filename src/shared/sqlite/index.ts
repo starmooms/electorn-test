@@ -1,4 +1,5 @@
 import sqlite3 from 'sqlite3'
+import logger from '@/main/core/Logger'
 const sqlite = sqlite3.verbose()
 
 export default class Sqlite {
@@ -13,11 +14,14 @@ export default class Sqlite {
   /** 连接数据库 */
   connect() {
     return new Promise<null>((resolve, reject) => {
+      if (this.isConnect) return
+      logger.info('sql connect', this.fileName)
       if (!this.fileName) {
         reject(`connect fileName undefined`)
         return
       }
       this.db = new sqlite.Database(this.fileName, err => {
+        logger.info('创建连接')
         if (err === null) {
           resolve(err)
         } else {
@@ -92,5 +96,10 @@ export default class Sqlite {
         }
       })
     })
+  }
+
+  /** 将sql最后一个‘,’，替换掉 */
+  static replaceSql(sql: string, end = '') {
+    return sql.replace(/,$/, end)
   }
 }

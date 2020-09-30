@@ -1,11 +1,9 @@
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
 import ipcManage from './IpcManage'
-import { controlCode } from '@/shared/config/port'
-import agreement from './Agreement'
 import PortItem from './PortItem'
-import configManage from './ConfigManage'
 import logger, { sysLog } from './Logger'
+import boxManage from './boxManage/BoxManage'
 
 export interface ArgeementData {
   buf: Buffer
@@ -24,8 +22,6 @@ export default class USBManager {
   }
 
   init() {
-    this.getPortPath()
-    this.changePortPath()
     this.start()
     this.setSlaverStatus()
     this.writeSteps()
@@ -37,24 +33,24 @@ export default class USBManager {
     this.getChannelList()
   }
 
-  getPortPath() {
-    const lastPortPath = this.protPath
-    this.protPath = configManage.userConfig.get('base.portPath')
-    if (this.protPath !== lastPortPath) {
-      if (this.portItem) {
-        this.portItem.close()
-      }
-      if (this.protPath) {
-        this.portItem = new PortItem(this.protPath)
-      }
-    }
-  }
+  // getPortPath() {
+  //   const lastPortPath = this.protPath
+  //   this.protPath = configManage.userConfig.get('base.portPath')
+  //   if (this.protPath !== lastPortPath) {
+  //     if (this.portItem) {
+  //       this.portItem.close()
+  //     }
+  //     if (this.protPath) {
+  //       this.portItem = new PortItem(this.protPath)
+  //     }
+  //   }
+  // }
 
-  changePortPath() {
-    configManage.userConfig.onDidChange('base', () => {
-      this.getPortPath()
-    })
-  }
+  // changePortPath() {
+  //   configManage.userConfig.onDidChange('base', () => {
+  //     this.getPortPath()
+  //   })
+  // }
 
   /** 开始监测USB */
   start() {
@@ -106,21 +102,21 @@ export default class USBManager {
   /** 写工步 */
   writeSteps() {
     ipcManage.handle('/port/writeWorkSteps', (event, data) => {
-      return this.getPortData().writeSteps(data)
+      return boxManage.boxStatus.writeSteps(data)
     })
   }
 
   /** 读工步 */
   readSteps() {
     ipcManage.handle('/port/readWorkSteps', (event, data) => {
-      return this.getPortData().readSteps(data)
+      return boxManage.boxStatus.readSteps(data)
     })
   }
 
   /** 设置从控状态 */
   setSlaverStatus() {
     ipcManage.handle('/port/slaver/setStatus', (event, data) => {
-      return this.getPortData().setStatus(data)
+      return boxManage.boxStatus.setStatus(data)
     })
   }
 
@@ -129,11 +125,10 @@ export default class USBManager {
     ipcManage.handle(
       '/port/sampSetReadStatus',
       (event, data: ipcReq.SampReadStatus) => {
-        const portItem = this.getPortData()
         if (data.status === true) {
-          portItem.readSamp()
+          boxManage.boxSamp.sampSetRead()
         } else {
-          portItem.stopSamp()
+          boxManage.boxSamp.sampSetStopRead()
         }
       }
     )
@@ -142,26 +137,21 @@ export default class USBManager {
   /** 设置校准 */
   setCal() {
     ipcManage.handle('/port/cal/set', async (event, data) => {
-      return this.getPortData().setCal(data)
+      return boxManage.boxCal.setCal(data)
     })
   }
 
   /** 读校准 */
   readCal() {
     ipcManage.handle('/port/cal/read', async (event, data) => {
-      return this.getPortData().readCal(data)
+      return boxManage.boxCal.readCal(data)
     })
   }
 
   /** 获取列表 */
   getChannelList() {
     ipcManage.handle('/port/channelList', async () => {
-      logger.info(this.protPath)
-      if (this.portItem) {
-        return this.getPortData().getChannelList()
-      } else {
-        return []
-      }
+      return boxManage.getChannelList()
     })
   }
 }

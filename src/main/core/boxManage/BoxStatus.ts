@@ -1,4 +1,3 @@
-import BoxManage from './BoxManage'
 import mainDb from '@/main/core/sqlite/MainDb'
 import {
   WORKSTEPS_MAP,
@@ -17,6 +16,8 @@ import { BufWriteModel as BufModel } from '@/main/utils/bufModel'
 import { typedKeys } from '@/shared/utils'
 import Bluebird from 'bluebird'
 import logger from '@/main/core/Logger'
+import communi from '@/main/core/Request/Communi'
+import { BoxManage } from './BoxManage'
 
 /** 机柜状态和工步通讯 */
 export default class BoxStatus {
@@ -85,7 +86,7 @@ export default class BoxStatus {
         writerModel.writer('masterId', masterId)
         channelInfo.masterId = masterId
         logger.info('写工步', writerModel.buf.toString('hex'))
-        await this.parent.post({
+        await communi.post({
           control: CONTROL_CODE.stepsSet,
           data: writerModel.buf,
           masterId
@@ -134,7 +135,7 @@ export default class BoxStatus {
       // const b = '000000000001010000000000000000000000000000000000'
       resultBuf = Buffer.from(b, 'hex')
     } else {
-      resultBuf = await this.parent.post({
+      resultBuf = await communi.post({
         control: CONTROL_CODE.stepsRead,
         data: writeMdoel.buf,
         masterId
@@ -224,7 +225,7 @@ export default class BoxStatus {
         writerModel.writer('masterId', masterId)
         channelInfo.masterId = masterId
         logger.info('改变状态', writerModel.buf.toString('hex'))
-        await this.parent.post({
+        await communi.post({
           control,
           data: writerModel.buf,
           masterId

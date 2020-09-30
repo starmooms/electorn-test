@@ -33,9 +33,11 @@ const init = () => {
 }
 
 beforeRender()
-  .then(data => {
-    if (!data.status) throw data.err || 'DATA STATUS ERROR'
-    SettingStatus.UPDATE_USERCONFIG(data.data.userConfig)
+  .then(result => {
+    if (!result.status) throw result.err || 'DATA STATUS ERROR'
+    const data = result.data
+    SettingStatus.UPDATE_USERCONFIG(data.userConfig)
+    SettingStatus.UPDATE_MAINDBPATH(data.mainData)
     init()
   })
   .catch(err => {

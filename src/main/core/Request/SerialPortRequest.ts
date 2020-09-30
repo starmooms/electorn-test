@@ -5,7 +5,7 @@ import agreement, { ReadResult } from '@/main/core/Agreement'
 import logger, { sysLog } from '@/main/core/Logger'
 import TransfromParser from '@/main/utils/transfromParser'
 import NotifyUtil from '@/main/utils/notifyUtil'
-import { CommuniEmitList } from '@/main/core/Request/Request'
+import { CommuniEmitList } from '@/main/core/Request/Communi'
 
 const SelfParser = TransfromParser
 

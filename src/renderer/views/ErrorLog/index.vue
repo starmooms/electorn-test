@@ -5,173 +5,197 @@
       class="refresh-btn"
       type="primary"
       icon="el-icon-refresh"
-      @click="getErrorList"
+      @click="getList"
     >
       刷新
     </el-button>
-    <div class="virtual-table err-table">
-      <div class="th-head">
-        <div class="th-item">
-          <div class="th-td td-date">创建日期</div>
-          <div class="th-td td-action">操作名称</div>
-          <div class="th-td td-err-type">错误类型</div>
-          <div class="th-td td-err-code">错误码</div>
-          <div class="th-td td-id">机柜号</div>
-          <div class="th-td td-id">从控号</div>
-          <div class="th-td td-id">通道号</div>
-          <div class="th-td td-err-msg">错误信息</div>
-        </div>
-      </div>
-      <div
-        v-if="errorList.length <= 0"
-        style="text-align: center;padding:10px;"
-      >
-        暂无数据
-      </div>
-      <RecycleScroller
-        v-else
-        class="th-body"
-        :items="errorList"
-        :item-size="32"
-        key-field="id"
-      >
-        <template v-slot="{ item, index }">
-          <div class="th-item" :class="{ even: index % 2 }">
-            <div class="th-td td-date">
-              {{ item.createTimeStr }}
-            </div>
-            <div class="th-td td-action">{{ item.action }}</div>
-            <div class="th-td td-err-type">
-              {{ item.type === 'SampError' ? '采样错误' : '串口交互错误' }}
-            </div>
-            <div class="th-td td-err-code">{{ item.errCode }}</div>
-            <div class="th-td td-id">
-              {{ item.masterId != null ? item.masterId + 1 : '-' }}
-            </div>
-            <div class="th-td td-id">
-              {{ item.slaverId != null ? item.slaverId + 1 : '-' }}
-            </div>
-            <div class="th-td td-id">
-              {{ item.channelId != null ? item.channelId + 1 : '-' }}
-            </div>
-            <div class="th-td td-err-msg">{{ item.errMsg }}</div>
-            <!-- <div class="th-td td-err-msg">
-              的所发生的就离开飞机手动if九点十分独守空房结束的快乐番薯的是电风扇地方都是发斯蒂芬斯蒂芬的的所发生的就离开飞机手动if九点十分独守空房结束的快乐番薯的是电风扇地方都是发斯蒂芬斯蒂芬的
-            </div> -->
-          </div>
-        </template>
-      </RecycleScroller>
+    <div v-loading="loading">
+      <el-table :data="list" stripe style="width: 100%" border>
+        <el-table-column prop="id" label="id" width="80"></el-table-column>
+        <el-table-column
+          prop="masterId"
+          label="主控"
+          width="80"
+        ></el-table-column>
+        <el-table-column
+          prop="slaverIds"
+          label="丛控"
+          width="80"
+        ></el-table-column>
+        <el-table-column
+          prop="channelIds"
+          label="通道"
+          width="80"
+        ></el-table-column>
+        <el-table-column
+          prop="typeStr"
+          label="错误类型"
+          width="200"
+        ></el-table-column>
+        <el-table-column prop="errCodeStr" label="错误信息"></el-table-column>
+        <el-table-column
+          prop="createdTime"
+          label="创建时间"
+          width="180"
+        ></el-table-column>
+      </el-table>
     </div>
+
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      :page.sync="listQuery.page"
+      :limit.sync="listQuery.limit"
+      @pagination="getList"
+    />
   </div>
 </template>
 <script lang="ts">
 import { getErrorLog } from '@/renderer/ipc/db'
 import { Vue, Component } from 'vue-property-decorator'
 import { RecycleScroller } from 'vue-virtual-scroller'
+import Pagination from '@/renderer/components/Pagination/index.vue'
+import mainDb from '@/renderer/Db/mainDb'
+import { type } from 'os'
+import { ERROR_STATUS } from '@/shared/config/port'
 
 @Component({
   components: {
-    RecycleScroller
+    RecycleScroller,
+    Pagination
   }
 })
 export default class ErrorLog extends Vue {
   errorList: any[] = []
+  total = 200
+  listQuery = {
+    page: 1,
+    limit: 20
+  }
+  db!: mainDb
+  list: Db.RErrorItem[] = []
+  loading = false
 
-  async getErrorList() {
-    const data = await getErrorLog()
-    if (data.status) {
-      this.errorList = data.data
+  async createDb() {
+    this.db = new mainDb()
+    await this.db.connect()
+  }
+
+  async getList() {
+    try {
+      this.loading = true
+      const data = await this.db.getErrorList(this.listQuery)
+      this.total = data.total
+      this.list = data.list.map(item => {
+        return {
+          ...item,
+          typeStr: item.type === 1 ? '通讯错误' : '实时数据错误列表',
+          errCodeStr: ERROR_STATUS[item.errCode]
+        }
+      })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      this.loading = false
     }
   }
 
+  async init() {
+    await this.createDb()
+    this.getList()
+  }
+
   mounted() {
-    this.getErrorList()
+    this.init()
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.refresh-btn {
+  margin-bottom: 10px;
+}
 /* .err-table {
   height: 80vh;
 } */
-::v-deep {
-  .t-header {
-    tr,
-    th {
-      background: #f5f7fa;
-    }
-  }
-}
+// ::v-deep {
+//   .t-header {
+//     tr,
+//     th {
+//       background: #f5f7fa;
+//     }
+//   }
+// }
 
-.virtual-table {
-  border: 1px solid #dcdfe6;
-  .th-item {
-    display: flex;
-    align-items: center;
-    &.even {
-      background-color: #f5f7fa;
-    }
-    .th-td {
-      flex: none;
-      box-sizing: border-box;
-      padding-left: 10px;
-      border-right: 1px solid #dcdfe6;
-      border-bottom: 1px solid #dcdfe6;
-      font-size: 12px;
-      position: relative;
-      height: 32px;
-      line-height: 32px;
-      /* &:after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 1px;
-        height: 100%;
-        background: #dcdfe6;
-      } */
-      &:last-child {
-        border-right: none;
-      }
+// .virtual-table {
+//   border: 1px solid #dcdfe6;
+//   .th-item {
+//     display: flex;
+//     align-items: center;
+//     &.even {
+//       background-color: #f5f7fa;
+//     }
+//     .th-td {
+//       flex: none;
+//       box-sizing: border-box;
+//       padding-left: 10px;
+//       border-right: 1px solid #dcdfe6;
+//       border-bottom: 1px solid #dcdfe6;
+//       font-size: 12px;
+//       position: relative;
+//       height: 32px;
+//       line-height: 32px;
+//       /* &:after {
+//         content: '';
+//         position: absolute;
+//         top: 0;
+//         right: 0;
+//         width: 1px;
+//         height: 100%;
+//         background: #dcdfe6;
+//       } */
+//       &:last-child {
+//         border-right: none;
+//       }
 
-      .td-text {
-        line-height: 1.2;
-        width: 100%;
-        word-wrap: break-word;
-        word-break: break-all;
-      }
-    }
-  }
+//       .td-text {
+//         line-height: 1.2;
+//         width: 100%;
+//         word-wrap: break-word;
+//         word-break: break-all;
+//       }
+//     }
+//   }
 
-  .th-head {
-    .th-item {
-      padding-right: 8px;
-    }
-  }
+//   .th-head {
+//     .th-item {
+//       padding-right: 8px;
+//     }
+//   }
 
-  .th-body {
-    height: 80vh;
-  }
-}
+//   .th-body {
+//     height: 80vh;
+//   }
+// }
 
-.err-table {
-  .th-item {
-    .td-date {
-      width: 160px;
-    }
-    .td-err-type {
-      flex-basis: 80px;
-    }
-    .td-err-code,
-    .td-id {
-      flex-basis: 80px;
-    }
-    .td-err-msg {
-      flex: auto;
-    }
-    .td-action {
-      width: 160px;
-    }
-  }
-}
+// .err-table {
+//   .th-item {
+//     .td-date {
+//       width: 160px;
+//     }
+//     .td-err-type {
+//       flex-basis: 80px;
+//     }
+//     .td-err-code,
+//     .td-id {
+//       flex-basis: 80px;
+//     }
+//     .td-err-msg {
+//       flex: auto;
+//     }
+//     .td-action {
+//       width: 160px;
+//     }
+//   }
+// }
 </style>

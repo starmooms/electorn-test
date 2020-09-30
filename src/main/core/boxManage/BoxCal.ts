@@ -1,8 +1,9 @@
-import BoxManage from './BoxManage'
 import { getCalList, CONTROL_CODE } from '@/shared/config/port'
 import { CAL_MODEL, COMMON_READ } from '@/shared/model'
 import { BufWriteModel as BufModel } from '@/main/utils/bufModel'
 import logger from '@/main/core/Logger'
+import communi from '@/main/core/Request/Communi'
+import { BoxManage } from './BoxManage'
 
 /** 机柜校准控制 */
 export default class BoxCal {
@@ -26,7 +27,7 @@ export default class BoxCal {
       // resultBuf = Buffer.from('000001003f99999a00000000000000003dcccccd00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003fb333330000000000000000000000000000000000000000000000000000000000000000', 'hex') // eslint-disable-line
         resultBuf = Buffer.from('0001000000e3388e3fe3380e4040555547408e38e30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040f8e37e410e38da411ffff6411ffff7', 'hex') // eslint-disable-line
     } else {
-      resultBuf = await this.parent.post({
+      resultBuf = await communi.post({
         control: CONTROL_CODE.calRead,
         data: writeModel.buf,
         masterId
@@ -67,7 +68,7 @@ export default class BoxCal {
       })
     })
     logger.info('写校准发送', writerModel.buf.toString('hex'))
-    await this.parent.post({
+    await communi.post({
       control: CONTROL_CODE.calSet,
       data: writerModel.buf,
       masterId

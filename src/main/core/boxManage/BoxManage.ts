@@ -2,6 +2,9 @@ import { sysLog } from '../Logger'
 import { channelList } from '@/shared/config/port'
 import mainDb from '../sqlite/MainDb'
 import is from 'electron-is'
+import BoxSamp from './BoxSamp'
+import BoxCal from './BoxCal'
+import BoxStatus from './BoxStatus'
 
 interface PostOpts {
   timeout?: number
@@ -14,7 +17,7 @@ interface PostOpts {
 }
 
 /** 机柜管理 */
-export default class BoxManage {
+export class BoxManage {
   /** 是否读取采样 */
   sampIsRead = false
   channelList!: Port.MasterList
@@ -29,63 +32,13 @@ export default class BoxManage {
   }
   initChannelResolve!: Promise<any>
   isDev = is.dev()
+  boxSamp = new BoxSamp(this)
+  boxCal = new BoxCal(this)
+  boxStatus = new BoxStatus(this)
 
-  constructor() {
+  create() {
     this.initChannelResolve = this.initChannelStatusList()
-  }
-
-  /** 串口通讯 */
-  async post({ timeout, data, masterId, control }: PostOpts): Promise<Buffer> {
-    return Buffer.from([0x00])
-    // return new Promise((resolve, reject) => {
-    //   const agrData = agreement.createData({
-    //     slaverId: 0xff,
-    //     type: 0x02,
-    //     masterId,
-    //     code: control.code,
-    //     data
-    //   })
-    //   let timer: NodeJS.Timeout // eslint-disable-line
-    //   const sId = agrData.sId
-    //   const setError = (msg: string) => {
-    //     this.emitList.delete(sId)
-    //     reject(new Error(`${this.port.path} POST Error：` + msg))
-    //     this.checkOpen()
-    //     clearTimeout(timer)
-    //   }
-    //   this.emitList.set(sId, ({ masterId, errCode, buf, originBuf }) => {
-    //     if (errCode !== '00') {
-    //       const errMsg = ERROR_STATUS[errCode]
-    //       redisClient.saveError([
-    //         {
-    //           postBuf: agrData.buf.toString('hex'),
-    //           backBuf: originBuf.toString('hex'),
-    //           masterId,
-    //           errCode,
-    //           errMsg,
-    //           action: control.name,
-    //           createTime: dayjs().valueOf(),
-    //           type: 'PostError'
-    //         }
-    //       ])
-    //       setError(`Error_Code ${errMsg}`)
-    //       return
-    //     }
-    //     resolve(buf)
-    //     clearTimeout(timer)
-    //   })
-    //   const status = this.port.write(agrData.buf, err => {
-    //     if (err) {
-    //       logger.error(err)
-    //       setError(`Writer_Error ${err.message}`)
-    //     }
-    //   })
-    //   logger.info('port write', agrData.buf.toString('hex'))
-    //   logger.info('write Status', status)
-    //   timer = setTimeout(() => {
-    //     setError('PORT Time Out')
-    //   }, timeout || 2000)
-    // })
+    return this.initChannelResolve
   }
 
   channelLog(message: string, channelInfo?: Port.ChannelInfo) {
@@ -128,4 +81,14 @@ export default class BoxManage {
     })
     return this.channelList
   }
+
+  /** 获取列表 */
+  async getChannelList() {
+    await this.initChannelResolve
+    return this.channelList
+  }
 }
+
+const boxManage = new BoxManage()
+
+export default boxManage

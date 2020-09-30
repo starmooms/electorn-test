@@ -1,28 +1,20 @@
-import BoxManage from './BoxManage'
 import mainDb from '@/main/core/sqlite/MainDb'
 import {
-  WORKSTEPS_MAP,
-  getCalList,
-  channelList,
-  PROTECT,
-  WORKSTEPS_TYPE_MAP,
-  WORKSTEPSINPUT,
   CHANNEL_ERR_STATUS,
   CHANNEL_STATUS,
   CHANNEL_STATUS_END,
   ERROR_STATUS,
   CONTROL_CODE
 } from '@/shared/config/port'
-import {
-  SAMP_MODEL,
-  COMMON_READ
-} from '@/shared/model'
+import { SAMP_MODEL, COMMON_READ } from '@/shared/model'
 import { BufWriteModel as BufModel } from '@/main/utils/bufModel'
 import historyDbCache from '@/main/core/sqlite/HistoryDBCache'
+import communi from '@/main/core/Request/Communi'
 import logger from '@/main/core/Logger'
 import dayjs from 'dayjs'
 import ipcManage from '../IpcManage'
 import winManager from '../WinManager'
+import { BoxManage } from './BoxManage'
 
 /** 机柜采样控制 */
 export default class BoxSamp {
@@ -42,6 +34,7 @@ export default class BoxSamp {
   clearTimer() {
     if (this.timer !== null) {
       clearTimeout(this.timer)
+      this.timer = null
     }
   }
 
@@ -52,7 +45,7 @@ export default class BoxSamp {
   }
 
   /** 开始读采样 */
-  async sampSetRead() {
+  sampSetRead() {
     if (this.isRead === true) return
     this.clearTimer()
     this.setTimeNext()
@@ -94,11 +87,11 @@ export default class BoxSamp {
     this.readSampWrite.writer('masterId', masterId)
     let resultBuf: Buffer
     if (this.parent.isDev) {
-      const a = `0000000800010000a10000000100000035980000000000000000000000000100000001a10000000100000035980000000000000000000000000100000002020000000100000035980000000000000000000000000100000003020000000100000035980000000000000000000000000100000004020000000100000035980000000000000000000000000100000005020000000100000035980000000000000000000000000100000006020000000100000035980000000000000000000000000100000007020000000100000035980000000000000000000000000100000001000000010001` // eslint-disable-line
+      const a = `0000000801010000a10000000100000035980000000000000000000000000100000001a10000000100000035980000000000000000000000000100000002020000000100000035980000000000000000000000000100000003020000000100000035980000000000000000000000000100000004020000000100000035980000000000000000000000000100000005020000000100000035980000000000000000000000000100000006020000000100000035980000000000000000000000000100000007020000000100000035980000000000000000000000000100000000000100000001000000010001000000010001` // eslint-disable-line
       resultBuf = Buffer.from(a, 'hex')
     } else {
       logger.info('读采样发送', this.readSampWrite.buf.toString('hex'))
-      resultBuf = await this.parent.post({
+      resultBuf = await communi.post({
         control: CONTROL_CODE.sampRead,
         data: this.readSampWrite.buf,
         masterId
@@ -121,6 +114,9 @@ export default class BoxSamp {
       await historyDbCache.saveSamp(saveSampList)
       if (channelStatus.length > 0) {
         await mainDb.saveChannelStatus(channelStatus)
+      }
+      if (errorList.length > 0) {
+        await mainDb.saveErrorList(errorList)
       }
       if (channelStatus.length > 0 || changeFilePath.length > 0) {
         ipcManage.commonMsg('updateChannelList', [
@@ -178,7 +174,7 @@ export default class BoxSamp {
       nowTime
     )
     this.readEndStatusList(masterId, readModel, getProjectSamp)
-    const errorList = this.readErrorList(readModel, nowTime)
+    const errorList = this.readErrorList(readModel)
 
     // 将需要存储的采样对象，改为列表数组
     let channelStatus: Port.ChannelChangeItem[] = []
@@ -346,21 +342,18 @@ export default class BoxSamp {
   }
 
   /** 读采样错误列表 */
-  readErrorList(readModel: BufModel, nowTime: number) {
-    const errorList: Port.SampErrorItem[] = []
+  readErrorList(readModel: BufModel) {
+    const errorList: Port.ErrorListItem[] = []
     readModel.ecahList('errorList', readItem => {
-      const errCode = readItem.readHex('errCode')
       errorList.push({
         masterId: readItem.read('masterId'),
-        slaverId: readItem.read('slaverId'),
-        channelId: readItem.read('channelId'),
+        slaverIds: readItem.read('slaverId'),
+        channelIds: readItem.read('channelId'),
+        type: 2,
         action: '实时数据错误列表返回',
-        errCode,
+        errCode: readItem.readHex('errCode'),
         params1: readItem.readHex('params1'),
-        params2: readItem.readHex('params2'),
-        createTime: nowTime,
-        type: 'SampError',
-        errMsg: ERROR_STATUS[errCode]
+        params2: readItem.readHex('params2')
       })
     })
     return errorList

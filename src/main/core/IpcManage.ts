@@ -15,7 +15,6 @@ declare type handListener = (
   ...args: any[]
 ) => Promise<void> | any
 
-
 class IpcManage {
   emitList: any = {}
 

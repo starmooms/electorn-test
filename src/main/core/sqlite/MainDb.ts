@@ -39,6 +39,7 @@ class MainDb {
         `SELECT name FROM sqlite_master`
       )
       await this.createTable(data)
+      return this.sqlite.fileName
     } catch (err) {
       ipcManage.ipcNotify({
         type: 'error',
@@ -105,21 +106,21 @@ class MainDb {
     }
 
     // 错误历史 type 1: 通讯错误 2：实时数据错误列表
-    // if (!tableName.includes(errorData)) {
-    //   sql += `CREATE TABLE "${errorData}" (
-    //     "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-    //     "masterId" text NOT NULL,
-    //     "slaverIds" text NOT NULL,
-    //     "channelIds" text NOT NULL,
-    //     "type" integer NOT NULL,
-    //     "action" text NOT NULL,
-    //     "errCode" text NOT NULL,
-    //     "params1" text DEFAULT NULL,
-    //     "params2" text DEFAULT NULL,
-    //     "createdTime" datetime NOT NULL DEFAULT(datetime('now', 'localtime'))
-    //   );
-    //   `
-    // }
+    if (!tableName.includes(errorData)) {
+      sql += `CREATE TABLE "${errorData}" (
+        "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "masterId" text NOT NULL,
+        "slaverIds" text NOT NULL,
+        "channelIds" text NOT NULL,
+        "type" integer NOT NULL,
+        "action" text NOT NULL,
+        "errCode" text NOT NULL,
+        "params1" text DEFAULT NULL,
+        "params2" text DEFAULT NULL,
+        "createdTime" datetime NOT NULL DEFAULT(datetime('now', 'localtime'))
+      );
+      `
+    }
 
     if (sql) {
       await this.sqlite.exec(sql)
@@ -253,8 +254,8 @@ class MainDb {
         ${item.type},
         '${item.action}',
         '${item.errCode}',
-        ${item.params1 ? `${item.params1}` : 'NULL'},
-        ${item.params2 ? `${item.params2}` : 'NULL'}),`
+        ${item.params1 ? `'${item.params1}'` : 'NULL'},
+        ${item.params2 ? `'${item.params2}'` : 'NULL'}),`
     })
     if (sql) {
       sql =

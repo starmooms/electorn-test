@@ -17,10 +17,11 @@ import UpdateManager from './core/UpdateManager'
 import './core/ConfigManage'
 import RedisServer from './core/redis/RedisServer'
 import redisClient, { RedisClient } from './core/redis/RedisClient'
-import logger, { setLogIpc } from './core/Logger'
+import logger, { sysLognow, sysFilePath } from './core/Logger'
 import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
 import udpManage from './core/connect/UdpManage'
+import boxManage from './core/boxManage/BoxManage'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -149,7 +150,14 @@ export default class Launcher {
     // powerSaveBlocker.stop(id)
 
     // await mainDb.connect()
-    setLogIpc()
+
+    ipcManage.handle('/sysLog/sysLogInfo', () => {
+      return {
+        start: sysLognow,
+        filePath: sysFilePath
+      }
+    })
+
     ipcManage.on('/createdWin', (event, data: any) => {
       switch (data.type) {
         case 'channel':
@@ -180,9 +188,11 @@ export default class Launcher {
 
   async beforeWinRender() {
     try {
-      await mainDb.connect()
-      this.usbManager = this.initUSBManager()
-      udpManage.start
+      const mainDbFilePath = (await mainDb.connect()) as string
+      await boxManage.create()
+      this.usbManager = new USBManager()
+      udpManage.start()
+      return mainDbFilePath
     } catch (err) {
       logger.error(err)
       throw err
@@ -192,10 +202,11 @@ export default class Launcher {
   startRender() {
     const handld = this.beforeWinRender()
     ipcManage.handle('/startRender', async () => {
-      await handld
+      const mainData = await handld
       const userConfig = configManage.userConfig.store
       return {
-        userConfig
+        userConfig,
+        mainData
       }
     })
   }
@@ -220,11 +231,6 @@ export default class Launcher {
       }
       this.win = null
     }
-  }
-
-  initUSBManager() {
-    const usbManager = new USBManager()
-    return usbManager
   }
 
   initUpdaterManager() {

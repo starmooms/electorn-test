@@ -221,6 +221,7 @@ export default class HistoryDb {
     const data = await this.sqlite.get(
       `SELECT id FROM ${channelInfo} WHERE endTime is NULL LIMIT 1`
     )
+    logger.info('有关闭状态', data)
     if (!data) {
       await this.closeDb()
     }

@@ -146,6 +146,7 @@ export default class SampChart extends Vue {
           {
             type: 'slider',
             xAxisIndex: [0],
+            filterMode: 'none',
             bottom: '2%',
             height: '4%'
           },
@@ -163,7 +164,7 @@ export default class SampChart extends Vue {
             right: '2%',
             width: '4%'
           },
-          { type: 'inside' }
+          { type: 'inside', filterMode: 'none' }
         ],
         grid: {
           x: 'center',

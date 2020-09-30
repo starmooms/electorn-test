@@ -51,14 +51,11 @@ class UdpManage {
   }
 
   /** 接收中位机返回ip的udp服务 */
-  clientUpdServer(ip: string, port: number) {
+  clientUpdServer(port: number) {
     try {
       const udpServer = dgram.createSocket('udp4')
       udpServer.on('listening', () => {
         logger.log('clientUpdServer listen', udpServer.address())
-        setInterval(() => {
-          udpServer.send(JSON.stringify(udpServer.address()), 2000, ip)
-        }, 2000)
       })
 
       //接收消息
@@ -73,7 +70,7 @@ class UdpManage {
         logger.error('clientUpdServer Error', err)
       })
 
-      udpServer.bind(port, ip)
+      udpServer.bind(port)
     } catch (err) {
       logger.info('clientUpdServer Error', err)
     }
@@ -81,7 +78,7 @@ class UdpManage {
 
   init() {
     // this.clientUpdServer('192.168.42.13', 31111)
-    this.clientUpdServer('192.168.0.201', 32222)
+    this.clientUpdServer(32222)
     this.postUdpServer()
   }
 

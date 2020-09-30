@@ -680,9 +680,9 @@ export default class PortItem {
 
           // await mainDb.saveChannelStatus(channelStatus)
 
-          if (errorList.length > 0) {
-            redisClient.saveError(errorList)
-          }
+          // if (errorList.length > 0) {
+          //   redisClient.saveError(errorList)
+          // }
 
           if (translate) {
             const winArr = translate.winArr

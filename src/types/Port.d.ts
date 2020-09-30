@@ -194,4 +194,10 @@ declare namespace Port {
     channel?: number
     channelIds?: number[]
   }
+
+  type GetProjectSampKey = keyof SaveSampItem
+  type GetProjectSamp = <T extends GetProjectSampKey>(
+    porjectId: number,
+    key: T
+  ) => SaveSampItem[T]
 }

@@ -9,6 +9,7 @@ logger.transports.file.maxSize = 2097152
 
 const sysLog = logger.create('sysLog')
 const now = dayjs().format(`YYYY-MM-DD HH:mm:ss`) // eslint-disable-line
+sysLog.transports.file.level = is.renderer() ? false : 'silly'
 sysLog.transports.file.maxSize = 1048576 * 10
 sysLog.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}]：{text}'
 sysLog.transports.file.resolvePath = variables => {
@@ -20,10 +21,6 @@ sysLog.transports.file.resolvePath = variables => {
 const sysFilePath = sysLog.transports.file.getFile().path
 
 sysLog.log(`启动系统`)
-// sysLog.info(`user Login init ${dayjs().format()}???`)
-// setInterval(() => {
-//   sysLog.info('???')
-// }, 2000)
 logger.info('Logger init')
 logger.warn('Logger init')
 

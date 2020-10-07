@@ -28,17 +28,15 @@
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 import { RecycleScroller } from 'vue-virtual-scroller'
 import SplitPane from '@/renderer/components/SplitPane/index.vue'
-import SampChart from '@/renderer/components/SampChart.vue'
+import SampChart from '@/renderer/components/SampChart/index.vue'
 import SampList from './components/SampList.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
 import dayjs from 'dayjs'
 import { formatTimeStr } from '@/renderer/utils/util'
 import {
-  CHANNEL_ERR_STATUS,
   CHANNEL_STATUS,
   END_STATUS,
-  WORKSTEPSINPUT,
-  WORKSTEPS_MAP
+  WORKSTEPSINPUT
 } from '@/shared/config/port'
 import ChannelPosition from './components/ChannelPosition.vue'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
@@ -199,7 +197,6 @@ export default class History extends Vue {
 
   @Watch('nowChannel')
   changeChannel() {
-    console.log(this.nowChannel, '?c')
     if (this.nowChannel) {
       this.openDb(this.nowChannel.filePath)
     }

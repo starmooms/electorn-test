@@ -1,8 +1,8 @@
-import Sqlite from './sqlite'
+import Sqlite from '@/shared/sqlite/index'
+import HistoryDbCom from '@/shared/sqlite/HistoryDbCom'
 import path from 'path'
 import dayjs from 'dayjs'
 import logger from '../Logger'
-import { channelList } from '@/shared/config/port'
 
 interface TableName {
   name: string
@@ -20,35 +20,26 @@ interface StepInfoItem {
 
 type CloseCb = () => void
 
-export default class HistoryDb {
-  sqlite: Sqlite
-  tables = {
-    stepsInfo: 'steps_info',
-    channelInfo: 'channel_info',
-    sampData: 'samp_data'
-  }
-  filePath = ''
+export default class HistoryDb extends HistoryDbCom {
   closeCb: CloseCb | undefined
 
   constructor(fileId: string, filePath: string, closeCb?: CloseCb) {
-    this.filePath = path.resolve(filePath, `${fileId}`)
+    super(path.resolve(filePath, `${fileId}`))
     this.closeCb = closeCb
-    this.sqlite = new Sqlite(this.filePath)
   }
 
   async connect() {
-    if (this.sqlite.isConnect) return
-    await this.sqlite.connect()
+    if (this.sqlite.isConnect) return null
+    const result = await super.connect()
     const data = await this.sqlite.all<TableName[]>(
       `SELECT name FROM sqlite_master`
     )
     await this.createTable(data)
+    return result
   }
 
   async closeDb() {
-    if (this.sqlite.isConnect) {
-      await this.sqlite.close()
-    }
+    await this.close()
     if (this.closeCb) {
       this.closeCb()
     }

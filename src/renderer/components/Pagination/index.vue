@@ -40,16 +40,18 @@ export default class Pagination extends Vue {
   handleSizeChange(val) {
     this.$emit('pagination', { page: this.currentPage, limit: val })
     if (this.autoScroll) {
-      console.log('??')
-      scrollTo()
+      scrollTo({
+        dom: document.querySelector('#main-left')!
+      })
     }
   }
 
   handleCurrentChange(val) {
     this.$emit('pagination', { page: val, limit: this.pageSize })
     if (this.autoScroll) {
-      console.log('??')
-      scrollTo()
+      scrollTo({
+        dom: document.querySelector('#main-left')!
+      })
     }
   }
 }

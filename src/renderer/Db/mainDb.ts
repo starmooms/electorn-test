@@ -1,24 +1,11 @@
-import Sqlite from '@/shared/sqlite/index'
+import MainDbCom from '@/shared/sqlite/MainDbCom'
 import path from 'path'
 import { SettingStatus } from '../store/modules/Setting'
 
-export default class MainDb {
-  sqlite: Sqlite
-  tables = {
-    errorData: 'error_data'
-  }
-
+export default class MainDb extends MainDbCom {
   constructor() {
     const filePath = SettingStatus.mainDbPath
-    this.sqlite = new Sqlite(path.resolve(filePath))
-  }
-
-  async connect() {
-    await this.sqlite.connect()
-  }
-
-  async close() {
-    await this.sqlite.close()
+    super(path.resolve(filePath))
   }
 
   async getErrorList({ limit, page }: Db.ListQuery) {

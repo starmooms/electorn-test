@@ -45,7 +45,7 @@ class HistoryDbCache {
 
     const cache = {
       db: HistoryDb,
-      filePath: HistoryDb.filePath,
+      filePath: HistoryDb.sqlite.fileName,
       dataSave
     }
     this.historyDbMap.set(historyId, cache)

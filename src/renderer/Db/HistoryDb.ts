@@ -1,39 +1,9 @@
-import Sqlite from '@/shared/sqlite/index'
+import HistoryDbCom from '@/shared/sqlite/HistoryDbCom'
 import path from 'path'
 
-interface TableName {
-  name: string
-}
-
-interface StepInfoItem {
-  id: number
-  historyId: number
-  startId: number
-  stepList: []
-  protect: Port.Protect
-  dataSave: ipcReq.StepsDataSave
-  createTime: number
-}
-
-export default class HistoryDb {
-  sqlite: Sqlite
-  tables = {
-    stepsInfo: 'steps_info',
-    channelInfo: 'channel_info',
-    sampData: 'samp_data'
-  }
-
+export default class HistoryDb extends HistoryDbCom {
   constructor(filePath: string) {
-    this.sqlite = new Sqlite(path.resolve(filePath))
-  }
-
-  async connect() {
-    if (this.sqlite.isConnect) return
-    await this.sqlite.connect()
-  }
-
-  async close() {
-    await this.sqlite.close()
+    super(path.resolve(filePath))
   }
 
   async getSampData(params) {

@@ -65,13 +65,11 @@ export default class Launcher {
       callback && callback()
       return
     }
-
     const canLock = app.requestSingleInstanceLock()
-
     if (!canLock) {
       app.quit()
     } else {
-      app.on('second-instance', (event, argv, workingDirectory) => {
+      app.on('second-instance', () => {
         if (this.win) {
           if (this.win.isMinimized()) {
             this.win.restore()

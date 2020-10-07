@@ -7,17 +7,11 @@ function easeInOutQuad(t, b, c, d) {
   return (-c / 2) * (t * (t - 2) - 1) + b
 }
 
-/**
- * Because it's so fucking difficult to detect the scrolling element, just move them all
- * @param {number} amount
- */
-function move(amount) {
-  document.documentElement.scrollTop = amount
-  document.body.scrollTop = amount
-}
-
-function position() {
-  return document.documentElement.scrollTop || document.body.scrollTop
+interface Params {
+  dom?: Element
+  to?: number
+  duration?: number
+  callback?: () => any
 }
 
 /**
@@ -25,8 +19,13 @@ function position() {
  * @param {number} duration
  * @param {Function} callback
  */
-export function scrollTo(to = 100, duration = 800, callback?: () => any) {
-  const start = position()
+export function scrollTo({
+  to = 100,
+  duration = 800,
+  callback,
+  dom = document.body
+}: Params = {}) {
+  const start = dom.scrollTop
   const change = to - start
   const increment = 20
   let currentTime = 0
@@ -36,7 +35,7 @@ export function scrollTo(to = 100, duration = 800, callback?: () => any) {
     // find the value with the quadratic in-out easing function
     const val = easeInOutQuad(currentTime, start, change, duration)
     // move the document.body
-    move(val)
+    dom.scrollTop = val
     // do the animation unless its over
     if (currentTime < duration) {
       window.requestAnimationFrame(animateScroll)

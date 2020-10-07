@@ -1,7 +1,6 @@
-import Store from 'electron-store'
+import Store, { Options } from 'electron-store'
 import ipcManage from './IpcManage'
 import uuid from 'node-uuid'
-import { app } from 'electron'
 
 /* eslint-disable quote-props */
 // prettier-ignore
@@ -14,6 +13,18 @@ class ConfigManage {
       sampling: {
         U: { max: 10000, min: 0 },
         I: { max: 6000, min: -6000 }
+      },
+      sampChartConfig: {
+        y1: 'U',
+        y2: 'I',
+        y1Limt: {
+          min: 0,
+          max: 10000
+        },
+        y2Limt: {
+          min: -6000,
+          max: 6000
+        }
       },
       base: {
         portPath: ''

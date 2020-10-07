@@ -1,11 +1,9 @@
-import Sqlite from '@/main/core/sqlite/sqlite'
+import MainDbCom from '@/shared/sqlite/MainDbCom'
+import Sqlite from '@/shared/sqlite/index'
 import { app } from 'electron'
 import * as path from 'path'
-import logger from '../Logger'
-import ipcManage from '../IpcManage'
 import dayjs from 'dayjs'
 import historyDbCache from './HistoryDBCache'
-import { channelList } from '@/shared/config/port'
 
 interface TableName {
   name: string
@@ -19,40 +17,20 @@ interface TableName {
 //   filePath: string
 // }
 
-class MainDb {
-  sqlite: Sqlite
-  tables = {
-    channelStatus: 'channel_status',
-    channelHistory: 'channel_history',
-    errorData: 'error_data'
-  }
-
+class MainDb extends MainDbCom {
   constructor() {
     const basePath = app.getPath('userData')
-    this.sqlite = new Sqlite(path.resolve(basePath, './main.db'))
+    super(path.resolve(basePath, './main.db'))
   }
 
+  /** 链接数据库，创建表 */
   async connect() {
-    try {
-      await this.sqlite.connect()
-      const data = await this.sqlite.all<TableName[]>(
-        `SELECT name FROM sqlite_master`
-      )
-      await this.createTable(data)
-      return this.sqlite.fileName
-    } catch (err) {
-      ipcManage.ipcNotify({
-        type: 'error',
-        message: `mainDB Error:${err.message}`
-      })
-      logger.error('mainDB Error', err)
-    }
-  }
-
-  async close() {
-    if (this.sqlite) {
-      this.sqlite.close()
-    }
+    const result = await super.connect()
+    const data = await this.sqlite.all<TableName[]>(
+      `SELECT name FROM sqlite_master`
+    )
+    await this.createTable(data)
+    return result
   }
 
   async createTable(tables: TableName[]) {

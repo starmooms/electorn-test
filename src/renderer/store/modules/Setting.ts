@@ -25,6 +25,7 @@ interface UserConfig {
   base: {
     portPath: string
   }
+  sampChartConfig: Store.SampChartConfig
 }
 
 @Module({ dynamic: true, store, name: 'setting' })
@@ -47,6 +48,10 @@ export default class SettingImpl extends VuexModule {
 
   get readTranslate() {
     return this.$readTranslate
+  }
+
+  get sampChartConfig() {
+    return this.userConfig!.sampChartConfig
   }
 
   @Mutation

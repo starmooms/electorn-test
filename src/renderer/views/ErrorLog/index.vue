@@ -51,12 +51,10 @@
   </div>
 </template>
 <script lang="ts">
-import { getErrorLog } from '@/renderer/ipc/db'
 import { Vue, Component } from 'vue-property-decorator'
 import { RecycleScroller } from 'vue-virtual-scroller'
 import Pagination from '@/renderer/components/Pagination/index.vue'
 import mainDb from '@/renderer/Db/mainDb'
-import { type } from 'os'
 import { ERROR_STATUS } from '@/shared/config/port'
 
 @Component({
@@ -107,6 +105,12 @@ export default class ErrorLog extends Vue {
 
   mounted() {
     this.init()
+  }
+
+  beforeDestroy() {
+    if (this.db) {
+      this.db.close()
+    }
   }
 }
 </script>

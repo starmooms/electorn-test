@@ -16,9 +16,10 @@ import 'echarts/lib/component/dataZoom'
 import 'echarts/lib/component/legend'
 import 'echarts/lib/component/visualMap'
 import 'echarts/lib/component/graphic'
-import { merge } from '@/shared/utils'
+// import { merge } from '@/shared/utils'
+import _merge from 'lodash/merge'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
-import { formatTimeStr } from '@/renderer/utils/util'
+import { formatTimeStr, SAMPCHART_Y_MAP } from '@/renderer/utils/util'
 // import getSampWorker from '@/renderer/utils/getSampWorker'
 import dayjs from 'dayjs'
 import ActionBox from './ActionBox.vue'
@@ -121,21 +122,23 @@ export default class SampChart extends Vue {
       }
     }
 
-    const polar = merge(
+    const chartConfig = this.getChartConfig()
+
+    const polar = _merge(
       {
         dataset: {
           source: data
         },
         tooltip: {
           trigger: 'axis',
-          transitionDuration: 0,
+          transitionDuration: 0.4,
           padding: 10,
           textStyle: {
             fontSize: 12
           },
           confine: true,
           extraCssText: 'width: 170px',
-          formatter(params, ticket, callback) {
+          formatter(params) {
             let htmlStr = ''
             for (let i = 0; i < params.length; i++) {
               const { seriesName, marker, value, dimensionNames } = params[i]
@@ -145,9 +148,12 @@ export default class SampChart extends Vue {
                 const workerStatus = `工步信息：${value.workerName}`
                 htmlStr += `${xName}</br>${workerId}</br>${workerStatus}</br>`
               }
-              const yValue = value[dimensionNames[1]] // y轴值
-              const unit = i === 0 ? 'mV' : 'mA'
-              htmlStr += `<div>${marker} ${seriesName}：${yValue} ${unit}</div>`
+              const yKey = dimensionNames[1]
+              if (yKey) {
+                const yValue = value[yKey] // y轴值
+                const unit = SAMPCHART_Y_MAP[yKey]?.unit
+                htmlStr += `<div>${marker} ${seriesName}：${yValue} ${unit}</div>`
+              }
             }
             return htmlStr
           }
@@ -157,13 +163,6 @@ export default class SampChart extends Vue {
           top: '2%'
         },
         dataZoom: [
-          {
-            type: 'slider',
-            xAxisIndex: [0],
-            filterMode: 'none',
-            bottom: '2%',
-            height: '4%'
-          },
           {
             type: 'slider',
             filterMode: 'none',
@@ -178,6 +177,13 @@ export default class SampChart extends Vue {
             right: '2%',
             width: '4%'
           },
+          {
+            type: 'slider',
+            xAxisIndex: [0],
+            filterMode: 'none',
+            bottom: '2%',
+            height: '4%'
+          },
           { type: 'inside', filterMode: 'none' }
         ],
         grid: {
@@ -188,50 +194,12 @@ export default class SampChart extends Vue {
           containLabel: false
         },
         xAxis: {
-          type: 'time'
-        },
-        yAxis: [
-          {
-            name: '电压(mV)',
-            max: this.sampChartConfig.y1Limt.max,
-            min: this.sampChartConfig.y1Limt.min,
-            splitNumber: 25,
-            position: 'left',
-            splitLine: { show: true }
-          },
-          {
-            name: '电流(mA)',
-            max: this.sampChartConfig.y2Limt.max,
-            min: this.sampChartConfig.y2Limt.min,
-            splitNumber: 25,
-            position: 'right',
-            splitLine: { show: false }
-          }
-        ],
-        series: [
-          {
-            name: '电压',
-            seriesLayoutBy: 'row',
-            dimensions: ['createTimeStr', 'U'],
-            type: 'line',
-            yAxisIndex: 0,
-            lineStyle: { color: 'green' },
-            itemStyle: { color: 'green' },
-            showSymbol: false
-          },
-          {
-            name: '电流',
-            type: 'line',
-            yAxisIndex: 1,
-            dimensions: ['createTimeStr', 'I'],
-            lineStyle: { color: 'red' },
-            itemStyle: { color: 'red' },
-            seriesLayoutBy: 'row',
-            showSymbol: false
-          }
-        ]
+          type: 'time',
+          axisLine: { onZero: false }
+        }
       },
-      sizeOpts
+      sizeOpts,
+      chartConfig
     )
     this.polar = polar
     // if (this.$refs.echart.chart) {
@@ -256,25 +224,82 @@ export default class SampChart extends Vue {
     this.setCharts(this.checkList(list))
   }
 
+  /** 获取Y轴配置，添加默认和show属性 */
+  getYConfig(key: string) {
+    const data = SAMPCHART_Y_MAP[key]
+    if (!data) {
+      return {
+        name: '',
+        unit: '',
+        color: '',
+        key: '',
+        show: false
+      }
+    } else {
+      return {
+        ...data,
+        show: true
+      }
+    }
+  }
+
   /** 获取采样图标设置 */
   getChartConfig() {
+    const y1 = this.getYConfig(this.sampChartConfig.y1)
+    const y2 = this.getYConfig(this.sampChartConfig.y2)
     return {
       yAxis: [
         {
+          id: '1',
+          name: `${y1.name}(${y1.unit})`,
           max: this.sampChartConfig.y1Limt.max,
-          min: this.sampChartConfig.y1Limt.min
+          min: this.sampChartConfig.y1Limt.min,
+          splitNumber: 25,
+          position: 'left',
+          splitLine: { show: true }
         },
         {
+          id: '2',
+          name: `${y2.name}(${y2.unit})`,
+          show: y2.show,
           max: this.sampChartConfig.y2Limt.max,
-          min: this.sampChartConfig.y2Limt.min
+          min: this.sampChartConfig.y2Limt.min,
+          splitNumber: 25,
+          position: 'right',
+          splitLine: { show: false }
         }
-      ]
+      ],
+      series: [
+        {
+          name: y1.name,
+          dimensions: ['createTimeStr', y1.key],
+          lineStyle: { color: y1.color },
+          itemStyle: { color: y1.color },
+          yAxisIndex: 0,
+          type: 'line',
+          seriesLayoutBy: 'row',
+          showSymbol: false
+        },
+        {
+          name: y2.name,
+          dimensions: ['createTimeStr', y2.key],
+          lineStyle: { color: y2.color },
+          itemStyle: { color: y2.color },
+          yAxisIndex: 1,
+          type: 'line',
+          seriesLayoutBy: 'row',
+          showSymbol: false
+        }
+      ],
+      dataZoom: [{ show: y1.show }, { show: y2.show }]
     }
   }
 
   refreshConfig() {
     if (this.$refs.echart) {
-      this.$refs.echart.mergeOptions(this.getChartConfig())
+      const cof = this.getChartConfig()
+      console.log(cof)
+      this.$refs.echart.mergeOptions(cof)
     }
   }
 

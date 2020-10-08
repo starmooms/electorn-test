@@ -11,6 +11,9 @@
         <el-button type="primary" @click="openBatch">
           机柜批量操作
         </el-button>
+        <el-button type="primary" @click="openSeparat">
+          容量分选
+        </el-button>
         <el-button type="primary" @click="sysLogOpen">
           查看系统日志
         </el-button>
@@ -254,6 +257,12 @@ export default class Home extends Vue {
       data: {
         filePath
       }
+    })
+  }
+
+  openSeparat() {
+    this.$command.send('/createdWin', {
+      type: 'separat'
     })
   }
 

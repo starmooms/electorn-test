@@ -18,9 +18,10 @@
 
     <el-dialog
       class="chart-config-dialog"
-      title="曲线设置"
-      :visible.sync="chartConfig"
       width="600px"
+      title="曲线设置"
+      :close-on-click-modal="false"
+      :visible.sync="chartConfig"
     >
       <el-form :model="form">
         <el-form-item class="form-confg-item" label="Y轴1">
@@ -86,6 +87,7 @@ import fs from 'fs'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { getStoreConfig, setStoreConfig } from '@/renderer/ipc/storeConfig'
 import { deepClone } from '@/shared/utils'
+import { SAMPCHART_Y_MAP } from '@/renderer/utils/util'
 
 @Component({
   components: {
@@ -102,12 +104,9 @@ export default class Pane extends Vue {
   ]
 
   chartConfig = false
-  y1List = [
-    { label: '电压', value: 'U' },
-    { label: '电流', value: 'I' },
-    { label: '容量', value: 'vol' },
-    { label: '电量', value: 'epower' }
-  ]
+  y1List = Object.keys(SAMPCHART_Y_MAP).map(key => {
+    return { label: SAMPCHART_Y_MAP[key].name, value: key }
+  })
   y2List = [...this.y1List, { label: '无', value: null }]
   form: Store.SampChartConfig = {
     y1: 'U',

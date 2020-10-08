@@ -22,6 +22,7 @@ import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
 import udpManage from './core/connect/UdpManage'
 import boxManage from './core/boxManage/BoxManage'
+import createSeparat from './window/Separat'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -164,6 +165,9 @@ export default class Launcher {
           break
         case 'history':
           createHistoryWin(data.data)
+          break
+        case 'separat':
+          createSeparat()
           break
         default:
           throw new Error(`${data.type} win no defined`)

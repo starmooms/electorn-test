@@ -57,6 +57,11 @@ const routes: Array<RouteConfig> = [
           isHistory: false
         },
         component: () => import('@/renderer/views/History/index.vue')
+      },
+      {
+        path: '/separat',
+        name: 'Separat',
+        component: () => import('@/renderer/views/Separat/index.vue')
       }
     ]
   }

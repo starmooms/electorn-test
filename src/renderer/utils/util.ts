@@ -155,3 +155,30 @@ export function stepListSimple(stepData?: Port.StepsDataItem) {
     stepList
   }
 }
+
+export const SAMPCHART_Y_MAP = {
+  U: {
+    name: '电压',
+    unit: 'mV',
+    color: 'green',
+    key: 'U'
+  },
+  I: {
+    name: '电流',
+    unit: 'mA',
+    color: 'red',
+    key: 'I'
+  },
+  vol: {
+    name: '容量',
+    unit: 'mAh',
+    color: 'cornflowerblue',
+    key: 'vol'
+  },
+  epower: {
+    name: '电量',
+    unit: 'mWh',
+    color: '#f7b521',
+    key: 'epower'
+  }
+}

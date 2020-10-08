@@ -16,30 +16,32 @@ export default class Pane extends Vue {
 </script>
 
 <style scoped>
-.splitter-pane.vertical.splitter-paneL {
+.splitter-pane.vertical {
   position: absolute;
-  left: 0px;
   height: 100%;
+  box-sizing: border-box;
+}
+.splitter-pane.horizontal {
+  position: absolute;
+  width: 100%;
+}
+
+.splitter-pane.vertical.splitter-paneL {
+  left: 0px;
   padding-right: 3px;
 }
 
 .splitter-pane.vertical.splitter-paneR {
-  position: absolute;
   right: 0px;
-  height: 100%;
   padding-left: 3px;
 }
 
 .splitter-pane.horizontal.splitter-paneL {
-  position: absolute;
   top: 0px;
-  width: 100%;
 }
 
 .splitter-pane.horizontal.splitter-paneR {
-  position: absolute;
   bottom: 0px;
-  width: 100%;
   padding-top: 3px;
 }
 </style>

@@ -25,8 +25,7 @@ export function chartFullNull({ time, len }: ChartFullNullOpts) {
 export const getSampChartList = async (
   list: any[],
   fullFun?: any,
-  lastTime = 0,
-  fullNull = false
+  lastTime = 0
 ) => {
   if (!lastTime && list.length > 0) {
     lastTime = lastTime || list[0].createTime

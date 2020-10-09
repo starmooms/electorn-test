@@ -104,4 +104,8 @@ export default class SerialPortRequest {
     logger.info('port write', buf.toString('hex'))
     logger.info('write Status', status)
   }
+
+  handleError() {
+    this.checkOpen()
+  }
 }

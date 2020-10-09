@@ -63,10 +63,11 @@ class Communi {
       const sId = agrData.sId
       const setError = (msg: string) => {
         this.emitList.delete(sId)
-        const headMsg = ''
-        // if(requestType === 'port'){
-        //   headMsg+= this.port.path
-        // }
+        let headMsg = ''
+        if (this.requestType === 'Port') {
+          headMsg += this.serialPort!.path
+          this.serialPort!.handleError()
+        }
         reject(new Error(`${headMsg}POST Error：${msg}`))
         clearTimeout(timer)
       }

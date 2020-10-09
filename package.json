@@ -2,7 +2,7 @@
   "name": "upper-computer",
   "author": "GXM",
   "description": "upper computer for battery detection",
-  "version": "0.2.56",
+  "version": "0.2.57",
   "private": true,
   "engines": {
     "node": ">=12.18.2"
@@ -79,6 +79,8 @@
     "typescript": "~3.9.3",
     "vue-cli-plugin-electron-builder": "~2.0.0-rc.4",
     "vue-template-compiler": "^2.6.11",
-    "worker-plugin": "^5.0.0"
+    "vxe-table": "^2.9.24",
+    "worker-plugin": "^5.0.0",
+    "xe-utils": "^2.7.14"
   }
 }

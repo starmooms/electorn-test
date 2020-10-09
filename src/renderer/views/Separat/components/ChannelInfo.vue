@@ -2,7 +2,9 @@
   <div class="channel-info">
     <div class="channel-slaver-box">
       <ul class="channel-row-box">
-        <li class="channel-row" v-for="item in 32" :key="item">{{ item }}</li>
+        <li class="channel-row" v-for="item in 32" :key="item">
+          <span>{{ item }}</span>
+        </li>
       </ul>
     </div>
     <div class="channel-channel-box">
@@ -75,8 +77,9 @@ export default class ChannelInfo extends Vue {}
   display: flex;
   margin: 0;
   .channel-row {
-    flex: 1 0;
+    flex: 1 1;
     margin-left: 2px;
+    overflow: hidden;
     &:nth-child(9n) {
       margin-left: 6px;
     }

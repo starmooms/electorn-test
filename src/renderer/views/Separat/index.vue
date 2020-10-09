@@ -1,17 +1,26 @@
 <template>
   <div class="separat-box">
     <div class="l-box">
-      <div class="l-t-box">
-        <div class="l-t-l">
-          <ChannelInfo />
-        </div>
-        <div class="show-btn" @click="setShow('config')">
-          <span>></span>
-        </div>
-        <div class="l-t-r" v-show="show.config"></div>
-      </div>
-
-      <div class="l-b-box"></div>
+      <split-pane class="main-box" split="horizontal" :defaultPercent="76">
+        <template slot="paneL">
+          <div class="l-t-box">
+            <div class="l-t-l">
+              <ChannelInfo />
+            </div>
+            <div class="show-btn" @click="setShow('setting')">
+              <span>></span>
+            </div>
+            <div class="l-t-r" v-show="show.setting">
+              <separat-setting />
+            </div>
+          </div>
+        </template>
+        <template slot="paneR">
+          <div class="l-b-box">
+            <details-tabel />
+          </div>
+        </template>
+      </split-pane>
     </div>
     <div class="show-btn" @click="setShow('result')">
       <span>></span>
@@ -19,35 +28,6 @@
     <div class="r-box" v-show="show.result">
       <Result />
     </div>
-    <!-- <split-pane class="separat-main-box" split="vertical" :defaultPercent="76">
-      <template slot="paneL">
-        <split-pane
-          class="separat-l-top-box"
-          split="vertical"
-          :defaultPercent="76"
-        >
-          <template slot="paneL">
-            <div class="pane-box">
-              <ChannelInfo />
-            </div>
-          </template>
-          <template slot="paneR">
-            <div class="right-container pane-container">
-              4
-            </div>
-          </template>
-        </split-pane>
-
-        <div class="separat-l-bottom-box">
-          3
-        </div>
-      </template>
-      <template slot="paneR">
-        <div class="right-container pane-container">
-          <Result />
-        </div>
-      </template>
-    </split-pane> -->
   </div>
 </template>
 
@@ -56,12 +36,16 @@ import { Component, Vue, Prop } from 'vue-property-decorator'
 import SplitPane from '@/renderer/components/SplitPane/index.vue'
 import ChannelInfo from './components/ChannelInfo.vue'
 import Result from './components/Result.vue'
+import SeparatSetting from './components/SeparatSetting.vue'
+import DetailsTabel from './components/DetailsTabel.vue'
 
 @Component({
   components: {
     SplitPane,
     ChannelInfo,
-    Result
+    Result,
+    SeparatSetting,
+    DetailsTabel
   }
 })
 export default class Separat extends Vue {
@@ -69,7 +53,7 @@ export default class Separat extends Vue {
 
   show = {
     result: true,
-    config: true
+    setting: true
   }
 
   setShow(key: string) {
@@ -83,37 +67,34 @@ export default class Separat extends Vue {
   }
 }
 </script>
-<style lang="scss" scoped>
-.separat-main-box {
-  height: 100vh;
-  .separat-l-top-box {
-    height: 72vh;
-  }
-  .separat-l-bottom-box {
-    border-top: 1px solid #ccc;
-  }
-}
 
+<style lang="scss" scoped>
 .separat-box {
   display: flex;
   height: 100%;
   .l-box {
     flex: 1;
-    display: flex;
-    flex-flow: column;
+    // display: flex;
+    // flex-flow: column;
+
     .l-t-box {
       display: flex;
       flex: 1;
+      height: 100%;
+
       .l-t-l {
-        flex: 1;
+        flex: 1 1;
+        overflow: auto;
       }
+
       .l-t-r {
-        flex-basis: 400px;
+        flex: 0 0 400px;
+        overflow: auto;
       }
     }
     .l-b-box {
-      flex-basis: 260px;
-      border-top: 2px solid #ccc;
+      height: 100%;
+      width: 100%;
     }
   }
   .r-box {
@@ -124,22 +105,18 @@ export default class Separat extends Vue {
 .show-btn {
   height: 100%;
   background-color: #f8f8f9;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
+  flex: 0 0 10px;
   width: 10px;
-  text-align: center;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   transition: all 0.2s;
   box-sizing: border-box;
+  cursor: pointer;
   &:hover {
-    // box-shadow: 0 0 2px #989898;
     border: 1px solid #989898;
   }
-}
-
-.pane-box {
-  height: 100%;
-  overflow: auto;
 }
 </style>
 <style>

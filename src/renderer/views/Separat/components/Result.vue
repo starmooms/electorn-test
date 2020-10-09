@@ -30,14 +30,9 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
-import SplitPane from '@/renderer/components/SplitPane/index.vue'
+import { Component, Vue } from 'vue-property-decorator'
 
-@Component({
-  components: {
-    SplitPane
-  }
-})
+@Component
 export default class ChannelInfo extends Vue {
   levelResult: any[] = [
     {
@@ -70,10 +65,6 @@ export default class ChannelInfo extends Vue {
       percent: '0.20%'
     }
   ]
-
-  mounted() {
-    document.title = '容量分选'
-  }
 }
 </script>
 <style lang="scss" scoped>
@@ -102,7 +93,7 @@ export default class ChannelInfo extends Vue {
 .border-el-table {
   &.el-table--border,
   &.el-table--group {
-    border: 1px solid #808080;
+    border: 1px solid #b3b3b3;
   }
 }
 </style>

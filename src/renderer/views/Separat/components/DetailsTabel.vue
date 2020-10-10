@@ -18,9 +18,9 @@
     <vxe-table-column field="time" title="时间" width="80"></vxe-table-column>
     <vxe-table-column field="startU" title="开压" width="80"></vxe-table-column>
     <vxe-table-column field="endU" title="终压" width="80"></vxe-table-column>
-    <vxe-table-column field="averageU" title="均压" width="80"></vxe-table-column>
+    <vxe-table-column field="avgU" title="均压" width="80"></vxe-table-column>
     <vxe-table-column field="endI" title="终流" width="80"></vxe-table-column>
-    <vxe-table-column field="curIRation" title="恒流比" width="80"></vxe-table-column>
+    <vxe-table-column field="curIRate" title="恒流比" width="80"></vxe-table-column>
     <vxe-table-column field="t1" title="T1" width="80"></vxe-table-column>
     <vxe-table-column field="c1" title="C1" width="80"></vxe-table-column>
     <vxe-table-column field="t2" title="T2" width="80"></vxe-table-column>
@@ -68,9 +68,9 @@ export default class DetailsTabel extends Vue {
       time: 10,
       startU: 30,
       endU: 40,
-      averageU: 20,
+      avgU: 20,
       endI: 50,
-      curIRation: 1.2,
+      curIRate: 1.2,
       t1: 0,
       c1: 0,
       t2: 0,

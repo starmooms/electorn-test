@@ -88,7 +88,7 @@ export default class Separat extends Vue {
       }
 
       .l-t-r {
-        flex: 0 0 400px;
+        flex: 0 0 320px;
         overflow: auto;
       }
     }

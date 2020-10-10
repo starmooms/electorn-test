@@ -29,7 +29,7 @@ export default class Resizer extends Vue {
   box-sizing: border-box;
   position: absolute;
   /* opacity: 0.2; */
-  z-index: 1;
+  z-index: 6;
   -moz-background-clip: padding;
   -webkit-background-clip: padding;
   background-clip: padding-box;

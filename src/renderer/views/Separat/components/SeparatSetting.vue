@@ -47,7 +47,7 @@
       <el-form class="box-item data-type">
         <div class="form-title">分选等级</div>
         <el-form-item class="form-flex-item">
-          <el-select v-model="form.masterId">
+          <el-select v-model="form.levelId">
             <el-option
               v-for="(item, index) in levelList"
               :key="index"
@@ -55,7 +55,7 @@
               :value="index"
             ></el-option>
           </el-select>
-          <el-button>条件设置</el-button>
+          <el-button @click="configShowSet">条件设置</el-button>
         </el-form-item>
         <el-form-item>
           <el-button>只分选</el-button>
@@ -118,28 +118,36 @@
         </div>
       </el-form>
     </div>
+    <level-dialog :show.sync="configShow" />
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
+import LevelDialog from './LevelDialog.vue'
 
-@Component
+@Component({
+  components: {
+    LevelDialog
+  }
+})
 export default class SeparatSetting extends Vue {
   form = {
     dataType: 'nowData',
     historyUrl: '',
     masterId: 0,
     workerId: null,
+    levelId: null,
     setpsCondutc: [],
     condutc: {
       vol: null,
       startU: null,
       endU: null,
       endI: null,
-      curIRation: null
+      curIRate: null
     }
   }
+  configShow = false
 
   @Watch('form', { deep: true })
   c(v) {
@@ -152,7 +160,7 @@ export default class SeparatSetting extends Vue {
     { name: '开压工步', key: 'startU' },
     { name: '终压工步', key: 'endU' },
     { name: '终流工步', key: 'endI' },
-    { name: '恒流工步比', key: 'curIRation' }
+    { name: '恒流工步比', key: 'curIRate' }
   ]
 
   workerList = []
@@ -170,6 +178,10 @@ export default class SeparatSetting extends Vue {
       desc: ''
     }
   ]
+
+  configShowSet() {
+    this.configShow = true
+  }
 }
 </script>
 <style lang="scss" scoped>
@@ -257,8 +269,8 @@ export default class SeparatSetting extends Vue {
         font-weight: bold;
         font-style: oblique;
         text-align: center;
-        cursor: default;
-        padding: 6px 0;
+        cursor: pointer;
+        padding: 2px 0;
       }
     }
   }
@@ -275,7 +287,7 @@ export default class SeparatSetting extends Vue {
         margin-left: 4px;
       }
       .input-val {
-        width: 40%;
+        width: 36%;
       }
     }
 

@@ -34,7 +34,7 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop, PropSync, Watch } from 'vue-property-decorator'
+import { Vue, Component, Prop, PropSync } from 'vue-property-decorator'
 import SelectMaster from '@/renderer/components/SelectMaster.vue'
 
 @Component({
@@ -70,14 +70,17 @@ export default class SelectChannel extends Vue {
     this.channelIdSync = v ? this.channelList : []
   }
 
-  @Watch('masterIdSync')
-  changeMasterId() {
-    if (!this.isCheckboxMaster) {
-      this.reset()
-    }
-  }
+  // @Watch('masterIdSync')
+  // changeMasterId() {
+  //   this.reset()
+  // }
 
   reset() {
+    if (this.isCheckboxMaster) {
+      this.masterIdSync = []
+    } else {
+      this.masterIdSync = null
+    }
     this.slaverAll = true
     this.channelAll = true
   }

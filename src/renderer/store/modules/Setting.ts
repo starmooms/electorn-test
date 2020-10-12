@@ -8,7 +8,7 @@ import {
 } from 'vuex-module-decorators'
 import store from '@/renderer/store'
 import { getStoreConfig } from '@/renderer/ipc/storeConfig'
-import { translateSet } from '@/renderer/ipc/channel'
+import { sampSetReadStatus } from '@/renderer/ipc/channel'
 config.rawError = true
 
 interface UserConfig {
@@ -25,12 +25,14 @@ interface UserConfig {
   base: {
     portPath: string
   }
+  sampChartConfig: Store.SampChartConfig
 }
 
 @Module({ dynamic: true, store, name: 'setting' })
 export default class SettingImpl extends VuexModule {
   public userConfig: UserConfig | null = null
   public $readTranslate = false
+  public mainDbPath = ''
 
   get sampling() {
     return this.userConfig!.sampling
@@ -48,14 +50,24 @@ export default class SettingImpl extends VuexModule {
     return this.$readTranslate
   }
 
+  get sampChartConfig() {
+    return this.userConfig!.sampChartConfig
+  }
+
   @Mutation
   private SETREADTRANSLATE(status: boolean) {
     this.$readTranslate = status
   }
 
   @Mutation
-  private UPDATE_USERCONFIG(userConfig: UserConfig) {
+  UPDATE_USERCONFIG(userConfig: UserConfig) {
     this.userConfig = userConfig
+  }
+
+  /** 设置mainDb文件路径 */
+  @Mutation
+  UPDATE_MAINDBPATH(path: string) {
+    this.mainDbPath = path
   }
 
   @Action
@@ -77,8 +89,7 @@ export default class SettingImpl extends VuexModule {
   @Action
   async toggleReadTranslate() {
     const status = !this.readTranslate
-    const data = await translateSet({
-      path: this.portPath,
+    const data = await sampSetReadStatus({
       status
     })
     if (data.status) {

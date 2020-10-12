@@ -82,7 +82,7 @@ class BufModel<T = any> {
           }
 
           if (readBuf.length > 0) {
-            len = readBuf.readIntBE(lenTarget.offset, lenTarget.bytLen)
+            len = readBuf.readUIntBE(lenTarget.offset, lenTarget.bytLen)
           }
         } else if (!listLen || listLen[target.name] === void 0) {
           throw new Error(`${target.name} listlen undefined`)
@@ -207,6 +207,10 @@ export class BufWriteModel {
       const target = this.getTarget(name)
       if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
       const offset = this.start + target.offset
+      // logger.info(
+      //   target.name,
+      //   this.buf.slice(offset, offset + target.bytLen).toString('hex')
+      // )
       if (target.type === 'float') {
         return this.buf.readFloatBE(offset)
       }

@@ -18,11 +18,7 @@ config.rawError = true
 // const listObj = deepClone(channelList)
 
 interface ChannelMap {
-  [key: string]: {
-    [key: string]: {
-      [key: string]: Port.ChannelItem
-    }
-  }
+  [key: string]: Port.ChannelItem
 }
 interface SampMap {
   [key: string]: Port.SampItem
@@ -38,7 +34,7 @@ export default class ChannelImpl extends VuexModule {
   public list: Port.MasterList | null = null
   public channelMap: ChannelMap | null = null
   public statusList = [
-    { name: '开始', action: 'start' },
+    // { name: '启动', action: 'start' },
     { name: '暂停', action: 'pause' },
     { name: '继续', action: 'continued' },
     { name: '重新启动', action: 'reset' },
@@ -58,10 +54,13 @@ export default class ChannelImpl extends VuexModule {
 
   @Mutation
   UPDATE_CHANNELLIST(list: Port.ChannelChangeItem[]) {
-    if (this.list) {
+    if (this.channelMap) {
       list.forEach(item => {
-        const channel = this.list![item.masterId].slaverList[item.slaverId].list[item.channelId] // eslint-disable-line
-        channel.workerStart = item.start && item.end ? null : item.start
+        const channel = this.channelMap![`${item.masterId}_${item.slaverId}_${item.channelId}`] // eslint-disable-line
+        if (channel) {
+          channel.nowStatus = item.status
+          channel.filePath = item.status === 'RUN' ? channel.filePath : ''
+        }
       })
     }
   }
@@ -69,11 +68,12 @@ export default class ChannelImpl extends VuexModule {
   @Mutation
   SET_CHANNELLIST(list: Port.MasterList) {
     this.list = list
-    const channelMap = {}
+    const channelMap: any = {}
     Object.entries(this.list).forEach(([mKey, master]) => {
       Object.entries(master.slaverList).forEach(([sKey, slaver]) => {
         Object.entries(slaver.list).forEach(([cKey, channel]) => {
-          setDeep(channel, [mKey, sKey, cKey], channelMap)
+          channelMap[`${mKey}_${sKey}_${cKey}`] = channel
+          // setDeep(channel, [mKey, sKey, cKey], channelMap)
         })
       })
     })
@@ -90,9 +90,7 @@ export default class ChannelImpl extends VuexModule {
   public async getList() {
     let data: any
     try {
-      data = await getChannelList({
-        path: SettingStatus.portPath
-      })
+      data = await getChannelList()
       if (data.status) {
         this.context.commit('SET_CHANNELLIST', data.data)
       }

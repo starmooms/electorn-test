@@ -1,4 +1,4 @@
-const dayjs = require('dayjs')
+// const dayjs = require('dayjs')
 
 // // 当天时间戳
 // console.log(
@@ -7,15 +7,15 @@ const dayjs = require('dayjs')
 //     .unix()
 // )
 
-const now = dayjs()
-const today = now.startOf('day').unix()
-const nowUnix = now.unix()
-console.log(today, nowUnix)
+// const now = dayjs()
+// const today = now.startOf('day').unix()
+// const nowUnix = now.unix()
+// console.log(today, nowUnix)
 
-const last15 = dayjs()
-  .subtract(15, 'minute')
-  .unix()
-console.log(nowUnix - last15)
+// const last15 = dayjs()
+//   .subtract(15, 'minute')
+//   .unix()
+// console.log(nowUnix - last15)
 
 // const key = '0_0_*'
 // console.log('del started for key: ', key)
@@ -48,3 +48,94 @@ console.log(nowUnix - last15)
 //     resolve()
 //   })
 // })
+
+// let data = Buffer.from(
+//   '01010000edededededededed6800180000000099a0edededed68010100006800180000000099a0edededed68010100006800180000000099a0edededed68010100006800180000000099a0edededed68010100006800180000000099a0edededed68010100006800180000000099a0edededed68010100006800180000000099a0edededed68010100006800180000000099a0edededed68010100006800180000000099a0edededed68010100006800180000',
+//   'hex'
+// )
+// // const b = Buffer.from('edededed', 'hex')
+// // const c = a.indexOf(b) + b.length
+// // console.log(a.indexOf(b) + b.length)
+// // console.log(a.slice(1, 6))
+// // console.log(a.readInt16BE(10), a.length)
+// // console.log(a.slice(12336))
+// // console.log(a.slice(12336).length)
+// let end = -1
+// const startChar = Buffer.from('68', 'hex')
+// const delimiter = Buffer.from('edededed', 'hex')
+// while ((end = data.indexOf(delimiter)) !== -1) {
+//   const start = data.indexOf(startChar)
+//   // console.log('start', start)
+//   // console.log('end', end)
+//   if (start >= 0 && start < end) {
+//     const len = data.readUInt16BE(start + 10) + 18 // 数据域长度 + 其他数据位长度
+//     // console.log('len', len)
+//     if (data.length >= len) {
+//       const endIndex = start + len
+//       console.log(data.slice(start, endIndex))
+//       const result = data.slice(start, endIndex)
+//       console.log(
+//         'lastIndex',
+//         result.lastIndexOf(delimiter) === len - delimiter.length
+//       )
+//       data = data.slice(endIndex)
+//       continue
+//     }
+//   }
+
+//   // 如果读取到结束帧，当起始不是68，清除结束帧前面的内容
+//   const flushEnd = end + delimiter.length
+//   console.log('flushEnd', flushEnd)
+//   data = data.slice(flushEnd)
+//   console.log('flshData', data)
+// }
+// console.log(data, 'data')
+
+const dgram = require('dgram')
+
+function clientUpdServer(ip, port) {
+  try {
+    let dPort = null
+    let dIp = null
+    const udpServer = dgram.createSocket({
+      type: 'udp4',
+      reuseAddr: true
+    })
+    udpServer.on('listening', () => {
+      console.log('clientUpdServer listen', udpServer.address())
+      setInterval(() => {
+        if (dPort && dIp) {
+          udpServer.send(JSON.stringify(udpServer.address()), dPort, dIp)
+        }
+      }, 2000)
+    })
+
+    //接收消息
+    udpServer.on('message', function(msg, rinfo) {
+      const strmsg = msg.toString('hex')
+      console.info(rinfo)
+      if (!dPort || !dIp) {
+        dPort = rinfo.port
+        dIp = rinfo.address
+      }
+      console.info(
+        'udpserver data',
+        strmsg,
+        rinfo.port,
+        rinfo.address,
+        new Date().toLocaleString()
+      )
+    })
+
+    //错误处理
+    udpServer.on('error', function(err) {
+      console.error('clientUpdServer Error', err)
+    })
+
+    udpServer.bind(port)
+  } catch (err) {
+    console.info('clientUpdServer Error', err)
+  }
+}
+
+clientUpdServer('192.168.0.201', 31111)

@@ -1,9 +1,9 @@
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
 import ipcManage from './IpcManage'
-import { controlCode } from '@/shared/config/port'
-import agreement from './Agreement'
 import PortItem from './PortItem'
+import logger, { sysLog } from './Logger'
+import boxManage from './boxManage/BoxManage'
 
 export interface ArgeementData {
   buf: Buffer
@@ -14,6 +14,8 @@ export default class USBManager {
   cache = new Map<string, PortItem>()
   hasEvent = false
   stepList: any[] | null = null
+  protPath!: string
+  portItem!: PortItem
 
   constructor() {
     this.init()
@@ -31,6 +33,25 @@ export default class USBManager {
     this.getChannelList()
   }
 
+  // getPortPath() {
+  //   const lastPortPath = this.protPath
+  //   this.protPath = configManage.userConfig.get('base.portPath')
+  //   if (this.protPath !== lastPortPath) {
+  //     if (this.portItem) {
+  //       this.portItem.close()
+  //     }
+  //     if (this.protPath) {
+  //       this.portItem = new PortItem(this.protPath)
+  //     }
+  //   }
+  // }
+
+  // changePortPath() {
+  //   configManage.userConfig.onDidChange('base', () => {
+  //     this.getPortPath()
+  //   })
+  // }
+
   /** 开始监测USB */
   start() {
     if (this.hasEvent === false) {
@@ -42,10 +63,6 @@ export default class USBManager {
   /** 结束监测USB */
   destory() {
     if (this.hasEvent === true) {
-      this.cache.forEach(portItem => {
-        portItem.stopTranslate()
-      })
-      this.cache.clear()
       usbDetection.stopMonitoring()
       this.hasEvent = false
     }
@@ -62,23 +79,6 @@ export default class USBManager {
   sendList() {
     ipcManage.send('/port/sendList', async () => {
       const list = await SerialPort.list()
-      list.forEach(item => {
-        item['readTranslate'] = false
-      })
-      const keys = Object.keys(this.cache)
-      if (keys.length > 0) {
-        keys.forEach(key => {
-          const listItem = list.find(item => item.path === key)
-          if (!listItem) {
-            this.cache.delete(key)
-          } else {
-            const portItem = this.cache.get(key)
-            if (portItem) {
-              listItem['readTranslate'] = portItem.sampIsRead
-            }
-          }
-        })
-      }
       return { list }
     })
   }
@@ -91,70 +91,67 @@ export default class USBManager {
     })
   }
 
-  getPortData(path: string) {
-    let portItem = this.cache.get(path)
-    if (!portItem) {
-      portItem = new PortItem(path)
-      this.cache.set(path, portItem)
+  getPortData() {
+    if (!this.portItem) {
+      sysLog.info('串口未初始化')
+      throw new Error('串口未初始化')
     }
-    return portItem
+    return this.portItem
   }
 
   /** 写工步 */
   writeSteps() {
-    ipcManage.handle('/port/writeWorkSteps', (event, data: any) => {
-      return this.getPortData(data.path).writeSteps(data)
+    ipcManage.handle('/port/writeWorkSteps', (event, data) => {
+      return boxManage.boxStatus.writeSteps(data)
     })
   }
 
   /** 读工步 */
   readSteps() {
-    ipcManage.handle('/port/readWorkSteps', (event, data: any) => {
-      return this.getPortData(data.path).readSteps(data)
+    ipcManage.handle('/port/readWorkSteps', (event, data) => {
+      return boxManage.boxStatus.readSteps(data)
     })
   }
 
   /** 设置从控状态 */
   setSlaverStatus() {
-    ipcManage.handle('/port/slaver/setStatus', (event, data: any) => {
-      const protItem = this.getPortData(data.path)
-      return protItem.setStatus(data)
+    ipcManage.handle('/port/slaver/setStatus', (event, data) => {
+      return boxManage.boxStatus.setStatus(data)
     })
   }
 
   /** 开始/关闭读从控采样 */
   setTranslate() {
-    ipcManage.handle('/port/translateSet', (event, data) => {
-      const portItem = this.getPortData(data.path)
-      if (data.status === true) {
-        portItem.readTranslate()
-      } else {
-        portItem.stopTranslate()
+    ipcManage.handle(
+      '/port/sampSetReadStatus',
+      (event, data: ipcReq.SampReadStatus) => {
+        if (data.status === true) {
+          boxManage.boxSamp.sampSetRead()
+        } else {
+          boxManage.boxSamp.sampSetStopRead()
+        }
       }
-    })
+    )
   }
 
   /** 设置校准 */
   setCal() {
-    ipcManage.handle('/port/cal/set', async (event, data: any) => {
-      const portItem = this.getPortData(data.path)
-      return await portItem.setCal(data)
+    ipcManage.handle('/port/cal/set', async (event, data) => {
+      return boxManage.boxCal.setCal(data)
     })
   }
 
   /** 读校准 */
   readCal() {
-    ipcManage.handle('/port/cal/read', async (event, data: any) => {
-      const portItem = this.getPortData(data.path)
-      return await portItem.readCal(data)
+    ipcManage.handle('/port/cal/read', async (event, data) => {
+      return boxManage.boxCal.readCal(data)
     })
   }
 
   /** 获取列表 */
   getChannelList() {
-    ipcManage.handle('/port/channelList', async (event, data: any) => {
-      const portItem = this.getPortData(data.path)
-      return await portItem.getChannelList(data)
+    ipcManage.handle('/port/channelList', async () => {
+      return boxManage.getChannelList()
     })
   }
 }

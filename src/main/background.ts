@@ -31,7 +31,7 @@ import debug from 'debug'
 // }
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
-app.allowRendererProcessReuse = true
+app.allowRendererProcessReuse = false
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }

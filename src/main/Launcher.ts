@@ -12,12 +12,17 @@ import MenuManager from './MenuManager'
 import winManager from './core/WinManager'
 import ipcManage from './core/IpcManage'
 import WorkStepSee from './window/WorkStepSee'
+import createHistoryWin from './window/HistoryWin'
 import UpdateManager from './core/UpdateManager'
-import SlaverTrend from './window/SlaverTrend'
 import './core/ConfigManage'
 import RedisServer from './core/redis/RedisServer'
 import redisClient, { RedisClient } from './core/redis/RedisClient'
-import logger from './core/Logger'
+import logger, { sysLognow, sysFilePath } from './core/Logger'
+import mainDb from './core/sqlite/MainDb'
+import configManage from './core/ConfigManage'
+import udpManage from './core/connect/UdpManage'
+import boxManage from './core/boxManage/BoxManage'
+import createSeparat from './window/Separat'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -25,7 +30,7 @@ declare type beforeMainWin = () => void
 export default class Launcher {
   win: BrowserWindow | null = null
   update: Update | null = null
-  usbManager = this.initUSBManager()
+  usbManager!: USBManager
   beforeMainWin: beforeMainWin | null = null
   updateManager = this.initUpdaterManager()
   redisServer!: RedisServer
@@ -61,13 +66,11 @@ export default class Launcher {
       callback && callback()
       return
     }
-
     const canLock = app.requestSingleInstanceLock()
-
     if (!canLock) {
       app.quit()
     } else {
-      app.on('second-instance', (event, argv, workingDirectory) => {
+      app.on('second-instance', () => {
         if (this.win) {
           if (this.win.isMinimized()) {
             this.win.restore()
@@ -145,14 +148,26 @@ export default class Launcher {
     // }, 1000)
     // powerSaveBlocker.stop(id)
 
+    // await mainDb.connect()
+
+    ipcManage.handle('/sysLog/sysLogInfo', () => {
+      return {
+        start: sysLognow,
+        filePath: sysFilePath
+      }
+    })
+
     ipcManage.on('/createdWin', (event, data: any) => {
       switch (data.type) {
         case 'channel':
           /** 查看通道 */
           new WorkStepSee(data.data, this.usbManager)
           break
-        case 'slaverTrend':
-          new SlaverTrend(data.data, this.usbManager)
+        case 'history':
+          createHistoryWin(data.data)
+          break
+        case 'separat':
+          createSeparat()
           break
         default:
           throw new Error(`${data.type} win no defined`)
@@ -163,6 +178,7 @@ export default class Launcher {
     this.redisServer.start().finally(() => {
       redisClient.initRedis()
     })
+    this.startRender()
   }
 
   afterWin() {
@@ -172,12 +188,38 @@ export default class Launcher {
     // })
   }
 
+  async beforeWinRender() {
+    try {
+      const mainDbFilePath = (await mainDb.connect()) as string
+      await boxManage.create()
+      this.usbManager = new USBManager()
+      udpManage.start()
+      return mainDbFilePath
+    } catch (err) {
+      logger.error(err)
+      throw err
+    }
+  }
+
+  startRender() {
+    const handld = this.beforeWinRender()
+    ipcManage.handle('/startRender', async () => {
+      const mainData = await handld
+      const userConfig = configManage.userConfig.store
+      return {
+        userConfig,
+        mainData
+      }
+    })
+  }
+
   async destoryWin(destroy = true) {
     try {
       this.win!.hide()
       if (this.usbManager) {
         this.usbManager.destory()
       }
+      await mainDb.close()
       await redisClient.close()
       if (this.redisServer) {
         await this.redisServer.stop()
@@ -191,11 +233,6 @@ export default class Launcher {
       }
       this.win = null
     }
-  }
-
-  initUSBManager() {
-    const usbManager = new USBManager()
-    return usbManager
   }
 
   initUpdaterManager() {

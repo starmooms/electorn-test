@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron'
 import logger from './Logger'
+import path from 'path'
 
 class WinManager {
   win: BrowserWindow | null = null
@@ -28,15 +29,15 @@ class WinManager {
   /**
    * 创建窗口
    * @param name 窗口名
-   * @param path 路由
+   * @param pageUrl 路由
    */
-  createdWin(name: string, path = '') {
+  createdWin(name: string, pageUrl = '') {
     const hasWin = this.getWin(name, true)
     if (hasWin) return hasWin
 
     const devUrl = process.env.WEBPACK_DEV_SERVER_URL
-    if (path) path = `#/${path}`
-    if (!devUrl) path = `index.html${path}`
+    if (pageUrl) pageUrl = `#/${pageUrl}`
+    if (!devUrl) pageUrl = `index.html${pageUrl}`
 
     const opts: Electron.BrowserWindowConstructorOptions = {}
     const nowFous = BrowserWindow.getFocusedWindow()
@@ -53,6 +54,7 @@ class WinManager {
       // backgroundColor: '#2e2c29',
       webPreferences: {
         // backgroundThrottling: false,
+        // preload: path.join(__dirname, 'preload.js'),
         nodeIntegration: (process.env
           .ELECTRON_NODE_INTEGRATION as unknown) as boolean
       },
@@ -62,11 +64,21 @@ class WinManager {
     let protocolPath = `app://./`
     if (devUrl) {
       protocolPath = devUrl
-      if (!process.env.IS_TEST) win.webContents.openDevTools()
+      if (!process.env.IS_TEST) {
+        win.webContents.openDevTools()
+        // https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/698
+        // const finishLoadListener = () => {
+        //   logger.info('reload ====>')
+        //   win.webContents.reload()
+        //   win.webContents.removeListener('did-finish-load', finishLoadListener)
+        // }
+        // win.webContents.on('did-finish-load', finishLoadListener)
+      }
     }
 
     this.winList.set(name, win)
-    win.loadURL(`${protocolPath}${path}`)
+
+    win.loadURL(`${protocolPath}${pageUrl}`)
     win.on('closed', () => {
       this.winList.delete(name)
     })

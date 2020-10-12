@@ -28,7 +28,7 @@ export default class App extends Vue {
   }
 
   mounted() {
-    ChannelStatus.getList()
+    this.checkPortPath()
     ipcRenderer.on('commomMsg', (event, channel, data) => {
       switch (channel) {
         case 'updateChannelList':

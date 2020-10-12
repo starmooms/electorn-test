@@ -5,13 +5,16 @@ import store from './store'
 import './utils/class-component-hooks'
 import Element from 'element-ui'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+import '@/renderer/components/vxeTabel'
 
 import '@/renderer/style/index.scss'
 
 import command from '@/renderer/command'
+import ElConfirm from '@/renderer/components/ElConfirm'
 import TitleBox from '@/renderer/components/TitleBox.vue'
 import '@/renderer/icons'
 import { SettingStatus } from './store/modules/Setting'
+import { beforeRender } from './ipc/storeConfig'
 
 const init = () => {
   Vue.config.productionTip = false
@@ -21,6 +24,7 @@ const init = () => {
 
   Vue.use(command)
   Vue.component('title-box', TitleBox)
+  Vue.use(ElConfirm)
 
   new Vue({
     router,
@@ -29,11 +33,23 @@ const init = () => {
   }).$mount('#app')
 }
 
-SettingStatus.getUserConfg()
-  .then(data => {
-    if (!data.status) throw data.err || 'DATA STATUS ERROR'
+beforeRender()
+  .then(result => {
+    if (!result.status) throw result.err || 'DATA STATUS ERROR'
+    const data = result.data
+    SettingStatus.UPDATE_USERCONFIG(data.userConfig)
+    SettingStatus.UPDATE_MAINDBPATH(data.mainData)
     init()
   })
   .catch(err => {
     alert(err)
   })
+
+// SettingStatus.getUserConfg()
+//   .then(data => {
+//     if (!data.status) throw data.err || 'DATA STATUS ERROR'
+//     init()
+//   })
+//   .catch(err => {
+//     alert(err)
+//   })

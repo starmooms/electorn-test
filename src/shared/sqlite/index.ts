@@ -1,9 +1,11 @@
 import sqlite3 from 'sqlite3'
+import logger from '@/main/core/Logger'
 const sqlite = sqlite3.verbose()
 
 export default class Sqlite {
   db!: sqlite3.Database
   fileName: string
+  isConnect = false
 
   constructor(fileName: string) {
     this.fileName = fileName
@@ -12,22 +14,26 @@ export default class Sqlite {
   /** 连接数据库 */
   connect() {
     return new Promise<null>((resolve, reject) => {
+      if (this.isConnect) return
+      logger.info('sql connect', this.fileName)
       if (!this.fileName) {
         reject(`connect fileName undefined`)
         return
       }
       this.db = new sqlite.Database(this.fileName, err => {
+        logger.info('创建连接')
         if (err === null) {
           resolve(err)
         } else {
           reject(err)
         }
       })
+      this.isConnect = true
     })
   }
 
   /** 运行sql */
-  run(sql: string, params: any) {
+  run(sql: string, params?: any) {
     return new Promise<null>((resolve, reject) => {
       this.db.run(sql, params, err => {
         if (err === null) {
@@ -40,9 +46,9 @@ export default class Sqlite {
   }
 
   /** 运行多条sql */
-  exec<T = any>(sql: string) {
-    return new Promise((resolve, reject) => {
-      this.db.exec<T>(sql, err => {
+  exec(sql: string) {
+    return new Promise<null>((resolve, reject) => {
+      this.db.exec(sql, err => {
         if (err === null) {
           resolve(err)
         } else {
@@ -53,13 +59,26 @@ export default class Sqlite {
   }
 
   /** 查询一条数据 */
-  get<T = any>(sql: string, params: any) {
+  get<T = any>(sql: string, params?: any) {
     return new Promise<T>((resolve, reject) => {
       this.db.get(sql, params, (err, data) => {
         if (err) {
           reject(err)
         } else {
           resolve(data)
+        }
+      })
+    })
+  }
+
+  /** 查询多条数据 */
+  all<T = any[]>(sql: string, params?: any) {
+    return new Promise<T>((resolve, reject) => {
+      this.db.all(sql, params, (err, data) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve((data as unknown) as T)
         }
       })
     })
@@ -72,9 +91,15 @@ export default class Sqlite {
         if (err) {
           reject(err)
         } else {
+          this.isConnect = false
           resolve(err)
         }
       })
     })
+  }
+
+  /** 将sql最后一个‘,’，替换掉 */
+  static replaceSql(sql: string, end = '') {
+    return sql.replace(/,$/, end)
   }
 }

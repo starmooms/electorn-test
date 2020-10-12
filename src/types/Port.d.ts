@@ -10,6 +10,9 @@ declare namespace Port {
     fullId: string
     workerStart: number | null
     workerEnd: number | null
+    nowStatus: null | 'RUN' | 'END'
+    lastSaveTime: number | null
+    filePath: string
   }
 
   interface SlaverItem {
@@ -33,17 +36,21 @@ declare namespace Port {
 
   /** 采样 */
   interface SampItem {
+    masterId: number
     slaverId: number
     channelId: number
     workerCode: string
     workerId: number
     U: number
     I: number
-    endStatus: number
+    vol: number
+    epower: number
+    loopNum: number
     errorCode: string
     errorMsg: string
     workerStatus: { name: string; status: string }
     createTime: number
+    projectId: number
     /**  */
     createTimeStr?: string
   }
@@ -53,9 +60,36 @@ declare namespace Port {
     masterId: number
     slaverId: number
     channelId: number
-    start: number | null
-    end: number | null
+    time: number
+    status: 'RUN' | 'END'
+    filePath: string
   }
+
+  interface ChannelChangeFilePath {
+    masterId: number
+    slaverId: number
+    channelId: number
+    filePath: string
+  }
+
+  interface ChannelChangeMap {
+    [projectId: string]: ChannelChangeItem[]
+  }
+
+  interface ErrorListItem {
+    masterId: number
+    slaverIds: string | number
+    channelIds: string | number
+    /** 1: 通讯错误 2：实时数据错误列表 */
+    type: 1 | 2
+    /** 操作名称 */
+    action: string
+    errCode: string
+    params1?: string
+    params2?: string
+    createTime?: string
+  }
+  type ErrorList = ErrorListItem[]
 
   interface BaseError {
     masterId: number
@@ -84,6 +118,17 @@ declare namespace Port {
 
   type SaveErrorItem = SampErrorItem | PostError
   type SaveError = SaveErrorItem[]
+
+  interface SampEndStatus {
+    masterId: number
+    slaverId: number
+    channelId: number
+    workerId: number
+    endCode: string
+  }
+  interface SampEndStatusMap {
+    [porjectId: string]: SampEndStatus[]
+  }
 
   /** 工步列表 */
   interface StepInput {
@@ -122,4 +167,39 @@ declare namespace Port {
       [key: string]: StepsDataItem
     }
   }
+
+  interface SaveSampItem {
+    projectId: number
+    sampList: SampItem[]
+    changeStatusList: ChannelChangeItem[]
+    endStatusList: SampEndStatus[]
+  }
+
+  interface SaveSampData {
+    [projectId: string]: SaveSampItem
+  }
+
+  /** 校准参数 */
+  interface CalItem {
+    name: string
+    key: string
+    index: number
+    value: number | string
+    nameKey: string
+  }
+
+  /** 通道信息，日志 */
+  interface ChannelInfo {
+    masterId: number
+    slaverId?: number
+    slaverIds?: number[]
+    channel?: number
+    channelIds?: number[]
+  }
+
+  type GetProjectSampKey = keyof SaveSampItem
+  type GetProjectSamp = <T extends GetProjectSampKey>(
+    porjectId: number,
+    key: T
+  ) => SaveSampItem[T]
 }

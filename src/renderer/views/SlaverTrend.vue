@@ -188,357 +188,357 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-import TrendChart from '@/renderer/components/TrendChart.vue'
-import { getChannelList, getWorkStep } from '../ipc/channel'
-import command from '../command'
-import { getSamp } from '../ipc/db'
-import dayjs from 'dayjs'
-import { formatTimeStr, stepListUtil } from '../utils/util'
-import { RecycleScroller } from 'vue-virtual-scroller'
+// import { Vue, Component } from 'vue-property-decorator'
+// import TrendChart from '@/renderer/components/TrendChart.vue'
+// import { getChannelList, getWorkStep } from '../ipc/channel'
+// import command from '../command'
+// import { getSamp } from '../ipc/db'
+// import dayjs from 'dayjs'
+// import { formatTimeStr, stepListUtil } from '../utils/util'
+// import { RecycleScroller } from 'vue-virtual-scroller'
 
-@Component({
-  components: {
-    TrendChart,
-    RecycleScroller
-  }
-})
-export default class SlaverTrend extends Vue {
-  $refs!: {
-    TrendChart: TrendChart[]
-  }
+// @Component({
+//   components: {
+//     TrendChart,
+//     RecycleScroller
+//   }
+// })
+// export default class SlaverTrend extends Vue {
+//   $refs!: {
+//     TrendChart: TrendChart[]
+//   }
 
-  portItem: null | any = null
-  slaverData: any = null
-  loading = false
-  list: any[] = []
-  tagList = ['走势图', '数据表格', '工步查看']
+//   portItem: null | any = null
+//   slaverData: any = null
+//   loading = false
+//   list: any[] = []
+//   tagList = ['走势图', '数据表格', '工步查看']
 
-  timeTag = [
-    { title: '15分钟', value: 15 },
-    { title: '1小时', value: 60 },
-    { title: '2小时', value: 120 },
-    { title: '12小时', value: 60 * 12 },
-    { title: '1天', value: 60 * 24 }
-  ]
+//   timeTag = [
+//     { title: '15分钟', value: 15 },
+//     { title: '1小时', value: 60 },
+//     { title: '2小时', value: 120 },
+//     { title: '12小时', value: 60 * 12 },
+//     { title: '1天', value: 60 * 24 }
+//   ]
 
-  selectDate = []
+//   selectDate = []
 
-  async getList() {
-    const data = await getChannelList({
-      type: 'slaver',
-      ...this.portItem
-    })
-    if (data.status) {
-      this.slaverData = data.data
-      this.list = Object.keys(data.data.list).map(cKey => {
-        const channel = data.data.list[cKey]
-        return {
-          ...channel,
-          sampData: [],
-          tag: 0,
-          loading: false,
-          workerIdNow: null,
-          workerStatus: '',
-          nowStepList: []
-        }
-      })
-      this.getWorkStepList()
-      this.$nextTick(async () => {
-        await this.getSampDatas(15, this.list)
-        this.setCharts()
-      })
-    }
-  }
+//   async getList() {
+//     const data = await getChannelList({
+//       type: 'slaver',
+//       ...this.portItem
+//     })
+//     if (data.status) {
+//       this.slaverData = data.data
+//       this.list = Object.keys(data.data.list).map(cKey => {
+//         const channel = data.data.list[cKey]
+//         return {
+//           ...channel,
+//           sampData: [],
+//           tag: 0,
+//           loading: false,
+//           workerIdNow: null,
+//           workerStatus: '',
+//           nowStepList: []
+//         }
+//       })
+//       this.getWorkStepList()
+//       this.$nextTick(async () => {
+//         await this.getSampDatas(15, this.list)
+//         this.setCharts()
+//       })
+//     }
+//   }
 
-  getChartMap() {
-    const chartMap: { [key: string]: TrendChart } = {}
-    this.$refs.TrendChart.forEach(item => {
-      chartMap[item.channelId] = item
-    })
-    return chartMap
-  }
+//   getChartMap() {
+//     const chartMap: { [key: string]: TrendChart } = {}
+//     this.$refs.TrendChart.forEach(item => {
+//       chartMap[item.channelId] = item
+//     })
+//     return chartMap
+//   }
 
-  async getWorkStepList() {
-    const listMap = {}
-    this.list.forEach(item => {
-      listMap[item.id] = item
-    })
-    const data = await getWorkStep({
-      ...this.portItem,
-      channelId: [0, 1, 2, 3, 4, 5, 6, 7]
-    })
-    if (data.status) {
-      Object.keys(data.data.stepData).forEach(cKey => {
-        const channel = listMap[cKey]
-        if (listMap[cKey]) {
-          channel.nowStepList = data.data.stepData[cKey].stepList.map(
-            stepListUtil
-          )
-        }
-      })
-    }
-  }
+//   async getWorkStepList() {
+//     const listMap = {}
+//     this.list.forEach(item => {
+//       listMap[item.id] = item
+//     })
+//     const data = await getWorkStep({
+//       ...this.portItem,
+//       channelId: [0, 1, 2, 3, 4, 5, 6, 7]
+//     })
+//     if (data.status) {
+//       Object.keys(data.data.stepData).forEach(cKey => {
+//         const channel = listMap[cKey]
+//         if (listMap[cKey]) {
+//           channel.nowStepList = data.data.stepData[cKey].stepList.map(
+//             stepListUtil
+//           )
+//         }
+//       })
+//     }
+//   }
 
-  // async getSampData(minute, channelList: any[]) {
-  //   try {
-  //     console.time()
-  //     const channelArr: any[] = []
-  //     channelList.forEach(item => {
-  //       item.loading = true
-  //       channelArr.push({
-  //         id: item.id
-  //       })
-  //     })
-  //     if (channelArr.length <= 0) return
-  //     const slaverId = this.portItem.slaverId
-  //     let startTime = dayjs()
-  //       .subtract(minute, 'minute')
-  //       .unix()
-  //     let endTime = dayjs().unix()
-  //     if (this.selectDate.length === 2) {
-  //       startTime = dayjs(this.selectDate[0]).unix()
-  //       endTime = dayjs(this.selectDate[1]).unix()
-  //     }
+//   // async getSampData(minute, channelList: any[]) {
+//   //   try {
+//   //     console.time()
+//   //     const channelArr: any[] = []
+//   //     channelList.forEach(item => {
+//   //       item.loading = true
+//   //       channelArr.push({
+//   //         id: item.id
+//   //       })
+//   //     })
+//   //     if (channelArr.length <= 0) return
+//   //     const slaverId = this.portItem.slaverId
+//   //     let startTime = dayjs()
+//   //       .subtract(minute, 'minute')
+//   //       .unix()
+//   //     let endTime = dayjs().unix()
+//   //     if (this.selectDate.length === 2) {
+//   //       startTime = dayjs(this.selectDate[0]).unix()
+//   //       endTime = dayjs(this.selectDate[1]).unix()
+//   //     }
 
-  //     // const add = 60 * 2
-  //     // const startTime = dayjs()
-  //     //   .subtract(minute + add, 'minute')
-  //     //   .unix()
-  //     // const endTime = dayjs()
-  //     //   .subtract(add, 'minute')
-  //     //   .unix()
-  //     const data = await getSamp({
-  //       start: startTime,
-  //       end: endTime,
-  //       masterId: this.portItem.masterId,
-  //       slaverArr: [
-  //         {
-  //           id: slaverId,
-  //           channel: channelArr
-  //         }
-  //       ]
-  //     })
-  //     if (data.status) {
-  //       const chartMap = this.getChartMap()
-  //       const slaverSamp = data.data[slaverId] || {}
-  //       const promisArr = this.list.map(async channel => {
-  //         const id = channel.id
-  //         const sampData = slaverSamp[id] || []
+//   //     // const add = 60 * 2
+//   //     // const startTime = dayjs()
+//   //     //   .subtract(minute + add, 'minute')
+//   //     //   .unix()
+//   //     // const endTime = dayjs()
+//   //     //   .subtract(add, 'minute')
+//   //     //   .unix()
+//   //     const data = await getSamp({
+//   //       start: startTime,
+//   //       end: endTime,
+//   //       masterId: this.portItem.masterId,
+//   //       slaverArr: [
+//   //         {
+//   //           id: slaverId,
+//   //           channel: channelArr
+//   //         }
+//   //       ]
+//   //     })
+//   //     if (data.status) {
+//   //       const chartMap = this.getChartMap()
+//   //       const slaverSamp = data.data[slaverId] || {}
+//   //       const promisArr = this.list.map(async channel => {
+//   //         const id = channel.id
+//   //         const sampData = slaverSamp[id] || []
 
-  //         if (channel && sampData.length > 0) {
-  //           channel.sampData = sampData.map(item => {
-  //             return {
-  //               createTime: dayjs.unix(item.createTime).format(formatTimeStr),
-  //               U: item.U,
-  //               I: item.I,
-  //               workerStatus: item.workerStatus.name,
-  //               workerId: item.workerId + 1
-  //             }
-  //           })
-  //         }
+//   //         if (channel && sampData.length > 0) {
+//   //           channel.sampData = sampData.map(item => {
+//   //             return {
+//   //               createTime: dayjs.unix(item.createTime).format(formatTimeStr),
+//   //               U: item.U,
+//   //               I: item.I,
+//   //               workerStatus: item.workerStatus.name,
+//   //               workerId: item.workerId + 1
+//   //             }
+//   //           })
+//   //         }
 
-  //         const component = chartMap[id]
-  //         if (component && sampData.length > 0) {
-  //           if (sampData.length > 0) {
-  //             if (sampData[0].createTime > startTime) {
-  //               sampData.unshift({
-  //                 createTime: startTime,
-  //                 U: '-',
-  //                 I: '-'
-  //               })
-  //             }
-  //             if (sampData[1].createTime < endTime) {
-  //               sampData.push({
-  //                 createTime: endTime,
-  //                 U: '-',
-  //                 I: '-'
-  //               })
-  //             }
-  //           }
+//   //         const component = chartMap[id]
+//   //         if (component && sampData.length > 0) {
+//   //           if (sampData.length > 0) {
+//   //             if (sampData[0].createTime > startTime) {
+//   //               sampData.unshift({
+//   //                 createTime: startTime,
+//   //                 U: '-',
+//   //                 I: '-'
+//   //               })
+//   //             }
+//   //             if (sampData[1].createTime < endTime) {
+//   //               sampData.push({
+//   //                 createTime: endTime,
+//   //                 U: '-',
+//   //                 I: '-'
+//   //               })
+//   //             }
+//   //           }
 
-  //           await component.setBaseList(sampData)
-  //         }
-  //       })
-  //       await Promise.all(promisArr)
-  //     }
-  //   } catch (err) {
-  //     console.error(err)
-  //   } finally {
-  //     console.timeEnd()
-  //     channelList.forEach(item => {
-  //       item.loading = false
-  //     })
-  //   }
-  // }
+//   //           await component.setBaseList(sampData)
+//   //         }
+//   //       })
+//   //       await Promise.all(promisArr)
+//   //     }
+//   //   } catch (err) {
+//   //     console.error(err)
+//   //   } finally {
+//   //     console.timeEnd()
+//   //     channelList.forEach(item => {
+//   //       item.loading = false
+//   //     })
+//   //   }
+//   // }
 
-  showTime = 15
-  async changeTime(minute: number) {
-    if (this.showTime !== minute) {
-      this.selectDate = []
-      this.showTime = minute
-      this.getSampDatas(this.showTime, this.list)
-    }
-  }
+//   showTime = 15
+//   async changeTime(minute: number) {
+//     if (this.showTime !== minute) {
+//       this.selectDate = []
+//       this.showTime = minute
+//       this.getSampDatas(this.showTime, this.list)
+//     }
+//   }
 
-  async getSampDatas(minute, channelList: any[]) {
-    try {
-      const channelArr: any[] = []
-      channelList.forEach(item => {
-        item.loading = true
-        channelArr.push({
-          id: item.id
-        })
-      })
-      if (channelArr.length <= 0) return
-      const slaverId = this.portItem.slaverId
-      let startTime = 0
-      let endTime = 0
+//   async getSampDatas(minute, channelList: any[]) {
+//     try {
+//       const channelArr: any[] = []
+//       channelList.forEach(item => {
+//         item.loading = true
+//         channelArr.push({
+//           id: item.id
+//         })
+//       })
+//       if (channelArr.length <= 0) return
+//       const slaverId = this.portItem.slaverId
+//       let startTime = 0
+//       let endTime = 0
 
-      if (this.selectDate.length === 2) {
-        startTime = dayjs(this.selectDate[0]).unix()
-        endTime = dayjs(this.selectDate[1]).unix()
-      } else {
-        startTime = dayjs()
-          .subtract(minute, 'minute')
-          .unix()
-        endTime = dayjs().unix()
-      }
+//       if (this.selectDate.length === 2) {
+//         startTime = dayjs(this.selectDate[0]).unix()
+//         endTime = dayjs(this.selectDate[1]).unix()
+//       } else {
+//         startTime = dayjs()
+//           .subtract(minute, 'minute')
+//           .unix()
+//         endTime = dayjs().unix()
+//       }
 
-      const data = await getSamp({
-        start: startTime,
-        end: endTime,
-        masterId: this.portItem.masterId,
-        slaverArr: [
-          {
-            id: slaverId,
-            channel: channelArr
-          }
-        ]
-      })
-      if (data.status) {
-        const chartMap = this.getChartMap()
-        const slaverSamp = data.data[slaverId] || {}
-        const promisArr = channelList.map(async channel => {
-          const id = channel.id
-          const sampData = slaverSamp[id] || []
-          channel.sampData = sampData.map(samp => {
-            samp.createTimeStr = dayjs.unix(samp.createTime).format(formatTimeStr) // eslint-disable-line
-            return {
-              createTime: samp.createTimeStr,
-              U: samp.U,
-              I: samp.I,
-              workerStatus: samp.workerStatus.name,
-              workerId: samp.workerId + 1
-            }
-          })
-          const chart = chartMap[id]
-          if (chart) {
-            await chart.setBaseList(sampData)
-          }
-        })
-        await Promise.all(promisArr)
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      channelList.forEach(item => {
-        item.loading = false
-      })
-    }
-  }
+//       const data = await getSamp({
+//         start: startTime,
+//         end: endTime,
+//         masterId: this.portItem.masterId,
+//         slaverArr: [
+//           {
+//             id: slaverId,
+//             channel: channelArr
+//           }
+//         ]
+//       })
+//       if (data.status) {
+//         const chartMap = this.getChartMap()
+//         const slaverSamp = data.data[slaverId] || {}
+//         const promisArr = channelList.map(async channel => {
+//           const id = channel.id
+//           const sampData = slaverSamp[id] || []
+//           channel.sampData = sampData.map(samp => {
+//             samp.createTimeStr = dayjs.unix(samp.createTime).format(formatTimeStr) // eslint-disable-line
+//             return {
+//               createTime: samp.createTimeStr,
+//               U: samp.U,
+//               I: samp.I,
+//               workerStatus: samp.workerStatus.name,
+//               workerId: samp.workerId + 1
+//             }
+//           })
+//           const chart = chartMap[id]
+//           if (chart) {
+//             await chart.setBaseList(sampData)
+//           }
+//         })
+//         await Promise.all(promisArr)
+//       }
+//     } catch (err) {
+//       console.error(err)
+//     } finally {
+//       channelList.forEach(item => {
+//         item.loading = false
+//       })
+//     }
+//   }
 
-  refresh() {
-    this.getSampDatas(this.showTime, this.list)
-    this.getWorkStepList()
-    this.checkScroll()
-  }
+//   refresh() {
+//     this.getSampDatas(this.showTime, this.list)
+//     this.getWorkStepList()
+//     this.checkScroll()
+//   }
 
-  selectDateChange() {
-    this.getSampDatas(this.showTime, this.list)
-  }
+//   selectDateChange() {
+//     this.getSampDatas(this.showTime, this.list)
+//   }
 
-  channelTagChange(channel: any, tagId: number) {
-    if (channel.tag !== tagId) {
-      channel.tag = tagId
-      this.$nextTick(() => {
-        if (tagId === 1) {
-          setTimeout(() => {
-            const sl = this.$refs[`spam-table-${channel.id}`]
-            if (sl && sl[0]) {
-              const el = sl[0]
-              el.scrollToItem(channel.sampData.length - 1)
-            }
-          }, 200)
-        }
-      })
-      this.$nextTick(() => {
-        if (tagId === 0) {
-          this.getSampDatas(this.showTime, [channel])
-        }
-      })
-    }
-  }
+//   channelTagChange(channel: any, tagId: number) {
+//     if (channel.tag !== tagId) {
+//       channel.tag = tagId
+//       this.$nextTick(() => {
+//         if (tagId === 1) {
+//           setTimeout(() => {
+//             const sl = this.$refs[`spam-table-${channel.id}`]
+//             if (sl && sl[0]) {
+//               const el = sl[0]
+//               el.scrollToItem(channel.sampData.length - 1)
+//             }
+//           }, 200)
+//         }
+//       })
+//       this.$nextTick(() => {
+//         if (tagId === 0) {
+//           this.getSampDatas(this.showTime, [channel])
+//         }
+//       })
+//     }
+//   }
 
-  checkScroll() {
-    setTimeout(() => {
-      this.list.forEach(item => {
-        if (item.tag === 1) {
-          const sl = this.$refs[`spam-table-${item.id}`]
-          if (sl && sl[0]) {
-            const el = sl[0]
-            el.scrollToItem(item.sampData.length - 1)
-          }
-        }
-      })
-    }, 200)
-  }
+//   checkScroll() {
+//     setTimeout(() => {
+//       this.list.forEach(item => {
+//         if (item.tag === 1) {
+//           const sl = this.$refs[`spam-table-${item.id}`]
+//           if (sl && sl[0]) {
+//             const el = sl[0]
+//             el.scrollToItem(item.sampData.length - 1)
+//           }
+//         }
+//       })
+//     }, 200)
+//   }
 
-  setCharts() {
-    let i = 0
-    const chartMap: { [key: string]: TrendChart } = {}
-    this.$refs.TrendChart.forEach(item => {
-      chartMap[item.channelId] = item
-    })
-    const { path, masterId, slaverId } = this.portItem
-    const listMap = {}
-    this.list.forEach(item => {
-      listMap[item.id] = item
-    })
-    command.on({
-      eventName: `/port/translate/${encodeURIComponent(
-        path
-      )}/${masterId}/${slaverId}`,
-      onEmit: (data: any) => {
-        i += 1
-        data.list.forEach(item => {
-          if (item.slaverId === slaverId) {
-            const channel = listMap[item.channelId]
-            channel.workerIdNow = item.workerId
-            channel.workerStatus = item.workerStatus.name
-            // const component = chartMap[item.channelId]
-            // if (component) {
-            //   component.update({
-            //     time: i,
-            //     ...item
-            //   })
-            // }
-          }
-        })
-      },
-      vm: this
-    })
-  }
+//   setCharts() {
+//     let i = 0
+//     const chartMap: { [key: string]: TrendChart } = {}
+//     this.$refs.TrendChart.forEach(item => {
+//       chartMap[item.channelId] = item
+//     })
+//     const { path, masterId, slaverId } = this.portItem
+//     const listMap = {}
+//     this.list.forEach(item => {
+//       listMap[item.id] = item
+//     })
+//     command.on({
+//       eventName: `/port/translate/${encodeURIComponent(
+//         path
+//       )}/${masterId}/${slaverId}`,
+//       onEmit: (data: any) => {
+//         i += 1
+//         data.list.forEach(item => {
+//           if (item.slaverId === slaverId) {
+//             const channel = listMap[item.channelId]
+//             channel.workerIdNow = item.workerId
+//             channel.workerStatus = item.workerStatus.name
+//             // const component = chartMap[item.channelId]
+//             // if (component) {
+//             //   component.update({
+//             //     time: i,
+//             //     ...item
+//             //   })
+//             // }
+//           }
+//         })
+//       },
+//       vm: this
+//     })
+//   }
 
-  mounted() {
-    this.portItem = {
-      path: this.$route.params.path,
-      masterId: Number(this.$route.params.masterId),
-      slaverId: Number(this.$route.params.slaverId)
-    }
-    this.getList()
-  }
-}
+//   mounted() {
+//     this.portItem = {
+//       path: this.$route.params.path,
+//       masterId: Number(this.$route.params.masterId),
+//       slaverId: Number(this.$route.params.slaverId)
+//     }
+//     this.getList()
+//   }
+// }
 </script>
 
 <style lang="scss" scoped>

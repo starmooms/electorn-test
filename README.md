@@ -79,3 +79,7 @@ Windows Registry Editor Version 5.00
 # 验证
 chcp
 ```
+
+```electron-build
+https://github.com/eyasliu/blog/issues/22
+```

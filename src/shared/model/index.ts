@@ -1,4 +1,5 @@
 import { BufModelT } from '@/types/BufModel'
+import { Model } from 'vue-property-decorator'
 declare type Model = BufModelT.OrginModel
 
 /**
@@ -7,12 +8,18 @@ declare type Model = BufModelT.OrginModel
  * 读校准时发送
  * 读工步发送
  *  */
-export const COMMON_READ: Model[] = [
+export const COMMON_READ = [
   { name: 'version', bytLen: 1 },
   { name: 'masterId', bytLen: 1 },
   { name: 'slaverBit', bytLen: 4 },
   { name: 'channelBit', bytLen: 1 }
 ]
+
+// declare type ElementType<
+//   T extends ReadonlyArray<Model>
+// > = T extends ReadonlyArray<infer ElementType> ? ElementType : never
+// declare type c = ElementType<typeof COMMON_READ>
+// declare type d = c['name']
 
 /** 工步 */
 export const WORKER_STEP_MODEL: Model[] = [
@@ -20,6 +27,8 @@ export const WORKER_STEP_MODEL: Model[] = [
   { name: 'masterId', bytLen: 1 },
   { name: 'slaverId', bytLen: 4 },
   { name: 'channelId', bytLen: 1 },
+  { name: 'projectId', bytLen: 4 },
+  { name: 'workStart', bytLen: 1 },
   { name: 'protectLen', bytLen: 1 },
   { name: 'workerLen', bytLen: 1 },
   {
@@ -52,10 +61,10 @@ export const WORKER_STEP_MODEL: Model[] = [
       { name: 'I', bytLen: 4, type: 'int' },
       { name: 'W', bytLen: 4 },
       { name: 'R', bytLen: 4 },
-      { name: 'loopNum', bytLen: 4 },
+      { name: 'loopNum', bytLen: 2 },
       { name: 'loopStart', bytLen: 1 },
-      { name: 'loopNow', bytLen: 4 },
-      { name: 'IEnd', bytLen: 4 }
+      { name: 'loopNow', bytLen: 2 },
+      { name: 'stopI', bytLen: 4 }
     ]
   }
 ]
@@ -123,6 +132,7 @@ export const SAMP_MODEL: Model[] = [
   { name: 'masterId', bytLen: 1 },
   { name: 'sampLen', bytLen: 2 },
   { name: 'errorLen', bytLen: 1 },
+  { name: 'endStatusLen', bytLen: 1 },
   {
     name: 'sampList',
     type: 'list',
@@ -132,11 +142,13 @@ export const SAMP_MODEL: Model[] = [
       { name: 'channelId', bytLen: 1 },
       { name: 'workerCode', bytLen: 1 },
       { name: 'workerId', bytLen: 1 },
-      { name: 'U', bytLen: 2 },
+      { name: 'U', bytLen: 4 },
       { name: 'I', bytLen: 4, type: 'int' },
-      { name: 'endCode', bytLen: 1 },
+      { name: 'vol', bytLen: 4 },
+      { name: 'epower', bytLen: 4 },
       { name: 'errCode', bytLen: 1 },
-      { name: 'stepsId', bytLen: 2 }
+      { name: 'projectId', bytLen: 4 },
+      { name: 'loopNum', bytLen: 2 }
     ]
   },
   {
@@ -150,6 +162,18 @@ export const SAMP_MODEL: Model[] = [
       { name: 'errCode', bytLen: 1 },
       { name: 'params1', bytLen: 4 },
       { name: 'params2', bytLen: 4 }
+    ]
+  },
+  {
+    name: 'endStatusList',
+    type: 'list',
+    len: 'endStatusLen',
+    model: [
+      { name: 'slaverId', bytLen: 1 },
+      { name: 'channelId', bytLen: 1 },
+      { name: 'projectId', bytLen: 4 },
+      { name: 'workerId', bytLen: 1 },
+      { name: 'endCode', bytLen: 1 }
     ]
   }
 ]

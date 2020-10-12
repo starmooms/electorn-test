@@ -36,6 +36,7 @@
         <svg-icon class="channel-icon" icon-class="batter"></svg-icon>
       </div>
       <template v-slot:menu>
+        <a href="javascript:;" @click="changeStatus('start')">启动</a>
         <a
           href="javascript:;"
           v-for="menu in batteryCtxMenu"
@@ -46,9 +47,6 @@
         </a>
         <a href="javascript:;" @click="calEditOpen">
           局部设置
-        </a>
-        <a href="javascript:;" @click="stepEditOpen">
-          编辑工步
         </a>
       </template>
     </ContextMenu>
@@ -99,17 +97,26 @@ export default class ChannelItem extends Vue {
   }
 
   /** 改变状态 */
-  changeStatus(status) {
-    this.$emit('setChannelStatus', {
-      params: {
+  changeStatus(status: string) {
+    if (status === 'start') {
+      this.$emit('start', {
         path: this.portPath,
-        slaverId: this.slaverId,
-        channelId: this.id,
-        masterId: this.masterId,
-        status
-      },
-      isSingle: true
-    })
+        slaverIds: [this.slaverId],
+        channelIds: [this.id],
+        masterIds: [this.masterId]
+      })
+    } else {
+      this.$emit('setChannelStatus', {
+        params: {
+          path: this.portPath,
+          slaverId: this.slaverId,
+          channelId: this.id,
+          masterId: this.masterId,
+          status
+        },
+        isSingle: true
+      })
+    }
   }
 
   // /** 更新采样 */
@@ -137,17 +144,12 @@ export default class ChannelItem extends Vue {
     })
   }
 
-  getChannelMsg() {
+  getChannelMsg(): ipcReq.PortItem {
     return {
       masterId: this.masterId,
       slaverId: this.slaverId,
       channelId: this.id
     }
-  }
-
-  /** 打开工步编辑 */
-  stepEditOpen() {
-    this.$emit('stepEditOpen', this.getChannelMsg())
   }
 
   /** 打开局部设置 */

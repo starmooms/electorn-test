@@ -211,366 +211,330 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
-import { Route } from 'vue-router'
-import { getWorkStep, getChannelList } from '@/renderer/ipc/channel'
-import command from '@/renderer/command'
-import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
-import CalModal from '@/renderer/components/CalModal.vue'
-// import TrendChart from '@/renderer/components/TrendChart.vue'
-import SampChart from '@/renderer/components/SampChart.vue'
-import { deepClone } from '@/shared/utils'
-import { GET_PROTECT_FORM, PROTECT } from '@/shared/config/port'
-import { ChannelStatus } from '@/renderer/store/modules/Channel'
-import dayjs from 'dayjs'
-import { getChannelHistory, getSamp } from '@/renderer/ipc/db'
-import { formatTimeStr, stepListUtil } from '@/renderer/utils/util'
-import { RecycleScroller } from 'vue-virtual-scroller'
-import SetChannelStatus from '@/renderer/components/SetChannelStatus.vue'
+// import { Route } from 'vue-router'
+// import { getWorkStep, getChannelList } from '@/renderer/ipc/channel'
+// import command from '@/renderer/command'
+// import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
+// import CalModal from '@/renderer/components/CalModal.vue'
+// // import TrendChart from '@/renderer/components/TrendChart.vue'
+// import SampChart from '@/renderer/components/SampChart.vue'
+// import { deepClone } from '@/shared/utils'
+// import { GET_PROTECT_FORM, PROTECT } from '@/shared/config/port'
+// import { ChannelStatus } from '@/renderer/store/modules/Channel'
+// import dayjs from 'dayjs'
+// import { getChannelHistory, getSamp } from '@/renderer/ipc/db'
+// import { formatTimeStr, stepListUtil } from '@/renderer/utils/util'
+// import { RecycleScroller } from 'vue-virtual-scroller'
+// import SetChannelStatus from '@/renderer/components/SetChannelStatus.vue'
 
 @Component({
   components: {
-    SampChart,
-    StepSetModal,
-    CalModal,
-    RecycleScroller,
-    SetChannelStatus
+    // SampChart,
+    // StepSetModal,
+    // CalModal,
+    // RecycleScroller,
+    // SetChannelStatus
   }
 })
 export default class WorkerSee extends Vue {
-  public $refs!: {
-    sampChart: SampChart
-    chart: SampChart
-    recycleScroller: RecycleScroller
-    setChannelStatus: SetChannelStatus
-  }
-
-  portItem: ipcReq.PortItem | null = null
-  stepsShow = false
-  calShow = false
-  tabChannel = '0'
-  channelList: any[] = []
-  sampStop = true
-
-  // 2
-  nowStepDialog = false
-  nowStepList: any[] = []
-
-  protectList = deepClone(PROTECT)
-  protectForm = GET_PROTECT_FORM()
-  workerIdNow: number | null = null
-  workerStatus: string | null = null
-
-  sampData: Port.SampItem[] = []
-
-  tabActive = 0
-  tabList = ['1.曲线图', '2.详细数据', '3.工步查看', '4.保护参数']
-
-  history: any = null
-  historyList: any[] = []
-
-  get btnList() {
-    return ChannelStatus.statusList
-  }
-
-  get channelId() {
-    return this.portItem ? this.portItem.channelId : null
-  }
-
-  get channelData() {
-    return this.channelId !== null && ChannelStatus.channelMap
-      ? ChannelStatus.channelMap[this.portItem!.masterId][
-          this.portItem!.slaverId
-        ][this.channelId]
-      : null
-  }
-
-  get channelNowStart() {
-    return this.channelData ? this.channelData.workerStart : null
-  }
-
-  get isRun() {
-    return this.channelNowStart && this.history
-      ? this.channelNowStart === this.history.start
-      : false
-  }
-
-  @Watch('tabChannel')
-  changeTab(newValue) {
-    const newChannelId = Number(newValue)
-    if (this.portItem && this.portItem.channelId !== newChannelId) {
-      this.changeChannelId(newChannelId)
-    }
-  }
-
-  @Watch('tabActive')
-  changeTabPan(v) {
-    this.$nextTick(() => {
-      if (v === 0 && this.$refs.chart) {
-        this.$refs.chart.resize()
-      }
-      if (v === 1 && this.$refs.recycleScroller) {
-        this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
-      }
-    })
-  }
-
-  @Watch('history')
-  changeHistory() {
-    this.getSampData()
-  }
-
-  @Watch('channelData', { deep: true })
-  changeNowStart(val: Port.ChannelItem | null, old: Port.ChannelItem | null) {
-    if (val && old) {
-      if (val.id === old.id) {
-        this.getHistory(true)
-      }
-    }
-  }
-
-  scrollBottom() {
-    if (this.$refs.recycleScroller) {
-      this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
-    }
-  }
-
-  stepsTableRow({ row }) {
-    return row.id === this.workerIdNow ? 'worker-row' : ''
-  }
-
-  changeChannelId(channelId: number) {
-    if (!this.portItem) return
-    const { path, masterId, slaverId } = this.portItem
-    this.portItem.channelId = channelId
-    this.$router.push({
-      path: `/port/WorkerSee/${encodeURIComponent(
-        path
-      )}/${masterId}/${slaverId}/${channelId}`
-    })
-  }
-
-  nowStepShow() {
-    this.nowStepDialog = true
-  }
-
-  refresh() {
-    this.getSampData(true)
-    this.getWorkStep()
-  }
-
-  async setStatus(status: string) {
-    if (!this.portItem) return
-    this.$refs.setChannelStatus.changeStatus({
-      params: {
-        path: this.portItem.path,
-        slaverId: this.portItem.slaverId,
-        channelId: this.portItem.channelId,
-        masterId: this.portItem.masterId,
-        status
-      },
-      isSingle: true
-    })
-  }
-
-  calOpen() {
-    this.calShow = true
-  }
-
-  workStepsOpen() {
-    this.stepsShow = true
-  }
-
-  async getList() {
-    const data = await getChannelList({
-      type: 'slaver',
-      path: this.portItem!.path,
-      masterId: this.portItem!.masterId,
-      slaverId: this.portItem!.slaverId
-    })
-    if (data.status) {
-      this.channelList = data.data.list
-    }
-  }
-
-  /** 重置 */
-  reset() {
-    this.sampStop = true
-    this.$refs.chart.setBaseList([])
-    this.sampData = []
-    this.nowStepList = []
-    this.history = null
-  }
-
-  /** 获取工步 */
-  async getWorkStep() {
-    if (!this.portItem) return
-    const { channelId } = this.portItem!
-    const data = await getWorkStep({
-      ...this.portItem,
-      channelId: [channelId]
-    })
-    if (data.status) {
-      if (data.data.stepData && data.data.stepData[channelId]) {
-        const { protect, stepList } = data.data.stepData[channelId]
-        this.protectForm = protect
-        this.nowStepList = stepList.map(stepListUtil)
-      }
-    }
-  }
-
-  /** 获取采样 */
-  async getSampData(isRefresh = false) {
-    try {
-      if (!this.history) return
-      const { start, end } = this.history
-      const { masterId, slaverId, channelId } = this.portItem!
-      const samp = await getSamp({
-        start,
-        end,
-        masterId,
-        slaverArr: [
-          {
-            id: slaverId,
-            channel: [
-              {
-                id: channelId
-              }
-            ]
-          }
-        ]
-      })
-      if (samp.status) {
-        const sampData = samp.data?.[slaverId]?.[channelId]
-        if (sampData) {
-          let lastEnd = 0
-          if (this.sampData.length > 0) {
-            lastEnd = this.sampData[this.sampData.length - 1].createTime
-          }
-          this.sampData = sampData.map(item => {
-            item.createTimeStr = dayjs
-              .unix(item.createTime)
-              .format(formatTimeStr)
-            return item
-          })
-
-          if (this.$refs.chart) {
-            if (isRefresh) {
-              this.$refs.chart.refresh(sampData)
-              this.autoScrollEnd(lastEnd)
-            } else {
-              this.$refs.chart.setBaseList(sampData)
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      // this.sampStop = false
-    }
-  }
-
-  autoScrollEnd(lastEnd: number) {
-    if (this.$refs.recycleScroller && lastEnd) {
-      const pool = this.$refs.recycleScroller.pool
-      if (pool.length > 2) {
-        const poolEnd = pool[pool.length - 1]
-        if (poolEnd && poolEnd.item.createTime === lastEnd) {
-          this.$nextTick(() => {
-            this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
-          })
-        }
-      }
-    }
-  }
-
-  /** 获取历史数据 */
-  async getHistory(isRefresh = false) {
-    const data = await getChannelHistory({
-      masterId: this.portItem!.masterId,
-      slaverId: this.portItem!.slaverId,
-      channelId: this.portItem!.channelId
-    })
-    if (data.status) {
-      this.historyList = data.data.map(item => {
-        const val = JSON.parse(item)
-        const start = dayjs.unix(val.start).format(formatTimeStr)
-        const end = val.end
-          ? dayjs.unix(val.end).format(formatTimeStr)
-          : '未知结束'
-        val.value = `${start} - ${end}`
-        return val
-      })
-
-      // 当前有进行中在工步直接显示
-      if (
-        this.history === null &&
-        this.historyList.length > 0 &&
-        this.channelData
-      ) {
-        const first = this.historyList[0]
-        if (first.start === this.channelData.workerStart) {
-          this.history = first
-        }
-      } else if (isRefresh && this.history) {
-        const history = this.historyList.find(item => {
-          return item.start === this.history.start
-        })
-        this.$nextTick(() => {
-          this.history = history || null
-        })
-      }
-    }
-  }
-
-  // setCharts() {
-  //   if (!this.portItem) return
-  //   const { path, masterId, slaverId } = this.portItem
-  //   command.on({
-  //     eventName: `/port/translate/${encodeURIComponent(
-  //       path
-  //     )}/${masterId}/${slaverId}`,
-  //     onEmit: (data: any) => {
-  //       if (this.sampStop) return
-  //       const item = data.list[this.portItem!.channelId + slaverId * 8]
-  //       if (item) {
-  //         this.workerIdNow = item.workerId
-  //         this.workerStatus = item.workerStatus.name
-
-  //         if (item.workerCode !== '00') {
-  //           this.addSampData(item)
-  //           this.$refs.chart.update([item])
-  //         }
-  //       }
-  //     },
-  //     vm: this
+  // public $refs!: {
+  //   sampChart: SampChart
+  //   chart: SampChart
+  //   recycleScroller: RecycleScroller
+  //   setChannelStatus: SetChannelStatus
+  // }
+  // portItem: ipcReq.PortItem | null = null
+  // stepsShow = false
+  // calShow = false
+  // tabChannel = '0'
+  // channelList: any[] = []
+  // sampStop = true
+  // // 2
+  // nowStepDialog = false
+  // nowStepList: any[] = []
+  // protectList = deepClone(PROTECT)
+  // protectForm = GET_PROTECT_FORM()
+  // workerIdNow: number | null = null
+  // workerStatus: string | null = null
+  // sampData: Port.SampItem[] = []
+  // tabActive = 0
+  // tabList = ['1.曲线图', '2.详细数据', '3.工步查看', '4.保护参数']
+  // history: any = null
+  // historyList: any[] = []
+  // get btnList() {
+  //   return ChannelStatus.statusList
+  // }
+  // get channelId() {
+  //   return this.portItem ? this.portItem.channelId : null
+  // }
+  // get channelData() {
+  //   return this.channelId !== null && ChannelStatus.channelMap
+  //     ? ChannelStatus.channelMap[this.portItem!.masterId][
+  //         this.portItem!.slaverId
+  //       ][this.channelId]
+  //     : null
+  // }
+  // get channelNowStart() {
+  //   return this.channelData ? this.channelData.workerStart : null
+  // }
+  // get isRun() {
+  //   return this.channelNowStart && this.history
+  //     ? this.channelNowStart === this.history.start
+  //     : false
+  // }
+  // @Watch('tabChannel')
+  // changeTab(newValue) {
+  //   const newChannelId = Number(newValue)
+  //   if (this.portItem && this.portItem.channelId !== newChannelId) {
+  //     this.changeChannelId(newChannelId)
+  //   }
+  // }
+  // @Watch('tabActive')
+  // changeTabPan(v) {
+  //   this.$nextTick(() => {
+  //     if (v === 0 && this.$refs.chart) {
+  //       this.$refs.chart.resize()
+  //     }
+  //     if (v === 1 && this.$refs.recycleScroller) {
+  //       this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
+  //     }
   //   })
   // }
-
-  init() {
-    this.reset()
-    this.getWorkStep()
-    this.getHistory()
-  }
-
-  mounted() {
-    this.portItem = {
-      path: this.$route.params.path,
-      masterId: Number(this.$route.params.masterId),
-      slaverId: Number(this.$route.params.slaverId),
-      channelId: Number(this.$route.params.channelId)
-    }
-    this.tabChannel = this.$route.params.channelId
-    this.getList()
-    this.$nextTick(() => {
-      this.init()
-    })
-  }
-
-  beforeRouteUpdate(to: Route, from: Route, next: Function) {
-    this.init()
-    next()
-  }
+  // @Watch('history')
+  // changeHistory() {
+  //   this.getSampData()
+  // }
+  // @Watch('channelData', { deep: true })
+  // changeNowStart(val: Port.ChannelItem | null, old: Port.ChannelItem | null) {
+  //   if (val && old) {
+  //     if (val.id === old.id) {
+  //       this.getHistory(true)
+  //     }
+  //   }
+  // }
+  // scrollBottom() {
+  //   if (this.$refs.recycleScroller) {
+  //     this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
+  //   }
+  // }
+  // stepsTableRow({ row }) {
+  //   return row.id === this.workerIdNow ? 'worker-row' : ''
+  // }
+  // changeChannelId(channelId: number) {
+  //   if (!this.portItem) return
+  //   const { masterId, slaverId } = this.portItem
+  //   this.portItem.channelId = channelId
+  //   this.$router.push({
+  //     path: `/port/WorkerSee/${encodeURIComponent(
+  //       path
+  //     )}/${masterId}/${slaverId}/${channelId}`
+  //   })
+  // }
+  // nowStepShow() {
+  //   this.nowStepDialog = true
+  // }
+  // refresh() {
+  //   this.getSampData(true)
+  //   this.getWorkStep()
+  // }
+  // async setStatus(status: string) {
+  //   if (!this.portItem) return
+  //   this.$refs.setChannelStatus.changeStatus({
+  //     params: {
+  //       // path: this.portItem.path,
+  //       slaverId: this.portItem.slaverId,
+  //       channelId: this.portItem.channelId,
+  //       masterId: this.portItem.masterId,
+  //       status
+  //     },
+  //     isSingle: true
+  //   })
+  // }
+  // calOpen() {
+  //   this.calShow = true
+  // }
+  // workStepsOpen() {
+  //   this.stepsShow = true
+  // }
+  // async getList() {
+  //   const data = await getChannelList({
+  //     type: 'slaver',
+  //     path: this.portItem!.path,
+  //     masterId: this.portItem!.masterId,
+  //     slaverId: this.portItem!.slaverId
+  //   })
+  //   if (data.status) {
+  //     this.channelList = data.data.list
+  //   }
+  // }
+  // /** 重置 */
+  // reset() {
+  //   this.sampStop = true
+  //   this.$refs.chart.setBaseList([])
+  //   this.sampData = []
+  //   this.nowStepList = []
+  //   this.history = null
+  // }
+  // /** 获取工步 */
+  // async getWorkStep() {
+  //   if (!this.portItem) return
+  //   const { channelId } = this.portItem!
+  //   const data = await getWorkStep({
+  //     ...this.portItem,
+  //     channelId: [channelId]
+  //   })
+  //   if (data.status) {
+  //     if (data.data.stepData && data.data.stepData[channelId]) {
+  //       const { protect, stepList } = data.data.stepData[channelId]
+  //       this.protectForm = protect
+  //       this.nowStepList = stepList.map(stepListUtil)
+  //     }
+  //   }
+  // }
+  // /** 获取采样 */
+  // async getSampData(isRefresh = false) {
+  //   try {
+  //     if (!this.history) return
+  //     const { start, end } = this.history
+  //     const { masterId, slaverId, channelId } = this.portItem!
+  //     const samp = await getSamp({
+  //       start,
+  //       end,
+  //       masterId,
+  //       slaverArr: [
+  //         {
+  //           id: slaverId,
+  //           channel: [
+  //             {
+  //               id: channelId
+  //             }
+  //           ]
+  //         }
+  //       ]
+  //     })
+  //     if (samp.status) {
+  //       const sampData = samp.data?.[slaverId]?.[channelId]
+  //       if (sampData) {
+  //         let lastEnd = 0
+  //         if (this.sampData.length > 0) {
+  //           lastEnd = this.sampData[this.sampData.length - 1].createTime
+  //         }
+  //         this.sampData = sampData.map(item => {
+  //           item.createTimeStr = dayjs
+  //             .unix(item.createTime)
+  //             .format(formatTimeStr)
+  //           return item
+  //         })
+  //         if (this.$refs.chart) {
+  //           if (isRefresh) {
+  //             this.$refs.chart.refresh(sampData)
+  //             this.autoScrollEnd(lastEnd)
+  //           } else {
+  //             this.$refs.chart.setBaseList(sampData)
+  //           }
+  //         }
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error(err)
+  //   } finally {
+  //     // this.sampStop = false
+  //   }
+  // }
+  // autoScrollEnd(lastEnd: number) {
+  //   if (this.$refs.recycleScroller && lastEnd) {
+  //     const pool = this.$refs.recycleScroller.pool
+  //     if (pool.length > 2) {
+  //       const poolEnd = pool[pool.length - 1]
+  //       if (poolEnd && poolEnd.item.createTime === lastEnd) {
+  //         this.$nextTick(() => {
+  //           this.$refs.recycleScroller.scrollToItem(this.sampData.length - 1)
+  //         })
+  //       }
+  //     }
+  //   }
+  // }
+  // /** 获取历史数据 */
+  // async getHistory(isRefresh = false) {
+  //   const data = await getChannelHistory({
+  //     masterId: this.portItem!.masterId,
+  //     slaverId: this.portItem!.slaverId,
+  //     channelId: this.portItem!.channelId
+  //   })
+  //   if (data.status) {
+  //     this.historyList = data.data.map(item => {
+  //       const val = JSON.parse(item)
+  //       const start = dayjs.unix(val.start).format(formatTimeStr)
+  //       const end = val.end
+  //         ? dayjs.unix(val.end).format(formatTimeStr)
+  //         : '未知结束'
+  //       val.value = `${start} - ${end}`
+  //       return val
+  //     })
+  //     // 当前有进行中在工步直接显示
+  //     if (
+  //       this.history === null &&
+  //       this.historyList.length > 0 &&
+  //       this.channelData
+  //     ) {
+  //       const first = this.historyList[0]
+  //       if (first.start === this.channelData.workerStart) {
+  //         this.history = first
+  //       }
+  //     } else if (isRefresh && this.history) {
+  //       const history = this.historyList.find(item => {
+  //         return item.start === this.history.start
+  //       })
+  //       this.$nextTick(() => {
+  //         this.history = history || null
+  //       })
+  //     }
+  //   }
+  // }
+  // // setCharts() {
+  // //   if (!this.portItem) return
+  // //   const { path, masterId, slaverId } = this.portItem
+  // //   command.on({
+  // //     eventName: `/port/translate/${encodeURIComponent(
+  // //       path
+  // //     )}/${masterId}/${slaverId}`,
+  // //     onEmit: (data: any) => {
+  // //       if (this.sampStop) return
+  // //       const item = data.list[this.portItem!.channelId + slaverId * 8]
+  // //       if (item) {
+  // //         this.workerIdNow = item.workerId
+  // //         this.workerStatus = item.workerStatus.name
+  // //         if (item.workerCode !== '00') {
+  // //           this.addSampData(item)
+  // //           this.$refs.chart.update([item])
+  // //         }
+  // //       }
+  // //     },
+  // //     vm: this
+  // //   })
+  // // }
+  // init() {
+  //   this.reset()
+  //   this.getWorkStep()
+  //   this.getHistory()
+  // }
+  // mounted() {
+  //   this.portItem = {
+  //     // path: this.$route.params.path,
+  //     masterId: Number(this.$route.params.masterId),
+  //     slaverId: Number(this.$route.params.slaverId),
+  //     channelId: Number(this.$route.params.channelId)
+  //   }
+  //   this.tabChannel = this.$route.params.channelId
+  //   this.getList()
+  //   this.$nextTick(() => {
+  //     this.init()
+  //   })
+  // }
+  // beforeRouteUpdate(to: Route, from: Route, next: Function) {
+  //   this.init()
+  //   next()
+  // }
 }
 </script>
 

@@ -8,7 +8,6 @@ Vue.use(VueRouter)
 const routes: Array<RouteConfig> = [
   {
     path: '/',
-    name: 'Main',
     component: Main,
     children: [
       {
@@ -33,15 +32,36 @@ const routes: Array<RouteConfig> = [
     name: 'Default',
     component: Default,
     children: [
+      // {
+      //   path: '/port/WorkerSee/:path/:masterId/:slaverId/:channelId',
+      //   name: 'WorkerSee',
+      //   component: () => import('@/renderer/views/WorkerSee/index.vue')
+      // },
+      // {
+      //   path: '/port/SlaverTrend/:path/:masterId/:slaverId',
+      //   name: 'SlaverTrend',
+      //   component: () => import('@/renderer/views/SlaverTrend.vue')
+      // },
       {
-        path: '/port/WorkerSee/:path/:masterId/:slaverId/:channelId',
-        name: 'WorkerSee',
-        component: () => import('@/renderer/views/WorkerSee/index.vue')
+        path: '/history/:filePath',
+        name: 'History',
+        props: {
+          isHistory: true
+        },
+        component: () => import('@/renderer/views/History/index.vue')
       },
       {
-        path: '/port/SlaverTrend/:path/:masterId/:slaverId',
-        name: 'SlaverTrend',
-        component: () => import('@/renderer/views/SlaverTrend.vue')
+        path: '/nowChannel/:masterId/:slaverId/:channelId',
+        name: 'nowChannel',
+        props: {
+          isHistory: false
+        },
+        component: () => import('@/renderer/views/History/index.vue')
+      },
+      {
+        path: '/separat',
+        name: 'Separat',
+        component: () => import('@/renderer/views/Separat/index.vue')
       }
     ]
   }

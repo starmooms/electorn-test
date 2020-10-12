@@ -7,8 +7,10 @@ interface Opts extends TransformOptions {
 
 export default class TransfromParser extends Transform {
   buffer = Buffer.alloc(0)
-  dataLen = 0
   delimiter: Buffer
+  startChar = Buffer.from('68', 'hex')
+  lenPosition = 10 // 数据域长度位置
+  otherLen = 18 // 除数据域其他字节长度
 
   constructor(options: Opts) {
     super(options)
@@ -26,25 +28,43 @@ export default class TransfromParser extends Transform {
 
   _transform(chunk, encoding, cb) {
     let data = Buffer.concat([this.buffer, chunk])
-    let canWhile = true
+    let end = -1
     logger.info('_transform', chunk.toString('hex'))
-    while (data.indexOf(this.delimiter) !== -1 && canWhile) {
-      const len = data.readInt16BE(10) + 18 // 数据域长度 + 其他数据位长度
-      if (data.length >= len) {
-        this.push(data.slice(0, len))
-        data = data.slice(len)
-      } else {
-        canWhile = false // 存在符合的结束符，但按数据域读取读取buf，buf字节不够
+
+    while ((end = data.indexOf(this.delimiter)) !== -1) {
+      const start = data.indexOf(this.startChar)
+
+      if (start >= 0 && start < end) {
+        const len = data.readUInt16BE(start + this.lenPosition) + this.otherLen // 数据域长度 + 其他数据位长度
+        if (data.length >= len) {
+          const endIndex = start + len
+          const result = data.slice(start, endIndex)
+
+          // 判断结束符位置是否正确
+          if (
+            result.lastIndexOf(this.delimiter) ===
+            len - this.delimiter.length
+          ) {
+            this.push(result)
+            data = data.slice(endIndex)
+            continue
+          }
+        }
       }
+
+      // 如果读取到结束帧，但结果不匹配，清除结束帧和前面的内容
+      const flushEnd = end + this.delimiter.length
+      data = data.slice(flushEnd)
     }
+
     this.buffer = data
     cb()
   }
 
   _flush(cb) {
+    logger.info('Parset _flush', this.buffer)
     this.push(this.buffer)
     this.buffer = Buffer.alloc(0)
-    this.dataLen = 0
     cb()
   }
 }

@@ -168,7 +168,7 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Route } from 'vue-router'
-import { getWorkStep, getChannelList } from '@/renderer/ipc/channel'
+import { getWorkStep } from '@/renderer/ipc/channel'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
 import CalModal from '@/renderer/components/CalModal.vue'
 import SampChart from '@/renderer/components/SampChart.vue'

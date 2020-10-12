@@ -6,11 +6,24 @@
           {{ readTranslate ? '关闭采样' : '打开采样' }}
         </el-button>
         <el-button type="primary" @click="stepsBatchOpen">
-          机柜批量编辑工步
+          机柜批量启动
         </el-button>
         <el-button type="primary" @click="openBatch">
           机柜批量操作
         </el-button>
+        <el-button type="primary" @click="openSeparat">
+          容量分选
+        </el-button>
+        <el-button type="primary" @click="sysLogOpen">
+          查看系统日志
+        </el-button>
+        <div class="select-file-btn">
+          <file-select openType="file" @change="importHistory">
+            <el-button type="primary">
+              导入外部文件
+            </el-button>
+          </file-select>
+        </div>
       </el-form>
 
       <div class="color-box">
@@ -32,7 +45,7 @@
             <el-card class="box-card" shadow="never">
               <div slot="header" class="box-card-header">
                 <span>{{ activeMaster.name }}</span>
-                <el-dropdown>
+                <!-- <el-dropdown>
                   <el-button type="text">
                     操作
                     <i class="el-icon-arrow-down el-icon--right"></i>
@@ -40,7 +53,7 @@
                   <el-dropdown-menu slot="dropdown">
                     <el-dropdown-item>批量操作从控</el-dropdown-item>
                   </el-dropdown-menu>
-                </el-dropdown>
+                </el-dropdown> -->
               </div>
               <ul class="slaver-list">
                 <li
@@ -59,6 +72,7 @@
                         :channel-data="channel"
                         :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
                         @stepEditOpen="stepsSetShow"
+                        @start="channelStart"
                         @calEditOpen="calOpen"
                         @setChannelStatus="setChannelStatus"
                       ></channel-item>
@@ -85,6 +99,7 @@
         :show.sync="stepsShow"
         :showItem="stepsShowItem"
         :isBatch="stepsBatch"
+        @openSysLog="sysLogOpen"
       ></StepSetModal>
 
       <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
@@ -95,7 +110,11 @@
         @setChannelStatus="setChannelStatus"
       ></BatchModal>
 
-      <SetChannelStatus ref="setChannelStatus"></SetChannelStatus>
+      <SetChannelStatus
+        ref="setChannelStatus"
+        @openSysLog="sysLogOpen"
+      ></SetChannelStatus>
+      <sys-log :show.sync="sysLogShow"></sys-log>
     </div>
     <div v-else>请先设置串口</div>
   </div>
@@ -112,17 +131,21 @@ import BatchModal from './components/BatchModal.vue'
 import SlaverDetails from './components/SlaverDetails/index.vue'
 import SetChannelStatus from '@/renderer/components/SetChannelStatus.vue'
 import ChannelItem from './components/ChannelItem.vue'
+import FileSelect from '@/renderer/components/FileSelect.vue'
+import SysLog from '@/renderer/components/SysLog/index.vue'
 
 @Component({
   name: 'Home',
   components: {
     StepSetModal,
+    FileSelect,
     CalModal,
     BatchModal,
     SlaverDetails,
     SelectMaster,
     ChannelItem,
-    SetChannelStatus
+    SetChannelStatus,
+    SysLog
   }
 })
 export default class Home extends Vue {
@@ -145,17 +168,15 @@ export default class Home extends Vue {
   }
 
   calShow = false
-  calShowItem: any = {
-    masterId: null,
-    slaverId: null,
-    channelId: null
-  }
+  calShowItem: ipcReq.CalOpts | null = null
 
   batchShow = false
 
   activeMasterId: null | number = null
   trendUnRegister!: any
   showSlaverDetail: null | number = null
+
+  sysLogShow = false
 
   get batteryList() {
     return ChannelStatus.list
@@ -194,21 +215,28 @@ export default class Home extends Vue {
     this.stepsShow = true
   }
 
+  channelStart(data: any) {
+    this.stepsShowItem = data
+    this.stepsBatch = false
+    this.stepsShow = true
+  }
+
   stepsBatchOpen() {
     this.stepsBatch = true
     this.stepsShow = true
   }
 
-  calOpen(channelMsg: any) {
-    this.calShowItem = {
-      path: this.portPath,
-      ...channelMsg
-    }
+  calOpen(channelMsg: ipcReq.CalOpts) {
+    this.calShowItem = channelMsg
     this.calShow = true
   }
 
   openBatch() {
     this.batchShow = true
+  }
+
+  sysLogOpen() {
+    this.sysLogShow = true
   }
 
   setChannelStatus(data: any) {
@@ -223,6 +251,21 @@ export default class Home extends Vue {
     await SettingStatus.toggleReadTranslate()
   }
 
+  importHistory(filePath: string) {
+    this.$command.send('/createdWin', {
+      type: 'history',
+      data: {
+        filePath
+      }
+    })
+  }
+
+  openSeparat() {
+    this.$command.send('/createdWin', {
+      type: 'separat'
+    })
+  }
+
   trendChange() {
     if (this.trendUnRegister) {
       this.trendUnRegister()
@@ -232,9 +275,7 @@ export default class Home extends Vue {
     }
 
     const { unRegister } = this.$command.on({
-      eventName: `/port/translate/${encodeURIComponent(this.portPath)}/${
-        this.activeMasterId
-      }/0`,
+      eventName: `/port/translate/${this.activeMasterId}`,
       onEmit: data => {
         data.list.forEach(item => {
           const slaver = this.activeMaster?.slaverList[item.slaverId]
@@ -341,5 +382,10 @@ export default class Home extends Vue {
       padding: 0;
     }
   }
+}
+
+.select-file-btn {
+  display: inline-block;
+  margin-left: 10px;
 }
 </style>

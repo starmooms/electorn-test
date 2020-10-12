@@ -59,6 +59,10 @@ export default class BatchModal extends Vue {
     return SettingStatus.portPath
   }
 
+  close() {
+    this.diolog = false
+  }
+
   async setStatus(status: string) {
     let msg = ''
     if (this.masterIdList.length === 0) {
@@ -80,13 +84,13 @@ export default class BatchModal extends Vue {
         status
       }
     })
+    this.close()
   }
 
   @Watch('diolog')
   changeShow(v) {
     if (v === true && this.$refs.SelectChannel) {
       this.$refs.SelectChannel.reset()
-      this.masterIdList = []
     }
   }
 }

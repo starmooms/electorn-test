@@ -98,11 +98,14 @@ export default class SetChannelStatus extends Vue {
 
   /** 发送通道状态 */
   private async setStatus(params: any) {
-    const data = await setChannelStatus(params)
-    if (data.status) {
-      Vue.prototype.$message.success(`成功`)
-      this.close()
-    }
+    setChannelStatus(params)
+    this.close()
+    this.$emit('openSysLog')
+    // const data = await setChannelStatus(params)
+    // if (data.status) {
+    //   Vue.prototype.$message.success(`成功`)
+    //   this.close()
+    // }
   }
 
   async changeStatus(data: any) {
@@ -111,7 +114,7 @@ export default class SetChannelStatus extends Vue {
       if (isSingle) {
         const { masterId, slaverId, channelId } = params
         const getStepData = await getWorkStep({
-          path: params.path,
+          // path: params.path,
           masterId: masterId,
           slaverId: slaverId,
           channelId: [channelId]

@@ -58,6 +58,7 @@ export default class HistoryDb extends HistoryDbCom {
         "startId" INTEGER NOT NULL,
         "stepList" TEXT NOT NULL,
         "protect" TEXT NOT NULL,
+        "features" TEXT NOT NULL,
         "dataSave" TEXT NOT NULL,
         "createTime" INTEGER NOT NULL
       );`
@@ -95,7 +96,8 @@ export default class HistoryDb extends HistoryDbCom {
         "I" REAL NOT NULL,
         "vol" REAL NOT NULL,
         "epower" REAL NOT NULL,
-        "loopNum" REAL NOT NULL,
+        "stepTime" REAL NOT NULL,
+        "loopNum" INTEGER NOT NULL,
         "stepId" INTEGER NOT NULL,
         "workCode" TEXT NOT NULL,
         "errorCode" TEXT NOT NULL,
@@ -120,6 +122,7 @@ export default class HistoryDb extends HistoryDbCom {
     {
       stepsList,
       protect,
+      features,
       dataSave,
       startId,
       masterIds,
@@ -139,12 +142,14 @@ export default class HistoryDb extends HistoryDbCom {
       ${startId},
       $stepsList,
       $protect,
+      $features,
       $dataSave,
       ${now}
     );`
     await this.sqlite.run(insertTeplSql, {
       $stepsList: JSON.stringify(stepsList),
       $protect: JSON.stringify(protect),
+      $features: JSON.stringify(features),
       $dataSave: JSON.stringify(dataSave)
     })
 
@@ -229,7 +234,7 @@ export default class HistoryDb extends HistoryDbCom {
     let sql = ''
     // 添加采样记录
     if (sampList.length > 0) {
-      sql += `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, loopNum, stepId, workCode, errorCode, createTime) VALUES`
+      sql += `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepTime, loopNum, stepId, workCode, errorCode, createTime) VALUES`
       sampList.forEach(item => {
         sql += `(
             ${item.masterId},
@@ -239,8 +244,9 @@ export default class HistoryDb extends HistoryDbCom {
             ${item.I},
             ${item.vol},
             ${item.epower},
+            ${item.stepTime},
             ${item.loopNum},
-            ${item.workerId},
+            ${item.stepId},
             '${item.workerCode}',
             '${item.errorCode}',
             ${item.createTime}
@@ -254,7 +260,7 @@ export default class HistoryDb extends HistoryDbCom {
       endStatusList.forEach(item => {
         sql += `UPDATE ${sampData}
         SET endCode='${item.endCode}'
-        WHERE id IN (SELECT id from ${sampData} WHERE masterId=${item.masterId} AND slaverId=${item.slaverId} AND channelId=${item.channelId} AND stepId=${item.workerId} ORDER BY id DESC LIMIT 1);`
+        WHERE id IN (SELECT id from ${sampData} WHERE masterId=${item.masterId} AND slaverId=${item.slaverId} AND channelId=${item.channelId} AND stepId=${item.stepId} ORDER BY id DESC LIMIT 1);`
       })
     }
 

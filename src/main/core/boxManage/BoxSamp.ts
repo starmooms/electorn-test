@@ -79,6 +79,27 @@ export default class BoxSamp {
     return writeModel
   }
 
+  /** 读通用采样工步数据 */
+  getStepData(bufModel: BufModel) {
+    return {
+      workerCode: bufModel.readHex('workerCode'),
+      stepId: bufModel.read('stepId'),
+      U: bufModel.read('U') / 10,
+      I: bufModel.read('I') / 10,
+      vol: bufModel.read('vol') / 10,
+      epower: bufModel.read('epower') / 10
+    }
+  }
+
+  /** 读通用采样状态数据 */
+  getStatusData(bufModel: BufModel) {
+    return {
+      projectId: bufModel.read('projectId'),
+      loopNum: bufModel.read('loopNum'),
+      stepTime: bufModel.read('stepTime') / 10
+    }
+  }
+
   /** 发送读采样请求 */
   async readSamp() {
     const masterId = 0
@@ -159,7 +180,9 @@ export default class BoxSamp {
           projectId,
           sampList: [],
           changeStatusList: [],
-          endStatusList: []
+          endList: [],
+          startList: [],
+          featureList: []
         }
         projectSamp[projectId] = sampItem
       }
@@ -216,14 +239,8 @@ export default class BoxSamp {
         masterId: masterId,
         slaverId: readItem.read('slaverId'),
         channelId: readItem.read('channelId'),
-        workerCode: workerCode,
-        workerId: readItem.read('workerId'),
-        U: readItem.read('U') / 10,
-        I: readItem.read('I') / 10,
-        vol: readItem.read('vol') / 10,
-        epower: readItem.read('epower') / 10,
-        projectId: readItem.read('projectId'),
-        loopNum: readItem.read('loopNum'),
+        ...this.getStepData(readItem),
+        ...this.getStatusData(readItem),
         errorCode: errCode,
         errorMsg: errCode !== '00' ? CHANNEL_ERR_STATUS[errCode] : '',
         workerStatus: CHANNEL_STATUS[workerCode] || this.parent.noWorkerStatus,
@@ -322,21 +339,62 @@ export default class BoxSamp {
     }
   }
 
+  /** 读采样开始状态 */
+  readStartList(
+    masterId: number,
+    readModel: BufModel,
+    getProjectSamp: Port.GetProjectSamp
+  ) {
+    readModel.ecahList('startList', readItem => {
+      const projectId = readItem.read('projectId')
+      const start = getProjectSamp(projectId, 'startList')
+      start.push({
+        masterId,
+        slaverId: readItem.read('slaverId'),
+        channelId: readItem.read('channelId'),
+        stepId: readItem.read('stepId'),
+        workerCode: readItem.readHex('workerCode'),
+        U: readItem.read('U') / 10
+      })
+    })
+  }
+
   /** 读采样返回的结束状态列表 */
   readEndStatusList(
     masterId: number,
     readModel: BufModel,
     getProjectSamp: Port.GetProjectSamp
   ) {
-    readModel.ecahList('endStatusList', readItem => {
+    readModel.ecahList('errorList', readItem => {
       const projectId = readItem.read('projectId')
-      const saveSampEnd = getProjectSamp(projectId, 'endStatusList')
-      saveSampEnd.push({
-        masterId: masterId,
+      const end = getProjectSamp(projectId, 'endList')
+      end.push({
+        masterId,
         slaverId: readItem.read('slaverId'),
         channelId: readItem.read('channelId'),
-        workerId: readItem.read('workerId'),
-        endCode: readItem.readHex('endCode')
+        ...this.getStepData(readItem),
+        ...this.getStatusData(readItem),
+        endCode: readItem.read('endCode')
+      })
+    })
+  }
+
+  /** 读采样特征状态 */
+  readFeatureList(
+    masterId: number,
+    readModel: BufModel,
+    getProjectSamp: Port.GetProjectSamp
+  ) {
+    readModel.ecahList('featureList', readItem => {
+      const projectId = readItem.read('projectId')
+      const feature = getProjectSamp(projectId, 'featureList')
+      feature.push({
+        masterId,
+        slaverId: readItem.read('slaverId'),
+        channelId: readItem.read('channelId'),
+        ...this.getStepData(readItem),
+        ...this.getStatusData(readItem),
+        featureType: readItem.read('featureType')
       })
     })
   }

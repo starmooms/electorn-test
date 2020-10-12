@@ -82,6 +82,15 @@ declare namespace ipcReq {
     I: StepDataSaveItem
   }
 
+  /** 特征电压 */
+  interface Features {
+    v1: number | null
+    v2: number | null
+    v3: number | null
+    v4: number | null
+    v5: number | null
+  }
+
   /** 写工步并启动，传递参数 */
   interface WriteSteps {
     masterIds: number[]
@@ -97,6 +106,7 @@ declare namespace ipcReq {
       TimeMin: ProtectItem
       warnVal: ProtectItem
     }
+    features: Features
     dataSave: StepsDataSave
     startId: number
     filePath: string

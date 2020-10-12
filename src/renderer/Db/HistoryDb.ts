@@ -9,7 +9,7 @@ export default class HistoryDb extends HistoryDbCom {
   async getSampData(params) {
     const { sampData } = this.tables
     const data = await this.sqlite.all(
-      `SELECT * FROM ${sampData} WHERE masterId=$masterId and slaverId=$slaverId and channelId=$channelId`,
+      `SELECT * FROM ${sampData} WHERE masterId=$masterId and slaverId=$slaverId and channelId=$channelId ORDER BY loopNum, stepId ASC`,
       params
     )
     return data

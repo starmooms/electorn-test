@@ -53,6 +53,9 @@ export default class BoxStatus {
       PROTECT.forEach(item => {
         writeItem.writer(item.type, data.protect[item.type] || 0)
       })
+      typedKeys(data.features).forEach(vKey => {
+        writeItem.writer(`feature_${vKey}`, data.features[vKey] || 0)
+      })
     })
     writerModel.ecahList('workerList', (writeItem, index) => {
       const item = data.stepsList[index]

@@ -49,6 +49,20 @@
           </el-form>
         </div>
 
+        <div class="data-feat-box">
+          <el-divider content-position="left">特征电压参数</el-divider>
+          <el-form class="data-feat-form" :inline="true" v-if="features">
+            <el-form-item
+              class="feat-form-item"
+              v-for="item in featuresList"
+              :key="item.type"
+              :label="item.label"
+            >
+              <el-input v-model.number="features[item.type]"></el-input>
+            </el-form-item>
+          </el-form>
+        </div>
+
         <div class="steps-edit-box">
           <el-divider content-position="left">工步编辑</el-divider>
           <div class="step-edit-set-box">
@@ -223,13 +237,24 @@ export default class StepSetModal extends Vue {
   ]
   startId: null | number = 1
 
+  // 特征电压参数
+  features: ipcReq.Features | null = null
+  featuresList = [
+    { label: '#1(mV)', type: 'v1' },
+    { label: '#2(mV)', type: 'v2' },
+    { label: '#3(mV)', type: 'v3' },
+    { label: '#4(mV)', type: 'v4' },
+    { label: '#5(mV)', type: 'v5' }
+  ]
+
   filePath = ''
 
   get tplData() {
     return {
       stepsList: this.stepsList,
       protect: this.protect,
-      dataSave: this.dataSave
+      dataSave: this.dataSave,
+      features: this.features
     }
   }
 
@@ -238,6 +263,9 @@ export default class StepSetModal extends Vue {
     this.protect = tpl.protect
     if (tpl.dataSave) {
       this.dataSave = tpl.dataSave
+    }
+    if (tpl.features) {
+      this.features = tpl.features
     }
   }
 
@@ -327,7 +355,8 @@ export default class StepSetModal extends Vue {
         protect: this.protect,
         dataSave: this.dataSave,
         startId: startId,
-        filePath: this.filePath
+        filePath: this.filePath,
+        features: this.features!
       })
       this.closeModal()
       this.$emit('openSysLog')
@@ -368,6 +397,13 @@ export default class StepSetModal extends Vue {
         enable: false,
         value: null
       }
+    }
+    this.features = {
+      v1: null,
+      v2: null,
+      v3: null,
+      v4: null,
+      v5: null
     }
     this.stepsList = []
     this.protect = GET_PROTECT_FORM()
@@ -505,6 +541,20 @@ export default class StepSetModal extends Vue {
           width: 36px;
           padding: 0 4px;
         }
+      }
+    }
+  }
+}
+
+.data-feat-box {
+  .data-feat-form {
+    display: flex;
+    .feat-form-item {
+      margin-right: 14px;
+    }
+    ::v-deep {
+      .el-form-item__content {
+        width: 80px;
       }
     }
   }

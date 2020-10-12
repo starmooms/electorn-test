@@ -43,7 +43,13 @@ export const WORKER_STEP_MODEL: Model[] = [
       { name: 'UMax', bytLen: 2 }, // 报警上限电压(mV)
       { name: 'UMin', bytLen: 2 }, // 报警下限电压(mV)
       { name: 'TimeMin', bytLen: 2 }, // 报警下限起效时间(min)
-      { name: 'warnVal', bytLen: 4 } // 报警容量(mAh)
+      { name: 'warnVal', bytLen: 4 }, // 报警容量(mAh)
+      // 特征电压参数
+      { name: 'feature_v1', bytLen: 2 },
+      { name: 'feature_v2', bytLen: 2 },
+      { name: 'feature_v3', bytLen: 2 },
+      { name: 'feature_v4', bytLen: 2 },
+      { name: 'feature_v5', bytLen: 2 }
     ]
   },
   {
@@ -126,13 +132,48 @@ export const CAL_MODEL: Model[] = [
   }
 ]
 
+declare type ModelObj = {
+  [key: string]: BufModelT.OrginModel
+}
+/** 采样通用参数 */
+const SAMP_COM_PAR = {
+  workerCode: { name: 'workerCode', bytLen: 1 },
+  stepId: { name: 'stepId', bytLen: 1 },
+  U: { name: 'U', bytLen: 4 },
+  I: { name: 'I', bytLen: 4, type: 'int' },
+  vol: { name: 'vol', bytLen: 4 },
+  epower: { name: 'epower', bytLen: 4 },
+  projectId: { name: 'projectId', bytLen: 4 },
+  loopNum: { name: 'loopNum', bytLen: 2 },
+  stepTime: { name: 'stepTime', bytLen: 4 }
+}
+
+/** 采样工步数据 */
+const SAMP_COM_PAR_STEP: BufModelT.OrginModel[] = [
+  SAMP_COM_PAR.workerCode,
+  SAMP_COM_PAR.stepId,
+  SAMP_COM_PAR.U,
+  SAMP_COM_PAR.I,
+  SAMP_COM_PAR.vol,
+  SAMP_COM_PAR.epower
+]
+
+/** 采样状态数据 */
+const SAMP_COM_PAR_STATUS: BufModelT.OrginModel[] = [
+  SAMP_COM_PAR.projectId,
+  SAMP_COM_PAR.loopNum,
+  SAMP_COM_PAR.stepTime
+]
+
 /** 采样 */
 export const SAMP_MODEL: Model[] = [
   { name: 'version', bytLen: 1 },
   { name: 'masterId', bytLen: 1 },
   { name: 'sampLen', bytLen: 2 },
   { name: 'errorLen', bytLen: 1 },
+  { name: 'startLen', bytLen: 1 },
   { name: 'endStatusLen', bytLen: 1 },
+  { name: 'featureLen', bytLen: 1 },
   {
     name: 'sampList',
     type: 'list',
@@ -140,15 +181,9 @@ export const SAMP_MODEL: Model[] = [
     model: [
       { name: 'slaverId', bytLen: 1 },
       { name: 'channelId', bytLen: 1 },
-      { name: 'workerCode', bytLen: 1 },
-      { name: 'workerId', bytLen: 1 },
-      { name: 'U', bytLen: 4 },
-      { name: 'I', bytLen: 4, type: 'int' },
-      { name: 'vol', bytLen: 4 },
-      { name: 'epower', bytLen: 4 },
+      ...SAMP_COM_PAR_STEP,
       { name: 'errCode', bytLen: 1 },
-      { name: 'projectId', bytLen: 4 },
-      { name: 'loopNum', bytLen: 2 }
+      ...SAMP_COM_PAR_STATUS
     ]
   },
   {
@@ -165,15 +200,40 @@ export const SAMP_MODEL: Model[] = [
     ]
   },
   {
+    name: 'startList',
+    type: 'list',
+    len: 'startLen',
+    model: [
+      { name: 'slaverId', bytLen: 1 },
+      { name: 'channelId', bytLen: 1 },
+      { name: 'projectId', bytLen: 4 },
+      SAMP_COM_PAR.stepId,
+      SAMP_COM_PAR.workerCode,
+      SAMP_COM_PAR.U
+    ]
+  },
+  {
     name: 'endStatusList',
     type: 'list',
     len: 'endStatusLen',
     model: [
       { name: 'slaverId', bytLen: 1 },
       { name: 'channelId', bytLen: 1 },
-      { name: 'projectId', bytLen: 4 },
-      { name: 'workerId', bytLen: 1 },
-      { name: 'endCode', bytLen: 1 }
+      ...SAMP_COM_PAR_STEP,
+      { name: 'endCode', bytLen: 1 },
+      ...SAMP_COM_PAR_STATUS
+    ]
+  },
+  {
+    name: 'featureList',
+    type: 'list',
+    len: 'featureLen',
+    model: [
+      { name: 'slaverId', bytLen: 1 },
+      { name: 'channelId', bytLen: 1 },
+      ...SAMP_COM_PAR_STEP,
+      ...SAMP_COM_PAR_STATUS,
+      { name: 'featureType', bytLen: 1 }
     ]
   }
 ]

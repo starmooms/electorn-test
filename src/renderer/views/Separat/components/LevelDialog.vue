@@ -6,7 +6,6 @@
     :visible.sync="dialog"
     :close-on-click-modal="false"
   >
-    <span>这是一段信息</span>
     <div class="level-main">
       <div class="main-l">
         <el-checkbox-group v-model="attrList">
@@ -22,7 +21,9 @@
         </el-checkbox-group>
       </div>
       <div class="main-r">
-        <div class="action-box"></div>
+        <div class="action-box">
+          <el-button @click="addLevel" type="primary">添加等级</el-button>
+        </div>
         <div class="tabel-box">
           <vxe-grid
             ref="xTable"
@@ -32,12 +33,23 @@
             resizable
             :data="tableData"
             size="mini"
-            height="600px"
+            height="400px"
             width="100%"
+            :edit-config="{
+              trigger: 'dblclick',
+              mode: 'row',
+              showIcon: false
+            }"
           >
             <!-- eslint-disable -->
-            <vxe-table-column type="seq" title="序号" width="80"></vxe-table-column>
-            <vxe-table-column v-for="config in tableColumn" :key="config.id" v-bind="config" ></vxe-table-column>
+            <vxe-table-column type="seq" title="等级名" width="80"></vxe-table-column>
+            <vxe-table-column v-for="config in tableColumn" :key="config.field" v-bind="config" ></vxe-table-column>
+            <vxe-table-column field="desc" title="等级描述" width="100" :edit-render="{ name: 'input', immediate: true, attrs: { type: 'text' }}"></vxe-table-column>
+            <vxe-table-column title="操作" width="80" show-overflow>
+              <template v-slot="{ rowIndex }">
+                <vxe-button type="text" status="primary" @click="removeRow(rowIndex)">删除</vxe-button>
+              </template>
+            </vxe-table-column>
             <!-- <div v-for="item in tableAttrList" :key="item.value">
               <vxe-table-column type="b" :title="`${item.label}<`" width="80" ></vxe-table-column>
             </div> -->
@@ -56,7 +68,7 @@
       </div>
       <div class="f-r">
         <el-button @click="dialogClose">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false">
+        <el-button type="primary" @click="dialogSave">
           保存
         </el-button>
       </div>
@@ -65,13 +77,30 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, PropSync, Watch } from 'vue-property-decorator'
+import { setStoreConfig } from '@/renderer/ipc/storeConfig'
+import { deepClone } from '@/shared/utils'
+import { Component, Vue, PropSync, Prop, Watch } from 'vue-property-decorator'
 import { Table } from 'vxe-table'
 
 @Component
 export default class LevelDialog extends Vue {
   @PropSync('show', { type: Boolean, default: false })
   private dialog!: boolean
+  /** 当前实际的等级列表 */
+  @Prop({
+    type: Array,
+    default() {
+      return []
+    }
+  })
+  levelList!: Store.LevelItem[]
+  @Prop({
+    type: Array,
+    default() {
+      return []
+    }
+  })
+  levelAttr!: string[]
 
   $refs!: {
     xTable: Table
@@ -98,6 +127,10 @@ export default class LevelDialog extends Vue {
     { label: 'T5', value: 't5', style: 't' },
     { label: 'C5', value: 'c5', style: 't' }
   ]
+  tableColumn: any[] = []
+  tableData: Store.LevelItem[] = []
+
+  scrollEndTimer: any = null
 
   get tableAttrList() {
     return this.attrAllList.filter(item => {
@@ -105,22 +138,29 @@ export default class LevelDialog extends Vue {
     })
   }
 
-  tableColumn: any[] = []
-
   @Watch('tableAttrList')
-  c(v) {
+  changeColumn() {
     const list: any[] = []
+    const commmonData = {
+      width: '80px',
+      'edit-render': {
+        name: 'input',
+        immediate: true,
+        controls: false,
+        attrs: { type: 'float' }
+      }
+    }
     this.tableAttrList.forEach(item => {
       list.push(
         {
-          id: `${item.value}_min`,
           title: `${item.label}>=`,
-          width: '80px'
+          field: `${item.value}_min`,
+          ...commmonData
         },
         {
-          id: `${item.value}_max`,
           title: `${item.label}<`,
-          width: '80px'
+          field: `${item.value}_max`,
+          ...commmonData
         }
       )
     })
@@ -130,14 +170,107 @@ export default class LevelDialog extends Vue {
     })
   }
 
-  tableData = []
+  @Watch('dialog')
+  changeDialog(v) {
+    if (v === true) {
+      this.createTabel()
+      if (this.tableData.length === 0) {
+        this.addLevel()
+        this.addLevel()
+        this.addLevel()
+      }
+    }
+  }
+
+  /** 表格滚动到最后一行 */
+  scrollEnd() {
+    this.$nextTick(() => {
+      clearTimeout(this.scrollEndTimer)
+      this.scrollEndTimer = setTimeout(() => {
+        this.$refs.xTable.scrollToRow(this.tableData[this.tableData.length - 1])
+      })
+    })
+  }
+
+  /** 根据levelList生成tabel */
+  createTabel() {
+    this.attrList = deepClone(this.levelAttr)
+
+    // 补充缺少的属性
+    const noAttr = this.attrAllList.filter(item => {
+      return !this.attrList.includes(item.value)
+    })
+    const noAttrData: any = {}
+    noAttr.forEach(item => {
+      noAttrData[`${item.value}_min`] = null
+      noAttrData[`${item.value}_max`] = null
+    })
+
+    this.tableData = this.levelList.map(item => {
+      return {
+        ...deepClone(item),
+        ...noAttrData
+      }
+    })
+  }
+
+  /** 添加一条等级 */
+  async addLevel() {
+    const obj: any = {}
+    this.attrAllList.forEach(item => {
+      obj[`${item.value}_min`] = null
+      obj[`${item.value}_max`] = null
+    })
+    const len = this.tableData.length + 1
+    this.tableData.push({
+      desc: `等级${len}`,
+      ...obj
+    })
+    this.scrollEnd()
+  }
+
+  removeRow(index: number) {
+    this.tableData.splice(index, 1)
+  }
+
+  levelFormat() {
+    return this.tableData.map((item, index) => {
+      const attrData = {}
+      this.attrList.forEach(attr => {
+        ;['_min', '_max'].forEach(keyB => {
+          const key = `${attr}${keyB}`
+          if (item[key] !== null && item[key] !== '') {
+            const data = Number(item[key])
+            item[key] = isNaN(data) ? null : data
+          }
+          attrData[key] = item[key]
+        })
+      })
+      const data = {
+        desc: item.desc,
+        ...attrData
+      }
+      return data
+    })
+  }
 
   dialogClose() {
     this.dialog = false
   }
 
-  dialogSave() {
-    this.dialog = true
+  async dialogSave() {
+    const data = await setStoreConfig({
+      type: 'separat',
+      key: '',
+      data: {
+        levelAttr: this.attrList,
+        levelList: this.levelFormat()
+      }
+    })
+    if (data.status) {
+      this.$emit('changeConfig')
+      this.dialog = false
+    }
   }
 }
 </script>
@@ -162,6 +295,9 @@ export default class LevelDialog extends Vue {
   .main-r {
     flex: 1 1 auto;
     overflow: auto;
+    .action-box {
+      margin-bottom: 10px;
+    }
     // width: 408px;
     // .tabel-box {
     //   width: 200px;

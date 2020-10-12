@@ -79,12 +79,26 @@ export default class ErrorLog extends Vue {
     await this.db.connect()
   }
 
+  setId(data: Db.ErrorItem, key: string) {
+    if (typeof data[key] === 'string') {
+      data[key] = data[key]
+        .split(',')
+        .map(id => {
+          return Number(id) + 1
+        })
+        .join(',')
+    }
+  }
+
   async getList() {
     try {
       this.loading = true
       const data = await this.db.getErrorList(this.listQuery)
       this.total = data.total
       this.list = data.list.map(item => {
+        item.masterId = Number(item.masterId) + 1
+        this.setId(item, 'slaverIds')
+        this.setId(item, 'channelIds')
         return {
           ...item,
           typeStr: item.type === 1 ? '通讯错误' : '实时数据错误列表',

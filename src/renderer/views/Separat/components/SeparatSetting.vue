@@ -118,11 +118,17 @@
         </div>
       </el-form>
     </div>
-    <level-dialog :show.sync="configShow" />
+    <level-dialog
+      :show.sync="configShow"
+      :levelAttr="levelAttr"
+      :levelList="levelList"
+      @changeConfig="getSeparatConfig"
+    />
   </div>
 </template>
 
 <script lang="ts">
+import { getStoreConfig } from '@/renderer/ipc/storeConfig'
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import LevelDialog from './LevelDialog.vue'
 
@@ -164,6 +170,8 @@ export default class SeparatSetting extends Vue {
   ]
 
   workerList = []
+
+  levelAttr = []
   levelList = [
     {
       id: 1,
@@ -181,6 +189,21 @@ export default class SeparatSetting extends Vue {
 
   configShowSet() {
     this.configShow = true
+  }
+
+  async getSeparatConfig() {
+    const result = await getStoreConfig({
+      type: 'separat'
+    })
+    if (result.status) {
+      const data = result.data
+      this.levelList = data.levelList
+      this.levelAttr = data.levelAttr
+    }
+  }
+
+  mounted() {
+    this.getSeparatConfig()
   }
 }
 </script>

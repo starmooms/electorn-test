@@ -1,7 +1,7 @@
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
 import ipcManage from './IpcManage'
-import PortItem from './PortItem'
+// import PortItem from './PortItem'
 import logger, { sysLog } from './Logger'
 import boxManage from './boxManage/BoxManage'
 
@@ -11,11 +11,11 @@ export interface ArgeementData {
 }
 
 export default class USBManager {
-  cache = new Map<string, PortItem>()
+  // cache = new Map<string, PortItem>()
   hasEvent = false
   stepList: any[] | null = null
   protPath!: string
-  portItem!: PortItem
+  // portItem!: PortItem
 
   constructor() {
     this.init()
@@ -91,13 +91,13 @@ export default class USBManager {
     })
   }
 
-  getPortData() {
-    if (!this.portItem) {
-      sysLog.info('串口未初始化')
-      throw new Error('串口未初始化')
-    }
-    return this.portItem
-  }
+  // getPortData() {
+  //   if (!this.portItem) {
+  //     sysLog.info('串口未初始化')
+  //     throw new Error('串口未初始化')
+  //   }
+  //   return this.portItem
+  // }
 
   /** 写工步 */
   writeSteps() {

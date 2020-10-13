@@ -2,6 +2,18 @@
 
 declare namespace Port {
   // type Item = SerialPort.PortInfo
+  interface ChannelSaveSampTimeData {
+    stepTime: number
+    masterId: number
+    slaverId: number
+    channelId: number
+    [key: string]: any
+  }
+
+  interface ChannelSaveSampTime {
+    channel?: ChannelItem
+    data: ChannelSaveSampTimeData
+  }
 
   interface ChannelItem {
     id: number
@@ -48,6 +60,8 @@ declare namespace Port {
   interface SampStatusData {
     loopNum: number
     stepTime: number
+    errorCode: string
+    endCode: string
   }
 
   /** 采样 */
@@ -194,7 +208,7 @@ declare namespace Port {
   }
 
   /** 采样启动列表 */
-  interface SampStart {
+  interface SampStart extends SampStepData, SampStatusData {
     masterId: number
     slaverId: number
     channelId: number
@@ -203,12 +217,12 @@ declare namespace Port {
     U: number
   }
 
-  /** 采样启动列表 */
+  /** 采样结束列表 */
   interface SampEnd extends SampStepData, SampStatusData {
     masterId: number
     slaverId: number
     channelId: number
-    endCode: number
+    endCode: string
   }
 
   interface SaveSampItem {

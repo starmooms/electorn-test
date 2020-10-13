@@ -15,8 +15,8 @@ import WorkStepSee from './window/WorkStepSee'
 import createHistoryWin from './window/HistoryWin'
 import UpdateManager from './core/UpdateManager'
 import './core/ConfigManage'
-import RedisServer from './core/redis/RedisServer'
-import redisClient, { RedisClient } from './core/redis/RedisClient'
+// import RedisServer from './core/redis/RedisServer'
+// import redisClient, { RedisClient } from './core/redis/RedisClient'
 import logger, { sysLognow, sysFilePath } from './core/Logger'
 import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
@@ -33,8 +33,8 @@ export default class Launcher {
   usbManager!: USBManager
   beforeMainWin: beforeMainWin | null = null
   updateManager = this.initUpdaterManager()
-  redisServer!: RedisServer
-  redisClient!: RedisClient
+  // redisServer!: RedisServer
+  // redisClient!: RedisClient
 
   constructor(beforeMainWin?: beforeMainWin) {
     if (beforeMainWin) {
@@ -174,10 +174,10 @@ export default class Launcher {
       }
     })
 
-    this.redisServer = RedisServer.getInstance()
-    this.redisServer.start().finally(() => {
-      redisClient.initRedis()
-    })
+    // this.redisServer = RedisServer.getInstance()
+    // this.redisServer.start().finally(() => {
+    //   redisClient.initRedis()
+    // })
     this.startRender()
   }
 
@@ -220,10 +220,10 @@ export default class Launcher {
         this.usbManager.destory()
       }
       await mainDb.close()
-      await redisClient.close()
-      if (this.redisServer) {
-        await this.redisServer.stop()
-      }
+      // await redisClient.close()
+      // if (this.redisServer) {
+      //   await this.redisServer.stop()
+      // }
       winManager.closeOtherWin()
     } catch (err) {
       dialog.showErrorBox('derstoryWin Error', err)

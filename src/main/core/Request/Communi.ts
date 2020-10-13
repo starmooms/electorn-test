@@ -68,7 +68,7 @@ class Communi {
           headMsg += this.serialPort!.path
           this.serialPort!.handleError()
         }
-        reject(new Error(`${headMsg}POST Error：${msg}`))
+        reject(new Error(`${headMsg} POST Error：${msg}`))
         clearTimeout(timer)
       }
 

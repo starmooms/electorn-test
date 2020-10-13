@@ -203,7 +203,8 @@ for (let i = 0; i < 20; i++) {
         workerEnd: null,
         filePath: '',
         lastSamp: null,
-        nowStatus: null
+        lastSaveTime: null,
+        nowStatus: 'END'
       }
     }
     slaverObj[j] = {

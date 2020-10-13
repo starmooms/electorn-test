@@ -2,7 +2,9 @@
 declare namespace Db {
   type SaveSampList = Port.SaveSampItem
   type sampList = SaveSampList['sampList']
-  type endStatusList = SaveSampList['endStatusList']
+  type startList = SaveSampList['startList']
+  type endList = SaveSampList['endList']
+  type featureList = SaveSampList['featureList']
   type changeStatusList = SaveSampList['changeStatusList']
   // interface SaveSampList {
   //   projectId: number

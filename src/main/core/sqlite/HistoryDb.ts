@@ -3,6 +3,7 @@ import HistoryDbCom from '@/shared/sqlite/HistoryDbCom'
 import path from 'path'
 import dayjs from 'dayjs'
 import logger from '../Logger'
+import { TIME_FORMAT } from '@/shared/utils'
 
 interface TableName {
   name: string
@@ -47,7 +48,7 @@ export default class HistoryDb extends HistoryDbCom {
 
   async createTable(tables: TableName[]) {
     let sql = ''
-    const { stepsInfo, channelInfo, sampData } = this.tables
+    const { stepsInfo, channelInfo, sampData, stepStatistics } = this.tables
     const tableName = tables.map(item => item.name)
 
     // 工步信息
@@ -112,6 +113,35 @@ export default class HistoryDb extends HistoryDbCom {
       );`
     }
 
+    // 采样工步统计表
+    if (!tableName.includes(stepStatistics)) {
+      sql += `CREATE TABLE "${stepStatistics}" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "masterId" INTEGER NOT NULL,
+        "slaverId" INTEGER NOT NULL,
+        "channelId" INTEGER NOT NULL,
+        "fullId" TEXT NOT NULL,
+        "stepId" INTEGER NOT NULL,
+        "workCode" TEXT NOT NULL,
+        "loopNum" INTEGER NOT NULL,
+        "stepTime" REAL,
+        "startU" REAL,
+        "endU" REAL,
+        "avgU" REAL,
+        "endI" REAL,
+        "curIRate" REAL,
+        "t1" REAL, "c1" REAL,
+        "t2" REAL, "c2" REAL,
+        "t3" REAL, "c3" REAL,
+        "t4" REAL, "c4" REAL,
+        "t5" REAL, "c5" REAL,
+        "endCode" TEXT,
+        "startTime" DATETIME,
+        "endTime" DATETIME,
+        "createTime" DATETIME
+      );`
+    }
+
     if (sql) {
       await this.sqlite.exec(sql)
     }
@@ -136,7 +166,7 @@ export default class HistoryDb extends HistoryDbCom {
     const now = dayjs().valueOf()
 
     // 写入模板
-    const insertTeplSql = `INSERT INTO ${stepsInfo} (historyId, startId, stepList, protect, dataSave, createTime)
+    const insertTeplSql = `INSERT INTO ${stepsInfo} (historyId, startId, stepList, protect, features, dataSave, createTime)
     VALUES (
       ${historyId},
       ${startId},
@@ -181,6 +211,9 @@ export default class HistoryDb extends HistoryDbCom {
     await this.connect()
     const { stepsInfo } = this.tables
     const data = await this.sqlite.get(`SELECT * FROM ${stepsInfo}`)
+    if (!data) {
+      throw new Error('缺少工步文件')
+    }
     data.dataSave = JSON.parse(data.dataSave)
     data.stepList = JSON.parse(data.stepList)
     data.protect = JSON.parse(data.protect)
@@ -223,19 +256,73 @@ export default class HistoryDb extends HistoryDbCom {
     }
   }
 
+  saveStart(list: Db.startList) {
+    let sql = ''
+    if (list.length > 0) {
+      const now = dayjs().format(TIME_FORMAT)
+      const { stepStatistics } = this.tables
+      sql += `INSERT INTO ${stepStatistics} (masterId, slaverId, channelId, fullId, stepId, workCode, loopNum, startU, startTime, createTime) VALUES`
+      list.forEach(item => {
+        sql += `(
+          ${item.masterId},
+          ${item.slaverId},
+          ${item.channelId},
+          '${item.masterId}_${item.slaverId}_${item.channelId}',
+          ${item.stepId},
+          '${item.workerCode}',
+          ${item.loopNum},
+          ${item.U},
+          '${now}',
+          '${now}'
+        ),`
+      })
+      sql = Sqlite.replaceSql(sql, ';')
+    }
+    return sql
+  }
+
+  saveEnd(list: Db.endList) {
+    let sql = ''
+    if (list.length > 0) {
+      const now = dayjs().format(TIME_FORMAT)
+      const { stepStatistics } = this.tables
+      list.forEach(item => {
+        sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, endCode=${item.endCode}, endTime=${now}
+        WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
+      })
+    }
+    return sql
+  }
+
+  saveFeature(list: Db.featureList) {
+    let sql = ''
+    if (list.length > 0) {
+      const { stepStatistics } = this.tables
+      list.forEach(item => {
+        sql += `UPDATE ${stepStatistics} SET t${item.featureType}=${item.stepTime}, c${item.featureType}=${item.vol}
+        WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
+      })
+    }
+    return sql
+  }
+
   /** 保存采样 */
-  async saveSamp(
-    sampList: Db.sampList,
-    endStatusList: Db.endStatusList,
-    changeStatusList: Db.changeStatusList
-  ) {
+  async saveSamp({
+    sampList,
+    startList,
+    endList,
+    featureList,
+    changeStatusList
+  }: Port.SaveSampItem) {
     const { sampData, channelInfo } = this.tables
     let hasEnd = false
     let sql = ''
+    const saveSampList = [...startList, ...endList, ...featureList, ...sampList]
+    const time = dayjs().unix()
     // 添加采样记录
-    if (sampList.length > 0) {
-      sql += `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepTime, loopNum, stepId, workCode, errorCode, createTime) VALUES`
-      sampList.forEach(item => {
+    if (saveSampList.length > 0) {
+      sql += `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepTime, loopNum, stepId, workCode, errorCode, endCode, createTime) VALUES`
+      saveSampList.forEach(item => {
         sql += `(
             ${item.masterId},
             ${item.slaverId},
@@ -249,20 +336,25 @@ export default class HistoryDb extends HistoryDbCom {
             ${item.stepId},
             '${item.workerCode}',
             '${item.errorCode}',
-            ${item.createTime}
+            '${item.endCode}',
+            ${time}
           ),`
       })
       sql = sql.replace(/,$/, ';')
     }
 
-    // 添加结束状态
-    if (endStatusList.length > 0) {
-      endStatusList.forEach(item => {
-        sql += `UPDATE ${sampData}
-        SET endCode='${item.endCode}'
-        WHERE id IN (SELECT id from ${sampData} WHERE masterId=${item.masterId} AND slaverId=${item.slaverId} AND channelId=${item.channelId} AND stepId=${item.stepId} ORDER BY id DESC LIMIT 1);`
-      })
-    }
+    sql += this.saveStart(startList)
+    sql += this.saveStart(featureList)
+    sql += this.saveStart(endList)
+
+    // // 添加结束状态
+    // if (endStatusList.length > 0) {
+    //   endStatusList.forEach(item => {
+    //     sql += `UPDATE ${sampData}
+    //     SET endCode='${item.endCode}'
+    //     WHERE id IN (SELECT id from ${sampData} WHERE masterId=${item.masterId} AND slaverId=${item.slaverId} AND channelId=${item.channelId} AND stepId=${item.stepId} ORDER BY id DESC LIMIT 1);`
+    //   })
+    // }
 
     // 记录通道起始状态
     if (changeStatusList.length > 0) {

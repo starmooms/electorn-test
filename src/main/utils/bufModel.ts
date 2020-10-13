@@ -99,10 +99,10 @@ class BufModel<T = any> {
         listTarget.listAction = []
         listTarget.bytLen = listBufModel.bufLength
         this.listModel.push(listTarget)
-        // logger.debug(
+        // logger.log(
         //   '列表添加++++++++',
         //   target.name,
-        //   listBufModel.bufLength * listLen[target.name]
+        //   listBufModel.bufLength * len
         // )
         this.bufLength += listBufModel.bufLength * len
       } else {
@@ -246,6 +246,35 @@ export class BufWriteModel {
       target.listAction.forEach((item, index) => {
         cb(item, index)
       })
+    }
+  }
+
+  showAll(result: any[] = [], log = true) {
+    try {
+      logger.info('showAll ==== ')
+      Object.keys(this.bufModel.modelTarget).forEach(item => {
+        // logger.info(this.getTarget(item))
+        const data = this.getTarget(item)
+        if (data.type === 'list') {
+          const listObj: any[] = [`listName: ${item}`]
+          result.push(listObj)
+          this.ecahList(item, listModel => {
+            const subItem: any = []
+            listObj.push(subItem)
+            listModel.showAll(subItem, false)
+          })
+        } else {
+          result.push(`${item} : ${this.readHex(item)}`)
+          // logger.info(item, this.readHex(item))
+        }
+      })
+    } catch (err) {
+      logger.error('SHOW ALL ERROR', err)
+      throw err
+    } finally {
+      if (log) {
+        logger.info(JSON.stringify(result, null, 2))
+      }
     }
   }
 }

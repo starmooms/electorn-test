@@ -29,7 +29,7 @@ export default class TransfromParser extends Transform {
   _transform(chunk, encoding, cb) {
     let data = Buffer.concat([this.buffer, chunk])
     let end = -1
-    logger.info('_transform', chunk.toString('hex'))
+    // logger.info('_transform', chunk.toString('hex'))
 
     while ((end = data.indexOf(this.delimiter)) !== -1) {
       const start = data.indexOf(this.startChar)
@@ -62,7 +62,7 @@ export default class TransfromParser extends Transform {
   }
 
   _flush(cb) {
-    logger.info('Parset _flush', this.buffer)
+    // logger.info('Parset _flush', this.buffer)
     this.push(this.buffer)
     this.buffer = Buffer.alloc(0)
     cb()

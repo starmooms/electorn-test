@@ -108,7 +108,7 @@ export default class BoxSamp {
     this.readSampWrite.writer('masterId', masterId)
     let resultBuf: Buffer
     if (this.parent.isDev) {
-      const a = `0000000801010000a10000000100000035980000000000000000000000000100000001a10000000100000035980000000000000000000000000100000002020000000100000035980000000000000000000000000100000003020000000100000035980000000000000000000000000100000004020000000100000035980000000000000000000000000100000005020000000100000035980000000000000000000000000100000006020000000100000035980000000000000000000000000100000007020000000100000035980000000000000000000000000100000000000100000001000000010001000000010001` // eslint-disable-line
+      const a = `00000008000000000000900000004848000000000000000000000000000000000600010000000b0001900000003b53000000000000000000000000000000000600010000000b0002900000003b68000000000000000000000000000000000600010000000b0003900000003b73000000000000000000000000000000000600010000000b0004900000004baf000000000000000000000000000000000600010000000b0005900000003c30000000000000000000000000000000000600010000000b0006900000003b16000000000000000000000000000000000600010000000b0007900000008259000000000000000000000000000000000600010000000b` // eslint-disable-line
       resultBuf = Buffer.from(a, 'hex')
     } else {
       logger.info('读采样发送', this.readSampWrite.buf.toString('hex'))
@@ -123,6 +123,7 @@ export default class BoxSamp {
       model: SAMP_MODEL,
       readBuf: resultBuf
     })
+    // readModel.showAll()
     const {
       sampList,
       saveSampList,
@@ -168,6 +169,22 @@ export default class BoxSamp {
     }
   }
 
+  /** 判断是否需要存储采样 */
+  sampShouldSave(last, now, save) {
+    return save && Math.abs(last - now) >= save
+  }
+
+  /** 更新采样上次时间记录 */
+  channelSaveTime({ data, channel }: Port.ChannelSaveSampTime) {
+    if (!channel) {
+      const fullId = `${data.masterId}_${data.slaverId}_${data.channelId}`
+      channel = this.channelMap.get(fullId)
+    }
+    if (channel) {
+      channel.lastSaveTime = data.stepTime
+    }
+  }
+
   /** 解析采样返回, 改变通道状态 */
   readSampModel(masterId: number, readModel: BufModel) {
     const nowUnix = dayjs().unix()
@@ -189,6 +206,7 @@ export default class BoxSamp {
       return sampItem[key]
     }
 
+    this.readStartList(masterId, readModel, getProjectSamp)
     const { sampList, changeFilePath } = this.readSampList(
       masterId,
       readModel,
@@ -196,7 +214,8 @@ export default class BoxSamp {
       nowUnix,
       nowTime
     )
-    this.readEndStatusList(masterId, readModel, getProjectSamp)
+    this.readEndList(masterId, readModel, getProjectSamp)
+    this.readFeatureList(masterId, readModel, getProjectSamp)
     const errorList = this.readErrorList(readModel)
 
     // 将需要存储的采样对象，改为列表数组
@@ -244,6 +263,7 @@ export default class BoxSamp {
         errorCode: errCode,
         errorMsg: errCode !== '00' ? CHANNEL_ERR_STATUS[errCode] : '',
         workerStatus: CHANNEL_STATUS[workerCode] || this.parent.noWorkerStatus,
+        endCode: '00',
         createTime: nowUnix
       }
       sampList.push(samp)
@@ -263,13 +283,14 @@ export default class BoxSamp {
       let nowStatus = lastStatus // 通道当前状态，默认为上回状态，下面通过采样判断
 
       let shouldSaveSamp = false // 是否保存采样
+      let saveSampUpdateTime = false // 保存采样更新保存时间
       let changeChannel: Port.ChannelChangeItem | null = null
 
       // 判断状态变化
       if (!nowStatus || !lastSamp || lastSamp.workerCode !== samp.workerCode) {
         nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
         if (lastStatus !== nowStatus) {
-          shouldSaveSamp = true
+          // shouldSaveSamp = true
           channel.nowStatus = nowStatus
           channel.filePath = historyDbCache.getFilePath(samp.projectId)
           changeChannel = {
@@ -287,48 +308,50 @@ export default class BoxSamp {
       }
 
       // 判断是否需要存储采样
-      if (!shouldSaveSamp && lastSamp) {
-        if (lastSamp.projectId !== samp.projectId) {
+      if (!shouldSaveSamp && lastSamp && nowStatus === 'RUN') {
+        const saveConf = historyDbCache.getSaveConf(samp.projectId)
+        if (!saveConf) {
           shouldSaveSamp = true
-        } else if (nowStatus === 'RUN') {
-          const saveConf = historyDbCache.getSaveConf(samp.projectId)
-          if (!saveConf) {
+        } else {
+          if (!channel.filePath) {
+            channel.filePath = historyDbCache.getFilePath(samp.projectId)
+            changeFilePath.push({
+              masterId: samp.masterId,
+              slaverId: samp.slaverId,
+              channelId: samp.channelId,
+              time: nowTime,
+              filePath: channel.filePath,
+              status: channel.nowStatus!
+            })
+          }
+
+          if (
+            channel.lastSaveTime === null ||
+            // channel.lastSaveTime === samp.stepTime ||
+            this.sampShouldSave(
+              channel.lastSaveTime,
+              samp.stepTime,
+              saveConf.time
+            )
+          ) {
+            saveSampUpdateTime = true
             shouldSaveSamp = true
-          } else {
-            if (!channel.filePath) {
-              channel.filePath = historyDbCache.getFilePath(samp.projectId)
-              changeFilePath.push({
-                masterId: samp.masterId,
-                slaverId: samp.slaverId,
-                channelId: samp.channelId,
-                time: nowTime,
-                filePath: channel.filePath,
-                status: channel.nowStatus!
-              })
-            }
-            if (
-              !channel.lastSaveTime ||
-              nowTime - channel.lastSaveTime >= saveConf.time
-            ) {
-              shouldSaveSamp = true
-            } else if (
-              saveConf.I &&
-              Math.abs(lastSamp.I - samp.I) >= saveConf.I
-            ) {
-              shouldSaveSamp = true
-            } else if (
-              saveConf.U &&
-              Math.abs(lastSamp.U - samp.U) >= saveConf.U
-            ) {
-              shouldSaveSamp = true
-            }
+          } else if (this.sampShouldSave(lastSamp.I, samp.I, saveConf.I)) {
+            shouldSaveSamp = true
+          } else if (this.sampShouldSave(lastSamp.U, samp.U, saveConf.U)) {
+            shouldSaveSamp = true
           }
         }
       }
 
       if (shouldSaveSamp) {
         const saveSampList = getProjectSamp(samp.projectId, 'sampList')
-        channel.lastSaveTime = nowTime
+        if (saveSampUpdateTime) {
+          this.channelSaveTime({
+            channel,
+            data: samp
+          })
+        }
         saveSampList.push(samp)
       }
     })
@@ -348,19 +371,28 @@ export default class BoxSamp {
     readModel.ecahList('startList', readItem => {
       const projectId = readItem.read('projectId')
       const start = getProjectSamp(projectId, 'startList')
-      start.push({
+      const data: Port.SampStart = {
         masterId,
         slaverId: readItem.read('slaverId'),
         channelId: readItem.read('channelId'),
         stepId: readItem.read('stepId'),
         workerCode: readItem.readHex('workerCode'),
-        U: readItem.read('U') / 10
-      })
+        U: readItem.read('U') / 10,
+        loopNum: readItem.read('loopNum'),
+        I: 0,
+        vol: 0,
+        epower: 0,
+        stepTime: 0,
+        errorCode: '00',
+        endCode: '00'
+      }
+      start.push(data)
+      this.channelSaveTime({ data })
     })
   }
 
   /** 读采样返回的结束状态列表 */
-  readEndStatusList(
+  readEndList(
     masterId: number,
     readModel: BufModel,
     getProjectSamp: Port.GetProjectSamp
@@ -374,7 +406,8 @@ export default class BoxSamp {
         channelId: readItem.read('channelId'),
         ...this.getStepData(readItem),
         ...this.getStatusData(readItem),
-        endCode: readItem.read('endCode')
+        endCode: readItem.readHex('endCode'),
+        errorCode: '00'
       })
     })
   }
@@ -394,7 +427,9 @@ export default class BoxSamp {
         channelId: readItem.read('channelId'),
         ...this.getStepData(readItem),
         ...this.getStatusData(readItem),
-        featureType: readItem.read('featureType')
+        featureType: readItem.read('featureType'),
+        errorCode: '00',
+        endCode: '00'
       })
     })
   }

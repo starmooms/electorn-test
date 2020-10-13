@@ -44,7 +44,7 @@ class UdpManage {
     udpServer.bind(() => {
       udpServer.setBroadcast(true)
       setInterval(() => {
-        logger.info('发送广播')
+        // logger.info('发送广播')
         udpServer.send(Buffer.from([0x00]), 31111, '255.255.255.255')
       }, 5000)
     })

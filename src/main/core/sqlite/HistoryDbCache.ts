@@ -29,17 +29,13 @@ class HistoryDbCache {
     const dataSave = {
       U: null,
       I: null,
-      time: 30000
+      time: 30
     }
 
     for (const key in saveConf) {
       const val = saveConf[key] as ipcReq.StepDataSaveItem
       if (val.enable && val.value) {
-        if (key === 'time') {
-          dataSave.time = val.value * 1000
-        } else {
-          dataSave[key] = val.value
-        }
+        dataSave[key] = val.value
       }
     }
 
@@ -70,6 +66,9 @@ class HistoryDbCache {
       const cache = this.getItem(historyId)
       if (cache) return cache
       const data = await mainDb.getHistory(historyId)
+      if (!data) {
+        throw new Error('不存在相关历史记录')
+      }
       const historyDb = new HistoryDb(data.fileId, data.filePath, () => {
         this.closeHistoryDb(historyId)
       })
@@ -115,7 +114,7 @@ class HistoryDbCache {
     const promiseArr = list.map(async item => {
       try {
         const db = await this.getDb(item.projectId)
-        await db.saveSamp(item.sampList, item.endList, item.changeStatusList)
+        await db.saveSamp(item)
         return true
       } catch (err) {
         logger.error('HistoryDBCache saveSamp Error', err)

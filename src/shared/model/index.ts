@@ -209,7 +209,8 @@ export const SAMP_MODEL: Model[] = [
       { name: 'projectId', bytLen: 4 },
       SAMP_COM_PAR.stepId,
       SAMP_COM_PAR.workerCode,
-      SAMP_COM_PAR.U
+      SAMP_COM_PAR.U,
+      SAMP_COM_PAR.loopNum
     ]
   },
   {

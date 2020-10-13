@@ -168,7 +168,10 @@ export default class History extends Vue {
           sIndex: index + 1,
           createTimeStr: dayjs.unix(item.createTime).format(formatTimeStr),
           workerName: CHANNEL_STATUS[item.workCode]?.name,
-          endStatus: item.endCode ? END_STATUS[item.endCode] : '',
+          endStatus:
+            item.endCode && item.endCode !== '00'
+              ? END_STATUS[item.endCode]
+              : '',
           ...item
         }
       })

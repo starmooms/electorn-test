@@ -158,7 +158,6 @@ export default class Pane extends Vue {
   }
 
   async showChartSave() {
-    console.log(this.form)
     await setStoreConfig({
       type: 'userConfig',
       key: 'sampChartConfig',

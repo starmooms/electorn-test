@@ -201,7 +201,7 @@ for (let i = 0; i < 20; i++) {
         samp: null,
         workerStart: null,
         workerEnd: null,
-        filePath: '',
+        filePath: null,
         lastSamp: null,
         lastSaveTime: null,
         nowStatus: 'END'

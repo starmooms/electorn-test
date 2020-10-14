@@ -287,7 +287,7 @@ export default class HistoryDb extends HistoryDbCom {
       const now = dayjs().format(TIME_FORMAT)
       const { stepStatistics } = this.tables
       list.forEach(item => {
-        sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, endCode=${item.endCode}, endTime=${now}
+        sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, endCode='${item.endCode}', endTime='${now}'
         WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
       })
     }
@@ -314,16 +314,22 @@ export default class HistoryDb extends HistoryDbCom {
     featureList,
     changeStatusList
   }: Port.SaveSampItem) {
-    const { sampData, channelInfo } = this.tables
-    let hasEnd = false
     let sql = ''
-    const saveSampList = [...startList, ...endList, ...featureList, ...sampList]
-    const time = dayjs().unix()
-    // 添加采样记录
-    if (saveSampList.length > 0) {
-      sql += `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepTime, loopNum, stepId, workCode, errorCode, endCode, createTime) VALUES`
-      saveSampList.forEach(item => {
-        sql += `(
+    try {
+      const { sampData, channelInfo } = this.tables
+      let hasEnd = false
+      const saveSampList = [
+        ...startList,
+        ...endList,
+        ...featureList,
+        ...sampList
+      ]
+      const time = dayjs().unix()
+      // 添加采样记录
+      if (saveSampList.length > 0) {
+        sql += `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepTime, loopNum, stepId, workCode, errorCode, endCode, createTime) VALUES`
+        saveSampList.forEach(item => {
+          sql += `(
             ${item.masterId},
             ${item.slaverId},
             ${item.channelId},
@@ -339,45 +345,49 @@ export default class HistoryDb extends HistoryDbCom {
             '${item.endCode}',
             ${time}
           ),`
-      })
-      sql = sql.replace(/,$/, ';')
-    }
+        })
+        sql = sql.replace(/,$/, ';')
+      }
 
-    sql += this.saveStart(startList)
-    sql += this.saveStart(featureList)
-    sql += this.saveStart(endList)
+      sql += this.saveStart(startList)
+      sql += this.saveFeature(featureList)
+      sql += this.saveEnd(endList)
 
-    // // 添加结束状态
-    // if (endStatusList.length > 0) {
-    //   endStatusList.forEach(item => {
-    //     sql += `UPDATE ${sampData}
-    //     SET endCode='${item.endCode}'
-    //     WHERE id IN (SELECT id from ${sampData} WHERE masterId=${item.masterId} AND slaverId=${item.slaverId} AND channelId=${item.channelId} AND stepId=${item.stepId} ORDER BY id DESC LIMIT 1);`
-    //   })
-    // }
+      // // 添加结束状态
+      // if (endStatusList.length > 0) {
+      //   endStatusList.forEach(item => {
+      //     sql += `UPDATE ${sampData}
+      //     SET endCode='${item.endCode}'
+      //     WHERE id IN (SELECT id from ${sampData} WHERE masterId=${item.masterId} AND slaverId=${item.slaverId} AND channelId=${item.channelId} AND stepId=${item.stepId} ORDER BY id DESC LIMIT 1);`
+      //   })
+      // }
 
-    // 记录通道起始状态
-    if (changeStatusList.length > 0) {
-      const {
-        startTime,
-        endTime,
-        startUpdate,
-        endUpdate
-      } = this.handleChangeChannel(changeStatusList)
-      if (startTime) {
+      // 记录通道起始状态
+      if (changeStatusList.length > 0) {
+        const {
+          startTime,
+          endTime,
+          startUpdate,
+          endUpdate
+        } = this.handleChangeChannel(changeStatusList)
+        if (startTime) {
         sql += `UPDATE ${channelInfo} SET startTime=${startTime} WHERE fullId IN (${startUpdate.join(',')}) AND startTime is NULL;` // eslint-disable-line
-      }
-      if (endTime) {
-        hasEnd = true
+        }
+        if (endTime) {
+          hasEnd = true
         sql += `UPDATE ${channelInfo} SET endTime=${endTime} WHERE fullId IN (${endUpdate.join(',')}) AND endTime is NULL;` // eslint-disable-line
+        }
       }
-    }
 
-    if (sql) {
-      await this.sqlite.exec(sql) // exec 连续执行语句，中间错误后中断
-    }
-    if (hasEnd) {
-      await this.checkCanClose()
+      if (sql) {
+        await this.sqlite.exec(sql) // exec 连续执行语句，中间错误后中断
+      }
+      if (hasEnd) {
+        await this.checkCanClose()
+      }
+    } catch (err) {
+      logger.error(sql)
+      throw err
     }
   }
 

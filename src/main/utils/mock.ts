@@ -1,3 +1,5 @@
+import logger from '../core/Logger'
+
 export default function translateList() {
   const list: any[] = []
   for (let i = 0; i < 8; i++) {
@@ -11,4 +13,24 @@ export default function translateList() {
     })
   }
   return list
+}
+
+let testIndex = 0
+export function testFilePath(samp: Port.SampItem) {
+  let testPath = ''
+  const len = 5
+  if (samp.slaverId === 0 && samp.channelId === 0) {
+    if (testIndex % len === 0) {
+      const changeFilePath = [
+        'E:\\up\\20201013233507188(1)',
+        'E:\\up\\20201013233556116(1)',
+        'E:\\up\\20201013233621261(1)'
+      ]
+      const index = (testIndex / len) % changeFilePath.length
+      logger.info('Mainindex', index, testIndex, changeFilePath.length)
+      testPath = changeFilePath[index]
+    }
+    testIndex++
+  }
+  return testPath
 }

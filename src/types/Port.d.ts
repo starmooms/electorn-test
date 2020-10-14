@@ -24,7 +24,7 @@ declare namespace Port {
     workerEnd: number | null
     nowStatus: null | 'RUN' | 'END'
     lastSaveTime: number | null
-    filePath: string
+    filePath: string | null
   }
 
   interface SlaverItem {

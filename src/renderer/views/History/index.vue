@@ -32,7 +32,7 @@ import SampChart from '@/renderer/components/SampChart/index.vue'
 import SampList from './components/SampList.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
 import dayjs from 'dayjs'
-import { formatTimeStr } from '@/renderer/utils/util'
+import { computerAdd, formatTimeStr } from '@/renderer/utils/util'
 import {
   CHANNEL_STATUS,
   END_STATUS,
@@ -60,7 +60,7 @@ export default class History extends Vue {
   sampData: any[] = []
   sampTableList: any[] = []
 
-  filePath = ''
+  filePath: string | null = null
   db!: HistoryDb | null
   loading = false
   position = {
@@ -86,7 +86,7 @@ export default class History extends Vue {
     }
   }
 
-  async openDb(filePath: string) {
+  async openDb(filePath: string | null) {
     try {
       this.loading = true
       if (this.filePath !== filePath) {
@@ -128,6 +128,7 @@ export default class History extends Vue {
       let lastStepIdId: null | number = null
       let lastLoopNum: null | number = null
       let lastStep: any = null
+      let lastStepTimeEnd = 0
       const dataEnd = data.length - 1
 
       this.sampTableList = []
@@ -158,6 +159,10 @@ export default class History extends Vue {
             this.sampTableList.push(nowStep)
             if (lastStep) {
               lastStep.end = index - 1
+              lastStepTimeEnd = computerAdd(
+                lastStepTimeEnd,
+                data[index - 1].stepTime
+              )
             }
             lastStepIdId = stepId
             lastLoopNum = loopNum
@@ -166,6 +171,7 @@ export default class History extends Vue {
         }
         return {
           sIndex: index + 1,
+          stepTimeTotal: computerAdd(lastStepTimeEnd, item.stepTime),
           createTimeStr: dayjs.unix(item.createTime).format(formatTimeStr),
           workerName: CHANNEL_STATUS[item.workCode]?.name,
           endStatus:
@@ -185,7 +191,10 @@ export default class History extends Vue {
   }
 
   refresh() {
-    if (!this.isHistory && !this.db) {
+    if (
+      !this.isHistory &&
+      (!this.db || this.filePath !== this.nowChannel?.filePath)
+    ) {
       this.changeChannel()
     } else {
       this.getSampData()

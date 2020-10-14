@@ -1,4 +1,5 @@
 import dayjs from 'dayjs'
+import { add } from 'lodash'
 
 export const formatTimeStr = 'YYYY-MM-DD HH:mm:ss'
 
@@ -180,4 +181,9 @@ export const SAMPCHART_Y_MAP = {
     color: '#f7b521',
     key: 'epower'
   }
+}
+
+/** 精度计算加法 */
+export const computerAdd = (num1: number, num2: number, r = 10) => {
+  return (num1 * r + num2 * r) / r
 }

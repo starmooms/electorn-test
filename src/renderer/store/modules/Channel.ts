@@ -7,10 +7,7 @@ import {
   Mutation
 } from 'vuex-module-decorators'
 import store from '@/renderer/store'
-import { channelList } from '@/shared/config/port'
-import { deepClone, setDeep } from '@/shared/utils'
 import { getChannelList } from '@/renderer/ipc/channel'
-import { SettingStatus } from './Setting'
 import Vue from 'vue'
 
 config.rawError = true
@@ -59,7 +56,7 @@ export default class ChannelImpl extends VuexModule {
         const channel = this.channelMap![`${item.masterId}_${item.slaverId}_${item.channelId}`] // eslint-disable-line
         if (channel) {
           channel.nowStatus = item.status
-          channel.filePath = item.status === 'RUN' ? channel.filePath : ''
+          channel.filePath = item.filePath
         }
       })
     }

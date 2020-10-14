@@ -21,10 +21,10 @@
             <br />
             电流: {{ sampData.I }}
             <template v-if="waitStatus.indexOf(sampData.workerCode) < 0">
+              <!-- <br />
+              启动时刻：{{ channelData.workerStart }} -->
               <br />
-              启动时刻：{{ channelData.workerStart }}
-              <br />
-              当前工步：{{ sampData.workerId }}
+              当前工步：{{ sampData.stepId }}
             </template>
 
             <template v-if="sampData.errorMsg">

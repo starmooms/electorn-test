@@ -23,6 +23,7 @@ import { formatTimeStr, SAMPCHART_Y_MAP } from '@/renderer/utils/util'
 // import getSampWorker from '@/renderer/utils/getSampWorker'
 import dayjs from 'dayjs'
 import ActionBox from './ActionBox.vue'
+import { coroutine } from 'bluebird'
 
 interface UpdateOpts {
   time: number
@@ -65,7 +66,6 @@ export default class SampChart extends Vue {
 
   @Watch('sampChartConfig', { deep: true })
   changeConfig() {
-    console.log('d?')
     this.refreshConfig()
   }
 
@@ -140,13 +140,19 @@ export default class SampChart extends Vue {
           extraCssText: 'width: 170px',
           formatter(params) {
             let htmlStr = ''
+            let mainInfo = true
             for (let i = 0; i < params.length; i++) {
               const { seriesName, marker, value, dimensionNames } = params[i]
-              if (i === 0) {
-                const xName = value[dimensionNames[0]] // 时间
-                const workerId = `工步ID：${value.stepId + 1}`
+              if (value.stepTime === 0) continue
+              if (mainInfo) {
+                const setpId = value.stepId + 1
+                const workerId = `工序：${setpId}（${setpId}-${value.loopNum}）`
                 const workerStatus = `工步信息：${value.workerName}`
-                htmlStr += `${xName}</br>${workerId}</br>${workerStatus}</br>`
+                const stepTime = `工步时间：${value.stepTime}s`
+                // const xName = `总工步时间：${value[dimensionNames[0]]}s` // 时间
+                const date = `日期：${value.createTimeStr}`
+                htmlStr += `${workerId}</br>${workerStatus}</br>${stepTime}</br>${date}</br>`
+                mainInfo = false
               }
               const yKey = dimensionNames[1]
               if (yKey) {
@@ -194,7 +200,6 @@ export default class SampChart extends Vue {
           containLabel: false
         },
         xAxis: {
-          type: 'time',
           axisLine: { onZero: false }
         }
       },
@@ -272,7 +277,7 @@ export default class SampChart extends Vue {
       series: [
         {
           name: y1.name,
-          dimensions: ['createTimeStr', y1.key],
+          dimensions: ['stepTimeTotal', y1.key],
           lineStyle: { color: y1.color },
           itemStyle: { color: y1.color },
           yAxisIndex: 0,
@@ -282,7 +287,7 @@ export default class SampChart extends Vue {
         },
         {
           name: y2.name,
-          dimensions: ['createTimeStr', y2.key],
+          dimensions: ['stepTimeTotal', y2.key],
           lineStyle: { color: y2.color },
           itemStyle: { color: y2.color },
           yAxisIndex: 1,
@@ -298,7 +303,6 @@ export default class SampChart extends Vue {
   refreshConfig() {
     if (this.$refs.echart) {
       const cof = this.getChartConfig()
-      console.log(cof)
       this.$refs.echart.mergeOptions(cof)
     }
   }

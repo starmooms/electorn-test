@@ -251,7 +251,6 @@ export class BufWriteModel {
 
   showAll(result: any[] = [], log = true) {
     try {
-      logger.info('showAll ==== ')
       Object.keys(this.bufModel.modelTarget).forEach(item => {
         // logger.info(this.getTarget(item))
         const data = this.getTarget(item)

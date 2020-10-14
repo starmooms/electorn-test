@@ -15,6 +15,7 @@ import dayjs from 'dayjs'
 import ipcManage from '../IpcManage'
 import winManager from '../WinManager'
 import { BoxManage } from './BoxManage'
+import { testFilePath } from '@/main/utils/mock'
 
 /** 机柜采样控制 */
 export default class BoxSamp {
@@ -100,6 +101,28 @@ export default class BoxSamp {
     }
   }
 
+  /** 主数据库记录通道状态 */
+  async mainSaveChannelStatus(channelStatus: Port.ChannelChangeItem[]) {
+    try {
+      if (channelStatus.length > 0) {
+        await mainDb.saveChannelStatus(channelStatus)
+      }
+    } catch (err) {
+      logger.error('mainSaveChannelStatus Error:', err)
+    }
+  }
+
+  /** 主数据库记录错误列表 */
+  async mainSaveError(errorList: Port.ErrorListItem[]) {
+    try {
+      if (errorList.length > 0) {
+        await mainDb.saveErrorList(errorList)
+      }
+    } catch (err) {
+      logger.error('mainSaveError Error:', err)
+    }
+  }
+
   /** 发送读采样请求 */
   async readSamp() {
     const masterId = 0
@@ -108,7 +131,7 @@ export default class BoxSamp {
     this.readSampWrite.writer('masterId', masterId)
     let resultBuf: Buffer
     if (this.parent.isDev) {
-      const a = `00000008000000000000900000004848000000000000000000000000000000000600010000000b0001900000003b53000000000000000000000000000000000600010000000b0002900000003b68000000000000000000000000000000000600010000000b0003900000003b73000000000000000000000000000000000600010000000b0004900000004baf000000000000000000000000000000000600010000000b0005900000003c30000000000000000000000000000000000600010000000b0006900000003b16000000000000000000000000000000000600010000000b0007900000008259000000000000000000000000000000000600010000000b` // eslint-disable-line
+      const a = `00000008000008000000a10100004886ffffff60000000000000000000000000010001000000040001a10100003bd900000000000000000000000000000000010001000000040002a10100003b8a00000000000000000000000000000000010001000000040003a10100003bd600000000000000000000000000000000010001000000040004a10100004ad200000000000000000000000000000000010001000000040005a10100003c0a00000000000000000000000000000000010001000000040006a10100003b1f00000000000000000000000000000000010001000000040007a1010000821100001bad000000000000000000000000010001000000040003900000003bd200000000000000040000000601000000010001000000650004900000004a9e00000000000000040000000701000000010001000000650005900000003c0f00000000000000040000000601000000010001000000650006900000003b18000000000000000400000006010000000100010000006500079000000082160000000000000000000000000100000001000100000065000090000000482300000000000000030000000701000000010001000000650001900000003bc500000000000000040000000601000000010001000000650002900000003b790000000000000004000000060100000001000100000065` // eslint-disable-line
       resultBuf = Buffer.from(a, 'hex')
     } else {
       logger.info('读采样发送', this.readSampWrite.buf.toString('hex'))
@@ -133,13 +156,11 @@ export default class BoxSamp {
     } = this.readSampModel(masterId, readModel)
 
     try {
-      await historyDbCache.saveSamp(saveSampList)
-      if (channelStatus.length > 0) {
-        await mainDb.saveChannelStatus(channelStatus)
-      }
-      if (errorList.length > 0) {
-        await mainDb.saveErrorList(errorList)
-      }
+      await Promise.all([
+        historyDbCache.saveSamp(saveSampList),
+        this.mainSaveChannelStatus(channelStatus),
+        this.mainSaveError(errorList)
+      ])
       if (channelStatus.length > 0 || changeFilePath.length > 0) {
         ipcManage.commonMsg('updateChannelList', [
           ...channelStatus,
@@ -150,9 +171,6 @@ export default class BoxSamp {
       logger.error(err)
     }
     this.sendWin(masterId, sampList)
-    // if (errorList.length > 0) {
-    //   redisClient.saveError(errorList)
-    // }
   }
 
   /** 发送采样列表到渲染端 */
@@ -286,24 +304,29 @@ export default class BoxSamp {
       let saveSampUpdateTime = false // 保存采样更新保存时间
       let changeChannel: Port.ChannelChangeItem | null = null
 
+      // const testPath = testFilePath(samp)
+
       // 判断状态变化
       if (!nowStatus || !lastSamp || lastSamp.workerCode !== samp.workerCode) {
         nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
-        if (lastStatus !== nowStatus) {
+        const filePath = historyDbCache.getFilePath(samp.projectId)
+        if (lastStatus !== nowStatus || channel.filePath !== filePath) {
           // shouldSaveSamp = true
           channel.nowStatus = nowStatus
-          channel.filePath = historyDbCache.getFilePath(samp.projectId)
+          channel.filePath = filePath
           changeChannel = {
             masterId: samp.masterId,
             slaverId: samp.slaverId,
             channelId: samp.channelId,
             time: nowTime,
             status: nowStatus,
-            filePath: channel.filePath
+            filePath: filePath
           }
-          const projectId = samp.projectId
-          const saveSampStatus = getProjectSamp(projectId, 'changeStatusList')
-          saveSampStatus.push(changeChannel)
+          if (nowStatus !== 'END') {
+            const projectId = samp.projectId
+            const saveSampStatus = getProjectSamp(projectId, 'changeStatusList')
+            saveSampStatus.push(changeChannel)
+          }
         }
       }
 
@@ -397,7 +420,7 @@ export default class BoxSamp {
     readModel: BufModel,
     getProjectSamp: Port.GetProjectSamp
   ) {
-    readModel.ecahList('errorList', readItem => {
+    readModel.ecahList('endList', readItem => {
       const projectId = readItem.read('projectId')
       const end = getProjectSamp(projectId, 'endList')
       end.push({

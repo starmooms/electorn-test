@@ -24,6 +24,7 @@
                 <div class="th-td td-epower">电量</div>
                 <div class="th-td td-work">执行工步</div>
                 <div class="th-td td-endStatus">结束标志</div>
+                <div class="th-td td-step-time">时间</div>
                 <!-- <div class="th-td td-work-id">工步ID</div> -->
                 <div class="th-td td-date">日期</div>
               </div>
@@ -79,6 +80,7 @@
               <!-- <div class="th-td td-work-id">
               {{ item.stepId }}
             </div> -->
+              <div class="th-td td-step-time">{{ item.stepTime }}</div>
               <div class="th-td td-date">
                 <span>{{ item.createTimeStr }}</span>
               </div>
@@ -237,7 +239,7 @@ $td-h: 24px;
   ::v-deep
     .vue-recycle-scroller.direction-vertical
     .vue-recycle-scroller__item-wrapper {
-    min-width: 662px;
+    min-width: 742px;
   }
 
   ::v-deep .vue-recycle-scroller__slot {
@@ -263,7 +265,7 @@ $td-h: 24px;
     }
     .td-date {
       flex-grow: 1;
-      min-width: 160px;
+      min-width: 80px;
     }
     .td-index {
       width: 36px;
@@ -274,7 +276,8 @@ $td-h: 24px;
     .td-i,
     .td-vol,
     .td-epower,
-    .td-work-id {
+    .td-work-id,
+    .td-step-time {
       width: 60px;
     }
     .td-work,

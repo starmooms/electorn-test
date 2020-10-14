@@ -47,7 +47,7 @@
                 class="step-item"
                 v-for="(step, index) in channel.stepList"
                 :key="index"
-                :class="{ active: step.id === channel.samp.workerId }"
+                :class="{ active: step.id === channel.samp.stepId }"
               >
                 {{ step.msg }}
               </li>

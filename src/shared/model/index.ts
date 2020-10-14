@@ -172,7 +172,7 @@ export const SAMP_MODEL: Model[] = [
   { name: 'sampLen', bytLen: 2 },
   { name: 'errorLen', bytLen: 1 },
   { name: 'startLen', bytLen: 1 },
-  { name: 'endStatusLen', bytLen: 1 },
+  { name: 'endLen', bytLen: 1 },
   { name: 'featureLen', bytLen: 1 },
   {
     name: 'sampList',
@@ -214,9 +214,9 @@ export const SAMP_MODEL: Model[] = [
     ]
   },
   {
-    name: 'endStatusList',
+    name: 'endList',
     type: 'list',
-    len: 'endStatusLen',
+    len: 'endLen',
     model: [
       { name: 'slaverId', bytLen: 1 },
       { name: 'channelId', bytLen: 1 },

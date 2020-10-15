@@ -26,4 +26,14 @@ export default class MainDb extends MainDbCom {
       list
     }
   }
+
+  async getHistoryList({ limit, page }: Db.ListQuery) {
+    const { channelHistory } = this.tables
+    return this.sqlite.getPageSql({
+      order: 'ORDER BY startTime DESC',
+      tableName: channelHistory,
+      limit,
+      page
+    })
+  }
 }

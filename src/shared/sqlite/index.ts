@@ -102,4 +102,34 @@ export default class Sqlite {
   static replaceSql(sql: string, end = '') {
     return sql.replace(/,$/, end)
   }
+
+  /** 获取分页数据 */
+  async getPageSql<T = any>({
+    limit,
+    page,
+    tableName,
+    order,
+    where
+  }: Db.PageUtilParams) {
+    if (!page || page < 1) {
+      page = 1
+    }
+    const whereSql = where ? ` ${where}` : ''
+    const orderSql = order ? ` ${order}` : ''
+
+    const list = await this.all<T[]>(
+      `SELECT * FROM ${tableName}${whereSql}${orderSql} LIMIT ${limit} OFFSET ${limit *
+        (page - 1)};`
+    )
+    const countKey = `COUNT(*)`
+    const count = await this.get(
+      `SELECT ${countKey} FROM ${tableName}${whereSql};`
+    )
+    return {
+      limit,
+      page,
+      total: count[countKey],
+      list
+    }
+  }
 }

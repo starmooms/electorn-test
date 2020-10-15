@@ -52,14 +52,12 @@
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
-import { RecycleScroller } from 'vue-virtual-scroller'
 import Pagination from '@/renderer/components/Pagination/index.vue'
 import mainDb from '@/renderer/Db/mainDb'
 import { ERROR_STATUS } from '@/shared/config/port'
 
 @Component({
   components: {
-    RecycleScroller,
     Pagination
   }
 })

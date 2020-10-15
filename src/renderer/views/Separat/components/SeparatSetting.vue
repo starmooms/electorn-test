@@ -14,7 +14,7 @@
         <el-form-item>
           <el-input readonly v-model.trim="form.historyUrl">
             <template slot="append">
-              <div class="historySelect">选择</div>
+              <div class="historySelect" @click="historySelect">选择</div>
             </template>
           </el-input>
         </el-form-item>
@@ -124,6 +124,8 @@
       :levelList="levelList"
       @changeConfig="getSeparatConfig"
     />
+
+    <history-dialog :show.sync="historyShow" />
   </div>
 </template>
 
@@ -131,10 +133,12 @@
 import { getStoreConfig } from '@/renderer/ipc/storeConfig'
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import LevelDialog from './LevelDialog.vue'
+import HistoryDialog from './HistoryDialog.vue'
 
 @Component({
   components: {
-    LevelDialog
+    LevelDialog,
+    HistoryDialog
   }
 })
 export default class SeparatSetting extends Vue {
@@ -154,6 +158,7 @@ export default class SeparatSetting extends Vue {
     }
   }
   configShow = false
+  historyShow = false
 
   @Watch('form', { deep: true })
   c(v) {
@@ -189,6 +194,10 @@ export default class SeparatSetting extends Vue {
 
   configShowSet() {
     this.configShow = true
+  }
+
+  historySelect() {
+    this.historyShow = true
   }
 
   async getSeparatConfig() {

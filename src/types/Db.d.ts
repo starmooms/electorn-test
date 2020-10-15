@@ -17,6 +17,12 @@ declare namespace Db {
     limit: number
   }
 
+  interface PageUtilParams extends ListQuery {
+    tableName: string
+    where?: string
+    order?: string
+  }
+
   interface ListData<T = any> {
     limit: number
     page: number

@@ -143,7 +143,7 @@ export default class BoxSamp {
       })
       logger.info('读采样返回', resultBuf.toString('hex'))
     }
-    logger.debug('开始处理采样 ===> start')
+    logger.debug('sampStart ==> 开始处理采样')
     const readModel = new BufModel({
       model: SAMP_MODEL,
       readBuf: resultBuf
@@ -156,6 +156,7 @@ export default class BoxSamp {
       changeFilePath,
       errorList
     } = this.readSampModel(masterId, readModel)
+    logger.debug('数据处理完成')
 
     try {
       await Promise.all([
@@ -163,6 +164,7 @@ export default class BoxSamp {
         this.mainSaveChannelStatus(channelStatus),
         this.mainSaveError(errorList)
       ])
+      logger.debug('存储数据完成')
       if (channelStatus.length > 0 || changeFilePath.length > 0) {
         ipcManage.commonMsg('updateChannelList', [
           ...channelStatus,
@@ -173,7 +175,7 @@ export default class BoxSamp {
       logger.error(err)
     }
     this.sendWin(masterId, sampList)
-    logger.debug('采样处理结束 ===>end')
+    logger.debug('sampEnd ==> 采样处理结束')
   }
 
   /** 发送采样列表到渲染端 */
@@ -353,7 +355,7 @@ export default class BoxSamp {
 
           if (
             channel.lastSaveTime === null ||
-            // channel.lastSaveTime === samp.stepTime ||
+            channel.lastSaveTime === samp.stepTime ||
             this.sampShouldSave(
               channel.lastSaveTime,
               samp.stepTime,

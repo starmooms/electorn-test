@@ -24,4 +24,10 @@ export default class HistoryDb extends HistoryDbCom {
     const { stepsInfo } = this.tables
     return this.sqlite.get(`SELECT * FROM ${stepsInfo} WHERE id=1`)
   }
+
+  // /** 获取分容所需工步 */
+  // async getSeparatStep() {
+  //   const { stepStatistics } = this.tables
+  //   // return this.sqlite.get(`SELECT * FROM ${}`)
+  // }
 }

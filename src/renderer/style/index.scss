@@ -78,6 +78,12 @@ a {
   justify-content: center;
   align-items: center;
 
+  &.auto-height {
+    .el-dialog{
+      max-height: none;
+    }
+  }
+
   .el-dialog{
     display: flex;
     flex-flow: column;

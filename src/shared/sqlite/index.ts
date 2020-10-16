@@ -92,6 +92,7 @@ export default class Sqlite {
           reject(err)
         } else {
           this.isConnect = false
+          logger.info(`关闭连接 ${this.fileName}`)
           resolve(err)
         }
       })
@@ -114,8 +115,8 @@ export default class Sqlite {
     if (!page || page < 1) {
       page = 1
     }
-    const whereSql = where ? ` ${where}` : ''
-    const orderSql = order ? ` ${order}` : ''
+    const whereSql = where ? ` WHERE ${where}` : ''
+    const orderSql = order ? ` ORDER BY ${order}` : ''
 
     const list = await this.all<T[]>(
       `SELECT * FROM ${tableName}${whereSql}${orderSql} LIMIT ${limit} OFFSET ${limit *

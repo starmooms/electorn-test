@@ -5,24 +5,30 @@
     </div>
     <div class="box-content">
       <el-form class="box-item data-type">
-        <el-form-item>
+        <!-- <span>选择历史</span> -->
+        <div class="form-title">选择历史</div>
+        <!-- <el-form-item>
           <el-radio-group v-model="form.dataType">
             <el-radio label="当前数据" value="nowData"></el-radio>
             <el-radio label="历史文件" value="history"></el-radio>
           </el-radio-group>
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item>
-          <el-input readonly v-model.trim="form.historyUrl">
-            <template slot="append">
-              <div class="historySelect" @click="historySelect">选择</div>
-            </template>
+          <el-input readonly v-model="historyFile">
+            <el-button
+              class="historySelect"
+              slot="append"
+              @click="historySelect"
+            >
+              选择
+            </el-button>
           </el-input>
         </el-form-item>
       </el-form>
 
       <el-form class="box-item data-type">
         <div class="form-title">分选工步</div>
-        <el-form-item label="机柜">
+        <!-- <el-form-item label="机柜">
           <el-select v-model="form.masterId">
             <el-option
               v-for="(item, index) in 20"
@@ -31,14 +37,14 @@
               :value="index"
             ></el-option>
           </el-select>
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="工步">
-          <el-select v-model="form.workerId">
+          <el-select v-model="form.stepData" value-key="loopId">
             <el-option
               v-for="(item, index) in workerList"
-              :key="item"
-              :label="item"
-              :value="index"
+              :key="index"
+              :label="`${item.id + 1}(${item.loopId})：${item.msg}`"
+              :value="item"
             ></el-option>
           </el-select>
         </el-form-item>
@@ -51,14 +57,14 @@
             <el-option
               v-for="(item, index) in levelList"
               :key="index"
-              :label="`${item.id}（${item.desc}）`"
+              :label="`${index + 1}（${item.desc}）`"
               :value="index"
             ></el-option>
           </el-select>
           <el-button @click="configShowSet">条件设置</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button>只分选</el-button>
+          <el-button @click="handleSepart">只分选</el-button>
           <el-button>分选并发送</el-button>
         </el-form-item>
       </el-form>
@@ -74,7 +80,10 @@
         </div>
         <div class="master-list">
           <div class="master-item" v-for="item in 20" :key="item">
-            <div class="master-box">
+            <div
+              class="master-box"
+              :class="{ active: masterActive.indexOf(item) >= 0 }"
+            >
               {{ item }}
             </div>
           </div>
@@ -125,7 +134,7 @@
       @changeConfig="getSeparatConfig"
     />
 
-    <history-dialog :show.sync="historyShow" />
+    <history-dialog :show.sync="historyShow" @save="changeHistory" />
   </div>
 </template>
 
@@ -134,6 +143,8 @@ import { getStoreConfig } from '@/renderer/ipc/storeConfig'
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import LevelDialog from './LevelDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
+import HistoryDb from '@/renderer/Db/HistoryDb'
+import { stepsFormat } from '@/renderer/utils/util'
 
 @Component({
   components: {
@@ -146,7 +157,7 @@ export default class SeparatSetting extends Vue {
     dataType: 'nowData',
     historyUrl: '',
     masterId: 0,
-    workerId: null,
+    stepData: null as null | UtilT.StepFormatItem,
     levelId: null,
     setpsCondutc: [],
     condutc: {
@@ -174,7 +185,7 @@ export default class SeparatSetting extends Vue {
     { name: '恒流工步比', key: 'curIRate' }
   ]
 
-  workerList = []
+  workerList: UtilT.StepFormatList = []
 
   levelAttr = []
   levelList = [
@@ -192,12 +203,70 @@ export default class SeparatSetting extends Vue {
     }
   ]
 
+  // 当前选择的历史
+  historyFile = ''
+  historyItem: Db.RHistoryItem | null = null
+  db!: HistoryDb | null
+
   configShowSet() {
     this.configShow = true
   }
 
   historySelect() {
     this.historyShow = true
+  }
+
+  get masterActive() {
+    return this.historyItem
+      ? this.historyItem.masterIds.split(',').map(Number)
+      : []
+  }
+
+  /** 创建数据库连接 */
+  async createDb(history: Db.RHistoryItem | null) {
+    try {
+      const filePath = history ? `${history.filePath}/${history.fileId}` : ''
+      if (this.historyFile !== filePath) {
+        await this.closeDb()
+        if (filePath) {
+          const db = new HistoryDb(filePath)
+          await db.connect()
+          this.db = db
+          this.historyFile = filePath
+          this.historyItem = history
+        }
+      }
+    } catch (err) {
+      console.warn(err)
+      return null
+    }
+  }
+
+  /** 关闭数据库 */
+  closeDb() {
+    if (this.db) {
+      this.db.close()
+      this.db = null
+      this.historyItem = null
+      this.historyFile = ''
+    }
+  }
+
+  /** 选中历史文件 */
+  async changeHistory(data: Db.RHistoryItem | null) {
+    await this.createDb(data)
+    if (this.db) {
+      this.getHistoryStep()
+    }
+  }
+
+  /** 历史文件获取工步 */
+  async getHistoryStep() {
+    if (this.db) {
+      const data = await this.db.getWorkStep()
+      const stepList = JSON.parse(data.stepList)
+      this.workerList = stepsFormat(stepList, true)
+    }
   }
 
   async getSeparatConfig() {
@@ -211,8 +280,22 @@ export default class SeparatSetting extends Vue {
     }
   }
 
+  handleSepart() {
+    if (!this.historyItem) {
+      return this.$message.info('未选择历史')
+    } else if (!this.form.stepData) {
+      return this.$message.info('未选择工步')
+    } else if (this.levelList.length === 0) {
+      return this.$message.info('未设置分选等级')
+    }
+  }
+
   mounted() {
     this.getSeparatConfig()
+  }
+
+  beforeDestroy() {
+    this.closeDb()
   }
 }
 </script>
@@ -303,6 +386,10 @@ export default class SeparatSetting extends Vue {
         text-align: center;
         cursor: pointer;
         padding: 2px 0;
+
+        &.active {
+          background-color: #fff;
+        }
       }
     }
   }

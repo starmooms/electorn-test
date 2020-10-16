@@ -83,9 +83,14 @@ class HistoryDbCache {
 
   /** 工步启动时创建历史文件 */
   async createdHistory({ params, fileId, filePath, historyId }: CreateHistory) {
-    const historyDb = new HistoryDb(fileId, filePath, () => {
-      this.closeHistoryDb(historyId)
-    })
+    const historyDb = new HistoryDb(
+      fileId,
+      filePath,
+      () => {
+        this.closeHistoryDb(historyId)
+      },
+      false
+    )
     await historyDb.created(params, historyId)
     this.set(historyId, historyDb, params.dataSave)
   }

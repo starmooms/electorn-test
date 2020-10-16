@@ -210,6 +210,7 @@ export const SAMP_MODEL: Model[] = [
       SAMP_COM_PAR.stepId,
       SAMP_COM_PAR.workerCode,
       SAMP_COM_PAR.U,
+      SAMP_COM_PAR.I,
       SAMP_COM_PAR.loopNum
     ]
   },

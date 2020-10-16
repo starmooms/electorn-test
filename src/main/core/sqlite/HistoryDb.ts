@@ -24,8 +24,13 @@ type CloseCb = () => void
 export default class HistoryDb extends HistoryDbCom {
   closeCb: CloseCb | undefined
 
-  constructor(fileId: string, filePath: string, closeCb?: CloseCb) {
-    super(path.resolve(filePath, `${fileId}`))
+  constructor(
+    fileId: string,
+    filePath: string,
+    closeCb?: CloseCb,
+    checkFile = true
+  ) {
+    super(path.resolve(filePath, `${fileId}`), checkFile)
     this.closeCb = closeCb
   }
 

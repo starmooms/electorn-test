@@ -38,4 +38,31 @@ declare namespace Db {
     typeStr: string
     errCodeStr: string
   }
+
+  interface GetHistoryParams extends ListQuery {
+    fileId: string
+    startTime: number
+    endTime: number
+  }
+
+  /** 渲染端使用历史文件列表 */
+  interface RHistoryItem {
+    id: number
+    masterIds: string
+    slaverIds: string
+    channelIds: string
+    fileId: string
+    filePath: string
+    startTime: string
+    endTime: string
+  }
+
+  interface StepList {
+    id: number
+    type: string
+    name: string
+    input: {
+      [key: string]: number
+    }
+  }
 }

@@ -1,3 +1,5 @@
+// const path = require('path')
+
 // const { EventEmitter } = require('events')
 
 // class a extends EventEmitter {
@@ -24,8 +26,8 @@
 
 // b.b()
 
-const a = Buffer.alloc(4)
-a.writeFloatBE('-1.335', 0)
-console.log(a)
+// const a = Buffer.alloc(4)
+// a.writeFloatBE('-1.335', 0)
+// console.log(a)
 
-console.log(a.readFloatBE(0).toFixed(6))
+// console.log(a.readFloatBE(0).toFixed(6))

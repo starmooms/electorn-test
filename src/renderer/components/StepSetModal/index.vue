@@ -96,7 +96,6 @@
                       :key="item.label"
                       :label="item.label"
                       :value="item.value"
-                      :disabled="item.value.type === 'loop' && hasLoop"
                     ></el-option>
                   </el-select>
                 </template>
@@ -277,12 +276,6 @@ export default class StepSetModal extends Vue {
   //   return this.channelList[this.batchMasterId] || null
   // }
 
-  get hasLoop() {
-    return this.stepsList.find((item: any) => item.type === 'loop')
-      ? true
-      : false
-  }
-
   async stepsSubmit() {
     let msg = ''
     let masterIds: number[] = []
@@ -437,11 +430,7 @@ export default class StepSetModal extends Vue {
       name: '',
       input: {}
     }
-    if (this.hasLoop) {
-      this.stepsList.splice(this.stepsList.length - 1, 0, obj)
-    } else {
-      this.stepsList.push(obj)
-    }
+    this.stepsList.push(obj)
   }
 
   stepsDel(index: number) {
@@ -449,7 +438,7 @@ export default class StepSetModal extends Vue {
   }
 
   stepItemIdChange(value, row, index) {
-    const lastIndex = this.stepsList.length - 1
+    // const lastIndex = this.stepsList.length - 1
     const input = {}
     value.input.forEach(item => {
       input[item] = null
@@ -457,10 +446,10 @@ export default class StepSetModal extends Vue {
     row.input = input
     row.type = value.type
     row.name = value.name
-    if (value === 'loop' && index !== lastIndex) {
-      this.stepsList.splice(index, 1)
-      this.stepsList.push(row)
-    }
+    // if (value === 'loop' && index !== lastIndex) {
+    //   this.stepsList.splice(index, 1)
+    //   this.stepsList.push(row)
+    // }
   }
 
   mounted() {

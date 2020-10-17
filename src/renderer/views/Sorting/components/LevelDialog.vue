@@ -247,6 +247,7 @@ export default class LevelDialog extends Vue {
         })
       })
       const data = {
+        id: index + 1,
         desc: item.desc,
         ...attrData
       }

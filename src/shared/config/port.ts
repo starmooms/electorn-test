@@ -343,5 +343,9 @@ export const CONTROL_CODE = {
   calRead: {
     code: 0x8a,
     name: '读校准'
+  },
+  lampSet: {
+    code: 0xa3,
+    name: '通道灯设置'
   }
 }

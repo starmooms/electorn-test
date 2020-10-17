@@ -5,13 +5,16 @@
         <template slot="paneL">
           <div class="l-t-box">
             <div class="l-t-l">
-              <ChannelInfo />
+              <ChannelInfo ref="channelInfo" :masterId="actionMasterId" />
             </div>
             <div class="show-btn" @click="setShow('setting')">
               <span>></span>
             </div>
             <div class="l-t-r" v-show="show.setting">
-              <sorting-setting @setTabel="setTabel" />
+              <sorting-setting
+                @storingResult="storingResult"
+                :actionMasterId.sync="actionMasterId"
+              />
             </div>
           </div>
         </template>
@@ -26,7 +29,7 @@
       <span>></span>
     </div>
     <div class="r-box" v-show="show.result">
-      <Result />
+      <Result ref="result" :levelResult="levelResult" />
     </div>
   </div>
 </template>
@@ -49,16 +52,19 @@ import DetailsTabel from './components/DetailsTabel.vue'
   }
 })
 export default class Sorting extends Vue {
-  @Prop({ type: String }) className!: string
-
   $refs!: {
     detailsTabel: DetailsTabel
+    result: Result
+    channelInfo: ChannelInfo
   }
 
   show = {
     result: true,
     setting: true
   }
+  actionMasterId = 0
+
+  levelResult: SortingT.LevelResult[] = []
 
   setShow(key: string) {
     if (this.show[key] !== void 0) {
@@ -70,12 +76,14 @@ export default class Sorting extends Vue {
     document.title = '容量分选'
   }
 
-  setTabel(data) {
+  storingResult(data: SortingT.LevelEmitResult) {
     const xTabel = this.$refs?.detailsTabel?.$refs?.xTabel
-    console.log(xTabel)
     if (xTabel) {
-      xTabel.reloadData(data)
+      xTabel.reloadData(data.list)
     }
+    this.levelResult = data.levelResultList
+    this.$refs.result.setBoxResult(data.boxResultList)
+    this.$refs.channelInfo.setBoxResult(data.boxLampResult)
   }
 }
 </script>

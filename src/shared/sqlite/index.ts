@@ -1,5 +1,7 @@
 import sqlite3 from 'sqlite3'
 import logger from '@/main/core/Logger'
+import is from 'electron-is'
+import { remote } from 'electron'
 const sqlite = sqlite3.verbose()
 
 export default class Sqlite {
@@ -29,6 +31,8 @@ export default class Sqlite {
         }
       })
       this.isConnect = true
+    }).catch(err => {
+      return this.handleError<null>(err)
     })
   }
 
@@ -42,6 +46,8 @@ export default class Sqlite {
           reject(err)
         }
       })
+    }).catch(err => {
+      return this.handleError<null>(err)
     })
   }
 
@@ -55,6 +61,8 @@ export default class Sqlite {
           reject(err)
         }
       })
+    }).catch(err => {
+      return this.handleError<null>(err)
     })
   }
 
@@ -68,6 +76,8 @@ export default class Sqlite {
           resolve(data)
         }
       })
+    }).catch(err => {
+      return this.handleError<T>(err)
     })
   }
 
@@ -81,6 +91,8 @@ export default class Sqlite {
           resolve((data as unknown) as T)
         }
       })
+    }).catch(err => {
+      return this.handleError<T>(err)
     })
   }
 
@@ -96,7 +108,20 @@ export default class Sqlite {
           resolve(err)
         }
       })
+    }).catch(err => {
+      return this.handleError<null>(err)
     })
+  }
+
+  handleError<T>(err: any): T {
+    if (is.renderer()) {
+      remote.dialog.showMessageBox(remote.getCurrentWindow(), {
+        type: 'error',
+        title: 'sqlite Error',
+        message: err.message
+      })
+    }
+    throw err
   }
 
   /** 将sql最后一个‘,’，替换掉 */

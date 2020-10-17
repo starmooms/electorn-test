@@ -163,4 +163,14 @@ declare namespace ipcReq {
     startId?: number
     status: string
   }
+
+  interface LampSetOpts {
+    list: {
+      masterId: number
+      slaverList: {
+        slaverId: number
+        channelBit: number[]
+      }[]
+    }[]
+  }
 }

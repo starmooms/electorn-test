@@ -5,6 +5,7 @@ import is from 'electron-is'
 import BoxSamp from './BoxSamp'
 import BoxCal from './BoxCal'
 import BoxStatus from './BoxStatus'
+import BoxLamp from './BoxLamp'
 
 interface PostOpts {
   timeout?: number
@@ -35,6 +36,7 @@ export class BoxManage {
   boxSamp = new BoxSamp(this)
   boxCal = new BoxCal(this)
   boxStatus = new BoxStatus(this)
+  boxLamp = new BoxLamp(this)
 
   create() {
     this.initChannelResolve = this.initChannelStatusList()

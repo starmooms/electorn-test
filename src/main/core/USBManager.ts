@@ -148,6 +148,13 @@ export default class USBManager {
     })
   }
 
+  /** 设置点灯 */
+  setLamp() {
+    ipcManage.handle('/port/lamp/set', async (event, data) => {
+      return boxManage.boxLamp.setLamp(data)
+    })
+  }
+
   /** 获取列表 */
   getChannelList() {
     ipcManage.handle('/port/channelList', async () => {

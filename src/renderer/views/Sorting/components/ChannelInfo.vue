@@ -8,14 +8,23 @@
       </ul>
     </div>
     <div class="channel-channel-box">
-      <div class="channel-id-item" v-for="channelId in 8" :key="channelId">
+      <div
+        class="channel-id-item"
+        v-for="(channelId, cIndex) in 8"
+        :key="channelId"
+      >
         <div class="channel-id">{{ channelId }}</div>
 
         <ul class="channel-row-box">
           <li
             class="channel-row channel-status"
-            v-for="item in 32"
+            v-for="(item, index) in 32"
             :key="item"
+            :class="{
+              action: actionList[cIndex]
+                ? actionList[cIndex].indexOf(index) >= 0
+                : false
+            }"
           ></li>
         </ul>
       </div>
@@ -24,10 +33,40 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Prop, Vue } from 'vue-property-decorator'
 
 @Component
-export default class ChannelInfo extends Vue {}
+export default class ChannelInfo extends Vue {
+  @Prop({ type: Number, default: 0 }) masterId!: number
+  list: any = null
+
+  get actionList() {
+    return this.list && this.list[this.masterId] ? this.list[this.masterId] : {}
+  }
+
+  /** 设置结果 */
+  setBoxResult(boxRestul: SortingT.BoxLampResult) {
+    const list: any = {}
+    Object.entries(boxRestul).forEach(master => {
+      Object.entries(master[1]).forEach(slaver => {
+        if (!list[master[0]]) {
+          list[master[0]] = {}
+        }
+        const m = list[master[0]]
+        slaver[1].forEach(channelId => {
+          if (!m[channelId]) {
+            m[channelId] = []
+          }
+          const c = m[channelId]
+
+          c.push(Number(slaver[0]))
+        })
+      })
+    })
+    this.list = list
+    console.log(this.list)
+  }
+}
 </script>
 <style lang="scss" scoped>
 .channel-info {
@@ -68,6 +107,9 @@ export default class ChannelInfo extends Vue {}
         height: 100%;
         box-sizing: border-box;
         border: 1px solid #333;
+        &.action {
+          background-color: red;
+        }
       }
     }
   }

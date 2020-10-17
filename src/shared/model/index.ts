@@ -132,9 +132,6 @@ export const CAL_MODEL: Model[] = [
   }
 ]
 
-declare type ModelObj = {
-  [key: string]: BufModelT.OrginModel
-}
 /** 采样通用参数 */
 const SAMP_COM_PAR = {
   workerCode: { name: 'workerCode', bytLen: 1 },
@@ -236,6 +233,21 @@ export const SAMP_MODEL: Model[] = [
       ...SAMP_COM_PAR_STEP,
       ...SAMP_COM_PAR_STATUS,
       { name: 'featureType', bytLen: 1 }
+    ]
+  }
+]
+
+/** 点灯控制 */
+export const LAMP_MODEL: Model[] = [
+  { name: 'masterId', bytLen: 1 },
+  { name: 'lampLen', bytLen: 1 },
+  {
+    name: 'lampList',
+    type: 'list',
+    len: 'lampLen',
+    model: [
+      { name: 'slaverId', bytLen: 1 },
+      { name: 'channelBit', bytLen: 8 }
     ]
   }
 ]

@@ -11,12 +11,18 @@
   >
     <!-- eslint-disable -->
     <vxe-table-column type="seq" title="序号" width="80"></vxe-table-column>
-    <vxe-table-column field="masterId" title="主控号" width="80" ></vxe-table-column>
-    <vxe-table-column field="slaverId" title="从控号" width="80" ></vxe-table-column>
-    <vxe-table-column field="channelId" title="通道号" width="80" ></vxe-table-column>
+    <vxe-table-column field="masterId" title="主控号" width="80">
+      <template v-slot="{ row }">{{ row.masterId+1 }}</template>
+    </vxe-table-column>
+    <vxe-table-column field="slaverId" title="从控号" width="80">
+      <template v-slot="{ row }">{{ row.slaverId+1 }}</template>
+    </vxe-table-column>
+    <vxe-table-column field="channelId" title="通道号" width="80">
+      <template v-slot="{ row }">{{ row.channelId+1 }}</template>
+    </vxe-table-column>
     <vxe-table-column field="vol" title="容量" width="80"></vxe-table-column>
     <vxe-table-column field="epower" title="电量" width="80"></vxe-table-column>
-    <vxe-table-column field="time" title="时间" width="80"></vxe-table-column>
+    <vxe-table-column field="stepTime" title="时间" width="80"></vxe-table-column>
     <vxe-table-column field="startU" title="开压" width="80"></vxe-table-column>
     <vxe-table-column field="endU" title="终压" width="80"></vxe-table-column>
     <vxe-table-column field="avgU" title="均压" width="80"></vxe-table-column>

@@ -78,5 +78,28 @@ declare namespace Db {
   interface GetStoring {
     setpId: number
     loopNum: number
+    levelList: Store.LevelItem[]
+    levelAttr: string[]
+  }
+
+  interface LevelChResult {
+    masterId: number
+    slaverId: number
+    channelId: number
+    fullId: string
+  }
+
+  interface StoringResult {
+    [key: string]: {
+      id: number
+      desc: string
+      levelResult: LevelChResult[]
+    }
+  }
+
+  /** 分容返回 */
+  interface StoringData {
+    list: any[]
+    sortingResult: StoringResult
   }
 }

@@ -55,10 +55,10 @@
         <el-form-item class="form-flex-item">
           <el-select multiple collapse-tags v-model="form.levelId">
             <el-option
-              v-for="(item, index) in levelList"
-              :key="index"
-              :label="`${index + 1}（${item.desc}）`"
-              :value="index"
+              v-for="item in levelList"
+              :key="item.id"
+              :label="`${item.id}（${item.desc}）`"
+              :value="item.id"
             ></el-option>
           </el-select>
           <el-button @click="configShowSet">条件设置</el-button>
@@ -82,7 +82,11 @@
           <div class="master-item" v-for="(item, index) in 20" :key="item">
             <div
               class="master-box"
-              :class="{ active: masterActive.indexOf(index) >= 0 }"
+              :class="{
+                active: masterActive.indexOf(index) >= 0,
+                select: nowBoxId === index
+              }"
+              @click="nowBoxId = index"
             >
               {{ item }}
             </div>
@@ -140,11 +144,11 @@
 
 <script lang="ts">
 import { getStoreConfig } from '@/renderer/ipc/storeConfig'
-import { Component, Vue, Watch } from 'vue-property-decorator'
+import { Component, Vue, Watch, PropSync } from 'vue-property-decorator'
 import LevelDialog from './LevelDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
-import { stepsFormat } from '@/renderer/utils/util'
+import { computerAdd, getPercent, stepsFormat } from '@/renderer/utils/util'
 
 @Component({
   components: {
@@ -153,12 +157,15 @@ import { stepsFormat } from '@/renderer/utils/util'
   }
 })
 export default class SortingSetting extends Vue {
+  @PropSync('actionMasterId', { type: Number, default: 0 })
+  private nowBoxId!: number
+
   form = {
     dataType: 'nowData',
     historyUrl: '',
     masterId: 0,
     stepData: null as null | UtilT.StepFormatItem,
-    levelId: null as null | number[],
+    levelId: [] as number[],
     setpsCondutc: [],
     condutc: {
       vol: null,
@@ -187,20 +194,7 @@ export default class SortingSetting extends Vue {
   workerList: UtilT.StepFormatList = []
 
   levelAttr = []
-  levelList = [
-    {
-      id: 1,
-      desc: '描述'
-    },
-    {
-      id: 2,
-      desc: ''
-    },
-    {
-      id: 3,
-      desc: ''
-    }
-  ]
+  levelList: Store.LevelItem[] = []
 
   // 当前选择的历史
   historyFile = ''
@@ -215,8 +209,24 @@ export default class SortingSetting extends Vue {
     this.historyShow = true
   }
 
+  /** 本次参与分选的机柜 */
   get masterActive() {
     return this.historyItem ? this.historyItem.masterIdArr : []
+  }
+
+  /** 计算各机柜通道总数 */
+  get masterChTotal() {
+    return this.historyItem
+      ? this.historyItem.slaverIdArr.length *
+          this.historyItem.channelIdArr.length
+      : 0
+  }
+
+  /** 计算通道总数 */
+  get channelTotal() {
+    return this.historyItem
+      ? this.historyItem.masterIdArr.length * this.masterChTotal
+      : 0
   }
 
   /** 创建数据库连接 */
@@ -230,7 +240,6 @@ export default class SortingSetting extends Vue {
           await db.connect()
           this.db = db
           this.historyFile = filePath
-          console.log(history)
           this.historyItem = history
         }
       }
@@ -279,21 +288,111 @@ export default class SortingSetting extends Vue {
   }
 
   /** 触发分选 */
-  async handleSorting() {
+  async handleSorting(lampSet=false) {
+    const selectLevel = this.form.levelId
     if (!this.historyItem || !this.db) {
       return this.$message.info('未选择历史')
     } else if (!this.form.stepData) {
       return this.$message.info('未选择工步')
-    } else if (this.levelList.length === 0) {
+    } else if (selectLevel.length === 0) {
       return this.$message.info('未设置分选等级')
     }
     const stepData = this.form.stepData
+    // const levelList = this.levelList.filter(item => {
+    //   return selectLevel.includes(item.id)
+    // })
     const data = await this.db.getSorting({
       setpId: stepData.id,
-      loopNum: stepData.loopNum
+      loopNum: stepData.loopNum,
+      levelList: this.levelList,
+      levelAttr: this.levelAttr
     })
-    console.log(data)
-    this.$emit('setTabel', data)
+
+    const total = this.channelTotal
+    const sortingResult = data.sortingResult
+
+    const channelResult: {
+      [key: string]: {
+        [key: string]: {
+          [key: string]: true
+        }
+      }
+    } = {}
+
+    /** 深度获取，如果不存在设置空对象 */
+    const getDeep = (
+      target: any,
+      key: string | number,
+      val = Object.create(null)
+    ) => {
+      let target2 = target[key]
+      if (!target2) {
+        target2 = val
+        target[key] = target2
+      }
+      return target2
+    }
+
+    // 根据等级列表统计
+    const levelResultList = this.levelList.map(item => {
+      const levelResult = data.sortingResult[item.id]?.levelResult
+      const num = levelResult.length ?? 0
+      if (selectLevel.includes(item.id)) {
+        levelResult.forEach(item => {
+          const master = getDeep(channelResult, item.masterId)
+          const slaver = getDeep(master, item.slaverId)
+          getDeep(slaver, item.channelId, item.fullId)
+        })
+      }
+      return {
+        id: item.id,
+        desc: item.desc,
+        num,
+        total,
+        percent: getPercent(num, total)
+      }
+    })
+
+    // 根据机柜统计
+    const boxResultList: SortingT.BoxResult[] = []
+    const boxTotal = this.masterChTotal
+    const boxLampResult: any = {}
+    const getMasterResult = (masterId: number) => {
+      let num = 0
+      const masterObj = channelResult[masterId]
+      if (masterObj) {
+        const master = getDeep(boxLampResult, masterId)
+        Object.entries(masterObj).forEach(slaverObj => {
+          const slaver = getDeep(master, slaverObj[0], [])
+          Object.entries(slaverObj[1]).forEach(channelObj => {
+            num += 1
+            slaver.push(Number(channelObj[0]))
+          })
+        })
+      }
+      return num
+    }
+    this.masterActive.forEach(masterId => {
+      const num = getMasterResult(masterId)
+      boxResultList.push({
+        masterId,
+        masterName: String(masterId + 1),
+        num,
+        total: boxTotal,
+        percent: getPercent(num, boxTotal)
+      })
+    })
+
+    this.$emit('storingResult', {
+      list: data.list,
+      levelResultList,
+      boxResultList,
+      boxLampResult
+    })
+
+    if(lampSet){
+      
+    }
     // this.db.getSorting()
     // this.db.getSampData()
   }
@@ -399,6 +498,9 @@ export default class SortingSetting extends Vue {
 
         &.active {
           background-color: #fff;
+          &.select {
+            background-color: #0db2f9;
+          }
         }
       }
     }

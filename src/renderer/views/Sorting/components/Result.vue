@@ -11,7 +11,7 @@
       <el-table-column prop="desc" label="等级描述" />
       <el-table-column prop="num" label="电池个数" width="80" />
       <el-table-column prop="total" label="电池总数" width="80" />
-      <el-table-column prop="percent" label="比例" width="60" />
+      <el-table-column prop="percent" label="比例" width="80" />
     </el-table>
     <div class="total-tabel">
       <el-table
@@ -20,8 +20,8 @@
         height="300px"
         :data="totalResult"
       >
-        <el-table-column prop="masterId" label="柜号" width="60" />
-        <el-table-column prop="num" label="电池个数" width="60" />
+        <el-table-column prop="masterName" label="柜号" width="60" />
+        <el-table-column prop="num" label="电池个数" width="80" />
         <el-table-column prop="total" label="电池总数" width="80" />
         <el-table-column prop="percent" label="比例" />
       </el-table>
@@ -30,41 +30,31 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { getPercent } from '@/renderer/utils/util'
+import { Component, Prop, Vue } from 'vue-property-decorator'
 
 @Component
 export default class ChannelInfo extends Vue {
-  levelResult: any[] = [
-    {
-      level: 1,
-      desc: '等级1描述',
-      num: 10,
-      total: 256,
-      percent: '0.20%'
-    },
-    {
-      level: 1,
-      desc: '等级1描述',
-      num: 10,
-      total: 256,
-      percent: '0.20%'
-    }
-  ]
+  @Prop({ type: Array, required: true }) levelResult!: SortingT.LevelResult[]
 
-  totalResult: any[] = [
-    {
-      masterId: '合计',
-      num: 20,
-      total: 256,
-      percent: '0.20%'
-    },
-    {
-      masterId: 1,
-      num: 10,
-      total: 256,
-      percent: '0.20%'
+  totalResult: SortingT.BoxResult[] = []
+
+  /** 设置机柜结果 */
+  setBoxResult(boxResutl: SortingT.BoxResult[]) {
+    const totalRow: SortingT.BoxResult = {
+      masterId: -1,
+      masterName: '合计',
+      num: 0,
+      total: 0,
+      percent: ''
     }
-  ]
+    boxResutl.forEach(item => {
+      totalRow.num += item.num
+      totalRow.total += item.total
+    })
+    totalRow.percent = getPercent(totalRow.num, totalRow.total)
+    this.totalResult = [totalRow, ...boxResutl]
+  }
 }
 </script>
 <style lang="scss" scoped>

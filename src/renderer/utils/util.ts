@@ -201,6 +201,16 @@ export const computerAdd = (num1: number, num2: number, r = 10) => {
   return (num1 * r + num2 * r) / r
 }
 
+/** 精度计算除法 */
+export const computerDiv = (num1: number, num2: number, r = 10) => {
+  return ((num1 * r) / (num2 * r)) * r
+}
+
+/**  */
+export const getPercent = (num1: number, num2: number, r = 2) => {
+  return computerDiv(num1, num2, 10 ** r).toFixed(r) + '%'
+}
+
 /** 格式化idList */
 export const idListFormat = (idList: string) => {
   const idArr = idList.split(',').map(item => Number(item))

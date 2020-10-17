@@ -29,10 +29,58 @@ export default class HistoryDb extends HistoryDbCom {
   }
 
   /** 获取分选信息 */
-  async getSorting({ setpId, loopNum }: Db.GetStoring) {
+  async getSorting({ setpId, loopNum, levelList, levelAttr }: Db.GetStoring) {
     const { stepStatistics } = this.tables
-    return this.sqlite.all(
-      `SELECT * FROM ${stepStatistics} WHERE stepId=${setpId} AND loopNum=${loopNum}`
-    )
+    const setpSql = `stepId=${setpId} AND loopNum=${loopNum}`
+    const result: Db.StoringData = {
+      list: [],
+      sortingResult: {}
+    }
+    const levelSearch = levelList.map(async level => {
+      // 遍历等级
+      let levelSql = ''
+      levelAttr.forEach(attr => {
+        // 遍历属性值
+        let attrSql = ''
+        const min = level[`${attr}_min`]
+        const max = level[`${attr}_max`]
+        if (min != null) {
+          attrSql += `${attr}>=${min}`
+        }
+        if (max != null) {
+          if (attrSql) {
+            attrSql += ` AND `
+          }
+          attrSql += `${attr}<${max}`
+        }
+        if (attrSql) {
+          levelSql += ` AND ${attrSql}`
+        }
+      })
+
+      let levelResult: Db.LevelChResult[] = []
+
+      if (levelSql) {
+        levelResult = await this.sqlite.all(
+          `SELECT masterId,slaverId,channelId,fullId FROM ${stepStatistics} WHERE ${setpSql}${levelSql}`
+        )
+      }
+      result.sortingResult[level.id] = {
+        id: level.id,
+        desc: level.desc,
+        levelResult
+      }
+      return
+    })
+    await Promise.all([
+      this.sqlite
+        .all(`SELECT * FROM ${stepStatistics} WHERE ${setpSql}`)
+        .then(list => {
+          result.list = list
+        }),
+      ...levelSearch
+    ])
+
+    return result
   }
 }

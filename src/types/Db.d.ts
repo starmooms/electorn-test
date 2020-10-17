@@ -39,10 +39,20 @@ declare namespace Db {
     errCodeStr: string
   }
 
+  /** 主数据库获取历史列表 */
   interface GetHistoryParams extends ListQuery {
     fileId: string
     startTime: number
     endTime: number
+  }
+  /** 工步解析后 */
+  interface StepList {
+    id: number
+    type: string
+    name: string
+    input: {
+      [key: string]: number
+    }
   }
 
   /** 渲染端使用历史文件列表 */
@@ -55,14 +65,18 @@ declare namespace Db {
     filePath: string
     startTime: string
     endTime: string
+    // 格式化id
+    masterIdArr: number[]
+    masterIdShowStr: string
+    slaverIdArr: number[]
+    slaverIdShowStr: string
+    channelIdArr: number[]
+    channelIdShowStr: string
   }
 
-  interface StepList {
-    id: number
-    type: string
-    name: string
-    input: {
-      [key: string]: number
-    }
+  /** 获取容量分选参数 */
+  interface GetStoring {
+    setpId: number
+    loopNum: number
   }
 }

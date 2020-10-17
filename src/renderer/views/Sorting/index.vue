@@ -1,5 +1,5 @@
 <template>
-  <div class="separat-box">
+  <div class="sorting-box">
     <div class="l-box">
       <split-pane class="main-box" split="horizontal" :defaultPercent="76">
         <template slot="paneL">
@@ -11,13 +11,13 @@
               <span>></span>
             </div>
             <div class="l-t-r" v-show="show.setting">
-              <separat-setting />
+              <sorting-setting @setTabel="setTabel" />
             </div>
           </div>
         </template>
         <template slot="paneR">
           <div class="l-b-box">
-            <details-tabel />
+            <details-tabel ref="detailsTabel" />
           </div>
         </template>
       </split-pane>
@@ -36,7 +36,7 @@ import { Component, Vue, Prop } from 'vue-property-decorator'
 import SplitPane from '@/renderer/components/SplitPane/index.vue'
 import ChannelInfo from './components/ChannelInfo.vue'
 import Result from './components/Result.vue'
-import SeparatSetting from './components/SeparatSetting.vue'
+import SortingSetting from './components/SortingSetting.vue'
 import DetailsTabel from './components/DetailsTabel.vue'
 
 @Component({
@@ -44,12 +44,16 @@ import DetailsTabel from './components/DetailsTabel.vue'
     SplitPane,
     ChannelInfo,
     Result,
-    SeparatSetting,
+    SortingSetting,
     DetailsTabel
   }
 })
-export default class Separat extends Vue {
+export default class Sorting extends Vue {
   @Prop({ type: String }) className!: string
+
+  $refs!: {
+    detailsTabel: DetailsTabel
+  }
 
   show = {
     result: true,
@@ -65,11 +69,19 @@ export default class Separat extends Vue {
   mounted() {
     document.title = '容量分选'
   }
+
+  setTabel(data) {
+    const xTabel = this.$refs?.detailsTabel?.$refs?.xTabel
+    console.log(xTabel)
+    if (xTabel) {
+      xTabel.reloadData(data)
+    }
+  }
 }
 </script>
 
 <style lang="scss" scoped>
-.separat-box {
+.sorting-box {
   display: flex;
   height: 100%;
   .l-box {

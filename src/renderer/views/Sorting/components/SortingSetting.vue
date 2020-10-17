@@ -1,5 +1,5 @@
 <template>
-  <div class="separat-setting">
+  <div class="sorting-setting">
     <div class="box-title">
       <h4 class="title">分选条件与执行</h4>
     </div>
@@ -53,7 +53,7 @@
       <el-form class="box-item data-type">
         <div class="form-title">分选等级</div>
         <el-form-item class="form-flex-item">
-          <el-select v-model="form.levelId">
+          <el-select multiple collapse-tags v-model="form.levelId">
             <el-option
               v-for="(item, index) in levelList"
               :key="index"
@@ -64,7 +64,7 @@
           <el-button @click="configShowSet">条件设置</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button @click="handleSepart">只分选</el-button>
+          <el-button @click="handleSorting">只分选</el-button>
           <el-button>分选并发送</el-button>
         </el-form-item>
       </el-form>
@@ -72,17 +72,17 @@
       <el-form class="box-item data-type">
         <div class="form-title button-title">
           <span class="txt">多机分选</span>
-          <div class="button-box">
+          <!-- <div class="button-box">
             <el-button>联机</el-button>
             <el-button>全选</el-button>
             <el-button>全不选</el-button>
-          </div>
+          </div> -->
         </div>
         <div class="master-list">
-          <div class="master-item" v-for="item in 20" :key="item">
+          <div class="master-item" v-for="(item, index) in 20" :key="item">
             <div
               class="master-box"
-              :class="{ active: masterActive.indexOf(item) >= 0 }"
+              :class="{ active: masterActive.indexOf(index) >= 0 }"
             >
               {{ item }}
             </div>
@@ -131,7 +131,7 @@
       :show.sync="configShow"
       :levelAttr="levelAttr"
       :levelList="levelList"
-      @changeConfig="getSeparatConfig"
+      @changeConfig="getSortingConfig"
     />
 
     <history-dialog :show.sync="historyShow" @save="changeHistory" />
@@ -152,13 +152,13 @@ import { stepsFormat } from '@/renderer/utils/util'
     HistoryDialog
   }
 })
-export default class SeparatSetting extends Vue {
+export default class SortingSetting extends Vue {
   form = {
     dataType: 'nowData',
     historyUrl: '',
     masterId: 0,
     stepData: null as null | UtilT.StepFormatItem,
-    levelId: null,
+    levelId: null as null | number[],
     setpsCondutc: [],
     condutc: {
       vol: null,
@@ -174,7 +174,6 @@ export default class SeparatSetting extends Vue {
   @Watch('form', { deep: true })
   c(v) {
     console.log(v)
-    console.log(v.setpsCondutc)
   }
 
   condutcList = [
@@ -217,15 +216,13 @@ export default class SeparatSetting extends Vue {
   }
 
   get masterActive() {
-    return this.historyItem
-      ? this.historyItem.masterIds.split(',').map(Number)
-      : []
+    return this.historyItem ? this.historyItem.masterIdArr : []
   }
 
   /** 创建数据库连接 */
   async createDb(history: Db.RHistoryItem | null) {
     try {
-      const filePath = history ? `${history.filePath}/${history.fileId}` : ''
+      const filePath = history ? `${history.filePath}\\${history.fileId}` : ''
       if (this.historyFile !== filePath) {
         await this.closeDb()
         if (filePath) {
@@ -233,6 +230,7 @@ export default class SeparatSetting extends Vue {
           await db.connect()
           this.db = db
           this.historyFile = filePath
+          console.log(history)
           this.historyItem = history
         }
       }
@@ -269,9 +267,9 @@ export default class SeparatSetting extends Vue {
     }
   }
 
-  async getSeparatConfig() {
+  async getSortingConfig() {
     const result = await getStoreConfig({
-      type: 'separat'
+      type: 'sorting'
     })
     if (result.status) {
       const data = result.data
@@ -280,18 +278,28 @@ export default class SeparatSetting extends Vue {
     }
   }
 
-  handleSepart() {
-    if (!this.historyItem) {
+  /** 触发分选 */
+  async handleSorting() {
+    if (!this.historyItem || !this.db) {
       return this.$message.info('未选择历史')
     } else if (!this.form.stepData) {
       return this.$message.info('未选择工步')
     } else if (this.levelList.length === 0) {
       return this.$message.info('未设置分选等级')
     }
+    const stepData = this.form.stepData
+    const data = await this.db.getSorting({
+      setpId: stepData.id,
+      loopNum: stepData.loopNum
+    })
+    console.log(data)
+    this.$emit('setTabel', data)
+    // this.db.getSorting()
+    // this.db.getSampData()
   }
 
   mounted() {
-    this.getSeparatConfig()
+    this.getSortingConfig()
   }
 
   beforeDestroy() {
@@ -300,7 +308,7 @@ export default class SeparatSetting extends Vue {
 }
 </script>
 <style lang="scss" scoped>
-.separat-setting {
+.sorting-setting {
   height: 100%;
   box-sizing: border-box;
   display: flex;
@@ -386,6 +394,8 @@ export default class SeparatSetting extends Vue {
         text-align: center;
         cursor: pointer;
         padding: 2px 0;
+        border: 2px solid #969696;
+        box-sizing: border-box;
 
         &.active {
           background-color: #fff;

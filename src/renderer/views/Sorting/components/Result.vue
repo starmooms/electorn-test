@@ -1,5 +1,5 @@
 <template>
-  <div class="separat-result">
+  <div class="sorting-result">
     <el-table
       border
       class="min-el-tabel border-el-table"
@@ -68,7 +68,7 @@ export default class ChannelInfo extends Vue {
 }
 </script>
 <style lang="scss" scoped>
-.separat-result {
+.sorting-result {
   width: 500px;
   box-sizing: border-box;
   padding: 10px;

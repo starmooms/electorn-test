@@ -4,6 +4,7 @@
     auto-resize
     show-overflow
     resizable
+    ref="xTabel"
     :data="tableData"
     size="mini"
     height="auto"
@@ -37,6 +38,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
+import { Table } from 'vxe-table'
 
 @Component
 export default class DetailsTabel extends Vue {
@@ -57,48 +59,51 @@ export default class DetailsTabel extends Vue {
   //   },
   //   { id: 10003, name: 'Test3', role: 'PM', sex: 'Man', address: 'Shanghai' }
   // ]
+  $refs!: {
+    xTabel: Table
+  }
 
   tableData = [
-    {
-      masterId: 0,
-      slaverId: 0,
-      channelId: 0,
-      vol: 2.1,
-      epower: 4.1,
-      time: 10,
-      startU: 30,
-      endU: 40,
-      avgU: 20,
-      endI: 50,
-      curIRate: 1.2,
-      t1: 0,
-      c1: 0,
-      t2: 0,
-      c2: 3,
-      t3: 0,
-      c3: 4,
-      t4: 2,
-      c4: 5,
-      t5: 53,
-      c5: 1
-    }
+    // {
+    //   masterId: 0,
+    //   slaverId: 0,
+    //   channelId: 0,
+    //   vol: 2.1,
+    //   epower: 4.1,
+    //   time: 10,
+    //   startU: 30,
+    //   endU: 40,
+    //   avgU: 20,
+    //   endI: 50,
+    //   curIRate: 1.2,
+    //   t1: 0,
+    //   c1: 0,
+    //   t2: 0,
+    //   c2: 3,
+    //   t3: 0,
+    //   c3: 4,
+    //   t4: 2,
+    //   c4: 5,
+    //   t5: 53,
+    //   c5: 1
+    // }
   ]
 
   mounted() {
-    const list: any = []
-    const item = this.tableData[0]
-    for (let i = 0; i < 5000; i++) {
-      console.log(i)
-      list.push({
-        ...item,
-        channelId: i
-      })
-    }
-    this.$nextTick(() => {
-      setTimeout(() => {
-        this.tableData = list
-      })
-    })
+    // const list: any = []
+    // const item = this.tableData[0]
+    // for (let i = 0; i < 5000; i++) {
+    //   console.log(i)
+    //   list.push({
+    //     ...item,
+    //     channelId: i
+    //   })
+    // }
+    // this.$nextTick(() => {
+    //   setTimeout(() => {
+    //     this.tableData = list
+    //   })
+    // })
   }
 }
 </script>

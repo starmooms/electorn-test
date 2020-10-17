@@ -260,7 +260,7 @@ export default class LevelDialog extends Vue {
 
   async dialogSave() {
     const data = await setStoreConfig({
-      type: 'separat',
+      type: 'sorting',
       key: '',
       data: {
         levelAttr: this.attrList,

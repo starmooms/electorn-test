@@ -11,7 +11,7 @@
         <el-button type="primary" @click="openBatch">
           机柜批量操作
         </el-button>
-        <el-button type="primary" @click="openSeparat">
+        <el-button type="primary" @click="openSorting">
           容量分选
         </el-button>
         <el-button type="primary" @click="sysLogOpen">
@@ -260,9 +260,9 @@ export default class Home extends Vue {
     })
   }
 
-  openSeparat() {
+  openSorting() {
     this.$command.send('/createdWin', {
-      type: 'separat'
+      type: 'sorting'
     })
   }
 

@@ -33,8 +33,8 @@ class ConfigManage {
   })
 
   /** 分容设置 */
-  separatConfig = new Store({
-    name: 'separat',
+  sortingConfig = new Store({
+    name: 'sorting',
     defaults: {
       levelAttr: [],
       levelList: [] as any[]
@@ -56,8 +56,8 @@ class ConfigManage {
       switch (data.type) {
         case 'workStepTpl':
           return this.workStepTpl.store
-        case 'separat':
-          return this.separatConfig.store
+        case 'sorting':
+          return this.sortingConfig.store
         case 'userConfig':
           return this.userConfig.store
         default:
@@ -70,11 +70,11 @@ class ConfigManage {
         case 'workStepTpl':
           this.workStepTplSave(data.data)
           break
-        case 'separat':
+        case 'sorting':
           if(!data.key){
-            this.separatConfig.set(data.data)
+            this.sortingConfig.set(data.data)
           }else{
-            this.separatConfig.set(data.key, data.data)
+            this.sortingConfig.set(data.key, data.data)
           }
           break
         case 'userConfig':

@@ -59,9 +59,9 @@ const routes: Array<RouteConfig> = [
         component: () => import('@/renderer/views/History/index.vue')
       },
       {
-        path: '/separat',
-        name: 'Separat',
-        component: () => import('@/renderer/views/Separat/index.vue')
+        path: '/sorting',
+        name: 'Sorting',
+        component: () => import('@/renderer/views/Sorting/index.vue')
       }
     ]
   }

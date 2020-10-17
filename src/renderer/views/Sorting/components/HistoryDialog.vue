@@ -44,9 +44,9 @@
               </template>
             </el-table-column>
             <el-table-column prop="fileId" label="启动ID" width="160" show-overflow-tooltip></el-table-column>
-            <el-table-column prop="masterIds" label="机柜号" width="80" show-overflow-tooltip></el-table-column>
-            <el-table-column prop="slaverIds" label="丛控号" width="80" show-overflow-tooltip></el-table-column>
-            <el-table-column prop="channelIds" label="通道号" width="80" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="masterIdShowStr" label="机柜号" width="80" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="slaverIdShowStr" label="丛控号" width="80" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="channelIdShowStr" label="通道号" width="80" show-overflow-tooltip></el-table-column>
             <el-table-column prop="startTime" label="启动时间" width="140"></el-table-column>
             <el-table-column prop="endTime" label="结束时间" width="140"></el-table-column>
             <el-table-column prop="filePath" label="文件路径" show-overflow-tooltip></el-table-column>
@@ -170,9 +170,11 @@ export default class HistoryDialog extends Vue {
       this.list = data.list.map(item => {
         item.startTime = dateFormat(item.startTime)
         item.endTime = dateFormat(item.endTime)
-        item.masterIds = idListFormat(item.masterIds)
-        item.slaverIds = idListFormat(item.slaverIds)
-        item.channelIds = idListFormat(item.channelIds)
+        ;['masterId', 'slaverId', 'channelId'].forEach(idKey => {
+          const idResult = idListFormat(item[`${idKey}s`])
+          item[`${idKey}Arr`] = idResult.idArr
+          item[`${idKey}ShowStr`] = idResult.idShowArr
+        })
         return item
       })
     } catch (err) {

@@ -62,5 +62,5 @@ declare namespace Store {
   }
 
   /** 分容设置 */
-  interface SeparatConfig {}
+  // interface SeparatConfig {}
 }

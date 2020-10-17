@@ -203,10 +203,12 @@ export const computerAdd = (num1: number, num2: number, r = 10) => {
 
 /** 格式化idList */
 export const idListFormat = (idList: string) => {
-  return idList
-    .split(',')
-    .map(item => Number(item) + 1)
-    .join(',')
+  const idArr = idList.split(',').map(item => Number(item))
+  const idShowArr = idArr.map(item => item + 1).join(',')
+  return {
+    idArr,
+    idShowArr
+  }
 }
 
 /** 格式化时间戳 */

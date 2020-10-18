@@ -5,7 +5,11 @@
         <template slot="paneL">
           <div class="l-t-box">
             <div class="l-t-l">
-              <ChannelInfo ref="channelInfo" :masterId="actionMasterId" />
+              <ChannelInfo
+                ref="channelInfo"
+                :masterId="actionMasterId"
+                :lampResult="lampResult"
+              />
             </div>
             <div class="show-btn" @click="setShow('setting')">
               <span>></span>
@@ -62,7 +66,8 @@ export default class Sorting extends Vue {
     result: true,
     setting: true
   }
-  actionMasterId = 0
+  actionMasterId = null
+  lampResult: null | SortingT.BoxLampResult = null
 
   levelResult: SortingT.LevelResult[] = []
 
@@ -82,8 +87,8 @@ export default class Sorting extends Vue {
       xTabel.reloadData(data.list)
     }
     this.levelResult = data.levelResultList
+    this.lampResult = data.boxLampResult
     this.$refs.result.setBoxResult(data.boxResultList)
-    this.$refs.channelInfo.setBoxResult(data.boxLampResult)
   }
 }
 </script>

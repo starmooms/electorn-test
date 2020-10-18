@@ -6,8 +6,8 @@
       height="300px"
       :data="levelResult"
     >
-      <el-table-column type="index" label="序号" width="60" />
-      <el-table-column prop="level" label="等级" width="60" />
+      <!-- <el-table-column type="index" label="序号" width="60" /> -->
+      <el-table-column prop="id" label="等级" width="60" />
       <el-table-column prop="desc" label="等级描述" />
       <el-table-column prop="num" label="电池个数" width="80" />
       <el-table-column prop="total" label="电池总数" width="80" />

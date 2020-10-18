@@ -109,7 +109,7 @@ export default class LevelDialog extends Vue {
   attrList: string[] = []
   attrAllList = [
     { label: '容量', value: 'vol' },
-    { label: '时间', value: 'time' },
+    { label: '时间', value: 'stepTime' },
     { label: '电量', value: 'epower' },
     { label: '开压', value: 'startU' },
     { label: '终压', value: 'endU' },

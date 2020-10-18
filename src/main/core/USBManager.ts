@@ -30,6 +30,7 @@ export default class USBManager {
     this.setTranslate()
     this.setCal()
     this.readCal()
+    this.setLamp()
     this.getChannelList()
   }
 

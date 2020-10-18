@@ -15,22 +15,32 @@ export default class BoxLamp {
 
   /** 设置校准 */
   async setLamp(opts: ipcReq.LampSetOpts) {
-    await Bluebird.mapSeries(opts.list, async item => {
+    const boxList: number[] = []
+    for (let i = 0; i < 20; i++) {
+      boxList.push(i)
+    }
+    const writeModel = new BufModel({
+      model: LAMP_MODEL,
+      listLen: {
+        lampList: 32
+      }
+    })
+    await Bluebird.mapSeries(boxList, async masterId => {
       try {
-        const writeModel = new BufModel({
-          model: LAMP_MODEL,
-          listLen: {
-            lampLen: item.slaverList.length
+        writeModel.writer('masterId', masterId)
+        writeModel.ecahList('lampList', (writeItem, sindex) => {
+          const slaverId = sindex
+          writeItem.writer('slaverId', slaverId)
+          const channelList = opts.list?.[`${masterId}`]?.[`${slaverId}`]
+          if (channelList && channelList.length > 0) {
+            writeItem.writerBit('channelBit', channelList)
           }
         })
-        const masterId = item.masterId
-        writeModel.writer('masterId', item.masterId)
-        writeModel.ecahList('lampList', (writeItem, index) => {
-          const slaverItem = item.slaverList[index]
-          writeItem.writer('slaverId', slaverItem.slaverId)
-          writeItem.writerBit('channelBit', slaverItem.channelBit)
-        })
-        logger.debug('点灯发送', writeModel.buf.toString('hex'))
+        logger.debug(
+          `点灯发送`,
+          `box ${masterId}`,
+          writeModel.buf.toString('hex')
+        )
         await communi.post({
           control: CONTROL_CODE.lampSet,
           data: writeModel.buf,

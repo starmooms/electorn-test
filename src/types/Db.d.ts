@@ -76,7 +76,7 @@ declare namespace Db {
 
   /** 获取容量分选参数 */
   interface GetStoring {
-    setpId: number
+    stepId: number
     loopNum: number
     levelList: Store.LevelItem[]
     levelAttr: string[]

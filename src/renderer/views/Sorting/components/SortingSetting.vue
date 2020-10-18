@@ -64,8 +64,9 @@
           <el-button @click="configShowSet">条件设置</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button @click="handleSorting">只分选</el-button>
-          <el-button>分选并发送</el-button>
+          <el-button @click="handleSorting(false)">只分选</el-button>
+          <el-button @click="handleSorting(true)">分选并发送</el-button>
+          <el-button @click="lampSbmit({})">关闭通道灯</el-button>
         </el-form-item>
       </el-form>
 
@@ -107,7 +108,7 @@
               type="checkbox"
               id="zeroU"
               value="zeroU"
-              v-model="form.setpsCondutc"
+              v-model="form.stepsCondutc"
             />
             <label for="zeroU">零电压参加分选</label>
           </div>
@@ -118,7 +119,7 @@
                 type="checkbox"
                 :id="item.key"
                 :value="item.key"
-                v-model="form.setpsCondutc"
+                v-model="form.stepsCondutc"
               />
               <label :for="item.key">{{ item.name }}</label>
               <input
@@ -148,7 +149,8 @@ import { Component, Vue, Watch, PropSync } from 'vue-property-decorator'
 import LevelDialog from './LevelDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
-import { computerAdd, getPercent, stepsFormat } from '@/renderer/utils/util'
+import { getPercent, PathResolve, stepsFormat } from '@/renderer/utils/util'
+import { lampSet } from '@/renderer/ipc/channel'
 
 @Component({
   components: {
@@ -157,8 +159,8 @@ import { computerAdd, getPercent, stepsFormat } from '@/renderer/utils/util'
   }
 })
 export default class SortingSetting extends Vue {
-  @PropSync('actionMasterId', { type: Number, default: 0 })
-  private nowBoxId!: number
+  @PropSync('actionMasterId', { type: Number, default: null })
+  private nowBoxId!: number | null
 
   form = {
     dataType: 'nowData',
@@ -166,7 +168,7 @@ export default class SortingSetting extends Vue {
     masterId: 0,
     stepData: null as null | UtilT.StepFormatItem,
     levelId: [] as number[],
-    setpsCondutc: [],
+    stepsCondutc: [],
     condutc: {
       vol: null,
       startU: null,
@@ -178,10 +180,10 @@ export default class SortingSetting extends Vue {
   configShow = false
   historyShow = false
 
-  @Watch('form', { deep: true })
-  c(v) {
-    console.log(v)
-  }
+  // @Watch('form', { deep: true })
+  // c(v) {
+  //   console.log(v)
+  // }
 
   condutcList = [
     { name: '容量工步', key: 'vol' },
@@ -232,15 +234,18 @@ export default class SortingSetting extends Vue {
   /** 创建数据库连接 */
   async createDb(history: Db.RHistoryItem | null) {
     try {
-      const filePath = history ? `${history.filePath}\\${history.fileId}` : ''
+      const filePath = history
+        ? `${PathResolve(history.filePath, history.fileId)}`
+        : ''
       if (this.historyFile !== filePath) {
         await this.closeDb()
-        if (filePath) {
+        if (filePath && history) {
           const db = new HistoryDb(filePath)
           await db.connect()
           this.db = db
           this.historyFile = filePath
           this.historyItem = history
+          this.nowBoxId = this.historyItem.masterIdArr[0]
         }
       }
     } catch (err) {
@@ -256,7 +261,19 @@ export default class SortingSetting extends Vue {
       this.db = null
       this.historyItem = null
       this.historyFile = ''
+      this.reset()
     }
+  }
+
+  /** 重置参数 */
+  reset() {
+    this.nowBoxId = null
+    this.$emit('storingResult', {
+      list: [],
+      levelResultList: [],
+      boxResultList: [],
+      boxLampResult: {}
+    })
   }
 
   /** 选中历史文件 */
@@ -276,6 +293,13 @@ export default class SortingSetting extends Vue {
     }
   }
 
+  /** 发送点灯 */
+  async lampSbmit(list: ipcReq.LampSetOpts['list']) {
+    await lampSet({
+      list
+    })
+  }
+
   async getSortingConfig() {
     const result = await getStoreConfig({
       type: 'sorting'
@@ -288,7 +312,7 @@ export default class SortingSetting extends Vue {
   }
 
   /** 触发分选 */
-  async handleSorting(lampSet=false) {
+  async handleSorting(lampSet = false) {
     const selectLevel = this.form.levelId
     if (!this.historyItem || !this.db) {
       return this.$message.info('未选择历史')
@@ -302,7 +326,7 @@ export default class SortingSetting extends Vue {
     //   return selectLevel.includes(item.id)
     // })
     const data = await this.db.getSorting({
-      setpId: stepData.id,
+      stepId: stepData.id,
       loopNum: stepData.loopNum,
       levelList: this.levelList,
       levelAttr: this.levelAttr
@@ -335,7 +359,7 @@ export default class SortingSetting extends Vue {
 
     // 根据等级列表统计
     const levelResultList = this.levelList.map(item => {
-      const levelResult = data.sortingResult[item.id]?.levelResult
+      const levelResult = sortingResult[item.id]?.levelResult
       const num = levelResult.length ?? 0
       if (selectLevel.includes(item.id)) {
         levelResult.forEach(item => {
@@ -356,7 +380,7 @@ export default class SortingSetting extends Vue {
     // 根据机柜统计
     const boxResultList: SortingT.BoxResult[] = []
     const boxTotal = this.masterChTotal
-    const boxLampResult: any = {}
+    const boxLampResult: SortingT.BoxLampResult = {}
     const getMasterResult = (masterId: number) => {
       let num = 0
       const masterObj = channelResult[masterId]
@@ -390,8 +414,8 @@ export default class SortingSetting extends Vue {
       boxLampResult
     })
 
-    if(lampSet){
-      
+    if (lampSet === true) {
+      this.lampSbmit(boxLampResult)
     }
     // this.db.getSorting()
     // this.db.getSampData()

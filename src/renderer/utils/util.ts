@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import { WORKSTEPSINPUT, WORKSTEPS_TYPE_MAP } from '@/shared/config/port'
 import { deepClone } from '@/shared/utils'
+import path from 'path'
 
 export const formatTimeStr = 'YYYY-MM-DD HH:mm:ss'
 
@@ -303,4 +304,9 @@ export const stepsFormat = (
   }
 
   return list
+}
+
+/** 解析路径 */
+export const PathResolve = (...args: string[]) => {
+  return path.resolve(...args)
 }

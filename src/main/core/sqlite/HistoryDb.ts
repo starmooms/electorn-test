@@ -134,6 +134,8 @@ export default class HistoryDb extends HistoryDbCom {
         "endU" REAL,
         "avgU" REAL,
         "endI" REAL,
+        "vol" REAL,
+        "epower" REAL,
         "curIRate" REAL,
         "t1" REAL, "c1" REAL,
         "t2" REAL, "c2" REAL,
@@ -144,7 +146,10 @@ export default class HistoryDb extends HistoryDbCom {
         "startTime" DATETIME,
         "endTime" DATETIME,
         "createTime" DATETIME
-      );`
+      );
+      CREATE INDEX "step_statis_fullId" ON "step_statistics" ("fullId");
+      CREATE INDEX "step_statis_stepId" ON "step_statistics" ("stepId");
+      CREATE INDEX "step_statis_loopNum" ON "step_statistics" ("loopNum");`
     }
 
     if (sql) {
@@ -292,7 +297,7 @@ export default class HistoryDb extends HistoryDbCom {
       const now = dayjs().format(TIME_FORMAT)
       const { stepStatistics } = this.tables
       list.forEach(item => {
-        sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, endCode='${item.endCode}', endTime='${now}'
+        sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, vol=${item.vol}, epower=${item.epower}, endCode='${item.endCode}', endTime='${now}'
         WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
       })
     }

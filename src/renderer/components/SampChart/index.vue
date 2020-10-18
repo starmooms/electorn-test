@@ -145,8 +145,8 @@ export default class SampChart extends Vue {
               const { seriesName, marker, value, dimensionNames } = params[i]
               if (value.stepTime === 0) continue
               if (mainInfo) {
-                const setpId = value.stepId + 1
-                const workerId = `工序：${setpId}（${setpId}-${value.loopNum}）`
+                const stepId = value.stepId + 1
+                const workerId = `工序：${stepId}（${stepId}-${value.loopNum}）`
                 const workerStatus = `工步信息：${value.workerName}`
                 const stepTime = `工步时间：${value.stepTime}s`
                 // const xName = `总工步时间：${value[dimensionNames[0]]}s` // 时间

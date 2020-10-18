@@ -29,6 +29,11 @@ export function readCal(data: ipcReq.CalOpts) {
   return $command.invoke(`/port/cal/read`, data)
 }
 
+/** 设置点灯 */
+export function lampSet(data: ipcReq.LampSetOpts) {
+  return $command.invoke(`/port/lamp/set`, data)
+}
+
 export function getChannelList() {
   return $command.invoke(`/port/channelList`)
 }

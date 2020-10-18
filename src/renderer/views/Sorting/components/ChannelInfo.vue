@@ -18,11 +18,11 @@
         <ul class="channel-row-box">
           <li
             class="channel-row channel-status"
-            v-for="(item, index) in 32"
+            v-for="(item, sindex) in 32"
             :key="item"
             :class="{
-              action: actionList[cIndex]
-                ? actionList[cIndex].indexOf(index) >= 0
+              action: actionList[sindex]
+                ? actionList[sindex].indexOf(cIndex) >= 0
                 : false
             }"
           ></li>
@@ -33,38 +33,28 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator'
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 @Component
 export default class ChannelInfo extends Vue {
-  @Prop({ type: Number, default: 0 }) masterId!: number
-  list: any = null
+  @Prop({ type: Number, default: null }) masterId!: number | null
+  @Prop({
+    type: Object,
+    default: null
+  })
+  lampResult!: SortingT.BoxLampResult
 
-  get actionList() {
-    return this.list && this.list[this.masterId] ? this.list[this.masterId] : {}
+  @Watch('lampResult')
+  c(v) {
+    console.log(v)
   }
 
-  /** 设置结果 */
-  setBoxResult(boxRestul: SortingT.BoxLampResult) {
-    const list: any = {}
-    Object.entries(boxRestul).forEach(master => {
-      Object.entries(master[1]).forEach(slaver => {
-        if (!list[master[0]]) {
-          list[master[0]] = {}
-        }
-        const m = list[master[0]]
-        slaver[1].forEach(channelId => {
-          if (!m[channelId]) {
-            m[channelId] = []
-          }
-          const c = m[channelId]
-
-          c.push(Number(slaver[0]))
-        })
-      })
-    })
-    this.list = list
-    console.log(this.list)
+  get actionList() {
+    return this.lampResult &&
+      this.masterId !== null &&
+      this.lampResult[this.masterId]
+      ? this.lampResult[this.masterId]
+      : {}
   }
 }
 </script>

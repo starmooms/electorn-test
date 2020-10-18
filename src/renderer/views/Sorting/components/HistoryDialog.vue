@@ -117,6 +117,7 @@ export default class HistoryDialog extends Vue {
   changeDialog(v) {
     if (v === true) {
       this.selectHistory = null
+      this.getList()
       this.setDom()
     }
   }
@@ -203,13 +204,8 @@ export default class HistoryDialog extends Vue {
     this.getList()
   }
 
-  async init() {
-    await this.createDb()
-    this.getList()
-  }
-
   mounted() {
-    this.init()
+    this.createDb()
   }
 
   beforeDestroy() {

@@ -9,7 +9,7 @@ import { CommuniEmitList } from '@/main/core/Request/Communi'
 
 const SelfParser = TransfromParser
 
-/** 窗口通讯 */
+/** 串口通讯 */
 export default class SerialPortRequest {
   path: string
   port!: SerialPort

@@ -20,7 +20,7 @@ import './core/ConfigManage'
 import logger, { sysLognow, sysFilePath, createSysLog } from './core/Logger'
 import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
-import udpManage from './core/connect/UdpManage'
+// import udpManage from './core/connect/UdpManage'
 import boxManage from './core/boxManage/BoxManage'
 import createSorting from './window/Sorting'
 
@@ -193,7 +193,7 @@ export default class Launcher {
       const mainDbFilePath = (await mainDb.connect()) as string
       await boxManage.create()
       this.usbManager = new USBManager()
-      udpManage.start()
+      // udpManage.start()
       return mainDbFilePath
     } catch (err) {
       logger.error(err)

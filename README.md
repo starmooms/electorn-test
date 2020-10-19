@@ -83,3 +83,8 @@ chcp
 ```electron-build
 https://github.com/eyasliu/blog/issues/22
 ```
+
+## vbs
+```
+https://www.cnblogs.com/XT-xutao/p/9912264.html
+```

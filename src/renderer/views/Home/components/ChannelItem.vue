@@ -76,10 +76,6 @@ export default class ChannelItem extends Vue {
     return this.channelData.id
   }
 
-  get portPath() {
-    return SettingStatus.portPath
-  }
-
   get batteryCtxMenu() {
     return ChannelStatus.statusList
   }
@@ -100,7 +96,6 @@ export default class ChannelItem extends Vue {
   changeStatus(status: string) {
     if (status === 'start') {
       this.$emit('start', {
-        path: this.portPath,
         slaverIds: [this.slaverId],
         channelIds: [this.id],
         masterIds: [this.masterId]
@@ -108,7 +103,6 @@ export default class ChannelItem extends Vue {
     } else {
       this.$emit('setChannelStatus', {
         params: {
-          path: this.portPath,
           slaverId: this.slaverId,
           channelId: this.id,
           masterId: this.masterId,
@@ -136,7 +130,6 @@ export default class ChannelItem extends Vue {
     this.$command.send('/createdWin', {
       type: 'channel',
       data: {
-        path: this.portPath,
         masterId: this.masterId,
         slaverId: this.slaverId,
         channelId: this.id

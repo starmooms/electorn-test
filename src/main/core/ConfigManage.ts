@@ -1,35 +1,38 @@
 import Store, { Options } from 'electron-store'
 import ipcManage from './IpcManage'
 import uuid from 'node-uuid'
+import logger from './Logger'
 
 /* eslint-disable quote-props */
 // prettier-ignore
 /* eslint-enable quote-props */
+const userConfigDefault = {
+  sampling: {
+    U: { max: 10000, min: 0 },
+    I: { max: 6000, min: -6000 }
+  },
+  sampChartConfig: {
+    y1: 'U',
+    y2: 'I',
+    y1Limt: {
+      min: 0,
+      max: 10000
+    },
+    y2Limt: {
+      min: -6000,
+      max: 6000
+    }
+  },
+  base: {
+    requestType: 'Tcp',
+    portPath: ''
+  }
+}
 
 class ConfigManage {
   userConfig = new Store({
     name: 'user',
-    defaults: {
-      sampling: {
-        U: { max: 10000, min: 0 },
-        I: { max: 6000, min: -6000 }
-      },
-      sampChartConfig: {
-        y1: 'U',
-        y2: 'I',
-        y1Limt: {
-          min: 0,
-          max: 10000
-        },
-        y2Limt: {
-          min: -6000,
-          max: 6000
-        }
-      },
-      base: {
-        portPath: ''
-      }
-    }
+    defaults: userConfigDefault
   })
 
   /** 分容设置 */
@@ -43,8 +46,7 @@ class ConfigManage {
 
   workStepTpl = new Store({
     name: 'workStepTpl',
-    defaults: {
-    }
+    defaults: {}
   })
 
   constructor() {
@@ -52,6 +54,8 @@ class ConfigManage {
   }
 
   init() {
+    logger.info(userConfigDefault)
+    this.checkStore(this.userConfig, userConfigDefault)
     ipcManage.handle('/config/get', (event, data: any) => {
       switch (data.type) {
         case 'workStepTpl':
@@ -65,15 +69,15 @@ class ConfigManage {
       }
     })
     ipcManage.handle('/config/set', (event, data: any) => {
-      if(!data.data) throw new Error('NO DATA')
+      if (!data.data) throw new Error('NO DATA')
       switch (data.type) {
         case 'workStepTpl':
           this.workStepTplSave(data.data)
           break
         case 'sorting':
-          if(!data.key){
+          if (!data.key) {
             this.sortingConfig.set(data.data)
-          }else{
+          } else {
             this.sortingConfig.set(data.key, data.data)
           }
           break
@@ -96,7 +100,24 @@ class ConfigManage {
     })
   }
 
-  setWorkStepTpl(key: string, value:any) {
+  /**
+   * 检查默认参数，
+   * electron-store 已设置过的对象的属性， 如果新加默认属性会无效，这里强制添加新的默认参数
+   * */
+  checkStore(store: Store<any>, target: any, lastKey = '') {
+    for (const key in target) {
+      const storeKey = lastKey ? `${lastKey}.${key}` : key
+      const v = store.get(storeKey)
+      const defaultVal = target[key]
+      if (v === void 0) {
+        store.set(storeKey, defaultVal)
+      } else if (typeof defaultVal === 'object') {
+        this.checkStore(store, defaultVal, storeKey)
+      }
+    }
+  }
+
+  setWorkStepTpl(key: string, value: any) {
     return this.workStepTpl.set(key, value)
   }
 
@@ -120,7 +141,6 @@ class ConfigManage {
   workStepTplDel(data: any) {
     this.workStepTpl.delete(`${data.id}`)
   }
-
 }
 
 const configManage = new ConfigManage()

@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div v-if="portPath">
+    <div>
       <el-form size="medium" :inline="true">
         <el-button @click="setTranslate">
           {{ readTranslate ? '关闭采样' : '打开采样' }}
@@ -116,7 +116,6 @@
       ></SetChannelStatus>
       <sys-log :show.sync="sysLogShow"></sys-log>
     </div>
-    <div v-else>请先设置串口</div>
   </div>
 </template>
 
@@ -157,7 +156,6 @@ export default class Home extends Vue {
 
   // portItem: any = null
   portList: any[] = []
-  portPath = SettingStatus.portPath
 
   stepsShow = false
   stepsBatch = false
@@ -208,7 +206,6 @@ export default class Home extends Vue {
 
   stepsSetShow(channelMsg: any) {
     this.stepsShowItem = {
-      path: this.portPath,
       ...channelMsg
     }
     this.stepsBatch = false
@@ -270,7 +267,7 @@ export default class Home extends Vue {
     if (this.trendUnRegister) {
       this.trendUnRegister()
     }
-    if (!this.portPath || this.activeMasterId === null) {
+    if (this.activeMasterId === null) {
       return
     }
 

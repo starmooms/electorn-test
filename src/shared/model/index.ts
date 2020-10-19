@@ -247,7 +247,7 @@ export const LAMP_MODEL: Model[] = [
     len: 'lampLen',
     model: [
       { name: 'slaverId', bytLen: 1 },
-      { name: 'channelBit', bytLen: 8 }
+      { name: 'channelBit', bytLen: 1 }
     ]
   }
 ]

@@ -23,7 +23,7 @@ export default class Sqlite {
         return
       }
       this.db = new sqlite.Database(this.fileName, err => {
-        logger.info('创建连接')
+        // logger.info('创建连接')
         if (err === null) {
           resolve(err)
         } else {

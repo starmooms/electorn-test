@@ -55,10 +55,6 @@ export default class BatchModal extends Vue {
     return ChannelStatus.statusList
   }
 
-  get portPath() {
-    return SettingStatus.portPath
-  }
-
   close() {
     this.diolog = false
   }
@@ -77,7 +73,6 @@ export default class BatchModal extends Vue {
     }
     this.$emit('setChannelStatus', {
       params: {
-        path: this.portPath,
         masterIdList: this.masterIdList,
         slaverIdList: this.slaverId,
         channelIdList: this.channelId,

@@ -6,6 +6,7 @@ import BoxSamp from './BoxSamp'
 import BoxCal from './BoxCal'
 import BoxStatus from './BoxStatus'
 import BoxLamp from './BoxLamp'
+import communi from '../Request/Communi'
 
 interface PostOpts {
   timeout?: number
@@ -32,7 +33,7 @@ export class BoxManage {
     channelIds: '通道'
   }
   initChannelResolve!: Promise<any>
-  isDev = is.dev()
+  useDev = is.dev() && communi.requestType === 'Port' && false
   boxSamp = new BoxSamp(this)
   boxCal = new BoxCal(this)
   boxStatus = new BoxStatus(this)

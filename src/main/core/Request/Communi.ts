@@ -3,6 +3,8 @@ import agreement, { ReadResult } from '@/main/core/Agreement'
 import SerialPortRequest from '@/main/core/Request/SerialPortRequest'
 import configManage from '../ConfigManage'
 import mainDb from '../sqlite/MainDb'
+import TcpRequest from './TcpRequest'
+import logger from '../Logger'
 
 interface PostOpts {
   timeout?: number
@@ -19,32 +21,65 @@ export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
 /** 通讯方式 */
 class Communi {
   emitList: CommuniEmitList = new Map()
-  requestType: 'Port' | 'Tcp' = 'Port'
+  requestType: 'Port' | 'Tcp' = 'Tcp'
+  tpcRequest: TcpRequest | null = null
 
   portPath!: string
   serialPort: SerialPortRequest | null = null
 
   constructor() {
-    this.createSerialPort()
     this.changeConfig()
+    this.createSerialPort()
+    this.createTcpRequest()
   }
 
   createSerialPort() {
+    if (this.requestType !== 'Port') {
+      this.serialPortClose()
+      return
+    }
     const lastPortPath = this.portPath
     this.portPath = configManage.userConfig.get('base.portPath')
-    if (lastPortPath === this.portPath) return
+    if (lastPortPath !== this.portPath || !this.serialPort) {
+      this.serialPortClose()
+      if (this.portPath && this.requestType === 'Port') {
+        this.serialPort = new SerialPortRequest(this.portPath, this.emitList)
+      }
+    }
+  }
+
+  serialPortClose() {
     if (this.serialPort) {
       this.serialPort.close()
       this.serialPort = null
     }
-    if (this.portPath) {
-      this.serialPort = new SerialPortRequest(this.portPath, this.emitList)
+  }
+
+  createTcpRequest() {
+    if (this.requestType === 'Tcp') {
+      if (!this.tpcRequest) {
+        this.tpcRequest = new TcpRequest(this)
+      }
+      this.tpcRequest.created()
+    } else {
+      this.tcpRequestClose()
+    }
+  }
+
+  tcpRequestClose() {
+    if (this.tpcRequest) {
+      this.tpcRequest.close()
+      // this.tpcRequest = null
     }
   }
 
   changeConfig() {
+    this.requestType = configManage.userConfig.get('base.requestType')
     configManage.userConfig.onDidChange('base', () => {
+      const lastType = this.requestType
+      this.requestType = configManage.userConfig.get('base.requestType')
       this.createSerialPort()
+      this.createTcpRequest()
     })
   }
 
@@ -99,6 +134,12 @@ class Communi {
           return
         }
         this.serialPort.post(agrData.buf, setError)
+      } else if (this.requestType === 'Tcp') {
+        if (!this.tpcRequest) {
+          setError('TCP未初始化')
+          return
+        }
+        this.tpcRequest.post(agrData.buf, setError, masterId)
       } else {
         setError(`requestType ${this.requestType} No Found`)
       }
@@ -108,8 +149,22 @@ class Communi {
       }, timeout || 2000)
     })
   }
+
+  /** 数据返回 */
+  onEmit(buf: Buffer) {
+    const result = agreement.readData(buf)
+    logger.info(this.emitList)
+    if (this.emitList.has(result.sId)) {
+      const fun = this.emitList.get(result.sId)
+      if (fun) fun(result)
+      this.emitList.delete(result.sId)
+      return
+    }
+    logger.warn(`流水号回调${result.sId} 不存在`)
+  }
 }
 
 const communi = new Communi()
 
+export declare type CommuniClass = typeof communi
 export default communi

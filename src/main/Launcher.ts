@@ -17,7 +17,7 @@ import UpdateManager from './core/UpdateManager'
 import './core/ConfigManage'
 // import RedisServer from './core/redis/RedisServer'
 // import redisClient, { RedisClient } from './core/redis/RedisClient'
-import logger, { sysLognow, sysFilePath } from './core/Logger'
+import logger, { sysLognow, sysFilePath, createSysLog } from './core/Logger'
 import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
 import udpManage from './core/connect/UdpManage'
@@ -40,8 +40,8 @@ export default class Launcher {
     if (beforeMainWin) {
       this.beforeMainWin = beforeMainWin
     }
-    this.beforeWin()
     this.makeSingleInstance(() => {
+      this.beforeWin()
       this.init()
     })
   }
@@ -149,7 +149,7 @@ export default class Launcher {
     // powerSaveBlocker.stop(id)
 
     // await mainDb.connect()
-
+    createSysLog()
     ipcManage.handle('/sysLog/sysLogInfo', () => {
       return {
         start: sysLognow,

@@ -2,7 +2,6 @@ import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
 import ipcManage from './IpcManage'
 // import PortItem from './PortItem'
-import logger, { sysLog } from './Logger'
 import boxManage from './boxManage/BoxManage'
 
 export interface ArgeementData {
@@ -91,14 +90,6 @@ export default class USBManager {
       this.sendList()
     })
   }
-
-  // getPortData() {
-  //   if (!this.portItem) {
-  //     sysLog.info('串口未初始化')
-  //     throw new Error('串口未初始化')
-  //   }
-  //   return this.portItem
-  // }
 
   /** 写工步 */
   writeSteps() {

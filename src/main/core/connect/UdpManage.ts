@@ -1,5 +1,5 @@
 import dgram from 'dgram'
-import logger, { sysLog } from '../Logger'
+import logger from '../Logger'
 import os from 'os'
 import TcpClient from './TcpClient'
 

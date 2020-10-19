@@ -10,7 +10,9 @@ logger.transports.file.maxSize = 2097152
 let sysLog = (logger as unknown) as logger.ElectronLog
 let sysFilePath = logPath
 let now = ''
-if (is.main()) {
+
+/** 创建系统日志 */
+const createSysLog = () => {
   sysLog = logger.create('sysLog')
   now = dayjs().format(`YYYY-MM-DD HH:mm:ss`) // eslint-disable-line
   sysLog.transports.file.level = is.renderer() ? false : 'silly'
@@ -30,4 +32,4 @@ logger.info('Logger init')
 logger.warn('Logger init')
 
 export default logger
-export { sysLog, now as sysLognow, sysFilePath }
+export { sysLog, now as sysLognow, sysFilePath, createSysLog }

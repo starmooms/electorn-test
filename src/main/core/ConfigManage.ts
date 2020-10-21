@@ -24,8 +24,9 @@ const userConfigDefault = {
     }
   },
   base: {
-    requestType: 'Tcp',
-    portPath: ''
+    requestType: 'Port',
+    portPath: '',
+    ipList: []
   }
 }
 
@@ -54,7 +55,6 @@ class ConfigManage {
   }
 
   init() {
-    logger.info(userConfigDefault)
     this.checkStore(this.userConfig, userConfigDefault)
     ipcManage.handle('/config/get', (event, data: any) => {
       switch (data.type) {

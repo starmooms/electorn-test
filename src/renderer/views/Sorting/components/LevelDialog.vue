@@ -46,8 +46,8 @@
             <vxe-table-column v-for="config in tableColumn" :key="config.field" v-bind="config" ></vxe-table-column>
             <vxe-table-column field="desc" title="等级描述" width="100" :edit-render="{ name: 'input', immediate: true, attrs: { type: 'text' }}"></vxe-table-column>
             <vxe-table-column title="操作" width="80" show-overflow>
-              <template v-slot="{ rowIndex }">
-                <vxe-button type="text" status="primary" @click="removeRow(rowIndex)">删除</vxe-button>
+              <template v-slot="{ $rowIndex }">
+                <vxe-button type="text" status="primary" @click="removeRow($rowIndex)">删除</vxe-button>
               </template>
             </vxe-table-column>
             <!-- <div v-for="item in tableAttrList" :key="item.value">

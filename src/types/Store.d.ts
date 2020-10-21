@@ -14,10 +14,16 @@ declare namespace Store {
     }
   }
 
+  interface IpListItem {
+    masterId: number
+    ip: string
+  }
+
   interface UserConfg {
     sampChartConfig: SampChartConfig
     base: {
       portPath: string
+      ipList: IpListItem[]
     }
   }
 

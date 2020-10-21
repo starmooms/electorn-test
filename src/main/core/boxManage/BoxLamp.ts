@@ -1,4 +1,4 @@
-import { getCalList, CONTROL_CODE } from '@/shared/config/port'
+import { CONTROL_CODE } from '@/shared/config/port'
 import { LAMP_MODEL } from '@/shared/model'
 import { BufWriteModel as BufModel } from '@/main/utils/bufModel'
 import logger from '@/main/core/Logger'

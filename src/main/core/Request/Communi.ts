@@ -59,8 +59,8 @@ class Communi {
     if (this.requestType === 'Tcp') {
       if (!this.tpcRequest) {
         this.tpcRequest = new TcpRequest(this)
+        this.tpcRequest.created()
       }
-      this.tpcRequest.created()
     } else {
       this.tcpRequestClose()
     }

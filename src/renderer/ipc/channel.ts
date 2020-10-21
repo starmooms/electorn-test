@@ -34,6 +34,16 @@ export function lampSet(data: ipcReq.LampSetOpts) {
   return $command.invoke(`/port/lamp/set`, data)
 }
 
+/** 获取ip列表 */
+export function getIpList() {
+  return $command.invoke(`/port/masterInfo/ipList`)
+}
+
+/** 删除某项ip */
+export function delIpItem(data: any) {
+  return $command.invoke(`/port/masterInfo/delIp`, data)
+}
+
 export function getChannelList() {
   return $command.invoke(`/port/channelList`)
 }

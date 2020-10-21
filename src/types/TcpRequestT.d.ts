@@ -4,7 +4,7 @@ declare namespace TcpRequestT {
   interface IpItem {
     masterId: number
     ip: string
-    port: number
+    // port: number
   }
 
   // interface TcpMapItem extends IpItem {

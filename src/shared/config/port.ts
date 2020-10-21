@@ -16,25 +16,25 @@ export const WORKSTEPS = [
     name: '恒流充电',
     type: 'ICi',
     key: 'a1',
-    input: { worker: ['IStart'], limt: ['UEnd'] }
+    input: { worker: ['IStart'], limt: ['UEnd', 'limtTime'] }
   },
   {
     name: '恒压充电',
     type: 'UCi',
     key: 'a2',
-    input: { worker: ['UStart'], limt: ['IEnd'] }
+    input: { worker: ['UStart'], limt: ['IEnd', 'limtTime'] }
   },
   {
     name: '恒流恒压充电',
     type: 'IUCi',
     key: 'a3',
-    input: { worker: ['IStart', 'UEnd'], limt: ['stopI'] }
+    input: { worker: ['IStart', 'UEnd'], limt: ['stopI', 'limtTime'] }
   },
   {
     name: '恒流放电',
     type: 'IDisCi',
     key: 'b0',
-    input: { worker: ['IStart'], limt: ['UEnd'] }
+    input: { worker: ['IStart'], limt: ['UEnd', 'limtTime'] }
   },
   {
     name: '搁置',
@@ -86,7 +86,8 @@ export const WORKSTEPSINPUT = {
   IStart: { unit: 'mA', name: '起始电流', type: 'I' },
   IEnd: { unit: 'mA', name: '截止电流', type: 'I' },
   UStart: { unit: 'mA', name: '起始电压', type: 'U' },
-  UEnd: { unit: 'mA', name: '截止电压', type: 'U' }
+  UEnd: { unit: 'mA', name: '截止电压', type: 'U' },
+  limtTime: { unit: 's', name: '时间限制', type: 'time' }
 }
 
 // /** 读工步数据 */
@@ -128,6 +129,11 @@ export const ERROR_STATUS = {
   '16': '从控号错误',
   '17': '通道号错误',
   '18': '固定字节错误(前后缀)',
+  '19': '工步码错误',
+  '20': '工步码不存在',
+  '21': '工步列表为空',
+  '22': '通道处于保护状态中',
+  '23': '机身码错误',
   'ff': '未知错误'
 }
 

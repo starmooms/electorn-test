@@ -34,15 +34,15 @@ export default class Setting extends Vue {
     {
       label: '基础设置',
       name: 'Base'
-    },
+    }
     // {
     //   label: '保护参数设置',
     //   name: 'Protect'
     // },
-    {
-      label: '采样设置',
-      name: 'Sampling'
-    }
+    // {
+    //   label: '采样设置',
+    //   name: 'Sampling'
+    // }
   ]
   activeName = this.tabList[0].name
 }

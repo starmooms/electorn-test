@@ -30,6 +30,7 @@ export default class USBManager {
     this.setCal()
     this.readCal()
     this.setLamp()
+    this.setMasterInfo()
     this.getChannelList()
   }
 
@@ -144,6 +145,16 @@ export default class USBManager {
   setLamp() {
     ipcManage.handle('/port/lamp/set', async (event, data) => {
       return boxManage.boxLamp.setLamp(data)
+    })
+  }
+
+  /** 获取ip列表 */
+  setMasterInfo() {
+    ipcManage.handle('/port/masterInfo/ipList', async () => {
+      return boxManage.boxMasterInfo.getIpList()
+    })
+    ipcManage.handle('/port/masterInfo/delIp', async (event, data) => {
+      return boxManage.boxMasterInfo.delIpItem(data)
     })
   }
 

@@ -6,6 +6,7 @@ import BoxSamp from './BoxSamp'
 import BoxCal from './BoxCal'
 import BoxStatus from './BoxStatus'
 import BoxLamp from './BoxLamp'
+import BoxMasterInfo from './BoxMasterInfo'
 import communi from '../Request/Communi'
 
 interface PostOpts {
@@ -38,6 +39,7 @@ export class BoxManage {
   boxCal = new BoxCal(this)
   boxStatus = new BoxStatus(this)
   boxLamp = new BoxLamp(this)
+  boxMasterInfo = new BoxMasterInfo(this)
 
   create() {
     this.initChannelResolve = this.initChannelStatusList()

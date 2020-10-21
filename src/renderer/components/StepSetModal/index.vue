@@ -468,16 +468,22 @@ export default class StepSetModal extends Vue {
     padding-top: 0;
   }
 
+  .el-table td,
+  .el-table th {
+    vertical-align: top;
+  }
+
   .input-box {
     display: flex;
     flex-flow: row wrap;
     align-items: center;
+    margin-bottom: -10px;
     .input-item {
       flex: 0 0 33.33%;
       margin-bottom: 10px;
-      &:nth-last-child(-n + 3) {
-        margin-bottom: 0;
-      }
+      // &:nth-last-child(-n + 3) {
+      //   margin-bottom: 0;
+      // }
       .el-input {
         width: 74px;
       }

@@ -14,6 +14,7 @@ interface PostOpts {
     name: string
   }
   masterId: number
+  requestType?: Communi['requestType']
 }
 
 export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
@@ -22,7 +23,7 @@ export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
 class Communi {
   emitList: CommuniEmitList = new Map()
   requestType: 'Port' | 'Tcp' = 'Tcp'
-  tpcRequest: TcpRequest | null = null
+  tpcRequest = new TcpRequest(this)
 
   portPath!: string
   serialPort: SerialPortRequest | null = null
@@ -30,7 +31,7 @@ class Communi {
   constructor() {
     this.changeConfig()
     this.createSerialPort()
-    this.createTcpRequest()
+    this.createTcpRequest(true)
   }
 
   createSerialPort() {
@@ -55,21 +56,18 @@ class Communi {
     }
   }
 
-  createTcpRequest() {
+  /**
+   * tcp 打开关闭
+   * @param connectIp 是否创建连接
+   */
+  createTcpRequest(connectIp: boolean) {
     if (this.requestType === 'Tcp') {
-      if (!this.tpcRequest) {
-        this.tpcRequest = new TcpRequest(this)
-        this.tpcRequest.created()
+      logger.debug(connectIp)
+      if (connectIp) {
+        this.tpcRequest.createdConnect()
       }
     } else {
-      this.tcpRequestClose()
-    }
-  }
-
-  tcpRequestClose() {
-    if (this.tpcRequest) {
       this.tpcRequest.close()
-      // this.tpcRequest = null
     }
   }
 
@@ -79,13 +77,21 @@ class Communi {
       const lastType = this.requestType
       this.requestType = configManage.userConfig.get('base.requestType')
       this.createSerialPort()
-      this.createTcpRequest()
+      this.createTcpRequest(lastType !== this.requestType)
     })
   }
 
-  post({ timeout, data, masterId, control }: PostOpts): Promise<Buffer> {
+  post({
+    timeout,
+    data,
+    masterId,
+    control,
+    requestType
+  }: PostOpts): Promise<Buffer> {
+    if (!requestType) {
+      requestType = this.requestType
+    }
     return new Promise((resolve, reject) => {
-      const requestType = this.requestType
       const agrData = agreement.createData({
         slaverId: 0xff,
         type: 0x02,
@@ -99,7 +105,7 @@ class Communi {
       const setError = (msg: string) => {
         this.emitList.delete(sId)
         let headMsg = ''
-        if (this.requestType === 'Port') {
+        if (requestType === 'Port') {
           headMsg += this.serialPort!.path
           this.serialPort!.handleError()
         }
@@ -128,20 +134,20 @@ class Communi {
         clearTimeout(timer)
       })
 
-      if (this.requestType === 'Port') {
+      if (requestType === 'Port') {
         if (!this.serialPort) {
           setError('串口未初始化')
           return
         }
         this.serialPort.post(agrData.buf, setError)
-      } else if (this.requestType === 'Tcp') {
+      } else if (requestType === 'Tcp') {
         if (!this.tpcRequest) {
           setError('TCP未初始化')
           return
         }
         this.tpcRequest.post(agrData.buf, setError, masterId)
       } else {
-        setError(`requestType ${this.requestType} No Found`)
+        setError(`requestType ${requestType} No Found`)
       }
 
       timer = setTimeout(() => {

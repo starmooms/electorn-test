@@ -27,8 +27,8 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="主控设置" v-else-if="form.requestType === 'Tcp'">
-        <el-button @click="showMasterConfig = true">主控设置</el-button>
+      <el-form-item label="IP设置" v-else-if="form.requestType === 'Tcp'">
+        <el-button @click="showIpConfig = true">IP设置</el-button>
       </el-form-item>
     </el-form>
     <FromAction
@@ -37,7 +37,7 @@
       :data.sync="form"
       @submit="submit"
     ></FromAction>
-    <master-config :show.sync="showMasterConfig" />
+    <ip-config :show.sync="showIpConfig" />
   </div>
 </template>
 <script lang="ts">
@@ -46,12 +46,12 @@ import FromAction from './FromAction.vue'
 import { setStoreConfig } from '@/renderer/ipc/storeConfig'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { deepClone } from '@/shared/utils'
-import MasterConfig from './MasterConfig.vue'
+import IpConfig from './ipConfig/index.vue'
 
 @Component({
   components: {
     FromAction,
-    MasterConfig
+    IpConfig
   }
 })
 export default class Base extends Vue {
@@ -72,7 +72,7 @@ export default class Base extends Vue {
     { type: 'Tcp', name: '网口' }
   ]
 
-  showMasterConfig = false
+  showIpConfig = false
 
   async submit() {
     const data = await setStoreConfig({

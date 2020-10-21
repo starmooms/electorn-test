@@ -1,7 +1,7 @@
 import { deepClone } from '@/shared/utils'
 import logger from '../core/Logger'
 import { BufModelT } from '@/types/BufModel'
-import { toHex } from '.'
+import { toHex, replaceAscii } from '.'
 
 // export interface Model {
 //   name: string
@@ -201,34 +201,63 @@ export class BufWriteModel {
     return this.writer(name, parseInt(bitArr.reverse().join(''), 2))
   }
 
+  /** 写ip */
+  writerIp(name: string, ip: string) {
+    const { offset } = this.getOffset(name)
+    Buffer.from(ip.split('.')).copy(this.buf, offset)
+  }
+
+  /** 写16进制 */
+  writerHex(name: string, data: string) {
+    const { offset } = this.getOffset(name)
+    this.buf.write(data, offset, 'hex')
+  }
+
+  getOffset(name: string) {
+    const target = this.getTarget(name)
+    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+    const offset = this.start + target.offset
+    return {
+      offset,
+      target
+    }
+  }
+
   /** 直接读数值 */
   read(name: string) {
-    try {
-      const target = this.getTarget(name)
-      if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
-      const offset = this.start + target.offset
-      // logger.info(
-      //   target.name,
-      //   this.buf.slice(offset, offset + target.bytLen).toString('hex')
-      // )
-      if (target.type === 'float') {
-        return this.buf.readFloatBE(offset)
-      }
-      if (target.type === 'int') {
-        return this.buf.readIntBE(offset, target.bytLen)
-      }
-      return this.buf.readUIntBE(offset, target.bytLen)
-    } catch (err) {
-      console.log(name)
-      throw err
+    const { target, offset } = this.getOffset(name)
+    // logger.info(
+    //   target.name,
+    //   this.buf.slice(offset, offset + target.bytLen).toString('hex')
+    // )
+    if (target.type === 'float') {
+      return this.buf.readFloatBE(offset)
     }
+    if (target.type === 'int') {
+      return this.buf.readIntBE(offset, target.bytLen)
+    }
+    return this.buf.readUIntBE(offset, target.bytLen)
+  }
+
+  /** 读字符 默认ascii */
+  readStr(name: string, encoding = 'ascii') {
+    const { target, offset } = this.getOffset(name)
+    let str = this.buf.toString(encoding, offset, offset + target.bytLen)
+    if (encoding === 'ascii') {
+      str = replaceAscii(str)
+    }
+    return str
   }
 
   /** 读16进制数值 */
   readHex(name: string) {
-    const target = this.getTarget(name)
-    const data = this.read(name)
-    return toHex(data, target.bytLen)
+    return this.readStr(name, 'hex')
+  }
+
+  /** 读Ip */
+  readIp(name: string) {
+    const { target, offset } = this.getOffset(name)
+    return this.buf.slice(offset, offset + target.bytLen).join('.')
   }
 
   readFloat(name: string, fractionDigits = 6) {

@@ -171,4 +171,13 @@ declare namespace ipcReq {
       }
     }
   }
+
+  interface SetMasterInfoOpts {
+    masterId: number
+    ip: string
+    mask: string
+    gateway: string
+    machineId: string
+    ipOld: string
+  }
 }

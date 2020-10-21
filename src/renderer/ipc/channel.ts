@@ -39,6 +39,16 @@ export function getIpList() {
   return $command.invoke(`/port/masterInfo/ipList`)
 }
 
+/** 刷新链接返回ip列表 */
+export function refreshIpConnect() {
+  return $command.invoke(`/port/masterInfo/refreshConnect`)
+}
+
+/** 编辑机柜信息 */
+export function setMasterInfo(data: ipcReq.SetMasterInfoOpts) {
+  return $command.invoke(`/port/masterInfo/set`, data)
+}
+
 /** 删除某项ip */
 export function delIpItem(data: any) {
   return $command.invoke(`/port/masterInfo/delIp`, data)

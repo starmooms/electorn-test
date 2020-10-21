@@ -156,6 +156,12 @@ export default class USBManager {
     ipcManage.handle('/port/masterInfo/delIp', async (event, data) => {
       return boxManage.boxMasterInfo.delIpItem(data)
     })
+    ipcManage.handle('/port/masterInfo/refreshConnect', async () => {
+      return boxManage.boxMasterInfo.refreshConnect()
+    })
+    ipcManage.handle('/port/masterInfo/set', async (event, data) => {
+      return boxManage.boxMasterInfo.setMasterInfo(data)
+    })
   }
 
   /** 获取列表 */

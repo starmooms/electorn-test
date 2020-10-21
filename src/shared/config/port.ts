@@ -353,5 +353,13 @@ export const CONTROL_CODE = {
   lampSet: {
     code: 0xa3,
     name: '通道灯设置'
+  },
+  masterInfoRead: {
+    code: 0x86,
+    name: '读主控信息'
+  },
+  masterInfoSet: {
+    code: 0xb3,
+    name: '写主控信息'
   }
 }

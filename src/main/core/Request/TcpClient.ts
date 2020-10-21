@@ -17,6 +17,8 @@ export default class TcpClient {
   port: number
   masterId: number
   tcpClient: net.Socket
+  isConnect = false
+  masterInfo: any
 
   constructor({ ip, port, masterId }: TcpClientParams) {
     this.masterId = masterId
@@ -27,7 +29,7 @@ export default class TcpClient {
 
   createTcpClient() {
     const tcpClient = net.createConnection(this.port, this.ip)
-    const info = `TcpClient ${this.ip}:${this.port}`
+    const info = `TcpClient ${this.masterId} ${this.ip}:${this.port}`
     tcpClient.on('data', data => {
       logger.debug(`${info} Data`, data.toString('hex'))
       // if (this.onData) {
@@ -41,12 +43,50 @@ export default class TcpClient {
       logger.error(`${info} Error`, err)
     })
     tcpClient.on('connect', () => {
+      this.isConnect = true
       logger.debug(`${info} 链接成功`)
     })
     tcpClient.on('close', () => {
+      this.isConnect = false
       logger.debug(`${info} 断开链接`)
     })
     return tcpClient
+  }
+
+  /** 链接成功返回Promsie */
+  waitConnect() {
+    return new Promise<null>((resolve, reject) => {
+      if (this.isConnect) {
+        resolve(null)
+        return
+      }
+      this.tcpClient.once('connect', resolve)
+      this.tcpClient.once('error', reject)
+      setTimeout(() => {
+        this.tcpClient.removeListener('connect', resolve)
+        this.tcpClient.removeListener('connect', reject)
+        reject('connect Time Out')
+      }, 3000)
+    })
+  }
+
+  /** 关闭连接 */
+  close() {
+    return new Promise<null>((resolve, reject) => {
+      if (!this.tcpClient.destroyed) {
+        this.tcpClient.destroy()
+      }
+      if (!this.isConnect) {
+        resolve(null)
+        return
+      }
+      this.tcpClient.on('close', hasError => {
+        if (hasError) {
+          reject(`TcpClient close has Error ${this.ip} ${hasError}`)
+        }
+        resolve(null)
+      })
+    })
   }
 }
 

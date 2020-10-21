@@ -63,3 +63,18 @@ export function setDeep(val: any, keys: string[] | number[], target = {}) {
 }
 
 export const TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss'
+
+/** 获取默认主控信息 */
+export function getMasterInfoObj(): IpConfigT.MasterInfo {
+  return {
+    version: '',
+    masterId: -1,
+    machineId: '',
+    ip: '',
+    mask: '',
+    gateway: '',
+    slaverList: [],
+    status: 1,
+    errMsg: ''
+  }
+}

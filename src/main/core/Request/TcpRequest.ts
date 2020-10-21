@@ -1,6 +1,7 @@
 import TcpClient from './TcpClient'
 import { CommuniClass } from './Communi'
 import logger from '../Logger'
+import configManage from '../ConfigManage'
 
 /** Tcp通讯 */
 export default class TcpRequest {
@@ -26,42 +27,77 @@ export default class TcpRequest {
     clientItem.tcpClient.on('data', buf => {
       this.parent.onEmit(buf)
     })
-    this.tcpIpMap.set(ip, clientItem)
+    // this.tcpIpMap.set(ip, clientItem)
     this.tcpMap.set(masterId, clientItem)
     return clientItem
   }
 
-  created() {
-    this.ipList.forEach(item => {
-      const ip = item.ip
-      this.createTcpClient(ip, item.masterId)
+  /** 关闭tcp，删除map对象 */
+  async closeTcpItem(masterId: number) {
+    const tcpItem = this.tcpMap.get(masterId)
+    if (tcpItem) {
+      await tcpItem.close()
+      this.tcpMap.delete(masterId)
+    }
+    return tcpItem
+  }
 
-      // const tcpItem = this.tcpMap.get(item.masterId)
-      // if (tcpItem && tcpItem.tcpClient.connecting) {
-      //   return
-      // }
-
-      // const tcpClient = createTcpClient(item, {
-      //   onData: buf => {
-      //     this.parent.onEmit(buf)
-      //   }
-      // })
-      // this.tcpMap.set(
-      //   item.masterId,
-      //   createTcpClient(item, {
-      //     onData: buf => {
-      //       this.parent.onEmit(buf)
-      //     }
-      //   })
-      // )
+  /** 根据base.ipList，创建连接 */
+  async createdConnect() {
+    this.ipList = configManage.userConfig.get('base.ipList')
+    const promiseArr: Promise<any>[] = []
+    const masterList = this.ipList.map(item => {
+      const tcpItem = this.tcpMap.get(item.masterId)
+      if (!tcpItem || tcpItem.ip !== item.ip || !tcpItem.isConnect) {
+        promiseArr.push(
+          (async () => {
+            await this.closeTcpItem(item.masterId)
+            const newTcpItem = this.createTcpClient(item.ip, item.masterId)
+            try {
+              await newTcpItem.waitConnect()
+            } catch (err) {
+              logger.error('createdConnect Error', err)
+            }
+          })()
+        )
+      }
+      return item.masterId
     })
+    this.tcpMap.forEach((value, masterId) => {
+      if (!masterList.includes(masterId)) {
+        promiseArr.push(this.closeTcpItem(masterId))
+      }
+    })
+    await Promise.all(promiseArr)
+    // this.ipList.forEach(item => {
+    //   const ip = item.ip
+    //   this.createTcpClient(ip, item.masterId)
+
+    //   // const tcpItem = this.tcpMap.get(item.masterId)
+    //   // if (tcpItem && tcpItem.tcpClient.connecting) {
+    //   //   return
+    //   // }
+
+    //   // const tcpClient = createTcpClient(item, {
+    //   //   onData: buf => {
+    //   //     this.parent.onEmit(buf)
+    //   //   }
+    //   // })
+    //   // this.tcpMap.set(
+    //   //   item.masterId,
+    //   //   createTcpClient(item, {
+    //   //     onData: buf => {
+    //   //       this.parent.onEmit(buf)
+    //   //     }
+    //   //   })
+    //   // )
+    // })
   }
 
   /** 关闭通讯 */
   close() {
-    logger.debug('关闭')
     this.tcpMap.forEach(item => {
-      item.tcpClient.destroy()
+      this.closeTcpItem(item.masterId)
     })
   }
 
@@ -77,6 +113,16 @@ export default class TcpRequest {
     } else {
       setError(new Error(`机柜${masterId} 未初始化链接`))
     }
+  }
+
+  /** 获取连接状态 */
+  getClientStatus(masterId: number): IpConfigT.MasterInfo['status'] {
+    let status = 1
+    const tcpClient = this.tcpMap.get(masterId)
+    if (tcpClient) {
+      status = tcpClient.isConnect ? 2 : 3
+    }
+    return status
   }
 
   /** 测试链接 */

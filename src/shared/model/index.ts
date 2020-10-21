@@ -2,6 +2,9 @@ import { BufModelT } from '@/types/BufModel'
 import { Model } from 'vue-property-decorator'
 declare type Model = BufModelT.OrginModel
 
+/** 版本号 */
+export const VERSERION = 0
+
 /**
  * 通用读发送数据model
  * 读实时数据/采样
@@ -250,4 +253,40 @@ export const LAMP_MODEL: Model[] = [
       { name: 'channelBit', bytLen: 1 }
     ]
   }
+]
+
+/** IP读主控信息发送 */
+export const MASERT_INFO_READ: Model[] = [
+  { name: 'version', bytLen: 1 },
+  { name: 'masterId', bytLen: 1 }
+]
+
+/** IP读主控信息返回 */
+export const MASERT_INFO: Model[] = [
+  { name: 'version', bytLen: 10 },
+  { name: 'masterId', bytLen: 1 },
+  { name: 'machineId', bytLen: 8 },
+  { name: 'ip', bytLen: 4 },
+  { name: 'mask', bytLen: 4 },
+  { name: 'gateway', bytLen: 4 },
+  { name: 'slaverLen', bytLen: 1 },
+  {
+    name: 'slaverList',
+    type: 'list',
+    len: 'slaverLen',
+    model: [
+      { name: 'version', bytLen: 10 },
+      { name: 'slaverId', bytLen: 1 },
+      { name: 'machineId', bytLen: 8 }
+    ]
+  }
+]
+
+/** IP写主控信息返回 */
+export const MASERT_INFO_SET: Model[] = [
+  { name: 'machineId', bytLen: 8 },
+  { name: 'masterId', bytLen: 1 },
+  { name: 'ip', bytLen: 4 },
+  { name: 'mask', bytLen: 4 },
+  { name: 'gateway', bytLen: 4 }
 ]

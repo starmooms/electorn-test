@@ -1,11 +1,17 @@
 import { CONTROL_CODE } from '@/shared/config/port'
-import { LAMP_MODEL } from '@/shared/model'
+import {
+  LAMP_MODEL,
+  MASERT_INFO_READ,
+  VERSERION,
+  MASERT_INFO,
+  MASERT_INFO_SET
+} from '@/shared/model'
 import { BufWriteModel as BufModel } from '@/main/utils/bufModel'
 import logger from '@/main/core/Logger'
 import communi from '@/main/core/Request/Communi'
 import { BoxManage } from './BoxManage'
-import Bluebird from 'bluebird'
 import configManage from '../ConfigManage'
+import { getMasterInfoObj } from '@/shared/utils'
 
 /** 机柜主控控制 */
 export default class BoxMasterInfo {
@@ -20,7 +26,50 @@ export default class BoxMasterInfo {
     }
   }
 
-  getMasterInfo(list: string[]) {
+  async getMasterInfo(masterId: number) {
+    const info: IpConfigT.MasterInfo = getMasterInfoObj()
+    info.status = communi.tpcRequest.getClientStatus(masterId)
+    if (info.status === 2) {
+      try {
+        const writeModel = new BufModel({
+          model: MASERT_INFO_READ
+        })
+        writeModel.writer('version', VERSERION)
+        writeModel.writer('masterId', masterId)
+        logger.debug('读主控信息发送', writeModel.buf.toString('hex'))
+        const resultBuf = await communi.post({
+          control: CONTROL_CODE.masterInfoRead,
+          data: writeModel.buf,
+          masterId,
+          requestType: 'Tcp'
+        })
+        logger.debug('读主控信息返回', resultBuf.toString('hex'))
+        const readModel = new BufModel({
+          model: MASERT_INFO,
+          readBuf: resultBuf
+        })
+        // readModel.showAll()
+        info.version = readModel.readStr('version')
+        info.masterId = readModel.read('masterId')
+        info.machineId = readModel.readHex('machineId')
+        info.ip = readModel.readIp('ip')
+        info.mask = readModel.readIp('mask')
+        info.gateway = readModel.readIp('gateway')
+        readModel.ecahList('slaverList', readItem => {
+          info.slaverList.push({
+            version: readItem.readStr('version'),
+            slaverId: readItem.read('slaverId'),
+            machineId: readItem.readHex('machineId')
+          })
+        })
+      } catch (err) {
+        logger.error(err)
+        info.status = 4
+        info.errMsg = err.message
+      }
+    }
+    return info
+
     // if (!communi.tpcRequest) {
     //   throw new Error('未生成Tcp管理对象')
     // }
@@ -34,79 +83,78 @@ export default class BoxMasterInfo {
   }
 
   /** 获取ip列表 */
-  getIpList() {
+  async getIpList(): Promise<IpConfigT.IpTcpItem[]> {
     const list: Store.IpListItem[] = configManage.userConfig.get('base.ipList')
-    const resultList: IpConfigT.IpTcpItem[] = list.map(item => {
-      let isConnect = false
-      if (communi.tpcRequest) {
-        const tcpClient = communi.tpcRequest.tcpMap.get(item.masterId)
-        if (tcpClient) {
-          isConnect = tcpClient.tcpClient.connecting
-        }
-      }
+    const resultListP = list.map(async item => {
+      const masterInfo = await this.getMasterInfo(item.masterId)
       return {
-        ip: item.ip,
-        masterId: item.masterId,
-        isConnect
+        ...item,
+        masterInfo
       }
     })
-    return resultList
+    const data = await Promise.all(resultListP)
+    return data
   }
 
-  /** 删除ip */
-  delIpItem(opts: any) {
-    logger.info('??')
+  findIpItem(masterId: number, ip: string) {
     const list: Store.IpListItem[] = configManage.userConfig.get('base.ipList')
     const index = list.findIndex(item => {
-      return opts.masterId === item.masterId && opts.ip === item.ip
+      return masterId === item.masterId && ip === item.ip
     })
     const ipItem = list[index]
     if (!ipItem) {
       throw new Error('查找不到对应项')
     }
+    return {
+      index,
+      ipItem,
+      list
+    }
+  }
+
+  /** 删除ip */
+  async delIpItem(opts: any) {
+    const { list, ipItem, index } = this.findIpItem(opts.masterId, opts.ip)
     list.splice(index, 1)
-    logger.debug(list)
     configManage.userConfig.set('base.ipList', list)
+    await communi.tpcRequest.closeTcpItem(ipItem.masterId)
     return true
   }
 
-  // /** 设置校准 */
-  // async setLamp(opts: ipcReq.LampSetOpts) {
-  //   const boxList: number[] = []
-  //   for (let i = 0; i < 1; i++) {
-  //     boxList.push(i)
-  //   }
-  //   const writeModel = new BufModel({
-  //     model: LAMP_MODEL,
-  //     listLen: {
-  //       lampList: 32
-  //     }
-  //   })
-  //   await Bluebird.mapSeries(boxList, async masterId => {
-  //     try {
-  //       writeModel.writer('masterId', masterId)
-  //       writeModel.ecahList('lampList', (writeItem, sindex) => {
-  //         const slaverId = sindex
-  //         writeItem.writer('slaverId', slaverId)
-  //         const channelList = opts.list?.[`${masterId}`]?.[`${slaverId}`]
-  //         if (channelList && channelList.length > 0) {
-  //           writeItem.writerBit('channelBit', channelList)
-  //         }
-  //       })
-  //       logger.debug(
-  //         `点灯发送`,
-  //         `box ${masterId}`,
-  //         writeModel.buf.toString('hex')
-  //       )
-  //       await communi.post({
-  //         control: CONTROL_CODE.lampSet,
-  //         data: writeModel.buf,
-  //         masterId
-  //       })
-  //     } catch (err) {
-  //       logger.error('点灯失败', err)
-  //     }
-  //   })
-  //   return true
-  // }
+  /** 刷新连接 */
+  async refreshConnect() {
+    await communi.tpcRequest.createdConnect()
+    return await this.getIpList()
+  }
+
+  /** 编辑机柜信息 */
+  async setMasterInfo(opts: any) {
+    const writeModel = new BufModel({
+      model: MASERT_INFO_SET
+    })
+    writeModel.writerHex('machineId', opts.machineId)
+    writeModel.writer('masterId', opts.masterId)
+    writeModel.writerIp('ip', opts.ip)
+    writeModel.writerIp('mask', opts.mask)
+    writeModel.writerIp('gateway', opts.gateway)
+    logger.debug('编辑主控信息发送', writeModel.buf.toString('hex'))
+    const resultBuf = await communi.post({
+      control: CONTROL_CODE.masterInfoSet,
+      data: writeModel.buf,
+      masterId: opts.masterId,
+      requestType: 'Tcp'
+    })
+    logger.debug('编辑主控信息返回', resultBuf.toString('hex'))
+    let status = 2
+    if (opts.ipOld !== opts.ip) {
+      const { list, index } = this.findIpItem(opts.masterId, opts.ipOld)
+      list[index].ip = opts.ip
+      configManage.userConfig.set('base.ipList', list)
+      await communi.tpcRequest.closeTcpItem(opts.masterId)
+      status = 1
+    }
+    return {
+      status
+    }
+  }
 }

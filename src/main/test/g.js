@@ -31,3 +31,13 @@
 // console.log(a)
 
 // console.log(a.readFloatBE(0).toFixed(6))
+
+const str = '312e322e300000000000'
+const b = Buffer.from(str, 'hex')
+b.write('09', 'hex')
+console.log(b.toString('hex'))
+// b.writeUIntBE(1, 0)
+// console.log(String(b) === '1.2.0')
+// console.log(b.toString('ascii') === '1.2.0')
+// console.log(b.toString('ascii').replace(/[^\x20-\x7E]+/g, ''))
+// console.log(b.toString('ascii').replace(/(\x00)+$/g, '') === '1.2.0')

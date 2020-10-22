@@ -45,12 +45,12 @@ export function refreshIpConnect() {
 }
 
 /** 编辑机柜信息 */
-export function setMasterInfo(data: ipcReq.SetMasterInfoOpts) {
+export function setMasterInfo(data: ipcReq.MasterInfoSetOpts) {
   return $command.invoke(`/port/masterInfo/set`, data)
 }
 
 /** 删除某项ip */
-export function delIpItem(data: any) {
+export function delIpItem(data: ipcReq.MasterInfoDelIp) {
   return $command.invoke(`/port/masterInfo/delIp`, data)
 }
 

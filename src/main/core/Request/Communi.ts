@@ -107,7 +107,15 @@ class Communi {
         let headMsg = ''
         if (requestType === 'Port') {
           headMsg += this.serialPort!.path
-          this.serialPort!.handleError()
+          if (this.serialPort) {
+            this.serialPort.handleError()
+          }
+        } else if (requestType === 'Tcp') {
+          const tcpClient = this.tpcRequest.getClient(masterId)
+          if (tcpClient) {
+            tcpClient.ip
+            headMsg += tcpClient.ip
+          }
         }
         reject(new Error(`${headMsg} POST Error：${msg}`))
         clearTimeout(timer)
@@ -159,7 +167,6 @@ class Communi {
   /** 数据返回 */
   onEmit(buf: Buffer) {
     const result = agreement.readData(buf)
-    logger.info(this.emitList)
     if (this.emitList.has(result.sId)) {
       const fun = this.emitList.get(result.sId)
       if (fun) fun(result)

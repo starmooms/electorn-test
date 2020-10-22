@@ -33,7 +33,15 @@
             </template>
           </div>
         </div>
-        <svg-icon class="channel-icon" icon-class="batter"></svg-icon>
+        <div class="channel-text-icon">
+          <i class="channe-b-top-icon"></i>
+          <div class="channel-border-icon">
+            U：{{ sampData.U }}
+            <br />
+            I：{{ sampData.I }}
+          </div>
+        </div>
+        <!-- <svg-icon class="channel-icon" icon-class="batter"></svg-icon> -->
       </div>
       <template v-slot:menu>
         <a href="javascript:;" @click="changeStatus('start')">启动</a>
@@ -156,14 +164,9 @@ export default class ChannelItem extends Vue {
   cursor: pointer;
   text-align: center;
   &:hover {
-    .channel-icon {
+    .channel-icon,
+    .channel-text-icon {
       transform: translate3d(0, -4px, 0);
-    }
-  }
-
-  @each $status, $val in $statusColor {
-    &.#{$status} .channel-icon {
-      color: $val;
     }
   }
 
@@ -173,12 +176,51 @@ export default class ChannelItem extends Vue {
     font-size: 40px;
   }
 
+  .channel-text-icon {
+    display: inline-block;
+    position: relative;
+    box-sizing: border-box;
+    transition: all 0.2s;
+    font-size: 0;
+    .channe-b-top-icon {
+      display: inline-block;
+      width: 24px;
+      height: 4px;
+      background-color: #606266;
+    }
+    .channel-border-icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 82px;
+      height: 48px;
+      box-sizing: border-box;
+      border: 4px solid #606266;
+      font-size: 12px;
+    }
+  }
+  @each $status, $val in $statusColor {
+    &.#{$status} {
+      .channel-icon {
+        color: $val;
+      }
+      .channel-text-icon {
+        .channe-b-top-icon {
+          background-color: $val;
+        }
+        .channel-border-icon {
+          border-color: $val;
+        }
+      }
+    }
+  }
+
   .sigh-box {
     position: absolute;
     top: 0;
     right: 50%;
     color: $--color-error;
-    margin-right: -40px;
+    margin-right: -54px;
   }
 }
 

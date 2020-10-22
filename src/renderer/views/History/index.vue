@@ -40,6 +40,7 @@ import {
 } from '@/shared/config/port'
 import ChannelPosition from './components/ChannelPosition.vue'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
+import logger from '@/main/core/Logger'
 
 @Component({
   components: {
@@ -129,6 +130,7 @@ export default class History extends Vue {
       let lastLoopNum: null | number = null
       let lastStep: any = null
       let lastStepTimeEnd = 0
+      let stepTimeMax = 0
       const dataEnd = data.length - 1
 
       this.sampTableList = []
@@ -159,15 +161,22 @@ export default class History extends Vue {
             this.sampTableList.push(nowStep)
             if (lastStep) {
               lastStep.end = index - 1
-              lastStepTimeEnd = computerAdd(
-                lastStepTimeEnd,
-                data[index - 1].stepTime
-              )
+              // lastStepTimeEnd = computerAdd(
+              //   lastStepTimeEnd,
+              //   data[index - 1].stepTime
+              // )
+              lastStepTimeEnd = computerAdd(lastStepTimeEnd, stepTimeMax)
+              stepTimeMax = 0
             }
             lastStepIdId = stepId
             lastLoopNum = loopNum
             lastStep = nowStep
           }
+        }
+        if (item.stepTime >= stepTimeMax) {
+          stepTimeMax = item.stepTime
+        } else {
+          console.error('??', item, stepTimeMax, item.stepTime)
         }
         return {
           sIndex: index + 1,

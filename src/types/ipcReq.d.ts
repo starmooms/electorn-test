@@ -172,12 +172,19 @@ declare namespace ipcReq {
     }
   }
 
-  interface SetMasterInfoOpts {
+  /** IP编辑机柜信息 */
+  interface MasterInfoSetOpts {
     masterId: number
     ip: string
     mask: string
     gateway: string
     machineId: string
     ipOld: string
+  }
+
+  /** 删除ip机柜 */
+  interface MasterInfoDelIp {
+    masterId: number
+    ip: string
   }
 }

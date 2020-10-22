@@ -29,7 +29,9 @@
               <br />
               <span class="u-txt">电压：{{ channel.samp.U }} mV</span>
               <br />
-              <span class="u-txt">当前循环次数：{{ channel.loopNow }}</span>
+              <span class="u-txt">
+                当前循环次数：{{ channel.samp.loopNum }}
+              </span>
             </div>
             <div class="msg-r">
               <span class="now-txt" :class="channel.samp.workerStatus.status">
@@ -132,7 +134,6 @@ export default class SlaverDetails extends Vue {
         channelId,
         stepList: [],
         samp,
-        loopNow: null,
         status: ''
       }
     })
@@ -158,9 +159,8 @@ export default class SlaverDetails extends Vue {
         this.list.forEach(item => {
           const channelId = item.channelId
           const samp = this.getSamp(channelId)
-          const { stepList, loopNow } = this.getStepList(stepData[channelId])
+          const { stepList } = this.getStepList(stepData[channelId])
           item.samp = samp
-          item.loopNow = loopNow
           item.stepList = stepList
         })
       }

@@ -5,7 +5,7 @@ import configManage from '../ConfigManage'
 
 /** Tcp通讯 */
 export default class TcpRequest {
-  ipList: TcpRequestT.IpItem[] = [{ ip: '192.168.0.200', masterId: 0 }]
+  ipList: TcpRequestT.IpItem[] = []
   tcpMap = new Map<number, TcpClient>()
   tcpIpMap = new Map<string, TcpClient>()
   parent: CommuniClass
@@ -24,7 +24,7 @@ export default class TcpRequest {
       masterId,
       port: 31111
     })
-    clientItem.tcpClient.on('data', buf => {
+    clientItem.on('data', buf => {
       this.parent.onEmit(buf)
     })
     // this.tcpIpMap.set(ip, clientItem)
@@ -123,6 +123,10 @@ export default class TcpRequest {
       status = tcpClient.isConnect ? 2 : 3
     }
     return status
+  }
+
+  getClient(masterId: number) {
+    return this.tcpMap.get(masterId)
   }
 
   /** 测试链接 */

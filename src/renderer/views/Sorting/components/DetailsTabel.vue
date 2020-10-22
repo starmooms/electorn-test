@@ -11,7 +11,7 @@
   >
     <!-- eslint-disable -->
     <vxe-table-column type="seq" title="序号" width="80"></vxe-table-column>
-    <vxe-table-column field="masterId" title="主控号" width="80">
+    <vxe-table-column field="masterId" title="机柜号" width="80">
       <template v-slot="{ row }">{{ row.masterId+1 }}</template>
     </vxe-table-column>
     <vxe-table-column field="slaverId" title="从控号" width="80">

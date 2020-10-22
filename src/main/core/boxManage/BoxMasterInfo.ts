@@ -20,12 +20,6 @@ export default class BoxMasterInfo {
     this.parent = parent
   }
 
-  getTcpRequest() {
-    if (!communi.tpcRequest) {
-      throw new Error('未生成Tcp管理对象')
-    }
-  }
-
   async getMasterInfo(masterId: number) {
     const info: IpConfigT.MasterInfo = getMasterInfoObj()
     info.status = communi.tpcRequest.getClientStatus(masterId)
@@ -113,7 +107,7 @@ export default class BoxMasterInfo {
   }
 
   /** 删除ip */
-  async delIpItem(opts: any) {
+  async delIpItem(opts: ipcReq.MasterInfoDelIp) {
     const { list, ipItem, index } = this.findIpItem(opts.masterId, opts.ip)
     list.splice(index, 1)
     configManage.userConfig.set('base.ipList', list)
@@ -128,7 +122,7 @@ export default class BoxMasterInfo {
   }
 
   /** 编辑机柜信息 */
-  async setMasterInfo(opts: any) {
+  async setMasterInfo(opts: ipcReq.MasterInfoSetOpts) {
     const writeModel = new BufModel({
       model: MASERT_INFO_SET
     })

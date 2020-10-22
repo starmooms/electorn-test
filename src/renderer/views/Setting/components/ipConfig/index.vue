@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-dialog
-      title="主控设置"
+      title="IP设置"
       width="1000px"
       :visible.sync="dialog"
       :close-on-click-modal="false"
@@ -23,7 +23,6 @@
             :data="list"
             :row-class-name="tableRowClassName"
           >
-            <!-- <el-table-column type="index" label="序号" width="60" /> -->
             <!-- eslint-disable -->
             <el-table-column prop="masterId" label="机柜号" width="60">
               <template v-slot="{ row }">
@@ -34,14 +33,15 @@
             <el-table-column prop="masterInfo.mask" label="掩码" width="120" />
             <el-table-column prop="masterInfo.gateway" label="网关" width="120" />
             <el-table-column prop="masterInfo.version" label="版本号" width="80" />
-            <el-table-column prop="masterInfo.machineId" label="机身号" width="160" />
-            <el-table-column prop="status" label="连接状态">
+            <el-table-column prop="masterInfo.machineId" label="机身号" width="140" />
+            <el-table-column prop="status" label="连接状态" min-width="170">
               <template v-slot="{ row }">
                 {{statusMap[row.masterInfo.status]}}
               </template>
             </el-table-column>
-            <el-table-column prop="ip" label="操作" width="160">
+            <el-table-column prop="ip" label="操作" width="120">
               <template v-slot="{ row, $index }">
+                <el-button type="text" @click="detailsOpen(row)" :disabled="row.masterInfo.status !== 2">查看</el-button>
                 <el-button type="text" @click="addMasterOpen(row)" :disabled="row.masterInfo.status !== 2">编辑</el-button>
                 <el-button type="text" @click="delMaster(row, $index)">删除</el-button>
               </template>
@@ -62,25 +62,27 @@
       @saveAdd="addMaster"
       @saveEdit="editIp"
     />
+    <DetailsInfo :show.sync="detailsShow" :masterInfo="detailsInfo" />
   </div>
 </template>
 
 <script lang="ts">
-import logger from '@/main/core/Logger'
+import { Component, Vue, PropSync } from 'vue-property-decorator'
+import IpEdit from './IpEdit.vue'
+import DetailsInfo from './DetailsInfo.vue'
+import { setStoreConfig } from '@/renderer/ipc/storeConfig'
+import { getMasterInfoObj } from '@/shared/utils'
 import {
   delIpItem,
   getIpList,
   refreshIpConnect,
   setMasterInfo
 } from '@/renderer/ipc/channel'
-import { setStoreConfig } from '@/renderer/ipc/storeConfig'
-import { getMasterInfoObj } from '@/shared/utils'
-import { Component, Vue, PropSync, Watch } from 'vue-property-decorator'
-import IpEdit from './IpEdit.vue'
 
 @Component({
   components: {
-    IpEdit
+    IpEdit,
+    DetailsInfo
   }
 })
 export default class IpConfig extends Vue {
@@ -99,13 +101,23 @@ export default class IpConfig extends Vue {
   }
   loading = false
 
+  // 查看详情
+  detailsShow = false
+  detailsInfo: null | IpConfigT.MasterInfo = null
+
   addMasterOpen(item?: IpConfigT.IpTcpItem) {
     this.editMaster = item ? item : null
     console.warn(this.editMaster)
     this.addMasterShow = true
   }
 
+  detailsOpen(row: IpConfigT.IpTcpItem) {
+    this.detailsInfo = row.masterInfo
+    this.detailsShow = true
+  }
+
   getIpListFormat() {
+    this.list.sort((a, b) => a.masterId - b.masterId)
     return this.list.map(item => {
       return {
         masterId: item.masterId,

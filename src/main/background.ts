@@ -11,24 +11,7 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import Launcher from './Launcher'
 import logger from './core/Logger'
 import debug from 'debug'
-
-// try {
-//   const d = debug
-//   d.log = logger.info.bind(logger)
-// } catch (err) {
-//   logger.error(err)
-// }
-
-// const log2 = debug('serialport/stream')
-// log.log = (...args) => {
-//   logger.info(...args)
-// }
-// log2.log = (...args) => {
-//   logger.info(...args)
-// }
-// error.log = (...args) => {
-//   logger.error(...args)
-// }
+import tcpServe from './core/connect/TcpServe'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 app.allowRendererProcessReuse = false
@@ -42,6 +25,7 @@ let beforeMainWin: any = () => {
 }
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
+  // tcpServe()
   if (process.platform === 'win32') {
     process.on('message', data => {
       if (data === 'graceful-exit') {

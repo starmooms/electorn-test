@@ -38,7 +38,7 @@
       <title-box name="通道列表">
         <SelectMaster v-model="activeMasterId"></SelectMaster>
         <transition name="el-fade-in">
-          <div v-if="activeMaster">
+          <div v-if="activeMaster" class="channel-main-box">
             <!-- <el-divider content-position="left">
               机柜{{ activeMaster.id + 1 }}
             </el-divider> -->
@@ -274,6 +274,7 @@ export default class Home extends Vue {
     const { unRegister } = this.$command.on({
       eventName: `/port/translate/${this.activeMasterId}`,
       onEmit: data => {
+        console.log(data)
         data.list.forEach(item => {
           const slaver = this.activeMaster?.slaverList[item.slaverId]
           if (slaver) {
@@ -363,9 +364,12 @@ export default class Home extends Vue {
     }
   }
 }
-
+.channel-main-box {
+  padding-bottom: 40px;
+}
 .box-card {
   margin-top: 40px;
+  overflow: initial;
   .box-card-header {
     display: flex;
     justify-content: space-between;

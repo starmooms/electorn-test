@@ -14,7 +14,7 @@
         <el-table-column prop="id" label="id" width="80"></el-table-column>
         <el-table-column
           prop="masterId"
-          label="主控"
+          label="机柜"
           width="80"
         ></el-table-column>
         <el-table-column

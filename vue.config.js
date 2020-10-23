@@ -66,22 +66,22 @@ module.exports = {
         },
         appId: 'com.xxx.app',
         // compression: 'maximum',
-        compression: 'store',
+        // compression: 'store',
         mac: {
           target: ['dmg', 'zip']
         },
         win: {
-          target: ['nsis', 'zip'],
-          extraResources: {
-            from: './extra/win32/',
-            to: './',
-            filter: ['**/*']
-          },
-          extraFiles: {
-            from: './extra/localData/',
-            to: './',
-            filter: ['**/*']
-          }
+          target: ['nsis', 'zip']
+          // extraResources: {
+          //   from: './extra/win32/',
+          //   to: './',
+          //   filter: ['**/*']
+          // },
+          // extraFiles: {
+          //   from: './extra/localData/',
+          //   to: './',
+          //   filter: ['**/*']
+          // }
         },
         nsis: {
           oneClick: false,

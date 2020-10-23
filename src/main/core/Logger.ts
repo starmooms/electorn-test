@@ -2,10 +2,25 @@ import is from 'electron-is'
 import logger from 'electron-log'
 import dayjs from 'dayjs'
 import * as path from 'path'
+import * as fs from 'fs'
 
 export const logPath = logger.transports.file.getFile().path
 logger.transports.file.level = is.production() ? 'silly' : 'silly'
 logger.transports.file.maxSize = 2097152
+// logger.transports.file.archiveLog = file => {
+//   const oldPath = file.toString()
+//   const inf = path.parse(oldPath)
+//   try {
+//     fs.renameSync(
+//       oldPath,
+//       path.join(inf.dir, inf.name + `${dayjs().valueOf()}` + '.old' + inf.ext)
+//     )
+//   } catch (e) {
+//     console.log('Could not rotate log', e)
+//     // const quarterOfMaxSize = Math.round(logger.transports.file.maxSize / 4)
+//     // file.crop(Math.min(quarterOfMaxSize, 256 * 1024))
+//   }
+// }
 
 let sysLog = (logger as unknown) as logger.ElectronLog
 let sysFilePath = logPath

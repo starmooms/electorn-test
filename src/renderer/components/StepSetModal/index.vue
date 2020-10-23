@@ -108,7 +108,11 @@
                       :key="key"
                       class="input-item"
                     >
-                      {{ stepsInputMap[key].name }}：
+                      <span class="input-name">
+                        {{
+                          `${stepsInputMap[key].name}(${stepsInputMap[key].unit})`
+                        }}：
+                      </span>
                       <el-input type="text" v-model.number="row.input[key]" />
                     </div>
                   </div>
@@ -179,6 +183,8 @@ import { SettingStatus } from '@/renderer/store/modules/Setting'
 import SelectChannel from '@/renderer/components/SelectChannel.vue'
 import FileSelect from '@/renderer/components/FileSelect.vue'
 
+const { stepsSelectList, stepsRulseMap } = getStepsOpts()
+
 @Component({
   components: {
     StepTplSave,
@@ -205,7 +211,9 @@ export default class StepSetModal extends Vue {
   tplUseShow = false
 
   stepsList: any[] = []
-  stepsSelectOpts = getStepsOpts()
+  stepsSelectOpts = stepsSelectList
+  stepsRulseMap = stepsRulseMap
+
   stepsInputMap = getStepsInputMap()
   stepsId = 0
 
@@ -305,11 +313,20 @@ export default class StepSetModal extends Vue {
 
     const list: any = []
     if (!msg) {
+      this.stepsListformat()
       this.stepsList.forEach((item, index) => {
         if (item.name) {
-          const hasNull = Object.keys(item.input).find(
-            key => item.input[key] === null
-          )
+          const hasNull = Object.keys(item.input).find(key => {
+            const valNull = item.input[key] === null
+            if (valNull) {
+              const rules = this.stepsRulseMap?.[item.type]?.rules
+              if (rules && rules.unReqire.includes(key)) {
+                return false
+              }
+            }
+            return valNull
+          })
+
           if (hasNull) {
             msg = '工步中有参数未设置'
           } else {
@@ -416,11 +433,19 @@ export default class StepSetModal extends Vue {
   }
 
   tplSaveOpen() {
+    this.stepsListformat()
     if (this.stepsList.length === 0) {
       this.$message.warning('请先添加工步')
       return
     }
     this.tplSaveShow = true
+  }
+
+  stepsListformat() {
+    this.stepsList = this.stepsList.map((item, index) => {
+      item.id = index
+      return item
+    })
   }
 
   stepsAdd() {
@@ -460,7 +485,7 @@ export default class StepSetModal extends Vue {
 
 <style lang="scss" scoped>
 ::v-deep .steps-add-dialog {
-  min-width: 900px;
+  min-width: 1000px;
 
   .el-dialog__body {
     max-height: 76vh;
@@ -481,6 +506,11 @@ export default class StepSetModal extends Vue {
     .input-item {
       flex: 0 0 33.33%;
       margin-bottom: 10px;
+      .input-name {
+        display: inline-block;
+        width: 90px;
+        text-align: right;
+      }
       // &:nth-last-child(-n + 3) {
       //   margin-bottom: 0;
       // }

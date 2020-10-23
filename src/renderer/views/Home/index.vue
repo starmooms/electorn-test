@@ -274,7 +274,6 @@ export default class Home extends Vue {
     const { unRegister } = this.$command.on({
       eventName: `/port/translate/${this.activeMasterId}`,
       onEmit: data => {
-        console.log(data)
         data.list.forEach(item => {
           const slaver = this.activeMaster?.slaverList[item.slaverId]
           if (slaver) {

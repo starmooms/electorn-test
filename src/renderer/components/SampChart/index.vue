@@ -1,7 +1,12 @@
 <template>
   <div class="echart-box">
     <action-box v-if="showAction"></action-box>
-    <v-chart ref="echart" manual-update :autoresize="true"></v-chart>
+    <v-chart
+      ref="echart"
+      manual-update
+      :autoresize="true"
+      @zr:click="handleClick"
+    ></v-chart>
   </div>
 </template>
 
@@ -23,7 +28,6 @@ import { formatTimeStr, SAMPCHART_Y_MAP } from '@/renderer/utils/util'
 // import getSampWorker from '@/renderer/utils/getSampWorker'
 import dayjs from 'dayjs'
 import ActionBox from './ActionBox.vue'
-import { coroutine } from 'bluebird'
 
 interface UpdateOpts {
   time: number
@@ -54,6 +58,7 @@ export default class SampChart extends Vue {
 
   chartSamp!: string | null
   polar!: any
+  selectSamp!: Port.SampItem | null
 
   get sampChartConfig() {
     return SettingStatus.sampChartConfig
@@ -122,8 +127,8 @@ export default class SampChart extends Vue {
       }
     }
 
+    this.selectSamp = null
     const chartConfig = this.getChartConfig()
-
     const polar = _merge(
       {
         dataset: {
@@ -131,6 +136,7 @@ export default class SampChart extends Vue {
         },
         tooltip: {
           trigger: 'axis',
+          // axisPointer: {},
           transitionDuration: 0.4,
           padding: 10,
           textStyle: {
@@ -138,13 +144,14 @@ export default class SampChart extends Vue {
           },
           confine: true,
           extraCssText: 'width: 170px',
-          formatter(params) {
+          formatter: params => {
             let htmlStr = ''
             let mainInfo = true
             for (let i = 0; i < params.length; i++) {
               const { seriesName, marker, value, dimensionNames } = params[i]
               if (value.stepTime === 0) continue
               if (mainInfo) {
+                this.selectSamp = value
                 const stepId = value.stepId + 1
                 const workerId = `工序：${stepId}（${stepId}-${value.loopNum}）`
                 const workerStatus = `工步信息：${value.workerName}`
@@ -325,6 +332,12 @@ export default class SampChart extends Vue {
   /** 获取echart实例 */
   getEchart(cb: (echart: any) => any) {
     cb(this.$refs?.echart?.chart)
+  }
+
+  handleClick() {
+    if (this.selectSamp) {
+      this.$emit('locate', this.selectSamp)
+    }
   }
 
   mounted() {

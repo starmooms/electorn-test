@@ -25,6 +25,7 @@ export default class BoxLamp {
         lampList: 32
       }
     })
+    writeModel.writer('lampLen', 32)
     await Bluebird.mapSeries(boxList, async masterId => {
       try {
         writeModel.writer('masterId', masterId)
@@ -41,6 +42,7 @@ export default class BoxLamp {
           `box ${masterId}`,
           writeModel.buf.toString('hex')
         )
+        writeModel.showAll()
         await communi.post({
           control: CONTROL_CODE.lampSet,
           data: writeModel.buf,

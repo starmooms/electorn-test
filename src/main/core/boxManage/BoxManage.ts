@@ -34,7 +34,7 @@ export class BoxManage {
     channelIds: '通道'
   }
   initChannelResolve!: Promise<any>
-  useDev = is.dev() && communi.requestType === 'Port' && false
+  useDev = is.dev() && communi.requestType === 'Port'
   boxSamp = new BoxSamp(this)
   boxCal = new BoxCal(this)
   boxStatus = new BoxStatus(this)

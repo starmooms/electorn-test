@@ -10,12 +10,13 @@
     <split-pane class="main-box" split="vertical">
       <template slot="paneL">
         <div class="left-container pane-container">
-          <samp-chart ref="sampChart"></samp-chart>
+          <samp-chart ref="sampChart" @locate="locate"></samp-chart>
         </div>
       </template>
       <template slot="paneR">
         <div class="right-container pane-container">
           <samp-list
+            ref="sampList"
             :samp-data="sampData"
             :step-list="sampTableList"
           ></samp-list>
@@ -40,7 +41,6 @@ import {
 } from '@/shared/config/port'
 import ChannelPosition from './components/ChannelPosition.vue'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
-import logger from '@/main/core/Logger'
 
 @Component({
   components: {
@@ -56,6 +56,7 @@ export default class History extends Vue {
 
   $refs!: {
     sampChart: SampChart
+    sampList: SampList
   }
 
   sampData: any[] = []
@@ -131,7 +132,7 @@ export default class History extends Vue {
       let lastStep: any = null
       let lastStepTimeEnd = 0
       let stepTimeMax = 0
-      const dataEnd = data.length - 1
+      const spamTotalLen = data.length
 
       this.sampTableList = []
       this.sampData = data.map((item, index) => {
@@ -156,11 +157,11 @@ export default class History extends Vue {
               msg: `工序： ${showStepId}（${showStepId}-${loopNum}）${steps.name}：${msgData}`,
               loopNum,
               start: index,
-              end: dataEnd
+              end: spamTotalLen
             }
             this.sampTableList.push(nowStep)
             if (lastStep) {
-              lastStep.end = index - 1
+              lastStep.end = index
               // lastStepTimeEnd = computerAdd(
               //   lastStepTimeEnd,
               //   data[index - 1].stepTime
@@ -257,6 +258,13 @@ export default class History extends Vue {
       masterId: Number(this.$route.params.masterId),
       slaverId: Number(this.$route.params.slaverId),
       channelId: Number(this.$route.params.channelId)
+    }
+  }
+
+  /** 曲线点击定位 */
+  locate(samp: Port.SampItem) {
+    if (this.$refs.sampList) {
+      this.$refs.sampList.locate(samp)
     }
   }
 

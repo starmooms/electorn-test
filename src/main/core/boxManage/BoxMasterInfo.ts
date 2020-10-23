@@ -1,6 +1,5 @@
 import { CONTROL_CODE } from '@/shared/config/port'
 import {
-  LAMP_MODEL,
   MASERT_INFO_READ,
   VERSERION,
   MASERT_INFO,

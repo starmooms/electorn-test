@@ -6,8 +6,8 @@
     </div>
     <div class="samp-table virtual-table">
       <DynamicScroller
+        ref="virtualScroll"
         class="th-body spam-table"
-        ref="recycleScroller"
         key-field="sIndex"
         :items="list"
         :min-item-size="24"
@@ -42,10 +42,13 @@
             :item="item"
             :active="active"
             :data-index="index"
+            :class="{ active: activeIndex === index }"
           >
+            <!-- 工步数据项 -->
             <div
               class="th-item spam-item spam-step"
               v-if="item.type === 'step'"
+              @click="setActiveItem(index)"
             >
               <div class="th-td td-index"></div>
               <div class="th-td td-extend">
@@ -60,10 +63,12 @@
                 {{ item.msg }}
               </div>
             </div>
+            <!-- 采样内容 -->
             <div
               class="th-item spam-item"
               v-else
               :class="{ even: item.sIndex % 2 }"
+              @click="setActiveItem(index)"
             >
               <div class="th-td td-index">{{ item.sIndex }}</div>
               <div class="th-td td-extend"></div>
@@ -93,15 +98,10 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-import {
-  RecycleScroller,
-  DynamicScroller,
-  DynamicScrollerItem
-} from 'vue-virtual-scroller'
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 
 @Component({
   components: {
-    RecycleScroller,
     DynamicScroller,
     DynamicScrollerItem
   }
@@ -110,14 +110,19 @@ export default class SampList extends Vue {
   @Prop({ type: Array }) sampData!: any[]
   @Prop({ type: Array }) stepList!: any[]
 
+  $refs!: {
+    virtualScroll: DynamicScroller
+  }
+
   stepShow: boolean[] = []
   list: any[] = []
+  activeIndex: number | null = null
 
   @Watch('sampData')
   changeList() {
     let list: any[] = []
     this.stepList.forEach((item, index) => {
-      const sub = this.sampData.slice(item.start, item.end + 1)
+      const sub = this.sampData.slice(item.start, item.end)
       const show = this.stepShow[index] || false
       const stepItem = {
         ...item,
@@ -135,32 +140,75 @@ export default class SampList extends Vue {
         stepItem.subList = sub
       }
     })
+    this.setActiveItem(null)
     this.list = list
   }
 
+  /** 展开关闭工步列表 */
   stepSubSet(step, index) {
     const status = !step.show
+    // 展开收缩采样列表
     if (status) {
       this.list.splice(index + 1, 0, ...step.subList)
     } else {
-      const list = this.list.splice(index + 1, step.length)
+      const stepLen = step.length
+      const list = this.list.splice(index + 1, stepLen)
       step.subList = list
     }
+
+    // 计算当前锁定tab
+    let activeIndexNew: null | number = null
+    const activeIndex = this.activeIndex
+    const stepSubLen = step.end - step.start
+    if (activeIndex && activeIndex > index) {
+      if (status) {
+        activeIndexNew = activeIndex + stepSubLen
+      } else {
+        if (activeIndex <= index + stepSubLen) {
+          activeIndexNew = index
+        } else {
+          activeIndexNew = activeIndex - stepSubLen
+        }
+      }
+      this.setActiveItem(activeIndexNew)
+    }
+
     this.$set(this.stepShow, step.stepIndex, status)
     step.show = status
   }
 
-  /** 显示详细数据 */
-  showDetails() {
+  /**
+   * 按工步列表循环，跳过采样列表
+   * @cb index 当前工步在表格中的索引
+   *  */
+  eachStep(cb: (step: any, index: number) => void) {
     for (let i = 0; i <= this.list.length; i++) {
       const item = this.list[i]
       if (item && item.type === 'step') {
-        if (item.show === false) {
-          this.stepSubSet(item, i)
+        cb(item, i)
+        if (item.show === true) {
+          i += item.end - item.start
         }
-        i += item.end - item.start + 1
       }
     }
+  }
+
+  /** 显示详细数据 */
+  showDetails() {
+    this.eachStep((item, index) => {
+      if (item.show === false) {
+        this.stepSubSet(item, index)
+      }
+    })
+    // for (let i = 0; i <= this.list.length; i++) {
+    //   const item = this.list[i]
+    //   if (item && item.type === 'step') {
+    //     if (item.show === false) {
+    //       this.stepSubSet(item, i)
+    //     }
+    //     i += item.end - item.start
+    //   }
+    // }
   }
 
   /** 显示过程数据 */
@@ -173,8 +221,27 @@ export default class SampList extends Vue {
     }
   }
 
-  mounted() {
-    console.log(this.sampData)
+  setActiveItem(index: number | null, scroll = false) {
+    this.activeIndex = index
+    if (scroll && index != null && this.$refs.virtualScroll) {
+      const preNum = 6
+      const scrollIndex = index > preNum ? index - preNum : index
+      this.$refs.virtualScroll.scrollToItem(scrollIndex)
+    }
+  }
+
+  /** 定位 */
+  locate(samp: any) {
+    const sampIndex = samp.sIndex - 1
+    this.eachStep((step, index) => {
+      if (sampIndex >= step.start && sampIndex < step.end) {
+        if (step.show) {
+          this.setActiveItem(index + 1 + (sampIndex - step.start), true)
+        } else {
+          this.setActiveItem(index, true)
+        }
+      }
+    })
   }
 }
 </script>
@@ -222,7 +289,6 @@ $td-h: 24px;
       }
     }
   }
-
   // .th-head {
   //   .th-item {
   //     padding-right: 8px;
@@ -310,6 +376,14 @@ $td-h: 24px;
       .icon {
         cursor: pointer;
       }
+    }
+  }
+
+  .active {
+    .th-item,
+    .th-item .td-extend {
+      background-color: #409eff;
+      color: #fff;
     }
   }
 }

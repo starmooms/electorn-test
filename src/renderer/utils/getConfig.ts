@@ -1,17 +1,34 @@
 import { WORKSTEPS, WORKSTEPSINPUT } from '@/shared/config/port'
 
+interface StepOptsRules {
+  [type: string]: {
+    rules?: {
+      unReqire: string[]
+    }
+  }
+}
+
 export function getStepsOpts() {
-  return WORKSTEPS.map(item => {
+  const stepsRulseMap: StepOptsRules = {}
+  const stepsSelectList = WORKSTEPS.map(item => {
+    stepsRulseMap[item.type] = {
+      rules: item.rules
+    }
     return {
       label: item.name,
       value: {
         name: item.name,
         type: item.type,
         input: item.input.worker.concat(item.input.limt),
-        key: item.key
+        key: item.key,
+        rules: item.rules
       }
     }
   })
+  return {
+    stepsSelectList,
+    stepsRulseMap
+  }
 }
 
 export function getStepsInputMap() {

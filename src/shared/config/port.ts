@@ -16,25 +16,37 @@ export const WORKSTEPS = [
     name: '恒流充电',
     type: 'ICi',
     key: 'a1',
-    input: { worker: ['IStart'], limt: ['UEnd', 'limtTime'] }
+    input: { worker: ['IStart'], limt: ['UEnd', 'limtTime'] },
+    rules: {
+      unReqire: ['limtTime']
+    }
   },
   {
     name: '恒压充电',
     type: 'UCi',
     key: 'a2',
-    input: { worker: ['UStart'], limt: ['IEnd', 'limtTime'] }
+    input: { worker: ['UStart'], limt: ['IEnd', 'limtTime'] },
+    rules: {
+      unReqire: ['limtTime']
+    }
   },
   {
     name: '恒流恒压充电',
     type: 'IUCi',
     key: 'a3',
-    input: { worker: ['IStart', 'UEnd'], limt: ['stopI', 'limtTime'] }
+    input: { worker: ['IStart', 'UEnd'], limt: ['stopI', 'limtTime'] },
+    rules: {
+      unReqire: ['limtTime']
+    }
   },
   {
     name: '恒流放电',
     type: 'IDisCi',
     key: 'b0',
-    input: { worker: ['IStart'], limt: ['UEnd', 'limtTime'] }
+    input: { worker: ['IStart'], limt: ['UEnd', 'limtTime'] },
+    rules: {
+      unReqire: ['limtTime']
+    }
   },
   {
     name: '搁置',
@@ -74,7 +86,8 @@ WORKSTEPS.forEach(item => {
 // }
 
 export const WORKSTEPSINPUT = {
-  time: { unit: 's', name: '时间' },
+  time: { unit: 'min', name: '时间' },
+  limtTime: { unit: 'min', name: '时间限制', type: 'time' },
   // U: { unit: 'mV', name: '电压' },
   // I: { unit: 'mA', name: '电流' },
   W: { unit: 'W', name: '功率' },
@@ -85,9 +98,8 @@ export const WORKSTEPSINPUT = {
   stopI: { unit: 'mA', name: '截止电流' },
   IStart: { unit: 'mA', name: '起始电流', type: 'I' },
   IEnd: { unit: 'mA', name: '截止电流', type: 'I' },
-  UStart: { unit: 'mA', name: '起始电压', type: 'U' },
-  UEnd: { unit: 'mA', name: '截止电压', type: 'U' },
-  limtTime: { unit: 's', name: '时间限制', type: 'time' }
+  UStart: { unit: 'mV', name: '起始电压', type: 'U' },
+  UEnd: { unit: 'mV', name: '截止电压', type: 'U' }
 }
 
 // /** 读工步数据 */
@@ -259,7 +271,6 @@ export function getCalList() {
 }
 
 // 保护参数
-export const PROTECT_ITEM_MODE = [2, 2, 2, 2, 2, 2, 4]
 export const PROTECT = [
   { name: '恒压充保护电压偏差(mV)', type: 'UCi', index: 0 },
   { name: '恒流充保护电流偏差(mA)', type: 'ICi', index: 1 },

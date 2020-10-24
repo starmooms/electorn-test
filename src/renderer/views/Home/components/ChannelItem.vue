@@ -24,7 +24,7 @@
               <!-- <br />
               启动时刻：{{ channelData.workerStart }} -->
               <br />
-              当前工步：{{ sampData.stepId }}
+              当前工步：{{ sampData.stepId + 1 }}
             </template>
 
             <template v-if="sampData.errorMsg">
@@ -66,6 +66,7 @@ import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { Vue, Component, Prop } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { getDefatulSamp } from '@/renderer/utils/util'
+import { CHANNEL_STATUS_END } from '@/shared/config/port'
 
 @Component({
   components: {
@@ -78,7 +79,7 @@ export default class ChannelItem extends Vue {
   @Prop({ type: Object, required: true }) channelData!: Port.ChannelItem
 
   tipShow = false
-  waitStatus = ['00', '02']
+  waitStatus = CHANNEL_STATUS_END
 
   get id() {
     return this.channelData.id

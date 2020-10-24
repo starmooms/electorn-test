@@ -1,9 +1,11 @@
+import { app } from 'electron'
 import Sqlite from '@/shared/sqlite/index'
 import HistoryDbCom from '@/shared/sqlite/HistoryDbCom'
 import path from 'path'
 import dayjs from 'dayjs'
 import logger from '../Logger'
 import { TIME_FORMAT } from '@/shared/utils'
+const APP_VERSON = app.getVersion()
 
 interface TableName {
   name: string
@@ -53,7 +55,13 @@ export default class HistoryDb extends HistoryDbCom {
 
   async createTable(tables: TableName[]) {
     let sql = ''
-    const { stepsInfo, channelInfo, sampData, stepStatistics } = this.tables
+    const {
+      stepsInfo,
+      channelInfo,
+      sampData,
+      stepStatistics,
+      systemVersion
+    } = this.tables
     const tableName = tables.map(item => item.name)
 
     // 工步信息
@@ -62,11 +70,14 @@ export default class HistoryDb extends HistoryDbCom {
         "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "historyId" INTEGER NOT NULL,
         "startId" INTEGER NOT NULL,
+        "masterIds" TEXT NOT NULL ,
+        "slaverIds" TEXT NOT NULL ,
+        "channelIds" TEXT NOT NULL ,
         "stepList" TEXT NOT NULL,
         "protect" TEXT NOT NULL,
         "features" TEXT NOT NULL,
         "dataSave" TEXT NOT NULL,
-        "createTime" INTEGER NOT NULL
+        "createTime" DATETIME NOT NULL
       );`
     }
 
@@ -78,17 +89,12 @@ export default class HistoryDb extends HistoryDbCom {
         "slaverId" INTEGER NOT NULL,
         "channelId" INTEGER NOT NULL,
         "fullId" TEXT NOT NULL,
-        "startTime" INTEGER,
-        "endTime" INTEGER,
-        "createTime" INTEGER NOT NULL
+        "startTime" DATETIME,
+        "endTime" DATETIME,
+        "createTime" DATETIME NOT NULL
       );
       CREATE INDEX "channel_info_channel_full_id" ON "${channelInfo}" ("fullId");
-      CREATE INDEX "channel_info_channel_id"
-      ON "${channelInfo}" (
-        "masterId",
-        "slaverId",
-        "channelId"
-      );`
+      CREATE INDEX "channel_info_channel_id" ON "${channelInfo}" ("masterId", "slaverId", "channelId");`
     }
 
     // 采样数据
@@ -108,14 +114,11 @@ export default class HistoryDb extends HistoryDbCom {
         "workCode" TEXT NOT NULL,
         "errorCode" TEXT NOT NULL,
         "endCode" TEXT,
-        "createTime" INTEGER NOT NULL
+        "createTime" DATETIME NOT NULL
       );
-      CREATE INDEX "samp_data_channel_id"
-      ON "${sampData}" (
-        "masterId",
-        "slaverId",
-        "channelId"
-      );`
+      CREATE INDEX "samp_data_channel_id" ON "${sampData}" ("masterId", "slaverId", "channelId");
+      CREATE INDEX "samp_data_loopNum" ON "${sampData}" ("loopNum");
+      CREATE INDEX "samp_data_stepId" ON "${sampData}" ("stepId");`
     }
 
     // 采样工步统计表
@@ -152,6 +155,15 @@ export default class HistoryDb extends HistoryDbCom {
       CREATE INDEX "step_statis_loopNum" ON "step_statistics" ("loopNum");`
     }
 
+    // 版本号记录
+    if (!tableName.includes(systemVersion)) {
+      sql += `CREATE TABLE "${systemVersion}" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "version" TEXT NOT NULL
+      );
+      INSERT INTO ${systemVersion} (version) VALUES ('${APP_VERSON}');`
+    }
+
     if (sql) {
       await this.sqlite.exec(sql)
     }
@@ -173,18 +185,21 @@ export default class HistoryDb extends HistoryDbCom {
   ) {
     await this.connect()
     const { stepsInfo, channelInfo } = this.tables
-    const now = dayjs().valueOf()
+    const now = dayjs().format(TIME_FORMAT)
 
     // 写入模板
-    const insertTeplSql = `INSERT INTO ${stepsInfo} (historyId, startId, stepList, protect, features, dataSave, createTime)
+    const insertTeplSql = `INSERT INTO ${stepsInfo} (historyId, startId, masterIds, slaverIds, channelIds, stepList, protect, features, dataSave, createTime)
     VALUES (
       ${historyId},
       ${startId},
+      '${masterIds.join(',')}',
+      '${slaverIds.join(',')}',
+      '${channelIds.join(',')}',
       $stepsList,
       $protect,
       $features,
       $dataSave,
-      ${now}
+      '${now}'
     );`
     await this.sqlite.run(insertTeplSql, {
       $stepsList: JSON.stringify(stepsList),
@@ -198,11 +213,11 @@ export default class HistoryDb extends HistoryDbCom {
     masterIds.forEach(masterId => {
       slaverIds.forEach(slaverId => {
         channelIds.forEach(channelId => {
-          insertChannelInfo += `(${masterId}, ${slaverId}, ${channelId}, '${masterId}_${slaverId}_${channelId}', ${now}),`
+          insertChannelInfo += `(${masterId}, ${slaverId}, ${channelId}, '${masterId}_${slaverId}_${channelId}', '${now}'),`
         })
       })
     })
-    insertChannelInfo = insertChannelInfo.replace(/,$/, ';')
+    insertChannelInfo = Sqlite.replaceSql(insertChannelInfo, ';')
     // 备用方案限制只能同时写入500条 (https://stackoverflow.com/questions/1609637/is-it-possible-to-insert-multiple-rows-at-a-time-in-an-sqlite-database/1734067#)
     // let insertChannelInfo = `INSERT INTO ${channelInfo} (masterId, slaverId, channelId, createTime) SELECT '${masterIds[0]}' AS masterId, '${slaverIds[0]}' AS slaverId, '${channelIds[0]}' AS channelId, '${now}' AS createTime`
     // masterIds.forEach(masterId => {
@@ -232,8 +247,8 @@ export default class HistoryDb extends HistoryDbCom {
 
   /** 通道起始状态改变时，分离开始和结束 */
   handleChangeChannel(list: Db.changeStatusList) {
-    let startTime: number | null = null
-    let endTime: number | null = null
+    let startTime: null | string = null
+    let endTime: null | string = null
     const startUpdate: string[] = []
     const endUpdate: string[] = []
     list.forEach(item => {
@@ -251,6 +266,11 @@ export default class HistoryDb extends HistoryDbCom {
       startUpdate,
       endTime,
       endUpdate
+    } as {
+      startTime: null | string
+      startUpdate: string[]
+      endTime: null | string
+      endUpdate: string[]
     }
   }
 
@@ -266,10 +286,9 @@ export default class HistoryDb extends HistoryDbCom {
     }
   }
 
-  saveStart(list: Db.startList) {
+  saveStart(list: Db.startList, now: string) {
     let sql = ''
     if (list.length > 0) {
-      const now = dayjs().format(TIME_FORMAT)
       const { stepStatistics } = this.tables
       sql += `INSERT INTO ${stepStatistics} (masterId, slaverId, channelId, fullId, stepId, workCode, loopNum, startU, startTime, createTime) VALUES`
       list.forEach(item => {
@@ -291,10 +310,9 @@ export default class HistoryDb extends HistoryDbCom {
     return sql
   }
 
-  saveEnd(list: Db.endList) {
+  saveEnd(list: Db.endList, now: string) {
     let sql = ''
     if (list.length > 0) {
-      const now = dayjs().format(TIME_FORMAT)
       const { stepStatistics } = this.tables
       list.forEach(item => {
         sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, vol=${item.vol}, epower=${item.epower}, endCode='${item.endCode}', endTime='${now}'
@@ -330,38 +348,23 @@ export default class HistoryDb extends HistoryDbCom {
       let hasEnd = false
       const saveSampList = [
         ...startList,
-        ...endList,
         ...featureList,
+        ...endList,
         ...sampList
       ]
-      const time = dayjs().unix()
+      const time = dayjs().format(TIME_FORMAT)
       // 添加采样记录
       if (saveSampList.length > 0) {
         sql += `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepTime, loopNum, stepId, workCode, errorCode, endCode, createTime) VALUES`
         saveSampList.forEach(item => {
-          sql += `(
-            ${item.masterId},
-            ${item.slaverId},
-            ${item.channelId},
-            ${item.U},
-            ${item.I},
-            ${item.vol},
-            ${item.epower},
-            ${item.stepTime},
-            ${item.loopNum},
-            ${item.stepId},
-            '${item.workerCode}',
-            '${item.errorCode}',
-            '${item.endCode}',
-            ${time}
-          ),`
+          sql += `(${item.masterId}, ${item.slaverId}, ${item.channelId}, ${item.U}, ${item.I}, ${item.vol}, ${item.epower}, ${item.stepTime}, ${item.loopNum}, ${item.stepId}, '${item.workerCode}', '${item.errorCode}', '${item.endCode}', '${time}'),`
         })
-        sql = sql.replace(/,$/, ';')
+        sql = Sqlite.replaceSql(sql, ';')
       }
 
-      sql += this.saveStart(startList)
+      sql += this.saveStart(startList, time)
       sql += this.saveFeature(featureList)
-      sql += this.saveEnd(endList)
+      sql += this.saveEnd(endList, time)
 
       // // 添加结束状态
       // if (endStatusList.length > 0) {
@@ -381,11 +384,11 @@ export default class HistoryDb extends HistoryDbCom {
           endUpdate
         } = this.handleChangeChannel(changeStatusList)
         if (startTime) {
-        sql += `UPDATE ${channelInfo} SET startTime=${startTime} WHERE fullId IN (${startUpdate.join(',')}) AND startTime is NULL;` // eslint-disable-line
+        sql += `UPDATE ${channelInfo} SET startTime='${startTime}' WHERE fullId IN (${startUpdate.join(',')}) AND startTime is NULL;` // eslint-disable-line
         }
         if (endTime) {
           hasEnd = true
-        sql += `UPDATE ${channelInfo} SET endTime=${endTime} WHERE fullId IN (${endUpdate.join(',')}) AND endTime is NULL;` // eslint-disable-line
+        sql += `UPDATE ${channelInfo} SET endTime='${endTime}' WHERE fullId IN (${endUpdate.join(',')}) AND endTime is NULL;` // eslint-disable-line
         }
       }
 

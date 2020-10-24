@@ -37,6 +37,11 @@ body {
   border: 1px solid rgba(195, 195, 195, .4);
 }
 
+::selection{
+  background-color:rgba(170, 217, 255, 0.28);
+  color:#000;
+}
+
 ul {
   padding: 0;
 }

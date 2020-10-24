@@ -87,7 +87,7 @@
                 active: masterActive.indexOf(index) >= 0,
                 select: nowBoxId === index
               }"
-              @click="nowBoxId = index"
+              @click="nowBoxIdChange(index)"
             >
               {{ item }}
             </div>
@@ -139,7 +139,7 @@
       @changeConfig="getSortingConfig"
     />
 
-    <history-dialog :show.sync="historyShow" @save="changeHistory" />
+    <history-dialog :show.sync="historyShow" @save="createDb" />
   </div>
 </template>
 
@@ -149,7 +149,12 @@ import { Component, Vue, Watch, PropSync } from 'vue-property-decorator'
 import LevelDialog from './LevelDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
-import { getPercent, PathResolve, stepsFormat } from '@/renderer/utils/util'
+import {
+  getPercent,
+  idListFormat,
+  PathResolve,
+  stepsFormat
+} from '@/renderer/utils/util'
 import { lampSet } from '@/renderer/ipc/channel'
 
 @Component({
@@ -232,24 +237,20 @@ export default class SortingSetting extends Vue {
   }
 
   /** 创建数据库连接 */
-  async createDb(history: Db.RHistoryItem | null) {
+  async createDb(filePath: string | null) {
     try {
-      const filePath = history
-        ? `${PathResolve(history.filePath, history.fileId)}`
-        : ''
       if (this.historyFile !== filePath) {
         await this.closeDb()
-        if (filePath && history) {
+        if (filePath) {
           const db = new HistoryDb(filePath)
           await db.connect()
           this.db = db
+          this.getHistoryStep()
           this.historyFile = filePath
-          this.historyItem = history
-          this.nowBoxId = this.historyItem.masterIdArr[0]
         }
       }
     } catch (err) {
-      console.warn(err)
+      console.error(err)
       return null
     }
   }
@@ -267,6 +268,7 @@ export default class SortingSetting extends Vue {
 
   /** 重置参数 */
   reset() {
+    this.form.stepData = null
     this.nowBoxId = null
     this.$emit('storingResult', {
       list: [],
@@ -276,20 +278,19 @@ export default class SortingSetting extends Vue {
     })
   }
 
-  /** 选中历史文件 */
-  async changeHistory(data: Db.RHistoryItem | null) {
-    await this.createDb(data)
-    if (this.db) {
-      this.getHistoryStep()
-    }
-  }
-
   /** 历史文件获取工步 */
   async getHistoryStep() {
     if (this.db) {
       const data = await this.db.getWorkStep()
       const stepList = JSON.parse(data.stepList)
       this.workerList = stepsFormat(stepList, true)
+      ;['masterId', 'slaverId', 'channelId'].forEach(idKey => {
+        const idResult = idListFormat(data[`${idKey}s`])
+        data[`${idKey}Arr`] = idResult.idArr
+        data[`${idKey}ShowStr`] = idResult.idShowArr
+      })
+      this.historyItem = data
+      this.nowBoxId = this.historyItem!.masterIdArr[0]
     }
   }
 
@@ -315,7 +316,7 @@ export default class SortingSetting extends Vue {
   async handleSorting(lampSet = false) {
     const selectLevel = this.form.levelId
     if (!this.historyItem || !this.db) {
-      return this.$message.info('未选择历史')
+      return this.$message.info('未选择启动历史')
     } else if (!this.form.stepData) {
       return this.$message.info('未选择工步')
     } else if (selectLevel.length === 0) {
@@ -417,8 +418,12 @@ export default class SortingSetting extends Vue {
     if (lampSet === true) {
       this.lampSbmit(boxLampResult)
     }
-    // this.db.getSorting()
-    // this.db.getSampData()
+  }
+
+  nowBoxIdChange(masterId: number) {
+    if (this.masterActive.includes(masterId)) {
+      this.nowBoxId = masterId
+    }
   }
 
   mounted() {

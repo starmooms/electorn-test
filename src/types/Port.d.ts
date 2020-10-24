@@ -91,7 +91,7 @@ declare namespace Port {
     masterId: number
     slaverId: number
     channelId: number
-    time: number
+    time: string
     status: 'RUN' | 'END'
     filePath: string
   }

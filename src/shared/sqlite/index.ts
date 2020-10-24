@@ -3,6 +3,7 @@ import logger from '@/main/core/Logger'
 import is from 'electron-is'
 import { remote } from 'electron'
 const sqlite = sqlite3.verbose()
+// logger.debug(`sqlite version ${sqlite.VERSION}`)
 
 export default class Sqlite {
   db!: sqlite3.Database

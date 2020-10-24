@@ -182,7 +182,7 @@ export default class History extends Vue {
         return {
           sIndex: index + 1,
           stepTimeTotal: computerAdd(lastStepTimeEnd, item.stepTime),
-          createTimeStr: dayjs.unix(item.createTime).format(formatTimeStr),
+          createTimeStr: item.createTime,
           workerName: CHANNEL_STATUS[item.workCode]?.name,
           endStatus:
             item.endCode && item.endCode !== '00'

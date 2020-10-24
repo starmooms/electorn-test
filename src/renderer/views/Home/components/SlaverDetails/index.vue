@@ -18,7 +18,7 @@
       element-loading-background="rgba(255, 255, 255, 0.6)"
     >
       <el-col :span="6" v-for="channel in list" :key="channel.channelId">
-        <div class="item">
+        <div class="item" :class="channel.samp.workerStatus.status">
           <div class="item-box title-box">
             <p class="tit">通道{{ channel.channelId + 1 }}</p>
           </div>
@@ -40,7 +40,7 @@
             </div>
           </div>
 
-          <div class="item-box step-box">
+          <div class="step-box clearfix">
             <div class="step-no-list" v-if="channel.stepList.length === 0">
               暂无数据
             </div>
@@ -51,7 +51,7 @@
                 :key="index"
                 :class="{ active: step.id === channel.samp.stepId }"
               >
-                {{ step.msg }}
+                {{ `${step.id + 1}、${step.msg}` }}
               </li>
             </ul>
           </div>
@@ -66,7 +66,7 @@
 <script lang="ts">
 import { getWorkStep } from '@/renderer/ipc/channel'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
-import { getDefatulSamp } from '@/renderer/utils/util'
+import { getDefatulSamp, stepsFormat } from '@/renderer/utils/util'
 import { Vue, Component, Prop } from 'vue-property-decorator'
 
 @Component({
@@ -89,35 +89,38 @@ export default class SlaverDetails extends Vue {
   }
 
   getStepList(stepData?: Port.StepsDataItem) {
-    let loopNow: number | null = null
-    let stepList: any[] = []
+    // const loopNow: number | null = null
+    // const stepList: any[] = []
     if (stepData) {
-      stepList = stepData.stepList.map(item => {
-        let msg = `${item.id + 1}、${item.name}`
-        if (item.type === 'loop') {
-          const hasLoopNow = item.worker.find(work => work.type === 'loopNow')
-          if (hasLoopNow !== void 0) {
-            loopNow = hasLoopNow.data
-          }
-        } else {
-          const workers = item.worker
-            .map(work => {
-              return `${work.data}${work.unit}`
-            })
-            .join('、')
-          msg += `（${workers}）`
-        }
-        return {
-          id: item.id,
-          msg
-        }
-      })
+      const data = stepsFormat(stepData.stepList as any, false, false)
+      return data
+      // stepList = stepData.stepList.map(item => {
+      //   let msg = `${item.id + 1}、${item.name}`
+      //   if (item.type === 'loop') {
+      //     const hasLoopNow = item.worker.find(work => work.type === 'loopNow')
+      //     if (hasLoopNow !== void 0) {
+      //       loopNow = hasLoopNow.data
+      //     }
+      //   } else {
+      //     const workers = item.worker
+      //       .map(work => {
+      //         return `${work.data}${work.unit}`
+      //       })
+      //       .join('、')
+      //     msg += `（${workers}）`
+      //   }
+      //   return {
+      //     id: item.id,
+      //     msg
+      //   }
+      // })
     }
+    return []
 
-    return {
-      loopNow,
-      stepList
-    }
+    // return {
+    //   loopNow,
+    //   stepList
+    // }
   }
 
   getSamp(channelId: number) {
@@ -159,9 +162,8 @@ export default class SlaverDetails extends Vue {
         this.list.forEach(item => {
           const channelId = item.channelId
           const samp = this.getSamp(channelId)
-          const { stepList } = this.getStepList(stepData[channelId])
           item.samp = samp
-          item.stepList = stepList
+          item.stepList = this.getStepList(stepData[channelId])
         })
       }
     } catch (err) {
@@ -248,11 +250,6 @@ export default class SlaverDetails extends Vue {
             height: 20px;
             line-height: 19px;
             letter-spacing: 2px;
-            @each $status, $val in $statusColor {
-              &.#{$status} {
-                background-color: $val;
-              }
-            }
           }
         }
 
@@ -265,18 +262,42 @@ export default class SlaverDetails extends Vue {
       .step-box {
         height: 200px;
         overflow: auto;
+        padding: 6px 0;
         .step-no-list {
           text-align: center;
         }
 
         .step-list {
+          float: left;
+          box-sizing: border-box;
           .step-item {
             white-space: nowrap;
             line-height: 24px;
+            display: inline-block;
+            min-width: 100%;
+            padding: 0 6px;
+            box-sizing: border-box;
             &.active {
               background-color: #67c23a;
               color: #fff;
             }
+          }
+        }
+      }
+
+      @each $status, $val in $statusColor {
+        &.#{$status} {
+          .msg-box {
+            .msg-r {
+              .now-txt {
+                background-color: $val;
+              }
+            }
+          }
+
+          .step-box .step-list .step-item.active {
+            background-color: $val;
+            color: #fff;
           }
         }
       }

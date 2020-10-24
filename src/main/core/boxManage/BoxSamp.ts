@@ -16,6 +16,7 @@ import ipcManage from '../IpcManage'
 import winManager from '../WinManager'
 import { BoxManage } from './BoxManage'
 import { testFilePath } from '@/main/utils/mock'
+import { TIME_FORMAT } from '@/shared/utils'
 
 /** 机柜采样控制 */
 export default class BoxSamp {
@@ -211,7 +212,7 @@ export default class BoxSamp {
   /** 解析采样返回, 改变通道状态 */
   readSampModel(masterId: number, readModel: BufModel) {
     const nowUnix = dayjs().unix()
-    const nowTime = dayjs().valueOf()
+    const nowDateTime = dayjs().format(TIME_FORMAT)
     const projectSamp: Port.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
     const getProjectSamp: Port.GetProjectSamp = (projectId, key) => {
       let sampItem = projectSamp[projectId]
@@ -235,7 +236,7 @@ export default class BoxSamp {
       readModel,
       getProjectSamp,
       nowUnix,
-      nowTime
+      nowDateTime
     )
     this.readEndList(masterId, readModel, getProjectSamp)
     this.readFeatureList(masterId, readModel, getProjectSamp)
@@ -267,7 +268,7 @@ export default class BoxSamp {
     readModel: BufModel,
     getProjectSamp: Port.GetProjectSamp,
     nowUnix: number,
-    nowTime: number
+    nowDateTime: string
   ) {
     /** 本此读取采样返回列表 */
     const sampList: Port.SampItem[] = []
@@ -312,7 +313,12 @@ export default class BoxSamp {
       // const testPath = testFilePath(samp)
 
       // 判断状态变化
-      if (!nowStatus || !lastSamp || lastSamp.workerCode !== samp.workerCode) {
+      if (
+        !nowStatus ||
+        !lastSamp ||
+        lastSamp.workerCode !== samp.workerCode ||
+        lastSamp.projectId !== samp.projectId
+      ) {
         nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
         const filePath = historyDbCache.getFilePath(samp.projectId)
         if (lastStatus !== nowStatus || channel.filePath !== filePath) {
@@ -323,7 +329,7 @@ export default class BoxSamp {
             masterId: samp.masterId,
             slaverId: samp.slaverId,
             channelId: samp.channelId,
-            time: nowTime,
+            time: nowDateTime,
             status: nowStatus,
             filePath: filePath
           }
@@ -347,7 +353,7 @@ export default class BoxSamp {
               masterId: samp.masterId,
               slaverId: samp.slaverId,
               channelId: samp.channelId,
-              time: nowTime,
+              time: nowDateTime,
               filePath: channel.filePath,
               status: channel.nowStatus!
             })
@@ -450,7 +456,7 @@ export default class BoxSamp {
     readModel.ecahList('featureList', readItem => {
       const projectId = readItem.read('projectId')
       const feature = getProjectSamp(projectId, 'featureList')
-      logger.debug(readItem.showAll())
+      logger.debug(`读到特征列表 ${readItem.buf.toString('hex')}`)
       feature.push({
         masterId,
         slaverId: readItem.read('slaverId'),

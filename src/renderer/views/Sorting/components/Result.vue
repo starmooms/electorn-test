@@ -41,19 +41,24 @@ export default class ChannelInfo extends Vue {
 
   /** 设置机柜结果 */
   setBoxResult(boxResutl: SortingT.BoxResult[]) {
-    const totalRow: SortingT.BoxResult = {
-      masterId: -1,
-      masterName: '合计',
-      num: 0,
-      total: 0,
-      percent: ''
+    let totalResult: SortingT.BoxResult[] = []
+    if (boxResutl.length > 0) {
+      const totalRow: SortingT.BoxResult = {
+        masterId: -1,
+        masterName: '合计',
+        num: 0,
+        total: 0,
+        percent: ''
+      }
+      boxResutl.forEach(item => {
+        totalRow.num += item.num
+        totalRow.total += item.total
+      })
+      totalRow.percent = getPercent(totalRow.num, totalRow.total)
+      totalResult = [totalRow, ...boxResutl]
     }
-    boxResutl.forEach(item => {
-      totalRow.num += item.num
-      totalRow.total += item.total
-    })
-    totalRow.percent = getPercent(totalRow.num, totalRow.total)
-    this.totalResult = [totalRow, ...boxResutl]
+
+    this.totalResult = totalResult
   }
 }
 </script>

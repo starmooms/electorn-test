@@ -81,7 +81,7 @@ export default class BoxStatus {
         }
       })
     })
-    writerModel.showAll()
+    // writerModel.showAll()
 
     const channelInfo = {
       masterId: 0,
@@ -108,7 +108,24 @@ export default class BoxStatus {
     return true
   }
 
-  readStepsInput(readItem: BufModel, key: string) {
+  // readStepsInput(readItem: BufModel, key: string) {
+  //   const inputItem = WORKSTEPSINPUT[key]
+  //   const readKey = inputItem.type || key
+  //   let data = readItem.read(readKey)
+  //   if (readKey === 'loopStart') {
+  //     data += 1
+  //   } else if (readKey === 'time') {
+  //     data = data / 60
+  //   }
+  //   return {
+  //     data,
+  //     unit: inputItem.unit,
+  //     name: inputItem.name,
+  //     type: readKey
+  //   }
+  // }
+
+  readStepsInputData(readItem: BufModel, key: string) {
     const inputItem = WORKSTEPSINPUT[key]
     const readKey = inputItem.type || key
     let data = readItem.read(readKey)
@@ -117,12 +134,7 @@ export default class BoxStatus {
     } else if (readKey === 'time') {
       data = data / 60
     }
-    return {
-      data,
-      unit: inputItem.unit,
-      name: inputItem.name,
-      type: readKey
-    }
+    return data
   }
 
   /** 读工步 */
@@ -177,20 +189,27 @@ export default class BoxStatus {
     readModel.ecahList('workerList', readItem => {
       const workerItem = WORKSTEPS_MAP[readItem.readHex('workerCode')]
       if (workerItem) {
-        const input = workerItem.input
-        const workerArr = input.other
-          ? input.worker.concat(input.other)
-          : input.worker
-        const worker = workerArr.map(key => this.readStepsInput(readItem, key))
-        const limt = input.limt.map(key => this.readStepsInput(readItem, key))
+        // const input = workerItem.input
+        // const workerArr = input.other
+        //   ? input.worker.concat(input.other)
+        //   : input.worker
+        // const worker = workerArr.map(key => this.readStepsInput(readItem, key))
+        // const limt = input.limt.map(key => this.readStepsInput(readItem, key))
+        const inputAttr = workerItem.input
+        const inputKey = [...inputAttr.worker, ...inputAttr.limt]
+        const input = {}
+        inputKey.forEach(key => {
+          return (input[key] = this.readStepsInputData(readItem, key))
+        })
         const channelId = readItem.read('channelId')
         const channelStep = getStepData(channelId)
         channelStep.stepList.push({
           id: readItem.read('workerId'),
           type: workerItem.type,
           name: workerItem.name,
-          worker,
-          limt
+          input
+          // worker,
+          // limt
         })
       }
     })

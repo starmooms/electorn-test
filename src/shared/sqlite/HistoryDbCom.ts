@@ -8,7 +8,8 @@ export default class HistoryDbCom {
     stepsInfo: 'steps_info',
     channelInfo: 'channel_info',
     sampData: 'samp_data',
-    stepStatistics: 'step_statistics'
+    stepStatistics: 'step_statistics',
+    systemVersion: 'system_version'
   }
   checkFile = true
 

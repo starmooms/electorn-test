@@ -42,7 +42,6 @@ export default class BoxLamp {
           `box ${masterId}`,
           writeModel.buf.toString('hex')
         )
-        writeModel.showAll()
         await communi.post({
           control: CONTROL_CODE.lampSet,
           data: writeModel.buf,

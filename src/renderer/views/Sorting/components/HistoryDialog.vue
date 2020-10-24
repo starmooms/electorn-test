@@ -24,7 +24,18 @@
               v-model="filterFileId"
             ></el-input>
           </el-form-item>
-          <el-button type="primary" @click="onSearch">查询</el-button>
+          <el-form-item>
+            <el-button type="primary" @click="onSearch">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <file-select openType="file" @change="importHistory">
+              <el-button type="primary">
+                导入外部文件
+              </el-button>
+            </file-select>
+          </el-form-item>
+
+          <!-- <el-button type="primary" @click="onSearch">导入外部文件</el-button> -->
         </el-form>
         <el-table
           v-loading="loading"
@@ -63,9 +74,14 @@
           @pagination="getList"
         />
       </div>
-      <div slot="footer">
-        <el-button @click="dialogClose">取 消</el-button>
-        <el-button type="primary" @click="dialogSubmit">确 定</el-button>
+      <div class="foot" slot="footer">
+        <!-- <div class="foot-l">
+          <el-button type="primary" @click="onSearch">导入外部文件</el-button>
+        </div> -->
+        <div class="foot-r">
+          <el-button @click="dialogClose">取 消</el-button>
+          <el-button type="primary" @click="dialogSubmit">确 定</el-button>
+        </div>
       </div>
     </el-dialog>
   </div>
@@ -75,12 +91,14 @@
 import { Component, Vue, PropSync, Watch } from 'vue-property-decorator'
 import Pagination from '@/renderer/components/Pagination/index.vue'
 import mainDb from '@/renderer/Db/mainDb'
-import { dateFormat, idListFormat } from '@/renderer/utils/util'
+import { dateFormat, idListFormat, PathResolve } from '@/renderer/utils/util'
+import FileSelect from '@/renderer/components/FileSelect.vue'
 import dayjs from 'dayjs'
 
 @Component({
   components: {
-    Pagination
+    Pagination,
+    FileSelect
   }
 })
 export default class HistoryDialog extends Vue {
@@ -128,8 +146,14 @@ export default class HistoryDialog extends Vue {
 
   /** 保存已选 */
   dialogSubmit() {
-    this.$emit('save', this.selectHistory)
-    this.dialogClose()
+    console.log(this.selectHistory)
+    this.emitSubmit(
+      this.selectHistory
+        ? PathResolve(this.selectHistory.filePath, this.selectHistory.fileId)
+        : null
+    )
+    // this.$emit('save', this.selectHistory)
+    // this.dialogClose()
   }
 
   /** 创建数据库 */
@@ -204,6 +228,17 @@ export default class HistoryDialog extends Vue {
     this.getList()
   }
 
+  /** 选择历史文件 */
+  importHistory(filePath: string) {
+    this.emitSubmit(filePath)
+  }
+
+  /** 提交文件路径 */
+  emitSubmit(filePath: string | null) {
+    this.$emit('save', filePath)
+    this.dialogClose()
+  }
+
   mounted() {
     this.createDb()
   }
@@ -223,9 +258,10 @@ export default class HistoryDialog extends Vue {
   padding: 0;
   margin-top: 20px;
 }
-// .history-container {
+
+// .foot {
 //   display: flex;
-//   flex-flow: column;
-//   overflow: hidden;
+//   justify-content: space-between;
+//   align-items: center;
 // }
 </style>

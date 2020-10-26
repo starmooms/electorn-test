@@ -23,6 +23,7 @@ const userConfigDefault = {
       max: 6000
     }
   },
+  historyFilePath: '',
   base: {
     requestType: 'Port',
     portPath: '',

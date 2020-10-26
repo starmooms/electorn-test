@@ -6,21 +6,25 @@ import * as fs from 'fs'
 
 export const logPath = logger.transports.file.getFile().path
 logger.transports.file.level = is.production() ? 'silly' : 'silly'
-logger.transports.file.maxSize = 2097152
-// logger.transports.file.archiveLog = file => {
-//   const oldPath = file.toString()
-//   const inf = path.parse(oldPath)
-//   try {
-//     fs.renameSync(
-//       oldPath,
-//       path.join(inf.dir, inf.name + `${dayjs().valueOf()}` + '.old' + inf.ext)
-//     )
-//   } catch (e) {
-//     console.log('Could not rotate log', e)
-//     // const quarterOfMaxSize = Math.round(logger.transports.file.maxSize / 4)
-//     // file.crop(Math.min(quarterOfMaxSize, 256 * 1024))
-//   }
-// }
+logger.transports.file.maxSize = 2 * 1024 * 1024
+logger.transports.file.archiveLog = (file: any) => {
+  const oldPath = file.toString()
+  const inf = path.parse(oldPath)
+  try {
+    const now = dayjs()
+    fs.renameSync(
+      oldPath,
+      path.join(
+        `${inf.dir}`,
+        inf.name + `${now.format('YYYY-MM-DD_HH-mm-ss')}` + '.old' + inf.ext
+      )
+    )
+  } catch (e) {
+    console.log('Could not rotate log', e)
+    const quarterOfMaxSize = Math.round(logger.transports.file.maxSize / 4)
+    file.crop(Math.max(quarterOfMaxSize, 256 * 1024))
+  }
+}
 
 let sysLog = (logger as unknown) as logger.ElectronLog
 let sysFilePath = logPath

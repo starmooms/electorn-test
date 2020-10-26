@@ -21,7 +21,7 @@ interface StepInfoItem {
   createTime: number
 }
 
-type CloseCb = () => void
+type CloseCb = (status?: string) => void
 
 export default class HistoryDb extends HistoryDbCom {
   closeCb: CloseCb | undefined
@@ -46,10 +46,10 @@ export default class HistoryDb extends HistoryDbCom {
     return result
   }
 
-  async closeDb() {
+  async closeDb(status?: string) {
     await this.close()
     if (this.closeCb) {
-      this.closeCb()
+      this.closeCb(status)
     }
   }
 
@@ -282,7 +282,7 @@ export default class HistoryDb extends HistoryDbCom {
     )
     logger.info('有关闭状态', data)
     if (!data) {
-      await this.closeDb()
+      await this.closeDb('isEnd')
     }
   }
 

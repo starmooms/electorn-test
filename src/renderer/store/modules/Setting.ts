@@ -25,6 +25,7 @@ interface UserConfig {
   base: {
     portPath: string
   }
+  historyFilePath: string
   sampChartConfig: Store.SampChartConfig
 }
 
@@ -52,6 +53,10 @@ export default class SettingImpl extends VuexModule {
 
   get sampChartConfig() {
     return this.userConfig!.sampChartConfig
+  }
+
+  get historyFilePath() {
+    return this.userConfig!.historyFilePath
   }
 
   @Mutation

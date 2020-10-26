@@ -52,11 +52,14 @@ class HistoryDbCache {
     return this.historyDbMap.get(historyId)
   }
 
-  closeHistoryDb(historyId: number) {
-    logger.info('关闭db', historyId)
+  closeHistoryDb(historyId: number, status?: string) {
+    logger.debug('HistoryDbCache 关闭db', historyId, status)
     const dbItem = this.historyDbMap.get(historyId)
     if (dbItem) {
       this.historyDbMap.delete(historyId)
+    }
+    if (status === 'isEnd') {
+      mainDb.workEnd(historyId)
     }
   }
 
@@ -69,9 +72,13 @@ class HistoryDbCache {
       if (!data) {
         throw new Error('不存在相关历史记录')
       }
-      const historyDb = new HistoryDb(data.fileId, data.filePath, () => {
-        this.closeHistoryDb(historyId)
-      })
+      const historyDb = new HistoryDb(
+        data.fileId,
+        data.filePath,
+        (status?: string) => {
+          this.closeHistoryDb(historyId, status)
+        }
+      )
       const stepInfo = await historyDb.open()
       logger.info('打开db', historyId)
       return this.set(historyId, historyDb, stepInfo.dataSave)
@@ -86,8 +93,8 @@ class HistoryDbCache {
     const historyDb = new HistoryDb(
       fileId,
       filePath,
-      () => {
-        this.closeHistoryDb(historyId)
+      status => {
+        this.closeHistoryDb(historyId, status)
       },
       false
     )

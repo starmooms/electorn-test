@@ -61,10 +61,10 @@
 
     <div class="dialog-footer" slot="footer">
       <div class="f-l">
-        <el-button @click="dialogClose" type="primary">载入代码</el-button>
+        <!-- <el-button @click="dialogClose" type="primary">载入代码</el-button>
         <el-button type="primary">
           保存代码
-        </el-button>
+        </el-button> -->
       </div>
       <div class="f-r">
         <el-button @click="dialogClose">取 消</el-button>

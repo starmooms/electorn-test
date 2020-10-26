@@ -18,6 +18,8 @@ import Bluebird from 'bluebird'
 import logger from '@/main/core/Logger'
 import communi from '@/main/core/Request/Communi'
 import { BoxManage } from './BoxManage'
+import { config } from 'process'
+import configManage from '../ConfigManage'
 
 /** 机柜状态和工步通讯 */
 export default class BoxStatus {
@@ -33,6 +35,7 @@ export default class BoxStatus {
     const channelIds = data.channelIds
     const masterIds = data.masterIds
     const projectId = await mainDb.workStart(data)
+    configManage.userConfig.set('historyFilePath', data.filePath)
     masterIds.sort((a, b) => a - b)
 
     const writerModel = new BufModel({
@@ -89,7 +92,7 @@ export default class BoxStatus {
       slaverIds
     }
 
-    await Bluebird.mapSeries(masterIds, async (masterId: number) => {
+    Bluebird.mapSeries(masterIds, async (masterId: number) => {
       try {
         writerModel.writer('masterId', masterId)
         channelInfo.masterId = masterId

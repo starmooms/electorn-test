@@ -24,7 +24,7 @@
           <el-button type="primary" @click="tplUseOpen">应用工步模板</el-button>
         </div>
 
-        <div class="data-save-box">
+        <!-- <div class="data-save-box">
           <el-divider content-position="left">数据记录条件</el-divider>
           <el-form class="data-save-form" :inline="true" v-if="dataSave">
             <el-form-item
@@ -145,7 +145,8 @@
               <el-input v-model.number="protect[item.type]"></el-input>
             </el-form-item>
           </el-form>
-        </div>
+        </div> -->
+        <step-tpl-edit ref="stepTplEdit" />
 
         <el-divider content-position="left">备注</el-divider>
         <el-form label-width="100px">
@@ -182,6 +183,7 @@ import { PROTECT, GET_PROTECT_FORM } from '@/shared/config/port'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import SelectChannel from '@/renderer/components/SelectChannel.vue'
 import FileSelect from '@/renderer/components/FileSelect.vue'
+import StepTplEdit from './StepTplEdit.vue'
 
 const { stepsSelectList, stepsRulseMap } = getStepsOpts()
 
@@ -191,7 +193,8 @@ const { stepsSelectList, stepsRulseMap } = getStepsOpts()
     StepTplUse,
     SelectMaster,
     SelectChannel,
-    FileSelect
+    FileSelect,
+    StepTplEdit
   }
 })
 export default class StepSetModal extends Vue {
@@ -203,6 +206,7 @@ export default class StepSetModal extends Vue {
 
   $refs!: {
     SelectChannel: SelectChannel
+    stepTplEdit: StepTplEdit
   }
 
   list: any[] = []
@@ -210,71 +214,76 @@ export default class StepSetModal extends Vue {
   tplSaveShow = false
   tplUseShow = false
 
-  stepsList: any[] = []
-  stepsSelectOpts = stepsSelectList
-  stepsRulseMap = stepsRulseMap
+  // stepsList: any[] = []
+  // stepsSelectOpts = stepsSelectList
+  // stepsRulseMap = stepsRulseMap
 
-  stepsInputMap = getStepsInputMap()
-  stepsId = 0
+  // stepsInputMap = getStepsInputMap()
+  // stepsId = 0
 
-  protectList = deepClone(PROTECT)
-  protect: any = null
+  // protectList = deepClone(PROTECT)
+  // protect: any = null
 
   batchMasterId: number[] = []
   batchSlaverId: number[] = []
   batchChannelId: number[] = []
 
-  dataSave: any = null
-  dataSaveList = [
-    {
-      label: '时间',
-      type: 'time',
-      unit: 's'
-    },
-    {
-      label: '电压间隔',
-      type: 'U',
-      unit: 'mV'
-    },
-    {
-      label: '电流间隔',
-      type: 'I',
-      unit: 'mA'
-    }
-  ]
+  // dataSave: any = null
+  // dataSaveList = [
+  //   {
+  //     label: '时间',
+  //     type: 'time',
+  //     unit: 's'
+  //   },
+  //   {
+  //     label: '电压间隔',
+  //     type: 'U',
+  //     unit: 'mV'
+  //   },
+  //   {
+  //     label: '电流间隔',
+  //     type: 'I',
+  //     unit: 'mA'
+  //   }
+  // ]
   startId: null | number = 1
 
-  // 特征电压参数
-  features: ipcReq.Features | null = null
-  featuresList = [
-    { label: '#1(mV)', type: 'v1' },
-    { label: '#2(mV)', type: 'v2' },
-    { label: '#3(mV)', type: 'v3' },
-    { label: '#4(mV)', type: 'v4' },
-    { label: '#5(mV)', type: 'v5' }
-  ]
+  // // 特征电压参数
+  // features: ipcReq.Features | null = null
+  // featuresList = [
+  //   { label: '#1(mV)', type: 'v1' },
+  //   { label: '#2(mV)', type: 'v2' },
+  //   { label: '#3(mV)', type: 'v3' },
+  //   { label: '#4(mV)', type: 'v4' },
+  //   { label: '#5(mV)', type: 'v5' }
+  // ]
 
-  filePath = ''
+  filePath = SettingStatus.historyFilePath
+  tplData: any = null
 
-  get tplData() {
-    return {
-      stepsList: this.stepsList,
-      protect: this.protect,
-      dataSave: this.dataSave,
-      features: this.features
-    }
-  }
+  // get defaultFilePath() {
+  //   return SettingStatus.historyFilePath
+  // }
 
-  set tplData(tpl: any) {
-    this.stepsList = tpl.stepsList
-    this.protect = tpl.protect
-    if (tpl.dataSave) {
-      this.dataSave = tpl.dataSave
-    }
-    if (tpl.features) {
-      this.features = tpl.features
-    }
-  }
+  // get tplData() {
+  //   return {
+  //     stepsList: this.stepsList,
+  //     protect: this.protect,
+  //     dataSave: this.dataSave,
+  //     features: this.features
+  //   }
+  // }
+
+  // set tplData(tpl: any) {
+  //   this.stepsList = tpl.stepsList
+  //   this.protect = tpl.protect
+  //   if (tpl.dataSave) {
+  //     this.dataSave = tpl.dataSave
+  //   }
+  //   if (tpl.features) {
+  //     this.features = tpl.features
+  //   }
+  // }
 
   get channelList() {
     return ChannelStatus.list
@@ -283,6 +292,16 @@ export default class StepSetModal extends Vue {
   // get batchMaster() {
   //   return this.channelList[this.batchMasterId] || null
   // }
+
+  /** 获取模板内容 */
+  async getTplData(checkStartId = true) {
+    if (!this.$refs.stepTplEdit) {
+      this.$message.error('模板组件未初始化')
+      return null
+    }
+    const tplRestul = await this.$refs.stepTplEdit.getTplData(checkStartId)
+    return tplRestul.data
+  }
 
   async stepsSubmit() {
     let msg = ''
@@ -311,69 +330,38 @@ export default class StepSetModal extends Vue {
       }
     }
 
-    const list: any = []
-    if (!msg) {
-      this.stepsListformat()
-      this.stepsList.forEach((item, index) => {
-        if (item.name) {
-          const hasNull = Object.keys(item.input).find(key => {
-            const valNull = item.input[key] === null
-            if (valNull) {
-              const rules = this.stepsRulseMap?.[item.type]?.rules
-              if (rules && rules.unReqire.includes(key)) {
-                return false
-              }
-            }
-            return valNull
-          })
-
-          if (hasNull) {
-            msg = '工步中有参数未设置'
-          } else {
-            list.push({
-              ...item,
-              id: index
-            })
-          }
-        }
-      })
-    }
     if (msg) {
       return this.$message.warning(msg)
     }
-
-    if (list.length === 0) {
-      return this.$message.error('请正确设置工步列表')
-    } else if (!this.startId) {
-      return this.$message.error('请设置起始工步')
+    if (!this.$refs.stepTplEdit) {
+      return this.$message.warning('模板组件未初始化')
     } else if (!this.filePath) {
       return this.$message.error('请设置历史文件路径')
     }
-
-    const startId = this.startId - 1
-    if (!(startId <= this.stepsList.length)) {
-      return this.$message.error('起始工步应该在当前工步列表范围内')
-    }
-
-    const confirm = await this.$elConfirm('确定应用并启动工步')
-    if (confirm) {
-      setSteps({
-        stepsList: list,
-        masterIds,
-        slaverIds,
-        channelIds,
-        protect: this.protect,
-        dataSave: this.dataSave,
-        startId: startId,
-        filePath: this.filePath,
-        features: this.features!
-      })
-      this.closeModal()
-      this.$emit('openSysLog')
-      // if (data.status) {
-      //   this.$message.success('设置工步成功')
-      //   this.closeModal()
-      // }
+    const tpl = await this.getTplData()
+    if (tpl) {
+      const confirm = await this.$elConfirm('确定应用并启动工步')
+      if (confirm) {
+        const data = await setSteps({
+          stepsList: tpl.stepsList,
+          masterIds,
+          slaverIds,
+          channelIds,
+          protect: tpl.protect,
+          dataSave: tpl.dataSave,
+          startId: tpl.startId,
+          features: tpl.features,
+          filePath: this.filePath
+        })
+        if (data.status) {
+          this.closeModal()
+          this.$emit('openSysLog')
+        }
+        // if (data.status) {
+        //   this.$message.success('设置工步成功')
+        //   this.closeModal()
+        // }
+      }
     }
   }
 
@@ -385,7 +373,7 @@ export default class StepSetModal extends Vue {
   stepsDialogChange(v) {
     if (v === true) {
       this.reset()
-      this.stepsAdd()
+      // this.stepsAdd()
       // if (this.isBatch) {
       //   this.$refs.SelectChannel.reset()
       // }
@@ -394,29 +382,32 @@ export default class StepSetModal extends Vue {
 
   /** 重置 */
   reset(resetChannel = true) {
-    this.dataSave = {
-      time: {
-        enable: true,
-        value: 1
-      },
-      U: {
-        enable: false,
-        value: null
-      },
-      I: {
-        enable: false,
-        value: null
-      }
+    // this.dataSave = {
+    //   time: {
+    //     enable: true,
+    //     value: 1
+    //   },
+    //   U: {
+    //     enable: false,
+    //     value: null
+    //   },
+    //   I: {
+    //     enable: false,
+    //     value: null
+    //   }
+    // }
+    // this.features = {
+    //   v1: null,
+    //   v2: null,
+    //   v3: null,
+    //   v4: null,
+    //   v5: null
+    // }
+    // this.stepsList = []
+    // this.protect = GET_PROTECT_FORM()
+    if (this.$refs.stepTplEdit) {
+      this.$refs.stepTplEdit.reset()
     }
-    this.features = {
-      v1: null,
-      v2: null,
-      v3: null,
-      v4: null,
-      v5: null
-    }
-    this.stepsList = []
-    this.protect = GET_PROTECT_FORM()
     this.startId = 1
     if (this.$refs.SelectChannel && resetChannel) {
       this.$refs.SelectChannel.reset()
@@ -429,52 +420,15 @@ export default class StepSetModal extends Vue {
 
   tplUse(tpl: any) {
     this.reset(false)
-    this.tplData = tpl
+    this.$refs.stepTplEdit.useTplData(tpl)
   }
 
-  tplSaveOpen() {
-    this.stepsListformat()
-    if (this.stepsList.length === 0) {
-      this.$message.warning('请先添加工步')
-      return
+  async tplSaveOpen() {
+    const tpl = await this.getTplData(false)
+    if (tpl) {
+      this.tplData = tpl
+      this.tplSaveShow = true
     }
-    this.tplSaveShow = true
-  }
-
-  stepsListformat() {
-    this.stepsList = this.stepsList.map((item, index) => {
-      item.id = index
-      return item
-    })
-  }
-
-  stepsAdd() {
-    const obj: any = {
-      id: ++this.stepsId,
-      type: '',
-      name: '',
-      input: {}
-    }
-    this.stepsList.push(obj)
-  }
-
-  stepsDel(index: number) {
-    this.stepsList.splice(index, 1)
-  }
-
-  stepItemIdChange(value, row, index) {
-    // const lastIndex = this.stepsList.length - 1
-    const input = {}
-    value.input.forEach(item => {
-      input[item] = null
-    })
-    row.input = input
-    row.type = value.type
-    row.name = value.name
-    // if (value === 'loop' && index !== lastIndex) {
-    //   this.stepsList.splice(index, 1)
-    //   this.stepsList.push(row)
-    // }
   }
 
   mounted() {
@@ -520,15 +474,15 @@ export default class StepSetModal extends Vue {
     }
   }
 
-  .slaver-select-list {
-    display: flex;
-    flex-flow: row wrap;
-    justify-content: flex-start;
-    .slaver-select-item {
-      flex: 0 0 12.5%;
-      margin-right: 0;
-    }
-  }
+  // .slaver-select-list {
+  //   display: flex;
+  //   flex-flow: row wrap;
+  //   justify-content: flex-start;
+  //   .slaver-select-item {
+  //     flex: 0 0 12.5%;
+  //     margin-right: 0;
+  //   }
+  // }
 
   .protect-form {
     display: flex;

@@ -161,6 +161,8 @@ export default class ChannelItem extends Vue {
 }
 </script>
 <style lang="scss">
+$noConnect-cl: #ccc;
+
 .channel-item {
   cursor: pointer;
   text-align: center;
@@ -173,7 +175,7 @@ export default class ChannelItem extends Vue {
 
   .channel-icon {
     transition: all 0.2s;
-    color: #606266;
+    color: $noConnect-cl;
     font-size: 40px;
   }
 
@@ -187,7 +189,7 @@ export default class ChannelItem extends Vue {
       display: inline-block;
       width: 24px;
       height: 4px;
-      background-color: #606266;
+      background-color: $noConnect-cl;
     }
     .channel-border-icon {
       display: flex;
@@ -196,7 +198,7 @@ export default class ChannelItem extends Vue {
       width: 82px;
       height: 48px;
       box-sizing: border-box;
-      border: 4px solid #606266;
+      border: 4px solid $noConnect-cl;
       font-size: 12px;
     }
   }

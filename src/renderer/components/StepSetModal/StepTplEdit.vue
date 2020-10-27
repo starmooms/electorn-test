@@ -43,7 +43,7 @@
       <el-divider content-position="left">工步编辑</el-divider>
       <div class="step-edit-set-box">
         <el-button type="primary" @click="stepsAdd">添加工步</el-button>
-        <div class="set-start">
+        <div class="set-start" v-if="showStartId">
           <span>设置第</span>
           <el-input class="set-start-input" v-model.number="startId"></el-input>
           <span>为起始工步</span>
@@ -123,7 +123,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
+import { Component, Prop, Vue } from 'vue-property-decorator'
 import { getStepsOpts, getStepsInputMap } from '@/renderer/utils/getConfig'
 import { PROTECT, GET_PROTECT_FORM } from '@/shared/config/port'
 import { deepClone } from '@/shared/utils'
@@ -132,6 +132,8 @@ const { stepsSelectList, stepsRulseMap } = getStepsOpts()
 
 @Component
 export default class StepTplEdit extends Vue {
+  @Prop({ type: Boolean, default: true }) showStartId!: boolean
+
   stepsList: any[] = []
   stepsSelectOpts = stepsSelectList
   stepsRulseMap = stepsRulseMap
@@ -218,13 +220,18 @@ export default class StepTplEdit extends Vue {
     this.stepsList.splice(index, 1)
   }
 
-  /** 选择工步时 */
-  stepItemIdChange(value, row) {
+  /** 根据选中的工步生成input */
+  createInput(value: any) {
     const input = {}
     value.input.forEach(item => {
       input[item] = null
     })
-    row.input = input
+    return input
+  }
+
+  /** 选择工步时 */
+  stepItemIdChange(value, row) {
+    row.input = this.createInput(value)
     row.type = value.type
     row.name = value.name
   }
@@ -249,10 +256,10 @@ export default class StepTplEdit extends Vue {
     for (let i = 0; i < this.stepsList.length; i++) {
       const item = this.stepsList[i]
       if (item.name) {
-        console.log(item)
         const hasNull = Object.keys(item.input).find(key => {
-          let val: number | null = Number(item.input[key])
-          if (isNaN(val)) {
+          const originVal = item.input[key]
+          let val: number | null = Number(originVal)
+          if (isNaN(val) || (!originVal && originVal !== 0)) {
             val = null
           }
           item.input[key] = val
@@ -266,7 +273,6 @@ export default class StepTplEdit extends Vue {
           }
           return valNull
         })
-        console.log(hasNull)
         if (hasNull) {
           msg = '工步中有参数未设置'
           break
@@ -297,7 +303,7 @@ export default class StepTplEdit extends Vue {
       status: true,
       msg,
       data: {
-        startId,
+        startId: startId,
         stepsList,
         protect: this.protect,
         dataSave: this.dataSave,
@@ -308,15 +314,24 @@ export default class StepTplEdit extends Vue {
 
   /** 应用工步模板 */
   useTplData(tpl: any) {
-    ;['stepsList', 'project', 'dataSave', 'features'].forEach(key => {
+    this.reset()
+    ;['protect', 'dataSave', 'features'].forEach(key => {
       if (tpl[key]) {
-        this[key] = tpl[key]
+        this[key] = deepClone(tpl[key])
       }
     })
-    // this.stepsList = tpl.stepsList
-    // this.protect = tpl.protect
-    // this.dataSave = tpl.dataSave
-    // this.features = tpl.features
+    const selectMap = {}
+    this.stepsSelectOpts.forEach(item => {
+      selectMap[item.value.type] = this.createInput(item.value)
+    })
+    this.stepsList = tpl.stepsList.map(step => {
+      const item = deepClone(step)
+      item.input = {
+        ...selectMap[item.type],
+        ...item.input
+      }
+      return item
+    })
   }
 
   mounted() {

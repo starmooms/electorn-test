@@ -2,6 +2,7 @@
   <div>
     <el-dialog
       title="编辑工步"
+      class="center-dialog"
       custom-class="steps-add-dialog"
       :close-on-click-modal="false"
       :visible.sync="stepsDialog"
@@ -441,38 +442,38 @@ export default class StepSetModal extends Vue {
 ::v-deep .steps-add-dialog {
   min-width: 1000px;
 
-  .el-dialog__body {
-    max-height: 76vh;
-    overflow-y: auto;
-    padding-top: 0;
-  }
+  // .el-dialog__body {
+  //   max-height: 76vh;
+  //   overflow-y: auto;
+  //   padding-top: 0;
+  // }
 
-  .el-table td,
-  .el-table th {
-    vertical-align: top;
-  }
+  // .el-table td,
+  // .el-table th {
+  //   vertical-align: top;
+  // }
 
-  .input-box {
-    display: flex;
-    flex-flow: row wrap;
-    align-items: center;
-    margin-bottom: -10px;
-    .input-item {
-      flex: 0 0 33.33%;
-      margin-bottom: 10px;
-      .input-name {
-        display: inline-block;
-        width: 90px;
-        text-align: right;
-      }
-      // &:nth-last-child(-n + 3) {
-      //   margin-bottom: 0;
-      // }
-      .el-input {
-        width: 74px;
-      }
-    }
-  }
+  // .input-box {
+  //   display: flex;
+  //   flex-flow: row wrap;
+  //   align-items: center;
+  //   margin-bottom: -10px;
+  //   .input-item {
+  //     flex: 0 0 33.33%;
+  //     margin-bottom: 10px;
+  //     .input-name {
+  //       display: inline-block;
+  //       width: 90px;
+  //       text-align: right;
+  //     }
+  //     // &:nth-last-child(-n + 3) {
+  //     //   margin-bottom: 0;
+  //     // }
+  //     .el-input {
+  //       width: 74px;
+  //     }
+  //   }
+  // }
 
   // .slaver-select-list {
   //   display: flex;
@@ -484,93 +485,93 @@ export default class StepSetModal extends Vue {
   //   }
   // }
 
-  .protect-form {
-    display: flex;
-    flex-flow: row wrap;
-  }
+  // .protect-form {
+  //   display: flex;
+  //   flex-flow: row wrap;
+  // }
 
-  .data-save-box {
-    .data-save-item {
-      margin-right: 32px;
-      .disable {
-        color: #adadad;
-      }
-      .lable {
-        margin-left: 10px;
-      }
-      .data-save-input {
-        width: 80px;
-        margin-right: 4px;
-      }
-    }
-  }
-}
-
-.steps-edit-box {
-  // margin: 20px 0;
-  .step-edit-set-box {
-    margin: 10px 0;
-    display: flex;
-    .set-start {
-      margin-left: 10px;
-      .set-start-input {
-        display: inline;
-        margin: 0 6px;
-        ::v-deep .el-input__inner {
-          width: 36px;
-          padding: 0 4px;
-        }
-      }
-    }
-  }
+  // .data-save-box {
+  //   .data-save-item {
+  //     margin-right: 32px;
+  //     .disable {
+  //       color: #adadad;
+  //     }
+  //     .lable {
+  //       margin-left: 10px;
+  //     }
+  //     .data-save-input {
+  //       width: 80px;
+  //       margin-right: 4px;
+  //     }
+  //   }
+  // }
 }
 
-.data-feat-box {
-  .data-feat-form {
-    display: flex;
-    .feat-form-item {
-      margin-right: 14px;
-    }
-    ::v-deep {
-      .el-form-item__content {
-        width: 80px;
-      }
-    }
-  }
-}
+// .steps-edit-box {
+//   // margin: 20px 0;
+//   .step-edit-set-box {
+//     margin: 10px 0;
+//     display: flex;
+//     .set-start {
+//       margin-left: 10px;
+//       .set-start-input {
+//         display: inline;
+//         margin: 0 6px;
+//         ::v-deep .el-input__inner {
+//           width: 36px;
+//           padding: 0 4px;
+//         }
+//       }
+//     }
+//   }
+// }
 
-.table-wrapper {
-  background-color: #f5f7fa;
-}
-.table-wrapper ::v-deep {
-  .el-table,
-  .el-table tr,
-  .el-table th,
-  .el-table--enable-row-transition .el-table__body td {
-    background-color: transparent;
-  }
-}
-.el-table__expanded-cell,
-.el-table .cell {
-  background-color: transparent;
-}
+// .data-feat-box {
+//   .data-feat-form {
+//     display: flex;
+//     .feat-form-item {
+//       margin-right: 14px;
+//     }
+//     ::v-deep {
+//       .el-form-item__content {
+//         width: 80px;
+//       }
+//     }
+//   }
+// }
 
-::v-deep {
-  .el-dialog {
-    display: flex;
-    flex-direction: column;
-    margin: 0 !important;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    /*height:600px;*/
-    max-height: calc(100% - 30px);
-    max-width: calc(100% - 30px);
-    .el-dialog__body {
-      flex: 1;
-      overflow: auto;
-    }
-  }
-}
+// .table-wrapper {
+//   background-color: #f5f7fa;
+// }
+// .table-wrapper ::v-deep {
+//   .el-table,
+//   .el-table tr,
+//   .el-table th,
+//   .el-table--enable-row-transition .el-table__body td {
+//     background-color: transparent;
+//   }
+// }
+// .el-table__expanded-cell,
+// .el-table .cell {
+//   background-color: transparent;
+// }
+
+// ::v-deep {
+//   .el-dialog {
+//     display: flex;
+//     flex-direction: column;
+//     margin: 0 !important;
+//     position: absolute;
+//     top: 50%;
+//     left: 50%;
+//     transform: translate(-50%, -50%);
+//     /*height:600px;*/
+//     max-height: calc(100% - 30px);
+//     max-width: calc(100% - 30px);
+//     .el-dialog__body {
+//       flex: 1;
+//       overflow: auto;
+//     }
+//   }
+// }
 </style>

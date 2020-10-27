@@ -292,18 +292,8 @@ export default class HistoryDb extends HistoryDbCom {
       const { stepStatistics } = this.tables
       sql += `INSERT INTO ${stepStatistics} (masterId, slaverId, channelId, fullId, stepId, workCode, loopNum, startU, startTime, createTime) VALUES`
       list.forEach(item => {
-        sql += `(
-          ${item.masterId},
-          ${item.slaverId},
-          ${item.channelId},
-          '${item.masterId}_${item.slaverId}_${item.channelId}',
-          ${item.stepId},
-          '${item.workerCode}',
-          ${item.loopNum},
-          ${item.U},
-          '${now}',
-          '${now}'
-        ),`
+        const fullId = `${item.masterId}_${item.slaverId}_${item.channelId}`
+        sql += `(${item.masterId}, ${item.slaverId}, ${item.channelId}, '${fullId}', ${item.stepId}, '${item.workerCode}', ${item.loopNum}, ${item.U}, '${now}', '${now}'),`
       })
       sql = Sqlite.replaceSql(sql, ';')
     }

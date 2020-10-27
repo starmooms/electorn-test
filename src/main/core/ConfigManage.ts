@@ -127,8 +127,12 @@ class ConfigManage {
       if (!data.name) throw new Error('name is no null')
       const has = this.workStepTpl.has(data.id)
       if (!has) throw new Error(`${data.id} Tpl No find`)
-
-      this.workStepTpl.set(`${data.id}.name`, data.name)
+      ;['name', 'tplData'].forEach(key => {
+        const val = data[key]
+        if (val) {
+          this.workStepTpl.set(`${data.id}.${key}`, val)
+        }
+      })
     } else {
       const id = uuid.v4().replace('-', '')
       this.setWorkStepTpl(id, {

@@ -102,4 +102,15 @@ declare namespace Db {
     list: any[]
     sortingResult: StoringResult
   }
+
+  /** 分容统计表校验 */
+  interface StaticItem {
+    start: null | {
+      U: number
+      I: number
+    }
+    end: null | {}
+    avgU: null | number
+  }
+
 }

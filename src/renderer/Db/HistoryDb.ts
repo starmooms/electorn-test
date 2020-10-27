@@ -28,6 +28,61 @@ export default class HistoryDb extends HistoryDbCom {
     return this.sqlite.get(`SELECT * FROM ${stepsInfo} WHERE id=1;`)
   }
 
+  /** 整理统计表 */
+  async checkStatic({
+    loopNum,
+    stepId
+  }: Pick<Db.GetStoring, 'loopNum' | 'stepId'>) {
+    const { stepStatistics, sampData } = this.tables
+    const staticMap = new Map<string, Db.StaticItem>()
+    const getMap = (row: any) => {
+      const fullId = `${row.masterId}_${row.slaverId}_${row.channelId}`
+      let staticItem = staticMap.get(fullId)
+      if (!staticItem) {
+        staticItem = {
+          start: null,
+          end: null,
+          avgU: null
+        }
+        staticMap.set(fullId, staticItem)
+      }
+      return staticItem
+    }
+    await Promise.all([
+      this.sqlite.each(
+        `SELECT masterId, slaverId, channelId, U, workCode FROM "samp_data" WHERE id IN (
+        SELECT MIN(id) id FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId
+      );`,
+        row => {
+          const item = getMap(row)
+          item.start = row
+        }
+      ),
+      this.sqlite.each(
+        `SELECT masterId, slaverId, channelId, U, I, epower, vol, stepTime, endCode FROM "samp_data" WHERE id IN (
+        SELECT MAX(id) id FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId
+      );`,
+        row => {
+          const item = getMap(row)
+          item.end = row
+        }
+      ),
+      this.sqlite.each(
+        `SELECT masterId, slaverId, channelId, avg(U) FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId`,
+        row => {
+          const item = getMap(row)
+          console.log(row)
+          item.avgU = row['avg(U)']
+        }
+      )
+    ])
+    let sql = ''
+    staticMap.forEach(()=>{
+      sql += ``
+    })
+    console.log(staticMap)
+  }
+
   /** 获取分选信息 */
   async getSorting({ stepId, loopNum, levelList, levelAttr }: Db.GetStoring) {
     const { stepStatistics } = this.tables
@@ -36,6 +91,10 @@ export default class HistoryDb extends HistoryDbCom {
       list: [],
       sortingResult: {}
     }
+    await this.checkStatic({
+      loopNum,
+      stepId
+    })
     const levelSearch = levelList.map(async level => {
       // 遍历等级
       let levelSql = ''

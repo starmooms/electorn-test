@@ -30,7 +30,7 @@
               <span class="u-txt">电压：{{ channel.samp.U }} mV</span>
               <br />
               <span class="u-txt">
-                当前循环次数：{{ channel.samp.loopNum }}
+                当前执行次数：{{ channel.samp.loopNum }}
               </span>
             </div>
             <div class="msg-r">
@@ -231,6 +231,8 @@ export default class SlaverDetails extends Vue {
         align-items: center;
         font-size: 12px;
         font-weight: bold;
+        height: 76px;
+        overflow: auto;
         p {
           margin: 0;
         }

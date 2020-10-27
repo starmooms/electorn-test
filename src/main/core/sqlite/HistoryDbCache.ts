@@ -129,7 +129,7 @@ class HistoryDbCache {
         await db.saveSamp(item)
         return true
       } catch (err) {
-        logger.error('HistoryDBCache saveSamp Error', err)
+        logger.error(`HistoryDBCache saveSamp Error ${item.projectId}`, err)
         return false
       }
     })

@@ -97,6 +97,31 @@ export default class Sqlite {
     })
   }
 
+  /** each */
+  each<T = any>(sql: string, cb: (row: T) => any, params: any = {}) {
+    return new Promise((resolve, reject) => {
+      this.db.each(
+        sql,
+        params,
+        (err, row) => {
+          if (err) {
+            reject(err)
+          }
+          cb(row)
+        },
+        err => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(true)
+          }
+        }
+      )
+    }).catch(err => {
+      return this.handleError<boolean>(err)
+    })
+  }
+
   /** 关闭连接 */
   close() {
     return new Promise<null>((resolve, reject) => {

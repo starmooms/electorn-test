@@ -5,6 +5,11 @@ import path from 'path'
 import dayjs from 'dayjs'
 import logger from '../Logger'
 import { TIME_FORMAT } from '@/shared/utils'
+import {
+  getInsertOrUpdate,
+  getInsertOrUpdateTpl,
+  getFullIdData
+} from '@/shared/sqlite/sqlUtil'
 const APP_VERSON = app.getVersion()
 
 interface TableName {
@@ -124,13 +129,12 @@ export default class HistoryDb extends HistoryDbCom {
     // 采样工步统计表
     if (!tableName.includes(stepStatistics)) {
       sql += `CREATE TABLE "${stepStatistics}" (
-        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "masterId" INTEGER NOT NULL,
         "slaverId" INTEGER NOT NULL,
         "channelId" INTEGER NOT NULL,
         "fullId" TEXT NOT NULL,
         "stepId" INTEGER NOT NULL,
-        "workCode" TEXT NOT NULL,
+        "workCode" TEXT,
         "loopNum" INTEGER NOT NULL,
         "stepTime" REAL,
         "startU" REAL,
@@ -148,7 +152,8 @@ export default class HistoryDb extends HistoryDbCom {
         "endCode" TEXT,
         "startTime" DATETIME,
         "endTime" DATETIME,
-        "createTime" DATETIME
+        "createTime" DATETIME,
+        PRIMARY KEY ("fullId", "stepId", "loopNum")
       );
       CREATE INDEX "step_statis_fullId" ON "step_statistics" ("fullId");
       CREATE INDEX "step_statis_stepId" ON "step_statistics" ("stepId");
@@ -290,12 +295,25 @@ export default class HistoryDb extends HistoryDbCom {
     let sql = ''
     if (list.length > 0) {
       const { stepStatistics } = this.tables
-      sql += `INSERT INTO ${stepStatistics} (masterId, slaverId, channelId, fullId, stepId, workCode, loopNum, startU, startTime, createTime) VALUES`
+      const getUpdateSql = getInsertOrUpdateTpl(['fullId', 'stepId', 'loopNum'])
       list.forEach(item => {
-        const fullId = `${item.masterId}_${item.slaverId}_${item.channelId}`
-        sql += `(${item.masterId}, ${item.slaverId}, ${item.channelId}, '${fullId}', ${item.stepId}, '${item.workerCode}', ${item.loopNum}, ${item.U}, '${now}', '${now}'),`
+        const updateSql = getUpdateSql({
+          ...getFullIdData(item),
+          loopNum: item.loopNum,
+          stepId: item.stepId,
+          workCode: item.workerCode,
+          startU: item.U,
+          startTime: `'${now}'`,
+          createTime: `'${now}'`
+        })
+        sql += `INSERT INTO ${stepStatistics} ${updateSql};`
       })
-      sql = Sqlite.replaceSql(sql, ';')
+      // sql += `INSERT INTO ${stepStatistics} (masterId, slaverId, channelId, fullId, stepId, workCode, loopNum, startU, startTime, createTime) VALUES`
+      // list.forEach(item => {
+      //   const fullId = `${item.masterId}_${item.slaverId}_${item.channelId}`
+      //   sql += `(${item.masterId}, ${item.slaverId}, ${item.channelId}, '${fullId}', ${item.stepId}, '${item.workerCode}', ${item.loopNum}, ${item.U}, '${now}', '${now}'),`
+      // })
+      // sql = Sqlite.replaceSql(sql, ';')
     }
     return sql
   }
@@ -304,9 +322,23 @@ export default class HistoryDb extends HistoryDbCom {
     let sql = ''
     if (list.length > 0) {
       const { stepStatistics } = this.tables
+      const getUpdateSql = getInsertOrUpdateTpl(['fullId', 'stepId', 'loopNum'])
       list.forEach(item => {
-        sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, vol=${item.vol}, epower=${item.epower}, endCode='${item.endCode}', endTime='${now}'
-        WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
+        const updateSql = getUpdateSql({
+          ...getFullIdData(item),
+          loopNum: item.loopNum,
+          stepId: item.stepId,
+          stepTime: item.stepTime,
+          endU: item.U,
+          endI: item.I,
+          vol: item.vol,
+          epower: item.epower,
+          endCode: `'${item.endCode}'`,
+          endTime: `'${now}'`
+        })
+        sql += `INSERT INTO ${stepStatistics} ${updateSql};`
+        // sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, vol=${item.vol}, epower=${item.epower}, endCode='${item.endCode}', endTime='${now}'
+        // WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
       })
     }
     return sql
@@ -317,8 +349,21 @@ export default class HistoryDb extends HistoryDbCom {
     if (list.length > 0) {
       const { stepStatistics } = this.tables
       list.forEach(item => {
-        sql += `UPDATE ${stepStatistics} SET t${item.featureType}=${item.stepTime}, c${item.featureType}=${item.vol}
-        WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
+        const tKey = `t${item.featureType}`
+        const cKey = `c${item.featureType}`
+        const updateSql = getInsertOrUpdate(
+          {
+            ...getFullIdData(item),
+            loopNum: item.loopNum,
+            stepId: item.stepId,
+            [cKey]: item.vol,
+            [tKey]: item.stepTime
+          },
+          ['fullId', 'stepId', 'loopNum']
+        )
+        sql += `INSERT INTO ${stepStatistics} ${updateSql};`
+        // sql += `UPDATE ${stepStatistics} SET t${item.featureType}=${item.stepTime}, c${item.featureType}=${item.vol}
+        // WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
       })
     }
     return sql

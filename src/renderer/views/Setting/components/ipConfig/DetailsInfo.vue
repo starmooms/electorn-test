@@ -12,7 +12,6 @@
           class="min-el-tabel border-el-table"
           height="300px"
           :data="masterInfo.slaverList"
-          :row-class-name="tableRowClassName"
         >
           <!-- eslint-disable -->
           <el-table-column label="从控号" width="80">

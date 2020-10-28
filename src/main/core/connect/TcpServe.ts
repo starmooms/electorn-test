@@ -15,25 +15,75 @@ export default function tcpServe() {
       const writeModel = new BufModel({
         model: SAMP_MODEL,
         listLen: {
-          sampList: sampLen,
+          sampList: 0,
           errorList: 0,
           startList: 0,
           endList: 0,
-          featureList: 0
+          featureList: 255
         }
       })
-      writeModel.writer('sampLen', sampLen)
-      logger.info('len', writeModel.read('sampLen'))
+      // writeModel.writer('sampLen', sampLen)
+      // writeModel.writer('endLen', 10)
+      writeModel.writer('featureLen', 255)
+
+      logger.info('sampLen', writeModel.read('sampLen'))
+      logger.info('featureLen', writeModel.read('featureLen'))
       writeModel.ecahList('sampList', (wItem, index) => {
         const U = Math.floor(Math.random() * 100000)
         wItem.writer('slaverId', Math.floor(index / 8))
         wItem.writer('channelId', index % 8)
-        wItem.writer('U', Math.floor(Math.random() * 100000))
+        wItem.writer('U', U)
         wItem.writer('I', Math.floor(Math.random() * 100000))
-        if (U > 50000) {
-          wItem.writer('errCode', '01')
-        }
+        wItem.writer('vol', Math.floor(Math.random() * 100000))
+        wItem.writer('epower', Math.floor(Math.random() * 100000))
+        wItem.writer('projectId', 120)
+        wItem.writer('loopNum', 1)
+        wItem.writer('stepId', 0)
+        wItem.writerHex('workerCode', 'a1')
+        // if (U > 50000) {
+        //   wItem.writer('errCode', '01')
+        // }
       })
+      writeModel.ecahList('endList', (wItem, index) => {
+        const U = Math.floor(Math.random() * 100000)
+        wItem.writer('slaverId', Math.floor(index / 8))
+        wItem.writer('channelId', index % 8)
+        wItem.writer('U', U)
+        wItem.writer('I', Math.floor(Math.random() * 100000))
+        wItem.writer('vol', Math.floor(Math.random() * 100000))
+        wItem.writer('epower', Math.floor(Math.random() * 100000))
+        wItem.writer('projectId', 120)
+        wItem.writer('loopNum', 1)
+        wItem.writer('stepId', 0)
+        wItem.writer('stepTime', 6666)
+        wItem.writerHex('workerCode', 'a1')
+        wItem.writerHex('endCode', '01')
+        // if (U > 50000) {
+        //   wItem.writer('errCode', '01')
+        // }
+      })
+      writeModel.ecahList('featureList', (wItem, index) => {
+        const U = Math.floor(Math.random() * 100000)
+        const slaverId = Math.floor(index / 8)
+        wItem.writer('slaverId', slaverId)
+        wItem.writer('channelId', index % 8)
+        wItem.writer('U', U)
+        wItem.writer('I', Math.floor(Math.random() * 100000))
+        wItem.writer('vol', Math.floor(Math.random() * 100000))
+        wItem.writer('epower', Math.floor(Math.random() * 100000))
+        wItem.writer('projectId', 120)
+        wItem.writer('loopNum', 1)
+        wItem.writer('stepId', 0)
+        wItem.writer('stepTime', 6666)
+        wItem.writerHex('workerCode', 'a1')
+        wItem.writer('featureType', (slaverId % 5) + 1)
+        logger.info(slaverId, 'd:', (slaverId % 5) + 1)
+        // if (U > 50000) {
+        //   wItem.writer('errCode', '01')
+        // }
+      })
+      logger.info('end')
+
       const resultBuf = Buffer.from(
         `6801010000688500${id}011f${writeModel.buf.toString(
           'hex'
@@ -57,5 +107,5 @@ export default function tcpServe() {
       console.log('关闭tcpServer')
     })
   })
-  tcpServer.listen(31111, '192.168.0.201')
+  tcpServer.listen(31111, '192.168.0.93')
 }

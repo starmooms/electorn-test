@@ -106,11 +106,23 @@ declare namespace Db {
   /** 分容统计表校验 */
   interface StaticItem {
     start: null | {
+      masterId: number
+      slaverId: number
+      channelId: number
+      U: number
+      workCode: string
+    }
+    end: null | {
+      masterId: number
+      slaverId: number
+      channelId: number
       U: number
       I: number
+      vol: number
+      epower: number
+      stepTime: number
+      endCode: string
     }
-    end: null | {}
     avgU: null | number
   }
-
 }

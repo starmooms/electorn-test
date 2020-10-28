@@ -8,7 +8,8 @@ import { TIME_FORMAT } from '@/shared/utils'
 import {
   getInsertOrUpdate,
   getInsertOrUpdateTpl,
-  getFullIdData
+  getFullIdData,
+  getInsertOrUpdateAllTpl
 } from '@/shared/sqlite/sqlUtil'
 const APP_VERSON = app.getVersion()
 
@@ -129,6 +130,7 @@ export default class HistoryDb extends HistoryDbCom {
     // 采样工步统计表
     if (!tableName.includes(stepStatistics)) {
       sql += `CREATE TABLE "${stepStatistics}" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "masterId" INTEGER NOT NULL,
         "slaverId" INTEGER NOT NULL,
         "channelId" INTEGER NOT NULL,
@@ -153,12 +155,14 @@ export default class HistoryDb extends HistoryDbCom {
         "startTime" DATETIME,
         "endTime" DATETIME,
         "createTime" DATETIME,
-        PRIMARY KEY ("fullId", "stepId", "loopNum")
+        CONSTRAINT "step_statis_step_unique" UNIQUE ("fullId", "stepId", "loopNum")
       );
       CREATE INDEX "step_statis_fullId" ON "step_statistics" ("fullId");
       CREATE INDEX "step_statis_stepId" ON "step_statistics" ("stepId");
       CREATE INDEX "step_statis_loopNum" ON "step_statistics" ("loopNum");`
     }
+
+    // CREATE UNIQUE INDEX "step_statis_uniqueId" ON "step_statistics" ("fullId", "loopNum", "stepId");
 
     // 版本号记录
     if (!tableName.includes(systemVersion)) {
@@ -295,9 +299,13 @@ export default class HistoryDb extends HistoryDbCom {
     let sql = ''
     if (list.length > 0) {
       const { stepStatistics } = this.tables
-      const getUpdateSql = getInsertOrUpdateTpl(['fullId', 'stepId', 'loopNum'])
+      const getUpdateSql = getInsertOrUpdateAllTpl([
+        'fullId',
+        'stepId',
+        'loopNum'
+      ])
       list.forEach(item => {
-        const updateSql = getUpdateSql({
+        getUpdateSql.insert({
           ...getFullIdData(item),
           loopNum: item.loopNum,
           stepId: item.stepId,
@@ -306,7 +314,6 @@ export default class HistoryDb extends HistoryDbCom {
           startTime: `'${now}'`,
           createTime: `'${now}'`
         })
-        sql += `INSERT INTO ${stepStatistics} ${updateSql};`
       })
       // sql += `INSERT INTO ${stepStatistics} (masterId, slaverId, channelId, fullId, stepId, workCode, loopNum, startU, startTime, createTime) VALUES`
       // list.forEach(item => {
@@ -314,7 +321,12 @@ export default class HistoryDb extends HistoryDbCom {
       //   sql += `(${item.masterId}, ${item.slaverId}, ${item.channelId}, '${fullId}', ${item.stepId}, '${item.workerCode}', ${item.loopNum}, ${item.U}, '${now}', '${now}'),`
       // })
       // sql = Sqlite.replaceSql(sql, ';')
+      const insertSql = getUpdateSql.getSql()
+      if (insertSql) {
+        sql += `INSERT INTO ${stepStatistics} ${insertSql};`
+      }
     }
+
     return sql
   }
 
@@ -322,10 +334,15 @@ export default class HistoryDb extends HistoryDbCom {
     let sql = ''
     if (list.length > 0) {
       const { stepStatistics } = this.tables
-      const getUpdateSql = getInsertOrUpdateTpl(['fullId', 'stepId', 'loopNum'])
+      const getUpdateSql = getInsertOrUpdateAllTpl([
+        'fullId',
+        'stepId',
+        'loopNum'
+      ])
       list.forEach(item => {
-        const updateSql = getUpdateSql({
-          ...getFullIdData(item),
+        const fullIdata = getFullIdData(item)
+        getUpdateSql.insert({
+          ...fullIdata,
           loopNum: item.loopNum,
           stepId: item.stepId,
           stepTime: item.stepTime,
@@ -334,12 +351,20 @@ export default class HistoryDb extends HistoryDbCom {
           vol: item.vol,
           epower: item.epower,
           endCode: `'${item.endCode}'`,
-          endTime: `'${now}'`
+          endTime: `'${now}'`,
+          avgU: `(SELECT ROUND(AVG(U),2) FROM 'samp_data' WHERE masterId=${item.masterId} AND slaverID=${item.slaverId} AND channelId=${item.channelId} AND loopNum=${item.loopNum} AND stepId=${item.stepId})`
         })
-        sql += `INSERT INTO ${stepStatistics} ${updateSql};`
+        // sql += `UPDATE ${stepStatistics} avgU=(
+        //   SELECT ROUND(AVG(U),2) FROM WHERE loopNum=${item.loopNum} AND stepId=${item.stepId} AND masterId=${fullIdata.masterId} AND slaverId=${fullIdata.slaverId} AND channelId=${fullIdata.channelId}
+        // )
+        // WHERE fullId='${fullIdata.fullId}' AND loopNum=${item.loopNum} AND stepId=${item.stepId};`
         // sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, vol=${item.vol}, epower=${item.epower}, endCode='${item.endCode}', endTime='${now}'
         // WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
       })
+      const insertSql = getUpdateSql.getSql()
+      if (insertSql) {
+        sql += `INSERT INTO ${stepStatistics} ${insertSql};`
+      }
     }
     return sql
   }
@@ -348,22 +373,41 @@ export default class HistoryDb extends HistoryDbCom {
     let sql = ''
     if (list.length > 0) {
       const { stepStatistics } = this.tables
+      const typeMap = new Map<number, any>()
+      const getType = (type: number) => {
+        let typeItem = typeMap.get(type)
+        if (!typeItem) {
+          typeItem = {
+            getUpdateSql: getInsertOrUpdateAllTpl([
+              'fullId',
+              'stepId',
+              'loopNum'
+            ]),
+            tKey: `t${type}`,
+            cKey: `c${type}`
+          }
+          typeMap.set(type, typeItem)
+        }
+        return typeItem
+      }
       list.forEach(item => {
-        const tKey = `t${item.featureType}`
-        const cKey = `c${item.featureType}`
-        const updateSql = getInsertOrUpdate(
-          {
-            ...getFullIdData(item),
-            loopNum: item.loopNum,
-            stepId: item.stepId,
-            [cKey]: item.vol,
-            [tKey]: item.stepTime
-          },
-          ['fullId', 'stepId', 'loopNum']
-        )
-        sql += `INSERT INTO ${stepStatistics} ${updateSql};`
+        const typeItem = getType(item.featureType)
+        typeItem.getUpdateSql.insert({
+          ...getFullIdData(item),
+          loopNum: item.loopNum,
+          stepId: item.stepId,
+          [typeItem.cKey]: item.vol,
+          [typeItem.tKey]: item.stepTime
+        })
+        // sql += `INSERT INTO ${stepStatistics} ${updateSql};`
         // sql += `UPDATE ${stepStatistics} SET t${item.featureType}=${item.stepTime}, c${item.featureType}=${item.vol}
         // WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
+      })
+      typeMap.forEach(typeItem => {
+        const insertSql = typeItem.getUpdateSql.getSql()
+        if (insertSql) {
+          sql += `INSERT INTO ${stepStatistics} ${insertSql};`
+        }
       })
     }
     return sql

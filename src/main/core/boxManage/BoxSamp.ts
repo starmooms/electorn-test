@@ -454,7 +454,7 @@ export default class BoxSamp {
     readModel.ecahList('featureList', readItem => {
       const projectId = readItem.read('projectId')
       const feature = getProjectSamp(projectId, 'featureList')
-      logger.debug(`读到特征列表 ${readItem.buf.toString('hex')}`)
+      logger.debug(`读到特征列表`)
       feature.push({
         masterId,
         slaverId: readItem.read('slaverId'),

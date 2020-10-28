@@ -1,5 +1,11 @@
 import HistoryDbCom from '@/shared/sqlite/HistoryDbCom'
 import path from 'path'
+import {
+  getFullIdData,
+  getInsertOrUpdateTpl,
+  getInsertOrUpdateAllTpl
+} from '@/shared/sqlite/sqlUtil'
+import logger from '@/main/core/Logger'
 
 export default class HistoryDb extends HistoryDbCom {
   constructor(filePath: string) {
@@ -68,19 +74,48 @@ export default class HistoryDb extends HistoryDbCom {
         }
       ),
       this.sqlite.each(
-        `SELECT masterId, slaverId, channelId, avg(U) FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId`,
+        `SELECT masterId, slaverId, channelId, ROUND(AVG(U),2) FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId`,
         row => {
           const item = getMap(row)
-          console.log(row)
-          item.avgU = row['avg(U)']
+          item.avgU = row['ROUND(AVG(U),2)']
         }
       )
     ])
     let sql = ''
-    staticMap.forEach(()=>{
-      sql += ``
+    // const getUpdateSql = getInsertOrUpdateTpl(['fullId', 'stepId', 'loopNum'])
+    const getUpdateSql = getInsertOrUpdateAllTpl([
+      'fullId',
+      'stepId',
+      'loopNum'
+    ])
+    staticMap.forEach(staticItem => {
+      const { start, end, avgU } = staticItem
+      if (start && end && avgU != null) {
+        getUpdateSql.insert({
+          ...getFullIdData(start),
+          loopNum,
+          stepId,
+          workCode: `'${start.workCode}'`,
+          startU: start.U,
+          endU: end.U,
+          endI: end.I,
+          vol: end.vol,
+          epower: end.epower,
+          endCode: `'${end.endCode}'`,
+          stepTime: end.stepTime,
+          avgU: avgU
+        })
+        // sql += `INSERT INTO ${stepStatistics} ${updateSql};`
+      }
     })
-    console.log(staticMap)
+    const insertSql = getUpdateSql.getSql()
+    if (insertSql) {
+      sql += `INSERT INTO ${stepStatistics} ${getUpdateSql.getSql()};`
+    }
+    if (sql) {
+      await this.sqlite.exec(sql)
+    }
+    return
   }
 
   /** 获取分选信息 */

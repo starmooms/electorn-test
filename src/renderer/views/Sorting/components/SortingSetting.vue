@@ -166,6 +166,8 @@ import { lampSet } from '@/renderer/ipc/channel'
 export default class SortingSetting extends Vue {
   @PropSync('actionMasterId', { type: Number, default: null })
   private nowBoxId!: number | null
+  @PropSync('loading', { type: Boolean, default: false })
+  private setLoading!: boolean
 
   form = {
     dataType: 'nowData',
@@ -314,109 +316,114 @@ export default class SortingSetting extends Vue {
 
   /** 触发分选 */
   async handleSorting(lampSet = false) {
-    const selectLevel = this.form.levelId
-    if (!this.historyItem || !this.db) {
-      return this.$message.info('未选择启动历史')
-    } else if (!this.form.stepData) {
-      return this.$message.info('未选择工步')
-    } else if (selectLevel.length === 0) {
-      return this.$message.info('未设置分选等级')
-    }
-    const stepData = this.form.stepData
-    // const levelList = this.levelList.filter(item => {
-    //   return selectLevel.includes(item.id)
-    // })
-    const data = await this.db.getSorting({
-      stepId: stepData.id,
-      loopNum: stepData.loopNum,
-      levelList: this.levelList,
-      levelAttr: this.levelAttr
-    })
-
-    const total = this.channelTotal
-    const sortingResult = data.sortingResult
-
-    const channelResult: {
-      [key: string]: {
-        [key: string]: {
-          [key: string]: true
-        }
+    try {
+      this.setLoading = true
+      const selectLevel = this.form.levelId
+      if (!this.historyItem || !this.db) {
+        return this.$message.info('未选择启动历史')
+      } else if (!this.form.stepData) {
+        return this.$message.info('未选择工步')
+      } else if (selectLevel.length === 0) {
+        return this.$message.info('未设置分选等级')
       }
-    } = {}
-
-    /** 深度获取，如果不存在设置空对象 */
-    const getDeep = (
-      target: any,
-      key: string | number,
-      val = Object.create(null)
-    ) => {
-      let target2 = target[key]
-      if (!target2) {
-        target2 = val
-        target[key] = target2
-      }
-      return target2
-    }
-
-    // 根据等级列表统计
-    const levelResultList = this.levelList.map(item => {
-      const levelResult = sortingResult[item.id]?.levelResult
-      const num = levelResult.length ?? 0
-      if (selectLevel.includes(item.id)) {
-        levelResult.forEach(item => {
-          const master = getDeep(channelResult, item.masterId)
-          const slaver = getDeep(master, item.slaverId)
-          getDeep(slaver, item.channelId, item.fullId)
-        })
-      }
-      return {
-        id: item.id,
-        desc: item.desc,
-        num,
-        total,
-        percent: getPercent(num, total)
-      }
-    })
-
-    // 根据机柜统计
-    const boxResultList: SortingT.BoxResult[] = []
-    const boxTotal = this.masterChTotal
-    const boxLampResult: SortingT.BoxLampResult = {}
-    const getMasterResult = (masterId: number) => {
-      let num = 0
-      const masterObj = channelResult[masterId]
-      if (masterObj) {
-        const master = getDeep(boxLampResult, masterId)
-        Object.entries(masterObj).forEach(slaverObj => {
-          const slaver = getDeep(master, slaverObj[0], [])
-          Object.entries(slaverObj[1]).forEach(channelObj => {
-            num += 1
-            slaver.push(Number(channelObj[0]))
-          })
-        })
-      }
-      return num
-    }
-    this.masterActive.forEach(masterId => {
-      const num = getMasterResult(masterId)
-      boxResultList.push({
-        masterId,
-        masterName: String(masterId + 1),
-        num,
-        total: boxTotal,
-        percent: getPercent(num, boxTotal)
+      const stepData = this.form.stepData
+      // const levelList = this.levelList.filter(item => {
+      //   return selectLevel.includes(item.id)
+      // })
+      const data = await this.db.getSorting({
+        stepId: stepData.id,
+        loopNum: stepData.loopNum,
+        levelList: this.levelList,
+        levelAttr: this.levelAttr
       })
-    })
 
-    this.$emit('storingResult', {
-      list: data.list,
-      levelResultList,
-      boxResultList,
-      boxLampResult
-    })
+      const total = this.channelTotal
+      const sortingResult = data.sortingResult
 
-    if (lampSet === true) {
-      this.lampSbmit(boxLampResult)
+      const channelResult: {
+        [key: string]: {
+          [key: string]: {
+            [key: string]: true
+          }
+        }
+      } = {}
+
+      /** 深度获取，如果不存在设置空对象 */
+      const getDeep = (
+        target: any,
+        key: string | number,
+        val = Object.create(null)
+      ) => {
+        let target2 = target[key]
+        if (!target2) {
+          target2 = val
+          target[key] = target2
+        }
+        return target2
+      }
+
+      // 根据等级列表统计
+      const levelResultList = this.levelList.map(item => {
+        const levelResult = sortingResult[item.id]?.levelResult
+        const num = levelResult.length ?? 0
+        if (selectLevel.includes(item.id)) {
+          levelResult.forEach(item => {
+            const master = getDeep(channelResult, item.masterId)
+            const slaver = getDeep(master, item.slaverId)
+            getDeep(slaver, item.channelId, item.fullId)
+          })
+        }
+        return {
+          id: item.id,
+          desc: item.desc,
+          num,
+          total,
+          percent: getPercent(num, total)
+        }
+      })
+
+      // 根据机柜统计
+      const boxResultList: SortingT.BoxResult[] = []
+      const boxTotal = this.masterChTotal
+      const boxLampResult: SortingT.BoxLampResult = {}
+      const getMasterResult = (masterId: number) => {
+        let num = 0
+        const masterObj = channelResult[masterId]
+        if (masterObj) {
+          const master = getDeep(boxLampResult, masterId)
+          Object.entries(masterObj).forEach(slaverObj => {
+            const slaver = getDeep(master, slaverObj[0], [])
+            Object.entries(slaverObj[1]).forEach(channelObj => {
+              num += 1
+              slaver.push(Number(channelObj[0]))
+            })
+          })
+        }
+        return num
+      }
+      this.masterActive.forEach(masterId => {
+        const num = getMasterResult(masterId)
+        boxResultList.push({
+          masterId,
+          masterName: String(masterId + 1),
+          num,
+          total: boxTotal,
+          percent: getPercent(num, boxTotal)
+        })
+      })
+
+      this.$emit('storingResult', {
+        list: data.list,
+        levelResultList,
+        boxResultList,
+        boxLampResult
+      })
+
+      if (lampSet === true) {
+        this.lampSbmit(boxLampResult)
+      }
+    } finally {
+      this.setLoading = false
     }
   }
 

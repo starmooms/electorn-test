@@ -1,5 +1,5 @@
 <template>
-  <div class="sorting-box">
+  <div class="sorting-box" v-loading="loading">
     <div class="l-box">
       <split-pane class="main-box" split="horizontal" :defaultPercent="76">
         <template slot="paneL">
@@ -16,8 +16,9 @@
             </div>
             <div class="l-t-r" v-show="show.setting">
               <sorting-setting
-                @storingResult="storingResult"
                 :actionMasterId.sync="actionMasterId"
+                :loading.sync="loading"
+                @storingResult="storingResult"
               />
             </div>
           </div>
@@ -70,6 +71,7 @@ export default class Sorting extends Vue {
   lampResult: null | SortingT.BoxLampResult = null
 
   levelResult: SortingT.LevelResult[] = []
+  loading = false
 
   setShow(key: string) {
     if (this.show[key] !== void 0) {

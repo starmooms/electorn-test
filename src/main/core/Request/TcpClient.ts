@@ -64,7 +64,7 @@ export default class TcpClient extends EventEmitter {
     const tcpClient = net.createConnection(this.port, this.ip)
     const info = `TcpClient ${this.masterId} ${this.ip}:${this.port}`
     tcpClient.on('data', data => {
-      logger.debug(`${info} Data`, data.toString('hex'))
+      // logger.debug(`${info} Data`, data.toString('hex'))
       this.transfromModel.transform(data)
     })
     tcpClient.on('end', data => {

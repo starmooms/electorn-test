@@ -66,7 +66,7 @@
         <el-form-item>
           <el-button @click="handleSorting(false)">只分选</el-button>
           <el-button @click="handleSorting(true)">分选并发送</el-button>
-          <el-button @click="lampSbmit({})">关闭通道灯</el-button>
+          <el-button @click="lampCloseAll">关闭通道灯</el-button>
         </el-form-item>
       </el-form>
 
@@ -149,13 +149,9 @@ import { Component, Vue, Watch, PropSync } from 'vue-property-decorator'
 import LevelDialog from './LevelDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
-import {
-  getPercent,
-  idListFormat,
-  PathResolve,
-  stepsFormat
-} from '@/renderer/utils/util'
+import { getPercent, idListFormat, stepsFormat } from '@/renderer/utils/util'
 import { lampSet } from '@/renderer/ipc/channel'
+import { ChannelStatus } from '@/renderer/store/modules/Channel'
 
 @Component({
   components: {
@@ -216,6 +212,11 @@ export default class SortingSetting extends Vue {
 
   historySelect() {
     this.historyShow = true
+  }
+
+  /** 总机柜数 */
+  get masterListLen() {
+    return ChannelStatus.masterListLen
   }
 
   /** 本次参与分选的机柜 */
@@ -291,7 +292,7 @@ export default class SortingSetting extends Vue {
         data[`${idKey}Arr`] = idResult.idArr
         data[`${idKey}ShowStr`] = idResult.idShowArr
       })
-      this.historyItem = data
+      this.historyItem = (data as unknown) as any
       this.nowBoxId = this.historyItem!.masterIdArr[0]
     }
   }
@@ -301,6 +302,15 @@ export default class SortingSetting extends Vue {
     await lampSet({
       list
     })
+  }
+
+  /** 一键关闭所有灯 */
+  async lampCloseAll() {
+    const masterTotal = {}
+    for (let i = 0; i < this.masterListLen; i++) {
+      masterTotal[i] = {}
+    }
+    await this.lampSbmit(masterTotal)
   }
 
   async getSortingConfig() {
@@ -364,8 +374,9 @@ export default class SortingSetting extends Vue {
 
       // 根据等级列表统计
       const levelResultList = this.levelList.map(item => {
-        const levelResult = sortingResult[item.id]?.levelResult
-        const num = levelResult.length ?? 0
+        const levelResult = sortingResult[item.id]?.levelResult || []
+        const num = levelResult.length
+        // 已选中参与分选的等级
         if (selectLevel.includes(item.id)) {
           levelResult.forEach(item => {
             const master = getDeep(channelResult, item.masterId)
@@ -386,11 +397,12 @@ export default class SortingSetting extends Vue {
       const boxResultList: SortingT.BoxResult[] = []
       const boxTotal = this.masterChTotal
       const boxLampResult: SortingT.BoxLampResult = {}
+      // 循环机柜时获取符合等级的通道数量，并统计出分选亮灯的通道
       const getMasterResult = (masterId: number) => {
         let num = 0
         const masterObj = channelResult[masterId]
+        const master = getDeep(boxLampResult, masterId) // 如果不存在，改主控为空对象！
         if (masterObj) {
-          const master = getDeep(boxLampResult, masterId)
           Object.entries(masterObj).forEach(slaverObj => {
             const slaver = getDeep(master, slaverObj[0], [])
             Object.entries(slaverObj[1]).forEach(channelObj => {

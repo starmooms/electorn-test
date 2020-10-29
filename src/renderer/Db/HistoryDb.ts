@@ -2,8 +2,8 @@ import HistoryDbCom from '@/shared/sqlite/HistoryDbCom'
 import path from 'path'
 import {
   getFullIdData,
-  getInsertOrUpdateTpl,
-  getInsertOrUpdateAllTpl
+  getInsertOrUpdateAllTpl,
+  getStaticInsert
 } from '@/shared/sqlite/sqlUtil'
 import logger from '@/main/core/Logger'
 
@@ -31,7 +31,7 @@ export default class HistoryDb extends HistoryDbCom {
   /** 获取工步信息 */
   async getWorkStep() {
     const { stepsInfo } = this.tables
-    return this.sqlite.get(`SELECT * FROM ${stepsInfo} WHERE id=1;`)
+    return this.sqlite.get<Db.StartInfo>(`SELECT * FROM ${stepsInfo} LIMIT 1;`)
   }
 
   /** 整理统计表 */
@@ -81,13 +81,7 @@ export default class HistoryDb extends HistoryDbCom {
         }
       )
     ])
-    let sql = ''
-    // const getUpdateSql = getInsertOrUpdateTpl(['fullId', 'stepId', 'loopNum'])
-    const getUpdateSql = getInsertOrUpdateAllTpl([
-      'fullId',
-      'stepId',
-      'loopNum'
-    ])
+    const getUpdateSql = getStaticInsert(stepStatistics)
     staticMap.forEach(staticItem => {
       const { start, end, avgU } = staticItem
       if (start && end && avgU != null) {
@@ -108,10 +102,7 @@ export default class HistoryDb extends HistoryDbCom {
         // sql += `INSERT INTO ${stepStatistics} ${updateSql};`
       }
     })
-    const insertSql = getUpdateSql.getSql()
-    if (insertSql) {
-      sql += `INSERT INTO ${stepStatistics} ${getUpdateSql.getSql()};`
-    }
+    const sql = getUpdateSql.getSql()
     if (sql) {
       await this.sqlite.exec(sql)
     }

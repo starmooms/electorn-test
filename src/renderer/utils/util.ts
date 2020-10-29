@@ -284,10 +284,12 @@ export const stepsFormat = (
     if (msgData) {
       msgData = msgData.slice(0, -1)
     }
+    const showId = index + 1
     list.push({
       id: index,
+      showId,
       loopNum: 1,
-      loopId: `${index + 1}-1`,
+      loopId: `${showId}-1`,
       code: stepInfo.key,
       type: stepInfo.type,
       input: steps.input,
@@ -304,6 +306,27 @@ export const stepsFormat = (
   }
 
   return list
+}
+
+/** 格式化启动信息 */
+export const startInfoFormat = (
+  startInfo: Db.StartInfo
+): UtilT.StartInfoFormat => {
+  const idList: any = {}
+  ;['masterId', 'slaverId', 'channelId'].forEach(idKey => {
+    const idResult = idListFormat(startInfo[`${idKey}s`])
+    idList[`${idKey}Arr`] = idResult.idArr
+    idList[`${idKey}ShowStr`] = idResult.idShowArr
+  })
+
+  return {
+    ...startInfo,
+    ...idList,
+    stepList: stepsFormat(JSON.parse(startInfo.stepList), false, false),
+    protect: JSON.parse(startInfo.protect),
+    features: JSON.parse(startInfo.features),
+    dataSave: JSON.parse(startInfo.dataSave)
+  }
 }
 
 /** 解析路径 */

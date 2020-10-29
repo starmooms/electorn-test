@@ -6,6 +6,7 @@
         @changeData="changeChannelPos"
       ></ChannelPosition>
       <el-button @click="refresh" type="primary">刷新</el-button>
+      <el-button @click="startInfoOpen" type="primary">查看启动信息</el-button>
     </div>
     <split-pane class="main-box" split="vertical">
       <template slot="paneL">
@@ -23,32 +24,32 @@
         </div>
       </template>
     </split-pane>
+    <start-info-dialog :show.sync="startInfoShow" :startInfo="startInfo" />
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-import { RecycleScroller } from 'vue-virtual-scroller'
 import SplitPane from '@/renderer/components/SplitPane/index.vue'
 import SampChart from '@/renderer/components/SampChart/index.vue'
-import SampList from './components/SampList.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
-import dayjs from 'dayjs'
-import { computerAdd, formatTimeStr } from '@/renderer/utils/util'
+import { computerAdd, startInfoFormat } from '@/renderer/utils/util'
+import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import {
   CHANNEL_STATUS,
   END_STATUS,
   WORKSTEPSINPUT
 } from '@/shared/config/port'
+import SampList from './components/SampList.vue'
 import ChannelPosition from './components/ChannelPosition.vue'
-import { ChannelStatus } from '@/renderer/store/modules/Channel'
+import StartInfoDialog from './components/StartInfoDialog.vue'
 
 @Component({
   components: {
-    RecycleScroller,
     SplitPane,
     SampChart,
     SampList,
-    ChannelPosition
+    ChannelPosition,
+    StartInfoDialog
   }
 })
 export default class History extends Vue {
@@ -70,7 +71,9 @@ export default class History extends Vue {
     slaverId: 0,
     channelId: 0
   }
-  stepList: any[] = []
+
+  startInfo: null | UtilT.StartInfoFormat = null
+  startInfoShow = false
 
   get nowChannel() {
     return !this.isHistory && ChannelStatus.channelMap
@@ -80,9 +83,13 @@ export default class History extends Vue {
       : null
   }
 
+  get stepList() {
+    return this.startInfo ? this.startInfo.stepList : []
+  }
+
   async closeDb() {
     if (this.db) {
-      this.stepList = []
+      this.startInfo = null
       await this.db.close()
       this.db = null
     }
@@ -111,7 +118,7 @@ export default class History extends Vue {
   async getWorkStep() {
     if (!this.db) return
     const data = await this.db.getWorkStep()
-    this.stepList = JSON.parse(data.stepList)
+    this.startInfo = startInfoFormat(data)
   }
 
   async getSampData() {
@@ -139,22 +146,11 @@ export default class History extends Vue {
         if (lastStepIdId !== item.stepId || item.loopNum !== lastLoopNum) {
           const steps = this.stepList[item.stepId]
           if (steps && steps.type !== 'loop') {
-            let msgData = ''
-            Object.entries(steps.input).forEach(([key, val]) => {
-              const valData: any = WORKSTEPSINPUT[key]
-              if (valData) {
-                msgData += `${valData.name}${val}${valData.unit}，`
-              }
-            })
-            if (msgData) {
-              msgData = msgData.slice(0, -1)
-            }
-
             const stepId = steps.id
             const showStepId = stepId + 1
             const loopNum = item.loopNum
             const nowStep = {
-              msg: `工序： ${showStepId}（${showStepId}-${loopNum}）${steps.name}：${msgData}`,
+              msg: `工序： ${showStepId}（${showStepId}-${loopNum}）${steps.msg}`,
               loopNum,
               start: index,
               end: spamTotalLen
@@ -177,7 +173,7 @@ export default class History extends Vue {
         if (item.stepTime >= stepTimeMax) {
           stepTimeMax = item.stepTime
         } else {
-          console.error('??', item, stepTimeMax, item.stepTime)
+          console.warn('error', item, stepTimeMax, item.stepTime)
         }
         return {
           sIndex: index + 1,
@@ -209,6 +205,11 @@ export default class History extends Vue {
     } else {
       this.getSampData()
     }
+  }
+
+  /** 查看启动信息 */
+  startInfoOpen() {
+    this.startInfoShow = true
   }
 
   reset() {

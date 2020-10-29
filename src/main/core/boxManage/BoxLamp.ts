@@ -13,26 +13,25 @@ export default class BoxLamp {
     this.parent = parent
   }
 
-  /** 设置校准 */
+  /** 写点灯 */
   async setLamp(opts: ipcReq.LampSetOpts) {
-    const boxList: number[] = []
-    for (let i = 0; i < 1; i++) {
-      boxList.push(i)
-    }
-    const writeModel = new BufModel({
-      model: LAMP_MODEL,
-      listLen: {
-        lampList: 32
-      }
-    })
-    writeModel.writer('lampLen', 32)
+    const boxList = Object.keys(opts.list).map(Number)
+    let errorMsg = ''
     await Bluebird.mapSeries(boxList, async masterId => {
       try {
+        const masterItem = opts.list?.[masterId]
+        const writeModel = new BufModel({
+          model: LAMP_MODEL,
+          listLen: {
+            lampList: 32
+          }
+        })
+        writeModel.writer('lampLen', 32)
         writeModel.writer('masterId', masterId)
         writeModel.ecahList('lampList', (writeItem, sindex) => {
           const slaverId = sindex
           writeItem.writer('slaverId', slaverId)
-          const channelList = opts.list?.[`${masterId}`]?.[`${slaverId}`]
+          const channelList = masterItem?.[slaverId]
           if (channelList && channelList.length > 0) {
             writeItem.writerBit('channelBit', channelList)
           }
@@ -49,8 +48,12 @@ export default class BoxLamp {
         })
       } catch (err) {
         logger.error('点灯失败', err)
+        errorMsg += `机柜${masterId + 1} 点灯失败</br>`
       }
     })
+    if (errorMsg) {
+      throw new Error(errorMsg)
+    }
     return true
   }
 }

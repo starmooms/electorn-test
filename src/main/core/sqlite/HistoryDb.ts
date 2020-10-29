@@ -5,12 +5,7 @@ import path from 'path'
 import dayjs from 'dayjs'
 import logger from '../Logger'
 import { TIME_FORMAT } from '@/shared/utils'
-import {
-  getInsertOrUpdate,
-  getInsertOrUpdateTpl,
-  getFullIdData,
-  getInsertOrUpdateAllTpl
-} from '@/shared/sqlite/sqlUtil'
+import { getFullIdData, getStaticInsert } from '@/shared/sqlite/sqlUtil'
 const APP_VERSON = app.getVersion()
 
 interface TableName {
@@ -130,7 +125,6 @@ export default class HistoryDb extends HistoryDbCom {
     // 采样工步统计表
     if (!tableName.includes(stepStatistics)) {
       sql += `CREATE TABLE "${stepStatistics}" (
-        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "masterId" INTEGER NOT NULL,
         "slaverId" INTEGER NOT NULL,
         "channelId" INTEGER NOT NULL,
@@ -155,7 +149,7 @@ export default class HistoryDb extends HistoryDbCom {
         "startTime" DATETIME,
         "endTime" DATETIME,
         "createTime" DATETIME,
-        CONSTRAINT "step_statis_step_unique" UNIQUE ("fullId", "stepId", "loopNum")
+        PRIMARY KEY ("fullId", "stepId", "loopNum")
       );
       CREATE INDEX "step_statis_fullId" ON "step_statistics" ("fullId");
       CREATE INDEX "step_statis_stepId" ON "step_statistics" ("stepId");
@@ -287,29 +281,31 @@ export default class HistoryDb extends HistoryDbCom {
   async checkCanClose() {
     const { channelInfo } = this.tables
     const data = await this.sqlite.get(
-      `SELECT id FROM ${channelInfo} WHERE endTime is NULL LIMIT 1`
+      `SELECT id FROM ${channelInfo} WHERE endTime is NULL LIMIT 1;`
     )
     logger.info('有关闭状态', data)
     if (!data) {
+      // const { stepsInfo } = this.tables
+      // const now = dayjs().format(TIME_FORMAT)
+      // await this.sqlite.run(
+      //   `UPDATE '${stepsInfo}' SET endTime='${now}' WHERE id=(SELECT MAX(id) FROM '${stepsInfo}');`
+      // )
       await this.closeDb('isEnd')
     }
   }
 
+  /** 生成 统计表保存开始列表sql */
   saveStart(list: Db.startList, now: string) {
     let sql = ''
     if (list.length > 0) {
       const { stepStatistics } = this.tables
-      const getUpdateSql = getInsertOrUpdateAllTpl([
-        'fullId',
-        'stepId',
-        'loopNum'
-      ])
+      const getUpdateSql = getStaticInsert(stepStatistics)
       list.forEach(item => {
         getUpdateSql.insert({
           ...getFullIdData(item),
           loopNum: item.loopNum,
           stepId: item.stepId,
-          workCode: item.workerCode,
+          workCode: `'${item.workerCode}'`,
           startU: item.U,
           startTime: `'${now}'`,
           createTime: `'${now}'`
@@ -321,24 +317,18 @@ export default class HistoryDb extends HistoryDbCom {
       //   sql += `(${item.masterId}, ${item.slaverId}, ${item.channelId}, '${fullId}', ${item.stepId}, '${item.workerCode}', ${item.loopNum}, ${item.U}, '${now}', '${now}'),`
       // })
       // sql = Sqlite.replaceSql(sql, ';')
-      const insertSql = getUpdateSql.getSql()
-      if (insertSql) {
-        sql += `INSERT INTO ${stepStatistics} ${insertSql};`
-      }
+      sql = getUpdateSql.getSql()
     }
 
     return sql
   }
 
+  /** 生成 统计表保存结束列表sql */
   saveEnd(list: Db.endList, now: string) {
     let sql = ''
     if (list.length > 0) {
       const { stepStatistics } = this.tables
-      const getUpdateSql = getInsertOrUpdateAllTpl([
-        'fullId',
-        'stepId',
-        'loopNum'
-      ])
+      const getUpdateSql = getStaticInsert(stepStatistics)
       list.forEach(item => {
         const fullIdata = getFullIdData(item)
         getUpdateSql.insert({
@@ -361,14 +351,12 @@ export default class HistoryDb extends HistoryDbCom {
         // sql += `UPDATE ${stepStatistics} SET stepTime=${item.stepTime}, endU=${item.U}, endI=${item.I}, vol=${item.vol}, epower=${item.epower}, endCode='${item.endCode}', endTime='${now}'
         // WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
       })
-      const insertSql = getUpdateSql.getSql()
-      if (insertSql) {
-        sql += `INSERT INTO ${stepStatistics} ${insertSql};`
-      }
+      sql = getUpdateSql.getSql()
     }
     return sql
   }
 
+  /** 生成 统计表保存特征列表sql */
   saveFeature(list: Db.featureList) {
     let sql = ''
     if (list.length > 0) {
@@ -378,11 +366,7 @@ export default class HistoryDb extends HistoryDbCom {
         let typeItem = typeMap.get(type)
         if (!typeItem) {
           typeItem = {
-            getUpdateSql: getInsertOrUpdateAllTpl([
-              'fullId',
-              'stepId',
-              'loopNum'
-            ]),
+            getUpdateSql: getStaticInsert(stepStatistics),
             tKey: `t${type}`,
             cKey: `c${type}`
           }
@@ -404,10 +388,7 @@ export default class HistoryDb extends HistoryDbCom {
         // WHERE fullId='${item.masterId}_${item.slaverId}_${item.channelId}' AND workCode='${item.workerCode}' AND loopNum=${item.loopNum};`
       })
       typeMap.forEach(typeItem => {
-        const insertSql = typeItem.getUpdateSql.getSql()
-        if (insertSql) {
-          sql += `INSERT INTO ${stepStatistics} ${insertSql};`
-        }
+        sql += typeItem.getUpdateSql.getSql()
       })
     }
     return sql
@@ -419,6 +400,7 @@ export default class HistoryDb extends HistoryDbCom {
     startList,
     endList,
     featureList,
+    specialList,
     changeStatusList
   }: Port.SaveSampItem) {
     let sql = ''
@@ -428,6 +410,7 @@ export default class HistoryDb extends HistoryDbCom {
       const saveSampList = [
         ...startList,
         ...featureList,
+        ...specialList,
         ...endList,
         ...sampList
       ]

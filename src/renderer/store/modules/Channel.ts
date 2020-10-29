@@ -30,6 +30,7 @@ interface SetSamp {
 export default class ChannelImpl extends VuexModule {
   public list: Port.MasterList | null = null
   public channelMap: ChannelMap | null = null
+  public masterListLen = 0
   public statusList = [
     // { name: '启动', action: 'start' },
     { name: '暂停', action: 'pause' },
@@ -65,6 +66,7 @@ export default class ChannelImpl extends VuexModule {
   @Mutation
   SET_CHANNELLIST(list: Port.MasterList) {
     this.list = list
+    this.masterListLen = Object.keys(list).length
     const channelMap: any = {}
     Object.entries(this.list).forEach(([mKey, master]) => {
       Object.entries(master.slaverList).forEach(([sKey, slaver]) => {

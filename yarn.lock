@@ -1100,6 +1100,11 @@
   resolved "https://registry.npm.taobao.org/@types/normalize-package-data/download/@types/normalize-package-data-2.4.0.tgz#e486d0d97396d79beedd0a6e33f4534ff6b4973e"
   integrity sha1-5IbQ2XOW15vu3QpuM/RTT/a0lz4=
 
+"@types/ping@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.npm.taobao.org/@types/ping/download/@types/ping-0.2.0.tgz#b97db062444e964ea6cb3a727e161cd37708e922"
+  integrity sha1-uX2wYkROlk6myzpyfhYc03cI6SI=
+
 "@types/q@^1.5.1":
   version "1.5.4"
   resolved "https://registry.npm.taobao.org/@types/q/download/@types/q-1.5.4.tgz#15925414e0ad2cd765bfef58842f7e26a7accb24"

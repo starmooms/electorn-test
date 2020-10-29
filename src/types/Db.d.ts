@@ -74,6 +74,21 @@ declare namespace Db {
     channelIdShowStr: string
   }
 
+  /** 获取启动信息 */
+  interface StartInfo {
+    id: number
+    historyId: number
+    startId: number
+    masterIds: string
+    slaverIds: string
+    channelIds: string
+    stepList: string
+    protect: string
+    features: string
+    dataSave: string
+    createTime: string
+  }
+
   /** 获取容量分选参数 */
   interface GetStoring {
     stepId: number

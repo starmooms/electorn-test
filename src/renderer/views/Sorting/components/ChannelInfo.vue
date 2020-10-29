@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Vue } from 'vue-property-decorator'
 
 @Component
 export default class ChannelInfo extends Vue {
@@ -43,11 +43,6 @@ export default class ChannelInfo extends Vue {
     default: null
   })
   lampResult!: SortingT.BoxLampResult
-
-  @Watch('lampResult')
-  c(v) {
-    console.log(v)
-  }
 
   get actionList() {
     return this.lampResult &&

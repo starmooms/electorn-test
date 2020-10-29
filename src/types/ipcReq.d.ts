@@ -165,11 +165,7 @@ declare namespace ipcReq {
   }
 
   interface LampSetOpts {
-    list: {
-      [masterId: string]: {
-        [slaverId: string]: number[]
-      }
-    }
+    list: SortingT.BoxLampResult
   }
 
   /** IP编辑机柜信息 */

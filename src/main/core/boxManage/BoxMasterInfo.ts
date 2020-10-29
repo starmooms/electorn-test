@@ -11,6 +11,7 @@ import communi from '@/main/core/Request/Communi'
 import { BoxManage } from './BoxManage'
 import configManage from '../ConfigManage'
 import { getMasterInfoObj } from '@/shared/utils'
+import { promise as ping } from 'ping'
 
 /** 机柜主控控制 */
 export default class BoxMasterInfo {
@@ -122,12 +123,21 @@ export default class BoxMasterInfo {
 
   /** 编辑机柜信息 */
   async setMasterInfo(opts: ipcReq.MasterInfoSetOpts) {
+    const ip = opts.ip
+    const changeIp = opts.ipOld !== ip
+    if (changeIp) {
+      const ipResult = await ping.probe(ip)
+      if (ipResult.alive) {
+        throw new Error(`IP ${ip} 被占用`)
+      }
+    }
+
     const writeModel = new BufModel({
       model: MASERT_INFO_SET
     })
     writeModel.writerHex('machineId', opts.machineId)
     writeModel.writer('masterId', opts.masterId)
-    writeModel.writerIp('ip', opts.ip)
+    writeModel.writerIp('ip', ip)
     writeModel.writerIp('mask', opts.mask)
     writeModel.writerIp('gateway', opts.gateway)
     logger.debug('编辑主控信息发送', writeModel.buf.toString('hex'))
@@ -139,9 +149,9 @@ export default class BoxMasterInfo {
     })
     logger.debug('编辑主控信息返回', resultBuf.toString('hex'))
     let status = 2
-    if (opts.ipOld !== opts.ip) {
+    if (changeIp) {
       const { list, index } = this.findIpItem(opts.masterId, opts.ipOld)
-      list[index].ip = opts.ip
+      list[index].ip = ip
       configManage.userConfig.set('base.ipList', list)
       await communi.tpcRequest.closeTcpItem(opts.masterId)
       status = 1

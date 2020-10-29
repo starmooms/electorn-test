@@ -232,6 +232,8 @@ declare namespace Port {
     startList: SampStart[]
     endList: SampEnd[]
     featureList: SampFeature[]
+    /** 非工步结束的特殊的结束列表 */
+    specialList: SampEnd[]
   }
 
   interface SaveSampData {

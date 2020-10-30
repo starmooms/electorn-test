@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter, { RouteConfig } from 'vue-router'
 import Main from '@/renderer/layout/Main/index.vue'
 import Default from '@/renderer/layout/Default.vue'
+import { SettingStatus } from '../store/modules/Setting'
 
 Vue.use(VueRouter)
 
@@ -62,6 +63,14 @@ const routes: Array<RouteConfig> = [
         path: '/sorting',
         name: 'Sorting',
         component: () => import('@/renderer/views/Sorting/index.vue')
+      },
+      {
+        path: '/calibrate',
+        name: 'Calibrate',
+        meta: {
+          titleBar: true
+        },
+        component: () => import('@/renderer/views/Calibrate/index.vue')
       }
     ]
   }
@@ -70,6 +79,14 @@ const routes: Array<RouteConfig> = [
 const router = new VueRouter({
   mode: 'hash',
   routes
+})
+
+router.beforeEach(async (to, from, next) => {
+  // console.log(to, from, next)
+  // if (to.meta.titleBar) {
+  //   SettingStatus.UPDATE_TITLEBAR(true)
+  // }
+  next()
 })
 
 export default router

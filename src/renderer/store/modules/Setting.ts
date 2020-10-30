@@ -34,6 +34,7 @@ export default class SettingImpl extends VuexModule {
   public userConfig: UserConfig | null = null
   public $readTranslate = false
   public mainDbPath = ''
+  public titleBar = false
 
   get sampling() {
     return this.userConfig!.sampling
@@ -73,6 +74,12 @@ export default class SettingImpl extends VuexModule {
   @Mutation
   UPDATE_MAINDBPATH(path: string) {
     this.mainDbPath = path
+  }
+
+  /** 设置titleBar是否显示 */
+  @Mutation
+  UPDATE_TITLEBAR(status: boolean) {
+    this.titleBar = status
   }
 
   @Action

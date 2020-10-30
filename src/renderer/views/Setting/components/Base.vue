@@ -76,7 +76,8 @@ export default class Base extends Vue {
 
   async submit() {
     const data = await setStoreConfig({
-      ...this.storeData,
+      type: 'userConfig',
+      key: 'base',
       data: this.form
     })
     if (data.status) {

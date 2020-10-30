@@ -154,7 +154,7 @@ export default class IpConfig extends Vue {
     })
     const data = await setStoreConfig({
       type: 'userConfig',
-      key: 'base.ipList',
+      key: 'ipList',
       data: this.getIpListFormat()
     })
     if (data.status) {
@@ -200,7 +200,6 @@ export default class IpConfig extends Vue {
       this.loading = true
       const data = await refreshIpConnect()
       if (data.status) {
-        console.log(data)
         this.list = data.data
       }
     } catch (err) {

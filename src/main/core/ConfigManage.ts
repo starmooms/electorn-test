@@ -24,10 +24,10 @@ const userConfigDefault = {
     }
   },
   historyFilePath: '',
+  ipList: [],
   base: {
     requestType: 'Port',
-    portPath: '',
-    ipList: []
+    portPath: ''
   }
 }
 

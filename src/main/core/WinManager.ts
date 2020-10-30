@@ -31,7 +31,11 @@ class WinManager {
    * @param name 窗口名
    * @param pageUrl 路由
    */
-  createdWin(name: string, pageUrl = '') {
+  createdWin(
+    name: string,
+    pageUrl = '',
+    opts: Electron.BrowserWindowConstructorOptions = {}
+  ) {
     const hasWin = this.getWin(name, true)
     if (hasWin) return hasWin
 
@@ -39,7 +43,6 @@ class WinManager {
     if (pageUrl) pageUrl = `#/${pageUrl}`
     if (!devUrl) pageUrl = `index.html${pageUrl}`
 
-    const opts: Electron.BrowserWindowConstructorOptions = {}
     const nowFous = BrowserWindow.getFocusedWindow()
     if (nowFous) {
       const offset = this.winList.size * 20

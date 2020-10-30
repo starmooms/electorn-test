@@ -12,6 +12,7 @@ body {
   font-family: Helvetica Neue,Helvetica,PingFang SC,Hiragino Sans GB,Microsoft YaHei,SimSun,sans-serif;
   font-variant: tabular-nums;
   min-width: 1200px;
+  user-select: none;
 }
 
 ::-webkit-scrollbar {

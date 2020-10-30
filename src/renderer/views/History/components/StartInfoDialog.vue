@@ -16,17 +16,9 @@
             <p class="line">通道号：{{ startInfo.channelIdShowStr }}</p>
           </div>
           <div class="start-data-save cxt-item">
-            <p class="title-line"><span class="title">数据记录条件：</span></p>
-            <p
-              class="line"
-              v-for="(item, key) in startInfo.dataSave"
-              :key="key"
-            >
-              <template v-if="item.enable">
-                {{
-                  `${dataSaveList[key].label}：${item.value}${dataSaveList[key].unit}`
-                }}
-              </template>
+            <p class="title-line">
+              <span class="title">数据记录条件：</span>
+              <span>{{ dateSave }}</span>
             </p>
           </div>
           <div class="start-features cxt-item">
@@ -38,7 +30,9 @@
           <div class="start-features cxt-item">
             <p class="title-line">
               <span class="title">保护参数：</span>
-              <span>{{ protect }}</span>
+            </p>
+            <p class="line" v-for="(item, index) in protect" :key="index">
+              {{ item }}
             </p>
           </div>
           <div class="stepList cxt-item">
@@ -94,11 +88,26 @@ export default class StartInfoDialog extends Vue {
   }
 
   get protect() {
-    return this.startInfo ? this.getProtect() : ''
+    return this.startInfo ? this.getProtect() : []
   }
 
   get features() {
     return this.startInfo ? this.getFeatures() : ''
+  }
+
+  get dateSave() {
+    return this.startInfo ? this.getDataSave() : ''
+  }
+
+  getProtect() {
+    if (this.startInfo) {
+      const protect = this.startInfo.protect
+      return PROTECT.map(item => {
+        const data = protect[item.type] || null
+        return `${item.name}：${data}`
+      })
+    }
+    return []
   }
 
   getFeatures() {
@@ -107,24 +116,25 @@ export default class StartInfoDialog extends Vue {
         .map(([key, val]) => {
           return `${key.replace('v', '#')}: ${val}mV`
         })
-        .join('，')
+        .join('、')
     }
+    return ''
   }
 
-  getProtect() {
+  getDataSave() {
+    const list: string[] = []
     if (this.startInfo) {
-      const protect = this.startInfo.protect
-      const list: string[] = []
-      PROTECT.forEach(item => {
-        const data = protect[item.type] || null
-        if (data) {
-          list.push(`${item.name}：${data}`)
+      Object.entries(this.startInfo.dataSave).forEach(([key, val]) => {
+        if (val.enable) {
+          const saveItem = this.dataSaveList[key]
+          if (saveItem) {
+            list.push(`${saveItem.label} ${val.value} ${saveItem.unit}`)
+          }
         }
       })
-      return list.join(',')
     }
+    return list.join('、')
   }
-
 }
 </script>
 <style lang="scss" scoped>

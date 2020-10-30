@@ -78,7 +78,7 @@ export default class BoxMasterInfo {
 
   /** 获取ip列表 */
   async getIpList(): Promise<IpConfigT.IpTcpItem[]> {
-    const list: Store.IpListItem[] = configManage.userConfig.get('base.ipList')
+    const list: Store.IpListItem[] = configManage.userConfig.get('ipList')
     const resultListP = list.map(async item => {
       const masterInfo = await this.getMasterInfo(item.masterId)
       return {
@@ -91,7 +91,7 @@ export default class BoxMasterInfo {
   }
 
   findIpItem(masterId: number, ip: string) {
-    const list: Store.IpListItem[] = configManage.userConfig.get('base.ipList')
+    const list: Store.IpListItem[] = configManage.userConfig.get('ipList')
     const index = list.findIndex(item => {
       return masterId === item.masterId && ip === item.ip
     })
@@ -110,7 +110,7 @@ export default class BoxMasterInfo {
   async delIpItem(opts: ipcReq.MasterInfoDelIp) {
     const { list, ipItem, index } = this.findIpItem(opts.masterId, opts.ip)
     list.splice(index, 1)
-    configManage.userConfig.set('base.ipList', list)
+    configManage.userConfig.set('ipList', list)
     await communi.tpcRequest.closeTcpItem(ipItem.masterId)
     return true
   }
@@ -152,7 +152,7 @@ export default class BoxMasterInfo {
     if (changeIp) {
       const { list, index } = this.findIpItem(opts.masterId, opts.ipOld)
       list[index].ip = ip
-      configManage.userConfig.set('base.ipList', list)
+      configManage.userConfig.set('ipList', list)
       await communi.tpcRequest.closeTcpItem(opts.masterId)
       status = 1
     }

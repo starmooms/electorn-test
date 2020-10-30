@@ -18,7 +18,6 @@ import Bluebird from 'bluebird'
 import logger from '@/main/core/Logger'
 import communi from '@/main/core/Request/Communi'
 import { BoxManage } from './BoxManage'
-import { config } from 'process'
 import configManage from '../ConfigManage'
 
 /** 机柜状态和工步通讯 */

@@ -62,7 +62,6 @@ class Communi {
    */
   createTcpRequest(connectIp: boolean) {
     if (this.requestType === 'Tcp') {
-      logger.debug(connectIp)
       if (connectIp) {
         this.tpcRequest.createdConnect()
       }
@@ -77,7 +76,7 @@ class Communi {
       const lastType = this.requestType
       this.requestType = configManage.userConfig.get('base.requestType')
       this.createSerialPort()
-      this.createTcpRequest(lastType !== this.requestType)
+      this.createTcpRequest(lastType !== this.requestType) // 如果通讯类型没变化，不需要主动重连tcp
     })
   }
 

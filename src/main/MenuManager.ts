@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events'
 import Electron, { app, Menu, shell } from 'electron'
 import { logPath } from '@/main/core/Logger'
+import createCalibrate from './window/Calibrate'
 
 const APP_VERSON = app.getVersion()
 
@@ -32,10 +33,16 @@ export default class MenuManager extends EventEmitter {
             type: 'separator'
           },
           {
-            label: `当前版本${APP_VERSON}`,
+            label: '通道校准',
             click: () => {
-              this.updateCheck()
+              createCalibrate()
             }
+          },
+          {
+            type: 'separator'
+          },
+          {
+            label: `当前版本${APP_VERSON}`
           }
         ]
       }

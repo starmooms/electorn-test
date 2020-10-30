@@ -42,9 +42,9 @@ export default class TcpRequest {
     return tcpItem
   }
 
-  /** 根据base.ipList，创建连接 */
+  /** 根据ipList，创建连接 */
   async createdConnect() {
-    this.ipList = configManage.userConfig.get('base.ipList')
+    this.ipList = configManage.userConfig.get('ipList')
     const promiseArr: Promise<any>[] = []
     const masterList = this.ipList.map(item => {
       const tcpItem = this.tcpMap.get(item.masterId)

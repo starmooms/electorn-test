@@ -34,25 +34,6 @@ export default class USBManager {
     this.getChannelList()
   }
 
-  // getPortPath() {
-  //   const lastPortPath = this.protPath
-  //   this.protPath = configManage.userConfig.get('base.portPath')
-  //   if (this.protPath !== lastPortPath) {
-  //     if (this.portItem) {
-  //       this.portItem.close()
-  //     }
-  //     if (this.protPath) {
-  //       this.portItem = new PortItem(this.protPath)
-  //     }
-  //   }
-  // }
-
-  // changePortPath() {
-  //   configManage.userConfig.onDidChange('base', () => {
-  //     this.getPortPath()
-  //   })
-  // }
-
   /** 开始监测USB */
   start() {
     if (this.hasEvent === false) {

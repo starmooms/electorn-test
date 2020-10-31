@@ -88,7 +88,7 @@ export default class Launcher {
     if (this.beforeMainWin) {
       this.beforeMainWin()
     }
-    this.win = winManager.createdWin('mainWin')
+    this.win = winManager.createdWin('mainWin', undefined, undefined, true)
     this.win.on('close', event => {
       logger.info(winManager.winList)
       if (this.win) {

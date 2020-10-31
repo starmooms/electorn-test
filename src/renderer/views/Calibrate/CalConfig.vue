@@ -28,12 +28,7 @@
         </el-select>
       </el-form-item>
       <el-form-item class="form-item" label="丛控">
-        <el-select
-          v-model="form.slaverId"
-          multiple
-          collapse-tags
-          placeholder="请选择"
-        >
+        <el-select v-model="form.slaverId" placeholder="请选择">
           <el-option
             v-for="item in channelList.slaver"
             :key="item.value"
@@ -105,11 +100,11 @@ import {
 
 @Component({})
 export default class CalConfig extends Vue {
-  form = {
+  form: CalibrateT.CalConfForm = {
     toolIp: '',
     masterId: null,
     slaverId: null,
-    channelId: null,
+    channelId: [],
     standard: null,
     uRangeId: 0,
     iRangeId: null
@@ -119,11 +114,6 @@ export default class CalConfig extends Vue {
   standardOpts = STANDARD_OPTS
   uRangeOpts = U_RANGE_OPTS
   iRangeOpts = I_RANGE_OPTS
-
-  @Watch('form.uRange')
-  a(v) {
-    console.log(v)
-  }
 
   // deviceEdit = {
   //   edit: false,
@@ -148,6 +138,14 @@ export default class CalConfig extends Vue {
   //   this.deviceEdit.last = this.deviceEdit.deviceIp
   //   this.deviceIpEditSet()
   // }
+
+  mounted() {
+    if (this.form.channelId.length === 0) {
+      this.form.channelId = this.channelList.channel.map(item => {
+        return item.id
+      })
+    }
+  }
 }
 </script>
 

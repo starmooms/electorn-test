@@ -4,7 +4,9 @@ export default function createCalibrate() {
   const winName = `calibrate`
   const win = winManager.getWin(winName, true)
   if (win) return
-  winManager.createdWin(winName, `${winName}`, {
-    // frame: false
+  const createWin = winManager.createdWin(winName, `${winName}`, {
+    parent: winManager.getWin('mainWin')!,
+    modal: true
   })
+  return createWin
 }

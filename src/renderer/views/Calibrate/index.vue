@@ -1,11 +1,11 @@
 <template>
   <div class="calibrate-container">
     <div class="calibrate-l">
-      <cal-config />
+      <cal-config ref="calConfig" />
     </div>
     <div class="calibrate-r">
       <div>
-        <cal-run />
+        <cal-run @start="calStart" />
         <cal-re-check />
         <cal-result />
       </div>
@@ -18,6 +18,7 @@ import CalConfig from './CalConfig.vue'
 import CalRun from './CalRun.vue'
 import CalReCheck from './CalReCheck.vue'
 import CalResult from './CalResult.vue'
+import { calStart } from '@/renderer/ipc/channel'
 
 @Component({
   components: {
@@ -27,7 +28,27 @@ import CalResult from './CalResult.vue'
     CalResult
   }
 })
-export default class Calibrate extends Vue {}
+export default class Calibrate extends Vue {
+  $refs!: {
+    calConfig: CalConfig
+  }
+
+  /** 开始校准修调 */
+  async calStart(startData: CalibrateTR.StartData) {
+    const config = this.$refs.calConfig.getForm()
+
+    if (config.status) {
+      const data = await calStart({
+        ...config.form,
+        ...startData
+      })
+      if (data.status) {
+        this.$message.success('校准启动成功')
+      }
+      console.log(config.form, startData)
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>

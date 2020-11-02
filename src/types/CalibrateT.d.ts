@@ -3,11 +3,24 @@ declare namespace CalibrateT {
   /** 校准设置表单 */
   interface CalConfForm {
     toolIp: string
-    masterId: null
-    slaverId: null
+    masterId: null | number
+    slaverId: null | number
     channelId: number[]
-    standard: null
+    standard: number
     uRangeId: number
-    iRangeId: null
+    iRangeId: number
+  }
+
+  /** 校准设置表单 */
+  interface CalConfSubmitForm extends CalConfForm {
+    masterId: number
+    slaverId: number
+  }
+}
+
+/** 校准页面相关 */
+declare namespace CalibrateTR {
+  interface StartData {
+    calType: string[]
   }
 }

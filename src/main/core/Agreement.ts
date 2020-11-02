@@ -1,4 +1,5 @@
 import { toHex, FixZero } from '../utils'
+import logger from './Logger'
 
 export type ReadResult = ReturnType<Agreement['readData']>
 export type SetDataBack = ReturnType<Agreement['setData']>
@@ -149,8 +150,8 @@ class Agreement {
       originBuf: buf,
       buf: buf.slice(dataStart, dataEndLen),
       sId: toHex(buf.readUInt16BE(8), 2),
-      errCode: toHex(buf.readInt8(7), 1),
-      masterId: buf.readInt8(4)
+      errCode: toHex(buf.readUInt8(7), 1),
+      masterId: buf.readUInt8(4)
     }
   }
 }

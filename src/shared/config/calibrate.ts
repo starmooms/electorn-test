@@ -8,12 +8,12 @@ export const U_RANGE_OPTS = [
 
 /** 校准---电流量程 */
 export const I_RANGE_OPTS = [
-  { id: 0, label: '0/0.1/0.5/1/2/2.8a', value: [0, 0.1, 0.5, 1, 2, 2.8] }
+  { id: 0, label: '0/0.1/0.5/1/2/3 a', value: [0, 0.1, 0.5, 1, 2, 2.8] }
 ]
 
 /** 校准类型 */
 export const CALIBRATE_TYPE = [
-  { label: '充电电流', type: 'ICharge' },
-  { label: '放电电流', type: 'IDisCharge' },
-  { label: '充电电压', type: 'UCharge' }
+  { label: '充电电流', type: '02', rangeType: 'a', meanwhile: true },
+  { label: '放电电流', type: '03', rangeType: 'a', meanwhile: false },
+  { label: '充电电压', type: '01', rangeType: 'v', meanwhile: true }
 ]

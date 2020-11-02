@@ -11,6 +11,11 @@
           </router-link>
         </li>
         <li class="nav-item">
+          <router-link to="/calibrate">
+            通道校准
+          </router-link>
+        </li>
+        <li class="nav-item">
           <router-link to="/setting">
             <svg-icon icon-class="setting"></svg-icon>
             设置

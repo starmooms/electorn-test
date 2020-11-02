@@ -356,14 +356,14 @@ export const CONTROL_CODE = {
       name: '通道复位'
     }
   },
-  calSet: {
-    code: 0xaa,
-    name: '设置校准'
-  },
-  calRead: {
-    code: 0x8a,
-    name: '读校准'
-  },
+  // calSet: {
+  //   code: 0xaa,
+  //   name: '设置校准'
+  // },
+  // calRead: {
+  //   code: 0x8a,
+  //   name: '读校准'
+  // },
   lampSet: {
     code: 0xa3,
     name: '通道灯设置'
@@ -375,5 +375,13 @@ export const CONTROL_CODE = {
   masterInfoSet: {
     code: 0xb3,
     name: '写主控信息'
+  },
+  calibrateSet: {
+    code: 0xaa,
+    name: '写校准'
+  },
+  calibrateRead: {
+    code: 0x8a,
+    name: '读校准'
   }
 }

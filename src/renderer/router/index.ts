@@ -25,6 +25,11 @@ const routes: Array<RouteConfig> = [
         path: '/errorLog',
         name: 'errorLog',
         component: () => import('@/renderer/views/ErrorLog/index.vue')
+      },
+      {
+        path: '/calibrate',
+        name: 'calibrate',
+        component: () => import('@/renderer/views/Calibrate/index.vue')
       }
     ]
   },
@@ -63,14 +68,6 @@ const routes: Array<RouteConfig> = [
         path: '/sorting',
         name: 'Sorting',
         component: () => import('@/renderer/views/Sorting/index.vue')
-      },
-      {
-        path: '/calibrate',
-        name: 'Calibrate',
-        meta: {
-          titleBar: true
-        },
-        component: () => import('@/renderer/views/Calibrate/index.vue')
       }
     ]
   }

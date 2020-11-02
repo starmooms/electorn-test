@@ -54,6 +54,11 @@ export function delIpItem(data: ipcReq.MasterInfoDelIp) {
   return $command.invoke(`/port/masterInfo/delIp`, data)
 }
 
+/** 开始校准 */
+export function calStart(data: ipcReq.CalStart) {
+  return $command.invoke(`/port/cal/start`, data)
+}
+
 export function getChannelList() {
   return $command.invoke(`/port/channelList`)
 }

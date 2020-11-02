@@ -122,7 +122,7 @@ class Communi {
 
       this.emitList.set(sId, ({ masterId, errCode, buf, originBuf }) => {
         if (errCode !== '00') {
-          const errMsg = ERROR_STATUS[errCode]
+          const errMsg = ERROR_STATUS[errCode] || errCode
           mainDb.saveErrorList([
             {
               masterId: masterId,

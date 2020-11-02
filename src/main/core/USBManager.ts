@@ -28,7 +28,6 @@ export default class USBManager {
     this.getPortList()
     this.setTranslate()
     this.setCal()
-    this.readCal()
     this.setLamp()
     this.setMasterInfo()
     this.getChannelList()
@@ -110,15 +109,18 @@ export default class USBManager {
 
   /** 设置校准 */
   setCal() {
-    ipcManage.handle('/port/cal/set', async (event, data) => {
-      return boxManage.boxCal.setCal(data)
-    })
-  }
+    // // 设置校准
+    // ipcManage.handle('/port/cal/set', async (event, data) => {
+    //   return boxManage.boxCal.setCal(data)
+    // })
+    // // 读校准
+    // ipcManage.handle('/port/cal/read', async (event, data) => {
+    //   return boxManage.boxCal.readCal(data)
+    // })
 
-  /** 读校准 */
-  readCal() {
-    ipcManage.handle('/port/cal/read', async (event, data) => {
-      return boxManage.boxCal.readCal(data)
+    // 读校准
+    ipcManage.handle('/port/cal/start', async (event, data) => {
+      return boxManage.boxCal.start(data)
     })
   }
 

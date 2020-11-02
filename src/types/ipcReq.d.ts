@@ -183,4 +183,18 @@ declare namespace ipcReq {
     masterId: number
     ip: string
   }
+
+  /** 校准--开始 */
+  interface CalStart extends CalibrateT.CalConfSubmitForm {
+    calType: string[]
+  }
+
+  interface CalReadSamp {
+    masterId: number
+    slaverId: number
+    channelIds: number[]
+    type: number // 1：读采样 2：读AB
+    calType: string
+  }
+  // type CalStart = CalibrateT.CalConfSubmitForm
 }

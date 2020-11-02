@@ -32,6 +32,11 @@
           label="错误类型"
           width="200"
         ></el-table-column>
+        <el-table-column
+          prop="action"
+          label="错误类型"
+          width="200"
+        ></el-table-column>
         <el-table-column prop="errCodeStr" label="错误信息"></el-table-column>
         <el-table-column
           prop="createdTime"

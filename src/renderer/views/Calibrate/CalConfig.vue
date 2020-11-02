@@ -90,30 +90,62 @@
   </el-form>
 </template>
 <script lang="ts">
-import { Vue, Component, Watch } from 'vue-property-decorator'
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 import { getStaticChList } from '@/shared/config/channel'
 import {
   I_RANGE_OPTS,
   STANDARD_OPTS,
   U_RANGE_OPTS
 } from '@/shared/config/calibrate'
+import { deepClone } from '@/shared/utils'
 
 @Component({})
 export default class CalConfig extends Vue {
+  channelList = getStaticChList()
+  standardOpts = deepClone(STANDARD_OPTS)
+  uRangeOpts = deepClone(U_RANGE_OPTS)
+  iRangeOpts = deepClone(I_RANGE_OPTS)
+
   form: CalibrateT.CalConfForm = {
     toolIp: '',
     masterId: null,
     slaverId: null,
     channelId: [],
-    standard: null,
+    standard: this.standardOpts[0],
     uRangeId: 0,
-    iRangeId: null
+    iRangeId: 0
   }
 
-  channelList = getStaticChList()
-  standardOpts = STANDARD_OPTS
-  uRangeOpts = U_RANGE_OPTS
-  iRangeOpts = I_RANGE_OPTS
+  getForm() {
+    const form = this.form
+    const setError = (msg: string) => {
+      this.$message.info(msg)
+      return {
+        status: false as false,
+        form: form as CalibrateT.CalConfForm
+      }
+    }
+    if (!form.toolIp) {
+      return setError('请填写工装IP')
+    } else if (form.masterId == null) {
+      return setError('请选择机柜')
+    } else if (form.slaverId == null) {
+      return setError('请选择从控')
+    } else if (form.channelId.length <= 0) {
+      return setError('请选择通道')
+    } else if (form.standard == null) {
+      return setError('请选择标准误差')
+    } else if (form.uRangeId == null) {
+      return setError('请选择电压量程')
+    } else if (form.uRangeId == null) {
+      return setError('请选择电流量程')
+    }
+    form.channelId = form.channelId.sort((a, b) => a - b)
+    return {
+      status: true as true,
+      form: form as CalibrateT.CalConfSubmitForm
+    }
+  }
 
   // deviceEdit = {
   //   edit: false,
@@ -151,7 +183,7 @@ export default class CalConfig extends Vue {
 
 <style lang="scss" scoped>
 .cal-config-box {
-  width: 300px;
+  width: 260px;
   .config-item {
     width: 100%;
     .form-item {

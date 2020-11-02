@@ -290,3 +290,67 @@ export const MASERT_INFO_SET: Model[] = [
   { name: 'mask', bytLen: 4 },
   { name: 'gateway', bytLen: 4 }
 ]
+
+/** 写校准 */
+export const CAL_SET_MODEL: Model[] = [
+  { name: 'type', bytLen: 1 },
+  { name: 'masterId', bytLen: 1 },
+  { name: 'slaverId', bytLen: 1 },
+  { name: 'channelBit', bytLen: 1 },
+  { name: 'calType', bytLen: 1 },
+  { name: 'pointer', bytLen: 4 },
+  { name: 'abLen', bytLen: 1 },
+  {
+    name: 'abList',
+    type: 'list',
+    len: 'abLen',
+    model: [
+      { name: 'channelId', bytLen: 1 },
+      { name: 'calType', bytLen: 1 },
+      { name: 'range', bytLen: 1 },
+      { name: 'a', bytLen: 4, type: 'float' },
+      { name: 'b', bytLen: 4, type: 'float' }
+    ]
+  }
+]
+
+/** 读校准发送 */
+export const CAL_READ_POST_MODEL: Model[] = [
+  { name: 'version', bytLen: 1 },
+  { name: 'masterId', bytLen: 1 },
+  { name: 'slaverId', bytLen: 1 },
+  { name: 'channelBit', bytLen: 1 },
+  { name: 'readType', bytLen: 1 },
+  { name: 'calType', bytLen: 1 }
+]
+
+/** 读校准返回 */
+export const CAL_READ_MODEL: Model[] = [
+  { name: 'masterId', bytLen: 1 },
+  { name: 'slaverId', bytLen: 1 },
+  { name: 'readType', bytLen: 1 },
+  { name: 'calType', bytLen: 1 },
+  { name: 'sampLen', bytLen: 1 },
+  { name: 'abLen', bytLen: 1 },
+  {
+    name: 'sampList',
+    type: 'list',
+    len: 'sampLen',
+    model: [
+      { name: 'channelId', bytLen: 1 },
+      { name: 'samp', bytLen: 4, type: 'float' }
+    ]
+  },
+  {
+    name: 'abList',
+    type: 'list',
+    len: 'abLen',
+    model: [
+      { name: 'channelId', bytLen: 1 },
+      { name: 'calType', bytLen: 1 },
+      { name: 'range', bytLen: 1 },
+      { name: 'a', bytLen: 4, type: 'float' },
+      { name: 'b', bytLen: 4, type: 'float' }
+    ]
+  }
+]

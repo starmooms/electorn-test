@@ -53,7 +53,6 @@ export default class SampChart extends Vue {
   }
 
   xData!: string[]
-  sampling = SettingStatus.sampling
   sampData: Port.SampItem[] = []
 
   chartSamp!: string | null

@@ -199,7 +199,7 @@ export default class SortingSetting extends Vue {
   workerList: UtilT.StepFormatList = []
 
   levelAttr = []
-  levelList: Store.LevelItem[] = []
+  levelList: StoreT.LevelItem[] = []
 
   // 当前选择的历史
   historyFile = ''

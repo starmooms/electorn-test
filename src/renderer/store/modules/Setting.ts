@@ -11,34 +11,12 @@ import { getStoreConfig } from '@/renderer/ipc/storeConfig'
 import { sampSetReadStatus } from '@/renderer/ipc/channel'
 config.rawError = true
 
-interface UserConfig {
-  sampling: {
-    U: {
-      max: number
-      min: number
-    }
-    I: {
-      max: number
-      min: number
-    }
-  }
-  base: {
-    portPath: string
-  }
-  historyFilePath: string
-  sampChartConfig: Store.SampChartConfig
-}
-
 @Module({ dynamic: true, store, name: 'setting' })
 export default class SettingImpl extends VuexModule {
-  public userConfig: UserConfig | null = null
+  public userConfig: StoreT.UserConfg | null = null
   public $readTranslate = false
   public mainDbPath = ''
   public titleBar = false
-
-  get sampling() {
-    return this.userConfig!.sampling
-  }
 
   get portPath() {
     return this.userConfig!.base.portPath
@@ -66,7 +44,7 @@ export default class SettingImpl extends VuexModule {
   }
 
   @Mutation
-  UPDATE_USERCONFIG(userConfig: UserConfig) {
+  UPDATE_USERCONFIG(userConfig: StoreT.UserConfg) {
     this.userConfig = userConfig
   }
 

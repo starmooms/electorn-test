@@ -5,7 +5,11 @@
     </div>
     <div class="calibrate-r">
       <div>
-        <cal-run @start="calStart" />
+        <cal-run
+          @start="calStart"
+          @stop="calStop"
+          :calResultList="calResultList"
+        />
         <cal-re-check />
         <cal-result />
       </div>
@@ -18,7 +22,7 @@ import CalConfig from './CalConfig.vue'
 import CalRun from './CalRun.vue'
 import CalReCheck from './CalReCheck.vue'
 import CalResult from './CalResult.vue'
-import { calStart } from '@/renderer/ipc/channel'
+import { calStart, calStop } from '@/renderer/ipc/channel'
 
 @Component({
   components: {
@@ -33,20 +37,53 @@ export default class Calibrate extends Vue {
     calConfig: CalConfig
   }
 
+  isRun = false
+  calResultList: any[] = []
+
   /** 开始校准修调 */
   async calStart(startData: CalibrateTR.StartData) {
     const config = this.$refs.calConfig.getForm()
 
     if (config.status) {
       const data = await calStart({
-        ...config.form,
-        ...startData
+        config: config.form,
+        calType: startData.calType
       })
       if (data.status) {
         this.$message.success('校准启动成功')
+        this.calResultList = []
       }
       console.log(config.form, startData)
     }
+  }
+
+  /** 停止校准 */
+  async calStop() {
+    const result = await calStop()
+    if (result.status) {
+      this.$message.success('校准停止成功')
+    }
+  }
+
+  mounted() {
+    this.$command.on({
+      eventName: '/calibrate/pointResult',
+      onEmit: data => {
+        console.log(data)
+        this.calResultList = this.calResultList.concat(data)
+        // this.portList = data.list.map(item => {
+        //   return {
+        //     readTranslate: false,
+        //     ...item
+        //   }
+        // })
+      },
+      vm: this
+    })
+  }
+
+  beforeRouteLeave(to, form, next) {
+    if (!this.isRun) next()
   }
 }
 </script>

@@ -59,6 +59,11 @@ export function calStart(data: ipcReq.CalStart) {
   return $command.invoke(`/port/cal/start`, data)
 }
 
+/** 停止校准 */
+export function calStop() {
+  return $command.invoke(`/port/cal/stop`)
+}
+
 export function getChannelList() {
   return $command.invoke(`/port/channelList`)
 }

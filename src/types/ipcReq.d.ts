@@ -185,7 +185,8 @@ declare namespace ipcReq {
   }
 
   /** 校准--开始 */
-  interface CalStart extends CalibrateT.CalConfSubmitForm {
+  interface CalStart {
+    config: CalibrateT.CalConfSubmitForm
     calType: string[]
   }
 

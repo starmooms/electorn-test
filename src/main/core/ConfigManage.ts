@@ -1,16 +1,11 @@
 import Store, { Options } from 'electron-store'
 import ipcManage from './IpcManage'
 import uuid from 'node-uuid'
-import logger from './Logger'
 
 /* eslint-disable quote-props */
 // prettier-ignore
 /* eslint-enable quote-props */
-const userConfigDefault = {
-  sampling: {
-    U: { max: 10000, min: 0 },
-    I: { max: 6000, min: -6000 }
-  },
+const userConfigDefault: StoreT.UserConfg = {
   sampChartConfig: {
     y1: 'U',
     y2: 'I',
@@ -22,6 +17,15 @@ const userConfigDefault = {
       min: -6000,
       max: 6000
     }
+  },
+  calibrateConfig: {
+    toolIp: '',
+    masterId: null,
+    slaverId: null,
+    channelId: [],
+    standard: 0.0005,
+    uRangeId: 0,
+    iRangeId: 0
   },
   historyFilePath: '',
   ipList: [],

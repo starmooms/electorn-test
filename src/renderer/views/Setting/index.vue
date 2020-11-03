@@ -18,14 +18,10 @@
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
-// import Protect from './components/Protect.vue'
-import Sampling from './components/Sampling.vue'
 import Base from './components/Base.vue'
 
 @Component({
   components: {
-    // Protect,
-    Sampling,
     Base
   }
 })

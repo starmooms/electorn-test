@@ -14,7 +14,7 @@
       </div>
       <div class="action-btn-box">
         <el-button type="primary" @click="start">修调</el-button>
-        <el-button type="primary">停止</el-button>
+        <el-button type="primary" @click="stop">停止</el-button>
         <el-button type="primary">导出</el-button>
         <el-button type="primary">清除</el-button>
       </div>
@@ -26,7 +26,7 @@
       show-overflow
       resizable
       ref="xTabel"
-      :data="calDataList"
+      :data="calResultList"
       size="mini"
       max-width="160px"
       height="240px"
@@ -42,7 +42,6 @@
       <vxe-table-column field="channelId" title="通道号" width="80">
         <template v-slot="{ row }">{{ row.channelId+1 }}</template>
       </vxe-table-column>
-      <vxe-table-column field="calModel" title="修调模块" width="80"></vxe-table-column>
       <vxe-table-column field="calTypeName" title="修调类型" min-width="80"></vxe-table-column>
       <vxe-table-column field="point1Name" title="修调点" width="80"></vxe-table-column>
       <vxe-table-column field="point1Result.actual" title="实际值" width="80"></vxe-table-column>
@@ -59,15 +58,16 @@
 <script lang="ts">
 import { CALIBRATE_TYPE } from '@/shared/config/calibrate'
 import { deepClone } from '@/shared/utils'
-import { Vue, Component } from 'vue-property-decorator'
+import { Vue, Component, Prop } from 'vue-property-decorator'
 
 @Component({
   components: {}
 })
 export default class CalRight extends Vue {
+  @Prop({ type: Array, required: true }) calResultList!: any[]
+
   calType: string[] = []
   calTypeList = deepClone(CALIBRATE_TYPE)
-  calDataList = []
 
   /** 开始修调 */
   start() {
@@ -79,21 +79,9 @@ export default class CalRight extends Vue {
     })
   }
 
-  mounted() {
-    this.$command.on({
-      eventName: '/calibrate/pointResult',
-      onEmit: data => {
-        console.log(data)
-        this.calDataList = data
-        // this.portList = data.list.map(item => {
-        //   return {
-        //     readTranslate: false,
-        //     ...item
-        //   }
-        // })
-      },
-      vm: this
-    })
+  /** 停止修调 */
+  stop() {
+    this.$emit('stop')
   }
 }
 </script>

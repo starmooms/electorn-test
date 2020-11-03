@@ -1,5 +1,5 @@
 /** 设置相关 */
-declare namespace Store {
+declare namespace StoreT {
   /** 采样曲线设置 */
   interface SampChartConfig {
     y1: string
@@ -21,9 +21,12 @@ declare namespace Store {
 
   interface UserConfg {
     sampChartConfig: SampChartConfig
+    calibrateConfig: CalibrateT.CalConfForm
+    historyFilePath: string
+    ipList: IpListItem[]
     base: {
+      requestType: string
       portPath: string
-      ipList: IpListItem[]
     }
   }
 

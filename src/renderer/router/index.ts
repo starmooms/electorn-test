@@ -2,7 +2,6 @@ import Vue from 'vue'
 import VueRouter, { RouteConfig } from 'vue-router'
 import Main from '@/renderer/layout/Main/index.vue'
 import Default from '@/renderer/layout/Default.vue'
-import { SettingStatus } from '../store/modules/Setting'
 
 Vue.use(VueRouter)
 

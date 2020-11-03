@@ -5,6 +5,8 @@ import configManage from '../ConfigManage'
 import mainDb from '../sqlite/MainDb'
 import TcpRequest from './TcpRequest'
 import logger from '../Logger'
+import is from 'electron-is'
+const isDev = is.dev()
 
 interface PostOpts {
   timeout?: number
@@ -14,7 +16,7 @@ interface PostOpts {
     name: string
   }
   masterId: number
-  requestType?: Communi['requestType']
+  requestType?: Communi['requestType'] | 'calTool'
 }
 
 export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
@@ -121,6 +123,10 @@ class Communi {
       }
 
       this.emitList.set(sId, ({ masterId, errCode, buf, originBuf }) => {
+        if (isDev) {
+          logger.debug(control.name, '返回', buf.toString('hex'))
+          logger.debug(control.name, '返回数据域', buf.toString('hex'))
+        }
         if (errCode !== '00') {
           const errMsg = ERROR_STATUS[errCode] || errCode
           mainDb.saveErrorList([
@@ -141,6 +147,11 @@ class Communi {
         clearTimeout(timer)
       })
 
+      if (isDev) {
+        logger.debug(control.name, '发送', agrData.buf.toString('hex'))
+        logger.debug(control.name, '发送数据域', data.toString('hex'))
+      }
+
       if (requestType === 'Port') {
         if (!this.serialPort) {
           setError('串口未初始化')
@@ -148,18 +159,16 @@ class Communi {
         }
         this.serialPort.post(agrData.buf, setError)
       } else if (requestType === 'Tcp') {
-        if (!this.tpcRequest) {
-          setError('TCP未初始化')
-          return
-        }
         this.tpcRequest.post(agrData.buf, setError, masterId)
+      } else if (requestType === 'calTool') {
+        this.tpcRequest.calToolPost(agrData.buf, setError)
       } else {
         setError(`requestType ${requestType} No Found`)
       }
 
       timer = setTimeout(() => {
         setError(`${requestType} Time Out`)
-      }, timeout || 2000)
+      }, timeout || 5000)
     })
   }
 

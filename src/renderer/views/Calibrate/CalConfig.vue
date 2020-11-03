@@ -90,7 +90,7 @@
   </el-form>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
+import { Vue, Component } from 'vue-property-decorator'
 import { getStaticChList } from '@/shared/config/channel'
 import {
   I_RANGE_OPTS,
@@ -98,6 +98,7 @@ import {
   U_RANGE_OPTS
 } from '@/shared/config/calibrate'
 import { deepClone } from '@/shared/utils'
+import { SettingStatus } from '@/renderer/store/modules/Setting'
 
 @Component({})
 export default class CalConfig extends Vue {
@@ -114,6 +115,10 @@ export default class CalConfig extends Vue {
     standard: this.standardOpts[0],
     uRangeId: 0,
     iRangeId: 0
+  }
+
+  get config() {
+    return SettingStatus.userConfig?.calibrateConfig
   }
 
   getForm() {
@@ -172,6 +177,13 @@ export default class CalConfig extends Vue {
   // }
 
   mounted() {
+    console.log(this.config)
+    if (this.config) {
+      this.form = {
+        ...this.form,
+        ...this.config
+      }
+    }
     if (this.form.channelId.length === 0) {
       this.form.channelId = this.channelList.channel.map(item => {
         return item.id

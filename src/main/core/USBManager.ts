@@ -118,9 +118,14 @@ export default class USBManager {
     //   return boxManage.boxCal.readCal(data)
     // })
 
-    // 读校准
+    // 开始校准
     ipcManage.handle('/port/cal/start', async (event, data) => {
       return boxManage.boxCal.start(data)
+    })
+
+    // 停止校准
+    ipcManage.handle('/port/cal/stop', async (event, data) => {
+      return boxManage.boxCal.setCalRunStop()
     })
   }
 

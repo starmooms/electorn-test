@@ -78,7 +78,7 @@ export default class BoxMasterInfo {
 
   /** 获取ip列表 */
   async getIpList(): Promise<IpConfigT.IpTcpItem[]> {
-    const list: Store.IpListItem[] = configManage.userConfig.get('ipList')
+    const list: StoreT.IpListItem[] = configManage.userConfig.get('ipList')
     const resultListP = list.map(async item => {
       const masterInfo = await this.getMasterInfo(item.masterId)
       return {
@@ -91,7 +91,7 @@ export default class BoxMasterInfo {
   }
 
   findIpItem(masterId: number, ip: string) {
-    const list: Store.IpListItem[] = configManage.userConfig.get('ipList')
+    const list: StoreT.IpListItem[] = configManage.userConfig.get('ipList')
     const index = list.findIndex(item => {
       return masterId === item.masterId && ip === item.ip
     })

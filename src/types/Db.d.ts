@@ -93,7 +93,7 @@ declare namespace Db {
   interface GetStoring {
     stepId: number
     loopNum: number
-    levelList: Store.LevelItem[]
+    levelList: StoreT.LevelItem[]
     levelAttr: string[]
   }
 

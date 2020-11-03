@@ -2,6 +2,7 @@ import TcpClient from './TcpClient'
 import { CommuniClass } from './Communi'
 import logger from '../Logger'
 import configManage from '../ConfigManage'
+import { CALTOOL_ID } from '@/shared/config/calibrate'
 
 /** Tcp通讯 */
 export default class TcpRequest {
@@ -9,16 +10,14 @@ export default class TcpRequest {
   tcpMap = new Map<number, TcpClient>()
   tcpIpMap = new Map<string, TcpClient>()
   parent: CommuniClass
+  calToolClient: TcpClient | null = null
 
   constructor(comuni: CommuniClass) {
     this.parent = comuni
   }
 
-  createTcpClient(ip: string, masterId: number) {
-    if (this.tcpMap.has(masterId)) {
-      logger.debug('masterId:${masterId} Duplicate link')
-      throw new Error(`masterId:${masterId} Duplicate link`)
-    }
+  /** 创建Tcp链接 */
+  private createClient(ip: string, masterId: number) {
     const clientItem = new TcpClient({
       ip,
       masterId,
@@ -27,7 +26,16 @@ export default class TcpRequest {
     clientItem.on('data', buf => {
       this.parent.onEmit(buf)
     })
-    // this.tcpIpMap.set(ip, clientItem)
+    return clientItem
+  }
+
+  /** 创建机柜Tcp */
+  private createMasterClient(ip: string, masterId: number) {
+    if (this.tcpMap.has(masterId)) {
+      logger.debug('masterId:${masterId} Duplicate link')
+      throw new Error(`masterId:${masterId} Duplicate link`)
+    }
+    const clientItem = this.createClient(ip, masterId)
     this.tcpMap.set(masterId, clientItem)
     return clientItem
   }
@@ -52,7 +60,7 @@ export default class TcpRequest {
         promiseArr.push(
           (async () => {
             await this.closeTcpItem(item.masterId)
-            const newTcpItem = this.createTcpClient(item.ip, item.masterId)
+            const newTcpItem = this.createMasterClient(item.ip, item.masterId)
             try {
               await newTcpItem.waitConnect()
             } catch (err) {
@@ -69,39 +77,16 @@ export default class TcpRequest {
       }
     })
     await Promise.all(promiseArr)
-    // this.ipList.forEach(item => {
-    //   const ip = item.ip
-    //   this.createTcpClient(ip, item.masterId)
-
-    //   // const tcpItem = this.tcpMap.get(item.masterId)
-    //   // if (tcpItem && tcpItem.tcpClient.connecting) {
-    //   //   return
-    //   // }
-
-    //   // const tcpClient = createTcpClient(item, {
-    //   //   onData: buf => {
-    //   //     this.parent.onEmit(buf)
-    //   //   }
-    //   // })
-    //   // this.tcpMap.set(
-    //   //   item.masterId,
-    //   //   createTcpClient(item, {
-    //   //     onData: buf => {
-    //   //       this.parent.onEmit(buf)
-    //   //     }
-    //   //   })
-    //   // )
-    // })
   }
 
-  /** 关闭通讯 */
+  /** 关闭中位机通讯 */
   close() {
     this.tcpMap.forEach(item => {
       this.closeTcpItem(item.masterId)
     })
   }
 
-  /** 串口通讯 */
+  /** 中位机通讯 */
   post(buf: Buffer, setError: any, masterId: number) {
     const tcpItem = this.tcpMap.get(masterId)
     if (tcpItem) {
@@ -129,22 +114,36 @@ export default class TcpRequest {
     return this.tcpMap.get(masterId)
   }
 
-  /** 测试链接 */
-  // testConnect() {}
-
-  /** 获取ip列表 */
-  getIpList() {
-    // const list: IpConfigT.IpTcpItem[] = [
-    // ]
-    // this.tcpMap.forEach(item => {
-    // })
+  /** 创建校准Tcp链接 */
+  async createCalTool(ip: string) {
+    if (this.calToolClient) {
+      if (this.calToolClient.isConnect && this.calToolClient.ip === ip) return
+      await this.calToolClose()
+    }
+    this.calToolClient = this.createClient(ip, CALTOOL_ID)
+    return this.calToolClient.waitConnect()
   }
 
-  // /** 获取ip的主控信息 */
-  // getMasterInfo(ip: string) {
-  //   let clientItem = this.tcpIpMap.get(ip)
-  //   if (!clientItem) {
-  //     clientItem = this.createTcpClient(ip)
-  //   }
-  // }
+  /** 校准工装通讯 */
+  calToolPost(buf: Buffer, setError: any) {
+    const tcpItem = this.calToolClient
+    if (tcpItem) {
+      tcpItem.tcpClient.write(buf, err => {
+        if (err) {
+          setError(err)
+        }
+      })
+    } else {
+      setError(new Error(`工装 未初始化链接`))
+    }
+  }
+
+  /** 校准工装关闭链接 */
+  async calToolClose() {
+    if (this.calToolClient) {
+      const oldClient = this.calToolClient
+      this.calToolClient = null
+      await oldClient.close()
+    }
+  }
 }

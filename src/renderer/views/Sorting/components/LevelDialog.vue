@@ -93,7 +93,7 @@ export default class LevelDialog extends Vue {
       return []
     }
   })
-  levelList!: Store.LevelItem[]
+  levelList!: StoreT.LevelItem[]
   @Prop({
     type: Array,
     default() {
@@ -128,7 +128,7 @@ export default class LevelDialog extends Vue {
     { label: 'C5', value: 'c5', style: 't' }
   ]
   tableColumn: any[] = []
-  tableData: Store.LevelItem[] = []
+  tableData: StoreT.LevelItem[] = []
 
   scrollEndTimer: any = null
 

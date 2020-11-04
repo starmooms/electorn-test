@@ -21,7 +21,10 @@ declare namespace StoreT {
 
   interface UserConfg {
     sampChartConfig: SampChartConfig
-    calibrateConfig: CalibrateT.CalConfForm
+    calibrateConfig: {
+      config: CalibrateT.CalConfForm
+      recheckForm: CalibrateTR.RecheckForm
+    }
     historyFilePath: string
     ipList: IpListItem[]
     base: {

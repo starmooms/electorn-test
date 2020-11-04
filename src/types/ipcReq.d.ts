@@ -197,5 +197,9 @@ declare namespace ipcReq {
     type: number // 1：读采样 2：读AB
     calType: string
   }
+
+  interface CalRecheck extends CalStart {
+    recheckForm: CalibrateTR.RecheckSumbitForm
+  }
   // type CalStart = CalibrateT.CalConfSubmitForm
 }

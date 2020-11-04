@@ -64,6 +64,16 @@ export function calStop() {
   return $command.invoke(`/port/cal/stop`)
 }
 
+/** 离开页面校准页面 */
+export function calLeave() {
+  return $command.invoke(`/port/cal/leave`)
+}
+
+/** 复检开始 */
+export function recheck(data: ipcReq.CalRecheck) {
+  return $command.invoke(`/port/cal/recheck`, data)
+}
+
 export function getChannelList() {
   return $command.invoke(`/port/channelList`)
 }

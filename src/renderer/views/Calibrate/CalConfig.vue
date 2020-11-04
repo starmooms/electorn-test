@@ -66,20 +66,20 @@
       </el-form-item>
 
       <el-divider content-position="left">辅助设备</el-divider>
-      <el-form-item class="form-item" label="电压量程">
-        <el-select v-model="form.uRangeId" placeholder="请选择">
+      <el-form-item class="form-item" label="电流量程">
+        <el-select v-model="form.iRangeId" placeholder="请选择">
           <el-option
-            v-for="item in uRangeOpts"
+            v-for="item in iRangeOpts"
             :key="item.label"
             :label="item.label"
             :value="item.id"
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item class="form-item" label="电流量程">
-        <el-select v-model="form.iRangeId" placeholder="请选择">
+      <el-form-item class="form-item" label="电压量程">
+        <el-select v-model="form.uRangeId" placeholder="请选择">
           <el-option
-            v-for="item in iRangeOpts"
+            v-for="item in uRangeOpts"
             :key="item.label"
             :label="item.label"
             :value="item.id"
@@ -118,7 +118,7 @@ export default class CalConfig extends Vue {
   }
 
   get config() {
-    return SettingStatus.userConfig?.calibrateConfig
+    return SettingStatus.userConfig?.calibrateConfig?.config
   }
 
   getForm() {

@@ -69,11 +69,18 @@ export default class CalRight extends Vue {
   calType: string[] = []
   calTypeList = deepClone(CALIBRATE_TYPE)
 
+  getCalType() {
+    if (this.calType.length <= 0) {
+      this.$message.info('请先选择修调类型')
+      return false
+    }
+    return this.calType
+  }
+
   /** 开始修调 */
   start() {
-    if (this.calType.length <= 0) {
-      return this.$message.info('请先选择修调类型')
-    }
+    const calType = this.getCalType()
+    if (calType === false) return
     this.$emit('start', {
       calType: this.calType
     })

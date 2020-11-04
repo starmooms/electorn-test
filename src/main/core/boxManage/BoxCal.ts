@@ -19,6 +19,7 @@ import ipcManage from '../IpcManage'
 import configManage from '../ConfigManage'
 import dayjs from 'dayjs'
 import { TIME_FORMAT } from '@/shared/utils'
+import RunPointQueue from './CalQueue/CalTypeQueue'
 
 /** 修调类型队列 */
 interface CalTypeQueueItem {
@@ -38,34 +39,21 @@ interface CalRangeQueueItem {
   pointIndex: number
 }
 
-/** 发送校准参数 */
-interface SetCalOpts {
-  /** 1：通道校准 2：设置AB值 3：工装校准 4：清除校准值 */
-  type: number
-  masterId: number
-  slaverId: number
-  channelIds: number[]
-  /** 1：充电电压 2：充电电流 3：放电电流 */
-  calType: string
-  /** 电压/电流(修调点) */
-  pointer?: number
-  abList?: any[]
-}
-
-type NowRunQueue = ReturnType<BoxCal['calTypeRunQueue']>
+// type NowRunQueue = ReturnType<BoxCal['calTypeRunQueue']>
 
 /** 机柜校准控制 */
 export default class BoxCal {
   parent: BoxManage
   isCalRun = false // 校准是否运行中
-  nowRunQueue: NowRunQueue | null = null
+  nowRunQueue: RunPointQueue | null = null
+
   constructor(parent: BoxManage) {
     this.parent = parent
   }
 
   /** 设置校准 */
-  async setCal(opts: SetCalOpts) {
-    const { masterId } = opts
+  async setCal(opts: CalibrateTB.SetCalOpts) {
+    const { masterId, calType, pointer } = opts
     const abList = opts.abList || []
     const abListLen = abList.length
     const writerModel = new BufModel({
@@ -79,18 +67,19 @@ export default class BoxCal {
     writerModel.writer('masterId', masterId)
     writerModel.writer('slaverId', opts.slaverId)
     writerModel.writerBit('channelBit', opts.channelIds)
-    writerModel.writerHex('calType', opts.calType)
-    writerModel.writer(
-      'pointer',
-      opts.pointer ? NP.times(opts.pointer, 1000) : 0
-    )
+    if (calType) {
+      writerModel.writerHex('calType', calType)
+    }
+    if (pointer) {
+      writerModel.writer('pointer', NP.times(pointer, 1000))
+    }
     writerModel.ecahList('abList', (writeItem, index) => {
       const abItem = abList[index]
       writeItem.writer('channelId', abItem.channelId)
       writeItem.writerHex('calType', abItem.calType)
       writeItem.writer('range', abItem.pointIndex)
       writeItem.writer('a', abItem.a)
-      writeItem.writer('a', abItem.b)
+      writeItem.writer('b', abItem.b)
     })
 
     await communi.post({
@@ -100,272 +89,8 @@ export default class BoxCal {
     })
   }
 
-  /** 开始校准队列 */
-  setCalRunStatus(queue: NowRunQueue) {
-    this.setCalRunStop()
-    this.isCalRun = true
-    this.nowRunQueue = queue
-    this.nowRunQueue.start()
-  }
-
-  /** 停止校准 */
-  setCalRunStop() {
-    if (this.nowRunQueue) {
-      this.nowRunQueue.stop()
-    }
-    this.nowRunQueue = null
-    this.isCalRun = false
-  }
-
-  /** 计算校准ab值 */
-  computedCalAB(x1: number, y1: number, x2: number, y2: number) {
-    const a = NP.divide(NP.minus(y2, y1), NP.minus(x2, x1))
-    const b = NP.minus(y1, NP.times(a, x1))
-    return { a, b }
-  }
-
-  /** 开始校准 */
-  async start(opts: ipcReq.CalStart) {
-    const config = opts.config
-    const { masterId, slaverId, channelId } = config
-    const iRange = I_RANGE_OPTS.find(item => item.id === config.iRangeId)
-    const uRange = U_RANGE_OPTS.find(item => item.id === config.uRangeId)
-    if (!iRange || !uRange) {
-      throw new Error(
-        `uRangeId:${config.uRangeId} or iRangeId:${config.iRangeId} Range undefined`
-      )
-    }
-
-    configManage.userConfig.set('calibrateConfig', opts.config)
-    if (this.isCalRun) throw new Error('校准运行中')
-    await communi.tpcRequest.createCalTool(config.toolIp)
-    const queue: CalTypeQueueItem[] = []
-    CALIBRATE_TYPE.forEach(item => {
-      if (opts.calType.includes(item.type)) {
-        const range = item.rangeType === 'A' ? iRange : uRange
-        queue.push({
-          masterId,
-          slaverId,
-          calType: item.type,
-          calTypeName: item.label,
-          meanwhile: item.meanwhile,
-          pointerList: [...range.value],
-          unit: item.rangeType
-        })
-      }
-    })
-    const runQueue = this.calTypeRunQueue(queue, channelId, () => {
-      this.setCalRunStop()
-    })
-
-    this.setCalRunStatus(runQueue)
-    return true
-  }
-
-  /** 校准类型队列 */
-  calTypeRunQueue(queue: CalTypeQueueItem[], channelIds: number[], cb: any) {
-    const runQueue = {
-      queue,
-      isRun: false,
-      nowRangeQueue: null as any,
-      end: () => {
-        cb()
-      },
-      start: () => {
-        runQueue.isRun = true
-        runQueue.next()
-      },
-      next: () => {
-        if (queue.length === 0) {
-          return runQueue.end()
-        }
-        const calTypeRun = queue.shift()!
-
-        // 修调点队列
-        const calRangeQueue: CalRangeQueueItem[] = []
-        const addQueue = (
-          rangeChannelId: number[],
-          rangeNum: number,
-          index: number
-        ) => {
-          calRangeQueue.push({
-            channelIds: rangeChannelId,
-            rangeNum,
-            pointIndex: index
-          })
-        }
-        if (calTypeRun.meanwhile) {
-          calTypeRun.pointerList.forEach((pointer, index) => {
-            addQueue(channelIds, pointer, index)
-          })
-        } else {
-          channelIds.forEach(channelId => {
-            calTypeRun.pointerList.forEach((pointer, index) => {
-              addQueue([channelId], pointer, index)
-            })
-          })
-        }
-
-        const rangeRunQueue = this.calRangeRunQueue(
-          calRangeQueue,
-          calTypeRun,
-          () => {
-            runQueue.next()
-          }
-        )
-        rangeRunQueue.start()
-        runQueue.nowRangeQueue = rangeRunQueue
-        return
-      },
-      stop: () => {
-        runQueue.isRun = false
-        if (runQueue.nowRangeQueue) {
-          runQueue.nowRangeQueue.stop()
-        }
-      }
-    }
-    return runQueue
-  }
-
-  /** 校准修调点队列 */
-  calRangeRunQueue(
-    queue: CalRangeQueueItem[],
-    calTypeRun: CalTypeQueueItem,
-    cb: any
-  ) {
-    const { masterId, slaverId, calType, calTypeName, unit } = calTypeRun
-    const resultCache: any = {}
-    const getChannel = (channelId: number) => {
-      let cache = resultCache[channelId]
-      if (!cache) {
-        cache = {}
-        resultCache[channelId] = cache
-      }
-      return cache
-    }
-
-    const getPointResult = (channelId: number, pointIndex: number) => {
-      const cache = getChannel(channelId)
-      if (cache) {
-        const pointerResult = cache[pointIndex]
-        if (
-          pointerResult &&
-          pointerResult.samp != null &&
-          pointerResult.actual != null
-        ) {
-          return pointerResult
-        }
-      }
-      throw new Error(`pointerResult Error ${channelId}_${pointIndex}`)
-    }
-
-    const runQueue = {
-      queue,
-      isRun: false,
-      timer: null as any,
-      checkSendList: async (nowPoint: CalRangeQueueItem) => {
-        // 计算ab值，发送区间列表
-        const { pointIndex } = nowPoint
-        if (pointIndex > 0) {
-          const point1Index = pointIndex - 1
-          const list = nowPoint.channelIds.map(channelId => {
-            const point1 = getPointResult(channelId, point1Index)
-            const point2 = getPointResult(channelId, pointIndex)
-            const name1 = calTypeRun.pointerList[point1Index]
-            const name2 = calTypeRun.pointerList[pointIndex]
-            const { a, b } = this.computedCalAB(
-              point1.samp,
-              point1.actual,
-              point2.samp,
-              point2.actual
-            )
-            return {
-              masterId,
-              slaverId,
-              channelId,
-              pointIndex,
-              calType,
-              calTypeName,
-              point1Name: `${name1}${unit}`,
-              point1Result: point1,
-              point2Name: `${name2}${unit}`,
-              point2Result: point2,
-              a,
-              b,
-              time: dayjs().format(TIME_FORMAT)
-            }
-          })
-          this.sendCalResult(list)
-        }
-      },
-      end: () => {
-        cb()
-      },
-      start: () => {
-        runQueue.isRun = true
-        runQueue.next()
-      },
-      stop: () => {
-        runQueue.isRun = false
-        clearTimeout(runQueue.timer)
-      },
-      next: async () => {
-        // if (!runQueue.isRun) return
-        if (queue.length <= 0) {
-          return runQueue.end()
-        }
-        const rangeItem = queue.shift()!
-
-        const { channelIds, pointIndex } = rangeItem
-        try {
-          await this.setCal({
-            type: 1,
-            masterId,
-            slaverId,
-            channelIds,
-            calType,
-            pointer: rangeItem.rangeNum
-          })
-
-          runQueue.timer = setTimeout(async () => {
-            try {
-              const params = {
-                masterId,
-                slaverId,
-                channelIds,
-                calType,
-                type: 1
-              }
-
-              const [sampResult, actualResult] = await Promise.all([
-                this.readCalSamp(params),
-                this.readCalSamp(params, true)
-              ])
-              channelIds.forEach(channelId => {
-                const cache = getChannel(channelId)
-                const samp = sampResult[channelId]
-                const actual = actualResult[channelId]
-                cache[pointIndex] = {
-                  samp: samp?.samp,
-                  actual: actual?.samp
-                }
-              })
-              await runQueue.checkSendList(rangeItem)
-            } catch (err) {
-              logger.error('calRangeRunQueue readSamp Error', err)
-            } finally {
-              runQueue.next()
-            }
-          }, 2000)
-        } catch (err) {
-          logger.error('calRangeRunQueue setPoint Error', err)
-        }
-      }
-    }
-    return runQueue
-  }
-
-  /** 读校准
+  /**
+   * 读校准
    * @isCalTool 是否读工装
    */
   async readCalSamp(opts: ipcReq.CalReadSamp, isCalTool = false) {
@@ -398,7 +123,7 @@ export default class BoxCal {
     })
     // readModel.showAll()
 
-    const result: any = {}
+    const result: CalibrateTB.CalResult = {}
     const getChannel = (channelId: number) => {
       let resultItem = result[channelId]
       if (!resultItem) {
@@ -424,11 +149,208 @@ export default class BoxCal {
     return result
   }
 
-  /** 发送校准列表 */
-  sendCalResult(data: any) {
-    ipcManage.send('/calibrate/pointResult', () => {
-      return data
+  /** 获取读校准返回, 验证参数为空报错 */
+  getCalResultSamp(result: CalibrateTB.CalResult, channelId: number) {
+    const item = result[channelId]
+    if (item && item.samp !== null) {
+      return item.samp
+    }
+    throw new Error(`read cal result channel:${channelId} Error`)
+  }
+
+  /** 开始校准队列 */
+  setCalRunStatus(queue: RunPointQueue) {
+    if (this.isCalRun === true) {
+      throw new Error('Cal is Run now')
+    }
+    this.isCalRun = true
+    this.nowRunQueue = queue
+    this.nowRunQueue.start()
+  }
+
+  /** 停止校准 */
+  async setCalRunStop() {
+    if (this.nowRunQueue) {
+      await this.nowRunQueue.stop()
+    }
+  }
+
+  /** 触发停止校准 */
+  stopCalEmit() {
+    if (this.nowRunQueue && this.nowRunQueue.isRun === true) return
+    this.nowRunQueue = null
+    this.isCalRun = false
+  }
+
+  /** 计算校准ab值 */
+  computedCalAB(x1: number, y1: number, x2: number, y2: number) {
+    const a = NP.round(NP.divide(NP.minus(y2, y1), NP.minus(x2, x1)), 6)
+    if (isNaN(a)) {
+      throw new Error('computedAB a is NaN')
+    }
+    const b = NP.round(NP.minus(y1, NP.times(a, x1)), 6)
+    return { a, b }
+  }
+
+  /** 保存设置 */
+  saveConfig(
+    config: CalibrateT.CalConfForm,
+    recheck?: CalibrateTR.RecheckForm
+  ) {
+    configManage.userConfig.set('calibrateConfig.config', config)
+    if (recheck) {
+      configManage.userConfig.set('calibrateConfig.recheckForm', recheck)
+    }
+  }
+
+  /** 创建校准类型队列 */
+  createCalTypeList(params: CalibrateTB.CalCreateTypeList) {
+    const { masterId, slaverId, iRange, uRange, calType } = params
+    const list: CalTypeQueueItem[] = []
+    CALIBRATE_TYPE.forEach(item => {
+      if (calType.includes(item.type)) {
+        const range = item.rangeType === 'A' ? iRange : uRange
+        list.push({
+          masterId,
+          slaverId,
+          calType: item.type,
+          calTypeName: item.label,
+          meanwhile: item.meanwhile,
+          pointerList: [...range],
+          unit: item.rangeType
+        })
+      }
     })
+    return list
+  }
+
+  /** 根据歩长生成列表 */
+  createForStep(start: number, end: number, step: number) {
+    const list: number[] = []
+    let i = start
+    const stepM = NP.divide(step, 1000)
+    while (i <= end) {
+      list.push(i)
+      i = NP.plus(i, stepM)
+    }
+    return list
+  }
+
+  /** 校准开始前 */
+  async beforCalStart(ip: string) {
+    if (this.nowRunQueue && this.nowRunQueue.isRun) {
+      throw new Error('校准运行中')
+    }
+    await communi.tpcRequest.createCalTool(ip)
+  }
+
+  /** 开始校准 */
+  async start(opts: ipcReq.CalStart) {
+    const config = opts.config
+    const { masterId, slaverId, channelId } = config
+    const iRange = I_RANGE_OPTS.find(item => item.id === config.iRangeId)
+    const uRange = U_RANGE_OPTS.find(item => item.id === config.uRangeId)
+    if (!iRange || !uRange) {
+      throw new Error(
+        `uRangeId:${config.uRangeId} or iRangeId:${config.iRangeId} Range undefined`
+      )
+    }
+
+    this.saveConfig(opts.config)
+    await this.beforCalStart(opts.config.toolIp)
+
+    const queue = this.createCalTypeList({
+      masterId,
+      slaverId,
+      calType: opts.calType,
+      iRange: iRange.value,
+      uRange: uRange.value
+    })
+
+    // queue, channelId, this
+    const runQueue = new RunPointQueue({
+      boxCal: this,
+      runType: 1,
+      typeList: queue,
+      standard: opts.config.standard,
+      masterId,
+      slaverId,
+      channelIds: channelId
+    })
+    this.setCalRunStatus(runQueue)
+    return true
+  }
+
+  /** 复检 */
+  async recheck(opts: ipcReq.CalRecheck) {
+    const { config, recheckForm } = opts
+    const { masterId, slaverId, channelId, toolIp } = config
+    const iRange: number[] = this.createForStep(
+      recheckForm.IStart,
+      recheckForm.IEnd,
+      recheckForm.IStep
+    )
+    const uRange: number[] = this.createForStep(
+      recheckForm.UStart,
+      recheckForm.UEnd,
+      recheckForm.UStep
+    )
+
+    if (iRange.length === 0) {
+      throw new Error('电流范围为0')
+    } else if (uRange.length === 0) {
+      throw new Error('电压范围为0')
+    }
+
+    this.saveConfig(config, recheckForm)
+    await this.beforCalStart(toolIp)
+
+    const queue = this.createCalTypeList({
+      masterId,
+      slaverId,
+      calType: opts.calType,
+      iRange: iRange,
+      uRange: uRange
+    })
+    const runQueue = new RunPointQueue({
+      boxCal: this,
+      runType: 5,
+      typeList: queue,
+      standard: config.standard,
+      masterId,
+      slaverId,
+      channelIds: channelId
+    })
+    this.setCalRunStatus(runQueue)
+    return true
+  }
+
+  /** 发送校准列表 */
+  sendCalResult(type: string, data: any) {
+    const result = {
+      data,
+      type
+    }
+    ipcManage.send('/calibrate/pointResult', () => {
+      return result
+    })
+  }
+
+  /** 离开页面时关闭工装 */
+  async leavePage() {
+    if (this.isCalRun) {
+      return {
+        isCalRun: true
+      }
+    }
+    try {
+      await communi.tpcRequest.calToolClose()
+    } catch (err) {
+      logger.error('关闭工装失败')
+    }
+    return {
+      isCalRun: this.isCalRun
+    }
   }
 
   // /** 发送校准流程 */

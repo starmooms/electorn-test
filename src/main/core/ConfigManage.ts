@@ -19,13 +19,23 @@ const userConfigDefault: StoreT.UserConfg = {
     }
   },
   calibrateConfig: {
-    toolIp: '',
-    masterId: null,
-    slaverId: null,
-    channelId: [],
-    standard: 0.0005,
-    uRangeId: 0,
-    iRangeId: 0
+    config: {
+      toolIp: '',
+      masterId: null,
+      slaverId: null,
+      channelId: [],
+      standard: 0.0005,
+      uRangeId: 0,
+      iRangeId: 0
+    },
+    recheckForm: {
+      IStep: null,
+      IStart: null,
+      IEnd: null,
+      UStep: null,
+      UStart: null,
+      UEnd: null,
+    }
   },
   historyFilePath: '',
   ipList: [],

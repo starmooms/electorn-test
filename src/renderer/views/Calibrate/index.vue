@@ -6,11 +6,16 @@
     <div class="calibrate-r">
       <div>
         <cal-run
+          ref="calRun"
           @start="calStart"
           @stop="calStop"
           :calResultList="calResultList"
         />
-        <cal-re-check />
+        <cal-re-check
+          @start="recheckStart"
+          @stop="calStop"
+          :recheckResult="recheckResult"
+        />
         <cal-result />
       </div>
     </div>
@@ -22,7 +27,8 @@ import CalConfig from './CalConfig.vue'
 import CalRun from './CalRun.vue'
 import CalReCheck from './CalReCheck.vue'
 import CalResult from './CalResult.vue'
-import { calStart, calStop } from '@/renderer/ipc/channel'
+import { calLeave, calStart, calStop, recheck } from '@/renderer/ipc/channel'
+import { SettingStatus } from '@/renderer/store/modules/Setting'
 
 @Component({
   components: {
@@ -35,10 +41,12 @@ import { calStart, calStop } from '@/renderer/ipc/channel'
 export default class Calibrate extends Vue {
   $refs!: {
     calConfig: CalConfig
+    calRun: CalRun
   }
 
   isRun = false
   calResultList: any[] = []
+  recheckResult: any[] = []
 
   /** 开始校准修调 */
   async calStart(startData: CalibrateTR.StartData) {
@@ -52,8 +60,8 @@ export default class Calibrate extends Vue {
       if (data.status) {
         this.$message.success('校准启动成功')
         this.calResultList = []
+        SettingStatus.getUserConfg()
       }
-      console.log(config.form, startData)
     }
   }
 
@@ -65,12 +73,46 @@ export default class Calibrate extends Vue {
     }
   }
 
+  /** 复检开始 */
+  async recheckStart(recheckForm: CalibrateTR.RecheckSumbitForm) {
+    const config = this.$refs.calConfig.getForm()
+    if (config.status) {
+      const calType = this.$refs.calRun.getCalType()
+      if (calType === false) return
+      const result = await recheck({
+        config: config.form,
+        calType,
+        recheckForm
+      })
+      if (result.status) {
+        this.$message.success('复检启动成功')
+        this.recheckResult = []
+        SettingStatus.getUserConfg()
+      }
+    }
+  }
+
   mounted() {
     this.$command.on({
       eventName: '/calibrate/pointResult',
       onEmit: data => {
-        console.log(data)
-        this.calResultList = this.calResultList.concat(data)
+        if (data.type === 'calRunResult') {
+          this.calResultList = this.calResultList.concat(data.data)
+        } else if (data.type === 'calRecheckResult') {
+          this.recheckResult = this.recheckResult.concat(data.data)
+        } else if (data.type === 'error') {
+          this.$notify.error({
+            title: '校准错误',
+            message: data.data,
+            duration: 0
+          })
+        } else if (data.type === 'msg') {
+          this.$notify.success({
+            title: '校准',
+            message: data.data,
+            duration: 0
+          })
+        }
         // this.portList = data.list.map(item => {
         //   return {
         //     readTranslate: false,
@@ -81,6 +123,25 @@ export default class Calibrate extends Vue {
       vm: this
     })
   }
+
+  // /** 离开页面前 */
+  // async beforeLeave(next: any) {
+  //   try {
+  //     const result = await calLeave()
+  //     if(result.status){
+  //       const data = result.data
+  //       if(data.isCalRun) {
+  //         const confirm = await this.$elConfirm('校准正在运行中,')
+  //         if(confirm){
+
+  //         }
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error(err)
+  //     next()
+  //   }
+  // }
 
   beforeRouteLeave(to, form, next) {
     if (!this.isRun) next()

@@ -4,19 +4,35 @@
       <cal-config ref="calConfig" />
     </div>
     <div class="calibrate-r">
+      <el-tabs v-model="activeTab">
+        <el-tab-pane
+          v-for="item in tabList"
+          :key="item.name"
+          :label="item.label"
+          :name="item.name"
+        ></el-tab-pane>
+      </el-tabs>
+
       <div>
-        <cal-run
-          ref="calRun"
-          @start="calStart"
-          @stop="calStop"
-          :calResultList="calResultList"
-        />
-        <cal-re-check
-          @start="recheckStart"
-          @stop="calStop"
-          :recheckResult="recheckResult"
-        />
-        <cal-result />
+        <div class="channel-cal" v-show="activeTab === 'channelCal'">
+          <cal-run
+            ref="calRun"
+            @start="calStart"
+            @stop="calStop"
+            @clean="clean(1)"
+            :calResultList="calResultList"
+          />
+          <cal-re-check
+            @start="recheckStart"
+            @stop="calStop"
+            @clean="clean(5)"
+            :recheckResult="recheckResult"
+          />
+          <cal-result />
+        </div>
+        <div class="tool-cal" v-show="activeTab === 'toolCal'">
+          <tool-cal></tool-cal>
+        </div>
       </div>
     </div>
   </div>
@@ -27,6 +43,7 @@ import CalConfig from './CalConfig.vue'
 import CalRun from './CalRun.vue'
 import CalReCheck from './CalReCheck.vue'
 import CalResult from './CalResult.vue'
+import ToolCal from './ToolCal.vue'
 import { calLeave, calStart, calStop, recheck } from '@/renderer/ipc/channel'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 
@@ -35,7 +52,8 @@ import { SettingStatus } from '@/renderer/store/modules/Setting'
     CalConfig,
     CalRun,
     CalReCheck,
-    CalResult
+    CalResult,
+    ToolCal
   }
 })
 export default class Calibrate extends Vue {
@@ -44,9 +62,17 @@ export default class Calibrate extends Vue {
     calRun: CalRun
   }
 
-  isRun = false
+  /** 当前运行信息 */
+  info: CalibrateT.CalRunInfo | null = null
+
   calResultList: any[] = []
   recheckResult: any[] = []
+
+  tabList = [
+    { name: 'channelCal', label: '通道校准' },
+    { name: 'toolCal', label: '工装校准' }
+  ]
+  activeTab = this.tabList[0].name
 
   /** 开始校准修调 */
   async calStart(startData: CalibrateTR.StartData) {
@@ -67,10 +93,7 @@ export default class Calibrate extends Vue {
 
   /** 停止校准 */
   async calStop() {
-    const result = await calStop()
-    if (result.status) {
-      this.$message.success('校准停止成功')
-    }
+    await calStop()
   }
 
   /** 复检开始 */
@@ -92,25 +115,38 @@ export default class Calibrate extends Vue {
     }
   }
 
+  /** 清除 */
+  clean(runType: 1 | 5) {
+    if (this.info && this.info.isRun && this.info.runType === runType) {
+      return this.$message.warning(`${this.info.runTypeName} 正在运行无法清除`)
+    }
+    if (runType === 1) {
+      this.calResultList = []
+    } else if (runType === 5) {
+      this.recheckResult = []
+    }
+  }
+
   mounted() {
     this.$command.on({
       eventName: '/calibrate/pointResult',
       onEmit: data => {
+        this.info = data.info
         if (data.type === 'calRunResult') {
           this.calResultList = this.calResultList.concat(data.data)
         } else if (data.type === 'calRecheckResult') {
           this.recheckResult = this.recheckResult.concat(data.data)
         } else if (data.type === 'error') {
           this.$notify.error({
-            title: '校准错误',
+            title: '错误',
             message: data.data,
             duration: 0
           })
         } else if (data.type === 'msg') {
           this.$notify.success({
-            title: '校准',
+            title: '提示',
             message: data.data,
-            duration: 0
+            duration: 3000
           })
         }
         // this.portList = data.list.map(item => {
@@ -143,8 +179,24 @@ export default class Calibrate extends Vue {
   //   }
   // }
 
-  beforeRouteLeave(to, form, next) {
-    if (!this.isRun) next()
+  /** 离开页面前如果还在运行 */
+  async isRunLeave(next: any) {
+    if (this.info && this.info.isRun) {
+      const runTypeName = this.info.runTypeName
+      const confirm = await this.$elConfirm(
+        `${runTypeName}正在运行，退出页面将关闭${runTypeName}？`,
+        {
+          userReversal: true
+        }
+      )
+      if (!confirm) return
+    }
+    await calLeave()
+    next()
+  }
+
+  async beforeRouteLeave(to, form, next) {
+    this.isRunLeave(next)
   }
 }
 </script>

@@ -52,6 +52,7 @@ export default class RunPointQueue {
   slaverId: number
   channelIds: number[] = []
   runType: 1 | 5
+  runTypeName = ''
   standard: number
 
   pointQueue: PointQueueItem[] = []
@@ -79,11 +80,13 @@ export default class RunPointQueue {
     this.channelIds = channelIds
     this.boxCal = boxCal
     this.standard = standard
+    this.runTypeName = this.runType === 1 ? '修调' : '复检'
   }
 
   start() {
     this.isRun = true
     this.next()
+    this.boxCal.sendCalResult('info', null)
   }
 
   async end(isSuccess = false) {
@@ -91,21 +94,29 @@ export default class RunPointQueue {
     if (isSuccess) {
       this.boxCal.sendCalResult(
         'msg',
-        `修调完成 ${dayjs().format(TIME_FORMAT)}`
+        `${this.runTypeName}完成 ${dayjs().format(TIME_FORMAT)}`
       )
     }
     await this.closeCal()
     this.boxCal.stopCalEmit()
   }
 
-  stop() {
-    return this.end()
+  async stop() {
+    await this.end()
+    this.boxCal.sendCalResult(
+      'msg',
+      `${this.runTypeName}已暂停 ${dayjs().format(TIME_FORMAT)}`
+    )
+    return
   }
 
   setError(err: Error) {
     logger.error(err)
     this.end()
-    this.boxCal.sendCalResult('error', `修调错误已停止 ${err.message}`)
+    this.boxCal.sendCalResult(
+      'error',
+      `${this.runTypeName}错误已停止 ${err.message}`
+    )
   }
 
   /** 获取当前修调点 */
@@ -249,7 +260,7 @@ export default class RunPointQueue {
   /** 计算存储ab值，发送校准结果到页面 */
   async sendCalRunResult() {
     const { channelIds, pointIndex } = this.getPointNow()
-    if (pointIndex > 0 && !this.isRun) {
+    if (pointIndex > 0 && this.isRun) {
       const point1Index = pointIndex - 1
       const {
         masterId,

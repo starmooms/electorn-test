@@ -239,7 +239,7 @@ export default class BoxCal {
   /** 校准开始前 */
   async beforCalStart(ip: string) {
     if (this.nowRunQueue && this.nowRunQueue.isRun) {
-      throw new Error('校准运行中')
+      throw new Error(`${this.nowRunQueue.runTypeName} 运行中`)
     }
     await communi.tpcRequest.createCalTool(ip)
   }
@@ -329,7 +329,14 @@ export default class BoxCal {
   sendCalResult(type: string, data: any) {
     const result = {
       data,
-      type
+      type,
+      info: this.nowRunQueue
+        ? {
+            isRun: this.nowRunQueue.isRun,
+            runType: this.nowRunQueue.runType,
+            runTypeName: this.nowRunQueue.runTypeName
+          }
+        : null
     }
     ipcManage.send('/calibrate/pointResult', () => {
       return result
@@ -338,12 +345,8 @@ export default class BoxCal {
 
   /** 离开页面时关闭工装 */
   async leavePage() {
-    if (this.isCalRun) {
-      return {
-        isCalRun: true
-      }
-    }
     try {
+      await this.setCalRunStop()
       await communi.tpcRequest.calToolClose()
     } catch (err) {
       logger.error('关闭工装失败')

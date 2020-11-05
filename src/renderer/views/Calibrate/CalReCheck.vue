@@ -52,7 +52,7 @@
           <el-button type="primary" @click="start">复检</el-button>
           <el-button type="primary" @click="stop">停止</el-button>
           <el-button type="primary">导出</el-button>
-          <el-button type="primary">清除</el-button>
+          <el-button type="primary" @click="clean">清除</el-button>
         </div>
       </div>
     </div>
@@ -67,24 +67,30 @@
       size="mini"
       max-width="160px"
       height="240px"
+      class="recheck-table"
     >
       <!-- eslint-disable -->
-      <vxe-table-column field="time" title="复检时间" width="160"></vxe-table-column>
-      <vxe-table-column title="机柜号" width="80">
+      <vxe-table-column field="time" title="复检时间" width="135"></vxe-table-column>
+      <vxe-table-column title="机柜号" width="60">
         <template v-slot="{ row }">{{ row.masterId+1 }}</template>
       </vxe-table-column>
-      <vxe-table-column title="从控号" width="80">
+      <vxe-table-column title="从控号" width="60">
         <template v-slot="{ row }">{{ row.slaverId+1 }}</template>
       </vxe-table-column>
-      <vxe-table-column title="通道号" width="80">
+      <vxe-table-column title="通道号" width="60">
         <template v-slot="{ row }">{{ row.channelId+1 }}</template>
       </vxe-table-column>
-      <vxe-table-column field="calTypeName" title="复检类型" min-width="80"></vxe-table-column>
+      <vxe-table-column field="calTypeName" title="复检类型" width="80"></vxe-table-column>
       <vxe-table-column field="pointName" title="复检点" width="80"></vxe-table-column>
-      <vxe-table-column field="actual" title="实际值" width="80"></vxe-table-column>
-      <vxe-table-column field="samp" title="采样值" width="80"></vxe-table-column>
+      <vxe-table-column field="actual" title="实际值(mA)" width="90"></vxe-table-column>
+      <vxe-table-column field="samp" title="采样值(mA)" width="90"></vxe-table-column>
       <vxe-table-column field="diff" title="误差值" width="80"></vxe-table-column>
-      <vxe-table-column field="status" title="测试结果" width="80"></vxe-table-column>
+      <vxe-table-column field="status" title="测试结果" min-width="80">
+        <template v-slot="{ row }">
+          <svg-icon v-if="row.status" class="status-icon success" icon-class="success"></svg-icon>
+          <svg-icon v-else class="status-icon error" icon-class="cal-error"></svg-icon>
+        </template>
+      </vxe-table-column>
       <!-- eslint-enable -->
     </vxe-grid>
   </div>
@@ -109,7 +115,6 @@ export default class CalReCheck extends Vue {
   UStepOpts = [500]
 
   get config() {
-    console.warn(SettingStatus.userConfig?.calibrateConfig)
     return SettingStatus.userConfig?.calibrateConfig?.recheckForm
   }
 
@@ -143,6 +148,10 @@ export default class CalReCheck extends Vue {
 
   stop() {
     this.$emit('stop')
+  }
+
+  clean() {
+    this.$emit('clean')
   }
 
   mounted() {
@@ -188,6 +197,18 @@ export default class CalReCheck extends Vue {
       // &:nth-last-child(1) {
       //   margin-bottom: 0;
       // }
+    }
+  }
+
+  .recheck-table {
+    .status-icon {
+      font-size: 18px;
+      &.success {
+        color: #67c23a;
+      }
+      &.error {
+        color: #f56c6c;
+      }
     }
   }
 }

@@ -194,6 +194,7 @@ export const SAMP_MODEL: Model[] = [
       { name: 'masterId', bytLen: 1 },
       { name: 'slaverId', bytLen: 1 },
       { name: 'channelId', bytLen: 1 },
+      { name: 'controlCode', bytLen: 1 },
       { name: 'errCode', bytLen: 1 },
       { name: 'params1', bytLen: 4 },
       { name: 'params2', bytLen: 4 }

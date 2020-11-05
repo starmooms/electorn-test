@@ -49,6 +49,13 @@ declare namespace CalibrateT {
     b: number
     time: string
   }
+
+  /** 运行校准时的运行新 */
+  interface CalRunInfo {
+    isRun: boolean
+    runType: 1 | 5
+    runTypeName: string
+  }
 }
 
 /** 校准页面相关 */
@@ -73,6 +80,53 @@ declare namespace CalibrateTR {
     UStep: number
     UStart: number
     UEnd: number
+  }
+
+  /** 创建工装校准参数 */
+  interface ToolCalCreateCal {
+    selectType: {
+      label: string
+      type: string
+      rangeType: string
+      meanwhile: boolean
+    }
+    selectRange: {
+      id: number
+      label: string
+      value: number[]
+    }
+  }
+
+  interface ToolCalSampResultItem {
+    [point: string]: number | null
+  }
+  /** 工装校准采样结果 */
+  interface ToolCalSampResult {
+    [channelId: string]: ToolCalSampResultItem
+  }
+
+  interface ToolCalAbResultItem {
+    a: number | null
+    b: number | null
+    pointIndex: number
+  }
+  interface ToolCalAbResultChItem {
+    [pointIndex: string]: ToolCalAbResultItem
+  }
+  /** 工装校准ab结果 */
+  interface ToolCalAbResult {
+    [channelId: string]: ToolCalAbResultChItem
+  }
+
+  interface ToolCalChannelList {
+    channelId: number
+    calTypeName: string
+    point1: number
+    point1Name: string
+    point2: number
+    point2Name: string
+    sampResult: ToolCalSampResultItem
+    abResult: ToolCalAbResultItem
   }
 }
 

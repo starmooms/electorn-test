@@ -177,7 +177,6 @@ export default class CalConfig extends Vue {
   // }
 
   mounted() {
-    console.log(this.config)
     if (this.config) {
       this.form = {
         ...this.form,

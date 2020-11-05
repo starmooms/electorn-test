@@ -48,7 +48,7 @@ export default class BoxLamp {
         })
       } catch (err) {
         logger.error('点灯失败', err)
-        errorMsg += `机柜${masterId + 1} 点灯失败</br>`
+        errorMsg += `机柜${masterId + 1} 点灯失败 ${err.message}</br>`
       }
     })
     if (errorMsg) {

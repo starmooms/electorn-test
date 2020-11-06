@@ -82,8 +82,8 @@
       </vxe-table-column>
       <vxe-table-column field="calTypeName" title="复检类型" width="80"></vxe-table-column>
       <vxe-table-column field="pointName" title="复检点" width="80"></vxe-table-column>
-      <vxe-table-column field="actual" title="实际值(mA)" width="90"></vxe-table-column>
-      <vxe-table-column field="samp" title="采样值(mA)" width="90"></vxe-table-column>
+      <vxe-table-column field="actual" title="实际值" width="90"></vxe-table-column>
+      <vxe-table-column field="samp" title="采样值" width="90"></vxe-table-column>
       <vxe-table-column field="diff" title="误差值" width="80"></vxe-table-column>
       <vxe-table-column field="status" title="测试结果" min-width="80">
         <template v-slot="{ row }">
@@ -201,15 +201,7 @@ export default class CalReCheck extends Vue {
   }
 
   .recheck-table {
-    .status-icon {
-      font-size: 18px;
-      &.success {
-        color: #67c23a;
-      }
-      &.error {
-        color: #f56c6c;
-      }
-    }
+
   }
 }
 </style>

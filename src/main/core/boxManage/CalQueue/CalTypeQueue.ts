@@ -1,5 +1,5 @@
 import NP from 'number-precision'
-import { deepClone, TIME_FORMAT } from '@/shared/utils'
+import { deepClone, TIME_FORMAT, computedCalAB } from '@/shared/utils'
 import BoxCal from '../BoxCal'
 import Bluebird from 'bluebird'
 import dayjs from 'dayjs'
@@ -277,7 +277,7 @@ export default class RunPointQueue {
         const point1 = this.getPointResult(channelId, point1Index)
         const point2 = this.getPointResult(channelId, pointIndex)
 
-        const { a, b } = this.boxCal.computedCalAB(
+        const { a, b } = computedCalAB(
           point1.samp,
           point1.actual,
           point2.samp,

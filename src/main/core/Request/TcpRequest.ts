@@ -121,7 +121,8 @@ export default class TcpRequest {
       await this.calToolClose()
     }
     this.calToolClient = this.createClient(ip, CALTOOL_ID)
-    return this.calToolClient.waitConnect()
+    await this.calToolClient.waitConnect()
+    return
   }
 
   /** 校准工装通讯 */

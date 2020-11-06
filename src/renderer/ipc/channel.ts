@@ -74,6 +74,16 @@ export function recheck(data: ipcReq.CalRecheck) {
   return $command.invoke(`/port/cal/recheck`, data)
 }
 
+/** 读工装校准 */
+export function calToolRead(data: ipcReq.CalToolReadSamp) {
+  return $command.invoke(`/port/cal/calToolRead`, data)
+}
+
+/** 设置工装校准 */
+export function calToolSet(data: ipcReq.CalToolSet) {
+  return $command.invoke(`/port/cal/calToolSet`, data)
+}
+
 export function getChannelList() {
   return $command.invoke(`/port/channelList`)
 }

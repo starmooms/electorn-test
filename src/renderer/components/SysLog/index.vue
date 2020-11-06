@@ -70,6 +70,7 @@ export default class SysLog extends Vue {
   }
 
   async openReadFile() {
+    if (this.loading) return
     try {
       this.loading = true
       const handle = await fsPromises.open(this.filePath, 'r')
@@ -119,6 +120,7 @@ export default class SysLog extends Vue {
         }
       })
     } catch (err) {
+      console.error(err)
       // this.$message.error(err)
     } finally {
       this.loading = false

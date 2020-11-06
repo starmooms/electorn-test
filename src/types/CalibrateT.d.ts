@@ -108,6 +108,8 @@ declare namespace CalibrateTR {
   interface ToolCalAbResultItem {
     a: number | null
     b: number | null
+    point1: number
+    point2: number
     pointIndex: number
   }
   interface ToolCalAbResultChItem {
@@ -147,20 +149,6 @@ declare namespace CalibrateTB {
     b: number
     pointIndex: number
     calType: string
-  }
-
-  /** 写校准参数 */
-  interface SetCalOpts {
-    /** 1：通道校准 2：设置AB值 3：工装校准 4：清除校准值 5:复检 6:关闭输出 */
-    type: number
-    masterId: number
-    slaverId: number
-    channelIds: number[]
-    /** 1：充电电压 2：充电电流 3：放电电流 */
-    calType?: string
-    /** 电压/电流(修调点) */
-    pointer?: number
-    abList?: AbListItem[]
   }
 
   /** 修调点队列 */

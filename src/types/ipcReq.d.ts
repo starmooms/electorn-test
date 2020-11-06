@@ -194,12 +194,43 @@ declare namespace ipcReq {
     masterId: number
     slaverId: number
     channelIds: number[]
-    type: number // 1：读采样 2：读AB
+    /** 1：读采样 2：读AB */
+    type: number
     calType: string
+  }
+
+  interface CalToolReadSamp {
+    readCal: CalReadSamp
+    config: {
+      ip: string
+    }
+  }
+
+  /** 写校准参数 */
+  interface SetCalOpts {
+    /** 1：通道校准 2：设置AB值 3：工装校准 4：清除校准值 5:复检 6:关闭输出 */
+    type: number
+    masterId: number
+    slaverId: number
+    channelIds: number[]
+    /** 1：充电电压 2：充电电流 3：放电电流 */
+    calType?: string
+    /** 电压/电流(修调点) */
+    pointer?: number
+    abList?: CalibrateTB.AbListItem[]
+  }
+
+  interface CalToolSet {
+    setCal: SetCalOpts
+    config: {
+      ip: string
+    }
   }
 
   interface CalRecheck extends CalStart {
     recheckForm: CalibrateTR.RecheckSumbitForm
+    iRange: number[]
+    uRange: number[]
   }
   // type CalStart = CalibrateT.CalConfSubmitForm
 }

@@ -16,7 +16,7 @@ interface PostOpts {
     name: string
   }
   masterId: number
-  requestType?: Communi['requestType'] | 'calTool'
+  requestType?: Communi['requestType'] | 'calTool' | null
 }
 
 export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>

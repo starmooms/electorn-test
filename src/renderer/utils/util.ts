@@ -333,3 +333,15 @@ export const startInfoFormat = (
 export const PathResolve = (...args: string[]) => {
   return path.resolve(...args)
 }
+
+/** 获取Vue父级组件 */
+export const getVmParent = <T = any>(vm: Vue, name: string): T => {
+  const parent = vm.$parent
+  if (parent) {
+    if (parent.$options.name === name) {
+      return parent as any
+    }
+    return getVmParent(parent, name)
+  }
+  return null as any
+}

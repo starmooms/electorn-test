@@ -94,6 +94,7 @@ export default class ErrorLog extends Vue {
   }
 
   async getList() {
+    if (this.loading) return
     try {
       this.loading = true
       const data = await this.db.getErrorList(this.listQuery)

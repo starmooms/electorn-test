@@ -51,11 +51,22 @@ export default class BoxCal {
     this.parent = parent
   }
 
-  /** 设置校准 */
-  async setCal(opts: CalibrateTB.SetCalOpts) {
-    const { masterId, calType, pointer } = opts
+  /**
+   * 设置校准
+   *  @isCalTool 是否工装通讯
+   *  */
+  async setCal(opts: ipcReq.SetCalOpts, isCalTool = false) {
+    const { calType, pointer } = opts
+    let masterId = opts.masterId
     const abList = opts.abList || []
     const abListLen = abList.length
+    let reqType: 'calTool' | null = null
+
+    if (isCalTool) {
+      masterId = CALTOOL_ID
+      reqType = 'calTool'
+    }
+
     const writerModel = new BufModel({
       model: CAL_SET_MODEL,
       listLen: {
@@ -82,10 +93,13 @@ export default class BoxCal {
       writeItem.writer('b', abItem.b)
     })
 
+    // writerModel.showAll()
+
     await communi.post({
       control: CONTROL_CODE.calibrateSet,
       data: writerModel.buf,
-      masterId
+      masterId,
+      requestType: reqType
     })
   }
 
@@ -149,6 +163,24 @@ export default class BoxCal {
     return result
   }
 
+  /** 工装校准开始前 */
+  async calToolBefore(ip: string) {
+    await communi.tpcRequest.createCalTool(ip)
+    configManage.userConfig.set('calibrateConfig.config.toolIp', ip)
+  }
+
+  /** 读工装校准 */
+  async readCalTool(opts: ipcReq.CalToolReadSamp) {
+    this.calToolBefore(opts.config.ip)
+    return await this.readCalSamp(opts.readCal, true)
+  }
+
+  /** 设置工装校准 */
+  async setCalTool(opts: ipcReq.CalToolSet) {
+    this.calToolBefore(opts.config.ip)
+    return await this.setCal(opts.setCal, true)
+  }
+
   /** 获取读校准返回, 验证参数为空报错 */
   getCalResultSamp(result: CalibrateTB.CalResult, channelId: number) {
     const item = result[channelId]
@@ -182,16 +214,6 @@ export default class BoxCal {
     this.isCalRun = false
   }
 
-  /** 计算校准ab值 */
-  computedCalAB(x1: number, y1: number, x2: number, y2: number) {
-    const a = NP.round(NP.divide(NP.minus(y2, y1), NP.minus(x2, x1)), 6)
-    if (isNaN(a)) {
-      throw new Error('computedAB a is NaN')
-    }
-    const b = NP.round(NP.minus(y1, NP.times(a, x1)), 6)
-    return { a, b }
-  }
-
   /** 保存设置 */
   saveConfig(
     config: CalibrateT.CalConfForm,
@@ -221,18 +243,6 @@ export default class BoxCal {
         })
       }
     })
-    return list
-  }
-
-  /** 根据歩长生成列表 */
-  createForStep(start: number, end: number, step: number) {
-    const list: number[] = []
-    let i = start
-    const stepM = NP.divide(step, 1000)
-    while (i <= end) {
-      list.push(i)
-      i = NP.plus(i, stepM)
-    }
     return list
   }
 
@@ -283,24 +293,8 @@ export default class BoxCal {
 
   /** 复检 */
   async recheck(opts: ipcReq.CalRecheck) {
-    const { config, recheckForm } = opts
+    const { config, recheckForm, iRange, uRange } = opts
     const { masterId, slaverId, channelId, toolIp } = config
-    const iRange: number[] = this.createForStep(
-      recheckForm.IStart,
-      recheckForm.IEnd,
-      recheckForm.IStep
-    )
-    const uRange: number[] = this.createForStep(
-      recheckForm.UStart,
-      recheckForm.UEnd,
-      recheckForm.UStep
-    )
-
-    if (iRange.length === 0) {
-      throw new Error('电流范围为0')
-    } else if (uRange.length === 0) {
-      throw new Error('电压范围为0')
-    }
 
     this.saveConfig(config, recheckForm)
     await this.beforCalStart(toolIp)
@@ -355,9 +349,4 @@ export default class BoxCal {
       isCalRun: this.isCalRun
     }
   }
-
-  // /** 发送校准流程 */
-  // sendCalResult(data: any) {
-
-  // }
 }

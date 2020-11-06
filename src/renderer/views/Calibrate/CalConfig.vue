@@ -16,7 +16,12 @@
         </el-button>
       </div> -->
     </title-box>
-    <title-box class="config-item" size="mini" name="设备">
+    <title-box
+      class="config-item"
+      size="mini"
+      name="设备"
+      v-show="showRunConfig"
+    >
       <el-form-item class="form-item" label="机柜">
         <el-select v-model="form.masterId" placeholder="请选择">
           <el-option
@@ -87,10 +92,11 @@
         </el-select>
       </el-form-item>
     </title-box>
+    <ToolCalConfig v-show="!showRunConfig" @start="toolCalStart" />
   </el-form>
 </template>
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
+import { Vue, Component, Prop } from 'vue-property-decorator'
 import { getStaticChList } from '@/shared/config/channel'
 import {
   I_RANGE_OPTS,
@@ -99,9 +105,16 @@ import {
 } from '@/shared/config/calibrate'
 import { deepClone } from '@/shared/utils'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
+import ToolCalConfig from './components/ToolCalConfig.vue'
 
-@Component({})
+@Component({
+  components: {
+    ToolCalConfig
+  }
+})
 export default class CalConfig extends Vue {
+  @Prop({ type: Boolean, default: true }) showRunConfig!: boolean
+
   channelList = getStaticChList()
   standardOpts = deepClone(STANDARD_OPTS)
   uRangeOpts = deepClone(U_RANGE_OPTS)
@@ -152,6 +165,10 @@ export default class CalConfig extends Vue {
     }
   }
 
+  toolCalStart(data: any) {
+    this.$emit('toolCalStart', data)
+  }
+
   // deviceEdit = {
   //   edit: false,
   //   deviceIp: this.form.deviceIp,
@@ -175,6 +192,14 @@ export default class CalConfig extends Vue {
   //   this.deviceEdit.last = this.deviceEdit.deviceIp
   //   this.deviceIpEditSet()
   // }
+
+  getToolIp() {
+    if (!this.form.toolIp) {
+      this.$message.info('请先填写工装IP')
+      return false
+    }
+    return this.form.toolIp
+  }
 
   mounted() {
     if (this.config) {

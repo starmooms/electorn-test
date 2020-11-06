@@ -109,15 +109,6 @@ export default class USBManager {
 
   /** 设置校准 */
   setCal() {
-    // // 设置校准
-    // ipcManage.handle('/port/cal/set', async (event, data) => {
-    //   return boxManage.boxCal.setCal(data)
-    // })
-    // // 读校准
-    // ipcManage.handle('/port/cal/read', async (event, data) => {
-    //   return boxManage.boxCal.readCal(data)
-    // })
-
     // 开始校准
     ipcManage.handle('/port/cal/start', async (event, data) => {
       return boxManage.boxCal.start(data)
@@ -128,7 +119,7 @@ export default class USBManager {
       return boxManage.boxCal.setCalRunStop()
     })
 
-    // 停止校准
+    // 离开校准
     ipcManage.handle('/port/cal/leave', async () => {
       return boxManage.boxCal.leavePage()
     })
@@ -136,6 +127,16 @@ export default class USBManager {
     // 开始复检
     ipcManage.handle('/port/cal/recheck', async (event, data) => {
       return boxManage.boxCal.recheck(data)
+    })
+
+    // 读工装校准
+    ipcManage.handle('/port/cal/calToolRead', async (event, data) => {
+      return boxManage.boxCal.readCalTool(data)
+    })
+
+    // 设置工装校准
+    ipcManage.handle('/port/cal/calToolSet', async (event, data) => {
+      return boxManage.boxCal.setCalTool(data)
     })
   }
 

@@ -1,6 +1,6 @@
 <template>
-  <div class="tool-cal">
-    <el-form :inline="true" :model="form" class="demo-form-inline">
+  <title-box size="mini" name="工装校准">
+    <el-form :model="form" class="demo-form-inline" label-width="80px">
       <el-form-item label="校准类型">
         <el-select v-model="form.calType" placeholder="请选择校准类型">
           <el-option
@@ -11,12 +11,8 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="校准范围" v-show="selectRangeType">
-        <el-select
-          v-if="selectRangeType === 'A'"
-          v-model="form.iRange"
-          placeholder="请选择电流范围"
-        >
+      <el-form-item label="电流范围">
+        <el-select v-model="form.iRange" placeholder="请选择电流范围">
           <el-option
             v-for="item in iRangeList"
             :key="item.id"
@@ -24,11 +20,9 @@
             :label="item.label"
           ></el-option>
         </el-select>
-        <el-select
-          v-if="selectRangeType === 'V'"
-          v-model="form.uRange"
-          placeholder="请选择电压范围"
-        >
+      </el-form-item>
+      <el-form-item label="电压范围">
+        <el-select v-model="form.uRange" placeholder="请选择电压范围">
           <el-option
             v-for="item in uRangeList"
             :key="item.id"
@@ -41,31 +35,19 @@
     <div>
       <el-button type="primary" @click="start">开始校准</el-button>
     </div>
-    <ToolCalTabel ref="toolCalTabel" />
-  </div>
+  </title-box>
 </template>
 <script lang="ts">
-import { Vue, Component, Watch } from 'vue-property-decorator'
+import { Vue, Component } from 'vue-property-decorator'
 import {
   CALIBRATE_TYPE,
   I_TOOL_RANGE_OPTS,
   U_TOOL_RANGE_OPTS
 } from '@/shared/config/calibrate'
-import CalTypeSelect from './components/CalTypeSelect.vue'
-import ToolCalTabel from './components/ToolCalTabel.vue'
 import { deepClone } from '@/shared/utils'
 
-@Component({
-  components: {
-    CalTypeSelect,
-    ToolCalTabel
-  }
-})
+@Component
 export default class ToolCal extends Vue {
-  $refs!: {
-    toolCalTabel: ToolCalTabel
-  }
-
   form = {
     calType: null as null | string,
     iRange: null,
@@ -86,11 +68,6 @@ export default class ToolCal extends Vue {
     return this.selectType ? this.selectType.rangeType : null
   }
 
-  @Watch('form', { deep: true })
-  a(v) {
-    console.log(v)
-  }
-
   start() {
     if (!this.selectType || !this.selectRangeType) {
       return this.$message.error('请选选择校准类型')
@@ -107,17 +84,10 @@ export default class ToolCal extends Vue {
     if (!rangeItem) {
       return this.$message.error(`rangeId ${rangeId} undefined`)
     }
-    this.$refs.toolCalTabel.createCal({
+    this.$emit('start', {
       selectType: this.selectType,
       selectRange: rangeItem
     })
   }
-
-  // mounted() {}
 }
 </script>
-<style lang="scss" scoped>
-.action-btn-box {
-  display: inline-block;
-}
-</style>

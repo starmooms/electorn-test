@@ -45,11 +45,11 @@
       </vxe-table-column>
       <vxe-table-column field="calTypeName" title="修调类型" min-width="80"></vxe-table-column>
       <vxe-table-column field="point1Name" title="修调点" width="80"></vxe-table-column>
-      <vxe-table-column field="point1Result.actual" title="实际值(mA)" width="90"></vxe-table-column>
-      <vxe-table-column field="point1Result.samp" title="采样值(mA)" width="90"></vxe-table-column>
+      <vxe-table-column field="point1Result.actual" title="实际值" width="90"></vxe-table-column>
+      <vxe-table-column field="point1Result.samp" title="采样值" width="90"></vxe-table-column>
       <vxe-table-column field="point2Name" title="修调点" width="80"></vxe-table-column>
-      <vxe-table-column field="point2Result.actual" title="实际值(mA)" width="90"></vxe-table-column>
-      <vxe-table-column field="point2Result.samp" title="采样值(mA)" width="90"></vxe-table-column>
+      <vxe-table-column field="point2Result.actual" title="实际值" width="90"></vxe-table-column>
+      <vxe-table-column field="point2Result.samp" title="采样值" width="90"></vxe-table-column>
       <vxe-table-column field="a" title="A" width="80"></vxe-table-column>
       <vxe-table-column field="b" title="B" width="80"></vxe-table-column>
       <!-- eslint-enable -->

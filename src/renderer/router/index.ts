@@ -29,6 +29,11 @@ const routes: Array<RouteConfig> = [
         path: '/calibrate',
         name: 'calibrate',
         component: () => import('@/renderer/views/Calibrate/index.vue')
+      },
+      {
+        path: '/upgrade',
+        name: 'upgrade',
+        component: () => import('@/renderer/views/Upgrade/index.vue')
       }
     ]
   },

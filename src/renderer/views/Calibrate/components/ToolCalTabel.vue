@@ -74,7 +74,9 @@ export default class ToolCalTabel extends Vue {
   calType = ''
 
   channelIds: number[] = []
+  /** 采样结果对象 */
   calSampResult: CalibrateTR.ToolCalSampResult = {}
+  /** 采样计算ab结果对象 */
   calAbResult: CalibrateTR.ToolCalAbResult = {}
   resultList: CalibrateTR.ToolCalChannelList[] = []
 
@@ -154,22 +156,26 @@ export default class ToolCalTabel extends Vue {
 
   /** 计算ab */
   computAb() {
-    const nullPoint = {}
+    const nullPoint: any = {}
     const abList: CalibrateTB.AbListItem[] = []
-    Object.entries(this.calSampResult).forEach(([channelIdKey, sampResult]) => {
-      let lastPointSamp: number | null = null
-      const abResult = this.calAbResult[channelIdKey]
-      const channelId = Number(channelIdKey)
-      Object.entries(sampResult).forEach(([pointId, pointSamp], index) => {
-        if (index > 0) {
-          const abResultItem = abResult[index]
-          const { point1, point2 } = abResultItem
-          if (lastPointSamp !== null && pointSamp !== null) {
+
+    this.channelIds.forEach(channelId => {
+      const abResult = this.calAbResult[channelId]
+      const sampResult = this.calSampResult[channelId]
+      let lastPoint: number | null = null
+
+      // 循环修调点计算ab
+      this.rangeList.forEach((point, pointIndex) => {
+        if (pointIndex > 0 && lastPoint !== null) {
+          const point1Samp = sampResult[lastPoint]
+          const point2Samp = sampResult[point]
+          const abResultItem = abResult[pointIndex]
+          if (point1Samp !== null && point2Samp !== null) {
             const { a, b } = computedCalAB(
-              lastPointSamp,
-              point1,
-              pointSamp,
-              point2
+              point1Samp,
+              lastPoint,
+              point2Samp,
+              point
             )
             abResultItem.a = a
             abResultItem.b = b
@@ -177,20 +183,23 @@ export default class ToolCalTabel extends Vue {
               channelId,
               a,
               b,
-              pointIndex: index,
+              pointIndex,
               calType: this.calType
             })
           } else {
             abResultItem.a = null
             abResultItem.b = null
-            if (lastPointSamp === null) nullPoint[point1] = true
-            if (pointSamp === null) nullPoint[point2] = true
+            if (point1Samp === null) nullPoint[lastPoint] = true
+            if (point2Samp === null) nullPoint[point] = true
           }
         }
-        lastPointSamp = pointSamp
+        lastPoint = point
       })
     })
-    const errorPoint = Object.keys(nullPoint).map(Number)
+
+    const errorPoint = Object.keys(nullPoint)
+      .map(Number)
+      .sort((a, b) => a - b)
     return {
       status: errorPoint.length === 0,
       errorPoint,

@@ -13,7 +13,7 @@ interface PointQueueItem {
 }
 
 /** 修调类型队列 */
-interface TypeQueueItem {
+export interface TypeQueueItem {
   masterId: number
   slaverId: number
   calType: string
@@ -90,6 +90,7 @@ export default class RunPointQueue {
   }
 
   async end(isSuccess = false) {
+    if (this.isRun === false) return
     this.isRun = false
     if (isSuccess) {
       this.boxCal.sendCalResult(
@@ -102,10 +103,11 @@ export default class RunPointQueue {
   }
 
   async stop() {
+    if (this.isRun === false) return
     await this.end()
     this.boxCal.sendCalResult(
       'msg',
-      `${this.runTypeName}已暂停 ${dayjs().format(TIME_FORMAT)}`
+      `${this.runTypeName}已停止 ${dayjs().format(TIME_FORMAT)}`
     )
     return
   }

@@ -16,6 +16,11 @@
           </router-link>
         </li>
         <li class="nav-item">
+          <router-link to="/upgrade">
+            设备升级
+          </router-link>
+        </li>
+        <li class="nav-item">
           <router-link to="/setting">
             <svg-icon icon-class="setting"></svg-icon>
             设置

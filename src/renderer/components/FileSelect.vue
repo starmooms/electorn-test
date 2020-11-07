@@ -25,6 +25,17 @@ export default class FileSelect extends Vue {
     }
   })
   readonly fileFilter!: Electron.FileFilter[]
+  @Prop({
+    type: Array,
+    default() {
+      return []
+    }
+  })
+  readonly fileType!: string[]
+
+  fileTypeList = {
+    hex: { name: 'hex', extensions: ['bin', 'hex'] }
+  }
 
   action() {
     if (this.isSave) {
@@ -34,6 +45,7 @@ export default class FileSelect extends Vue {
     }
   }
 
+  /** 保存文件目录 */
   onSaveFolder() {
     remote.dialog
       .showSaveDialog(remote.getCurrentWindow(), {
@@ -48,16 +60,25 @@ export default class FileSelect extends Vue {
       })
   }
 
+  /** 打开文件 */
   onFolderClick() {
     const properties: OpenDialogOptions['properties'] =
       this.openType === 'file'
         ? ['openFile']
         : ['openDirectory', 'createDirectory']
 
+    let filters = [{ name: 'All Files', extensions: ['*'] }]
+    if (this.fileType.length > 0) {
+      filters = this.fileType.map(key => {
+        return this.fileTypeList[key]
+      })
+    }
+
     remote.dialog
       .showOpenDialog(remote.getCurrentWindow(), {
         // defaultPath: this.path || remote.app.getPath('downloads'),
-        properties: properties
+        properties: properties,
+        filters
       })
       .then(({ canceled, filePaths }) => {
         if (canceled || filePaths.length === 0) {

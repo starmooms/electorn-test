@@ -8,6 +8,7 @@ import BoxStatus from './BoxStatus'
 import BoxLamp from './BoxLamp'
 import BoxMasterInfo from './BoxMasterInfo'
 import communi from '../Request/Communi'
+import BoxUpgrade from './BoxUpgrade'
 
 interface PostOpts {
   timeout?: number
@@ -40,6 +41,7 @@ export class BoxManage {
   boxStatus = new BoxStatus(this)
   boxLamp = new BoxLamp(this)
   boxMasterInfo = new BoxMasterInfo(this)
+  boxUpgrade = new BoxUpgrade(this)
 
   create() {
     this.initChannelResolve = this.initChannelStatusList()

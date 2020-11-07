@@ -31,6 +31,7 @@ export default class USBManager {
     this.setLamp()
     this.setMasterInfo()
     this.getChannelList()
+    this.upgrade()
   }
 
   /** 开始监测USB */
@@ -137,6 +138,14 @@ export default class USBManager {
     // 设置工装校准
     ipcManage.handle('/port/cal/calToolSet', async (event, data) => {
       return boxManage.boxCal.setCalTool(data)
+    })
+  }
+
+  /** 设置升级控制 */
+  upgrade() {
+    // 设置工装校准
+    ipcManage.handle('/port/upgrade/start', async (event, data) => {
+      return boxManage.boxUpgrade.upgradeStart(data)
     })
   }
 

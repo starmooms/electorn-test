@@ -124,8 +124,8 @@ class Communi {
 
       this.emitList.set(sId, ({ masterId, errCode, buf, originBuf }) => {
         if (isDev) {
-          logger.debug(control.name, '返回', buf.toString('hex'))
-          logger.debug(control.name, '返回数据域', buf.toString('hex'))
+          // logger.debug(control.name, '返回', buf.toString('hex'))
+          // logger.debug(control.name, '返回数据域', buf.toString('hex'))
         }
         if (errCode !== '00') {
           const errMsg = ERROR_STATUS[errCode] || errCode
@@ -148,8 +148,8 @@ class Communi {
       })
 
       if (isDev) {
-        logger.debug(control.name, '发送', agrData.buf.toString('hex'))
-        logger.debug(control.name, '发送数据域', data.toString('hex'))
+        // logger.debug(control.name, '发送', agrData.buf.toString('hex'))
+        // logger.debug(control.name, '发送数据域', data.toString('hex'))
       }
 
       if (requestType === 'Port') {

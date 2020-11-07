@@ -84,6 +84,11 @@ export function calToolSet(data: ipcReq.CalToolSet) {
   return $command.invoke(`/port/cal/calToolSet`, data)
 }
 
+/** 设置工装校准 */
+export function upgradeStart(data: ipcReq.UpgradeForm) {
+  return $command.invoke(`/port/upgrade/start`, data)
+}
+
 export function getChannelList() {
   return $command.invoke(`/port/channelList`)
 }

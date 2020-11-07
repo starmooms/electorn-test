@@ -9,6 +9,7 @@ import {
 import store from '@/renderer/store'
 import { getChannelList } from '@/renderer/ipc/channel'
 import Vue from 'vue'
+import { getStaticChList } from '@/shared/config/channel'
 
 config.rawError = true
 
@@ -39,6 +40,7 @@ export default class ChannelImpl extends VuexModule {
     { name: '关闭', action: 'close' }
   ]
   public sampMap: SampMap = {}
+  public staticChList = getStaticChList()
 
   public workerStatus = {
     vacant: '空置',

@@ -232,5 +232,11 @@ declare namespace ipcReq {
     iRange: number[]
     uRange: number[]
   }
-  // type CalStart = CalibrateT.CalConfSubmitForm
+
+  interface UpgradeForm {
+    masterIds: number[]
+    filePath: string
+    /** 1：机柜升级 2：从控升级 */
+    upgradeType: 1 | 2
+  }
 }

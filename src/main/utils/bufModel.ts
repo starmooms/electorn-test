@@ -266,6 +266,11 @@ export class BufWriteModel {
     return Math.round(this.read(name) * n) / n
   }
 
+  /** 连接 */
+  concat(buf: Buffer) {
+    this.buf = Buffer.concat([this.buf, buf])
+  }
+
   ecahList(
     name: string,
     cb: (BufWriteModel: BufWriteModel, index: number) => any

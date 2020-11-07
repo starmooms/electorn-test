@@ -1,3 +1,27 @@
+const fs = require('fs').promises
+
+const path = 'E:\\up\\sj\\bt_check(12).hex'
+const b = Buffer.from([1, 254, 2, 288])
+console.log(b)
+const check = b.reduce((total, item) => (total += item), 0)
+console.log(check)
+// fs.stat(path)
+//   .then(data => {
+//     console.log(data)
+//   })
+//   .catch(err => {
+//     console.log(err.message)
+//     console.log(err)
+//   })
+
+// fs.open(path)
+//   .then(data => {
+//     console.log(data)
+//   })
+//   .catch(err => {
+//     console.log(err)
+//   })
+
 // const buf1 = Buffer.from('0616', 'hex')
 // const buf3 = Buffer.from([12, 255])
 // console.log(buf1)
@@ -284,9 +308,23 @@
 
 // console.log(Buffer.from('333333330d0a', 'hex').toString())
 
-const b = Buffer.from(
-  '00000000000101010100000a00140014001400c800c8000000c800000000a100000000001400000014000000000000000000000000000000000000000000',
-  'hex'
-)
-// b.writeIntBE('0xff', 0, 2)
-console.log(b.length)
+// const b = Buffer.from(
+//   '00000000000101010100000a00140014001400c800c8000000c800000000a100000000001400000014000000000000000000000000000000000000000000',
+//   'hex'
+// )
+// // b.writeIntBE('0xff', 0, 2)
+// console.log(b.length)
+
+// setTimeout(() => {
+//   console.log('timer1')
+//   Promise.resolve().then(function() {
+//     console.log('promise1')
+//   })
+// }, 0)
+
+// setTimeout(() => {
+//   console.log('timer2')
+//   Promise.resolve().then(function() {
+//     console.log('promise2')
+//   })
+// }, 0)

@@ -1,4 +1,5 @@
 import NP from 'number-precision'
+NP.enableBoundaryChecking(false)
 
 declare type typedKeys = <T>(o: T) => Array<keyof T>
 /** 可以返回类型的 Object.keys */
@@ -82,7 +83,6 @@ export function getMasterInfoObj(): IpConfigT.MasterInfo {
 }
 
 export function computedCalAB(x1: number, y1: number, x2: number, y2: number) {
-  console.log(x1, y1, x2, y2)
   const a = NP.round(NP.divide(NP.minus(y2, y1), NP.minus(x2, x1)), 6)
   if (isNaN(a)) {
     throw new Error('computedAB a is NaN')

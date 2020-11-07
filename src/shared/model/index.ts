@@ -355,3 +355,24 @@ export const CAL_READ_MODEL: Model[] = [
     ]
   }
 ]
+
+/** 机柜升级发送 */
+export const UPGRADE_MODEL: Model[] = [
+  { name: 'upgradeType', bytLen: 1 }, // 1：主控 2：丛控
+  { name: 'masterId', bytLen: 1 },
+  { name: 'total', bytLen: 4 },
+  { name: 'offset', bytLen: 4 },
+  { name: 'size', bytLen: 4 },
+  { name: 'check', bytLen: 4 },
+  { name: 'totalCheck', bytLen: 4 },
+  { name: 'data', bytLen: 0 }
+]
+
+/** 机柜升级返回 */
+export const UPGRADE_BACK_MODEL: Model[] = [
+  { name: 'upgradeType', bytLen: 1 }, // 1：主控 2：丛控
+  { name: 'masterId', bytLen: 1 },
+  { name: 'slaverId', bytLen: 1 },
+  { name: 'offset', bytLen: 4 },
+  { name: 'errCode', bytLen: 1 }
+]

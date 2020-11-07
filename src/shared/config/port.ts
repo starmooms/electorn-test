@@ -383,5 +383,9 @@ export const CONTROL_CODE = {
   calibrateRead: {
     code: 0x8a,
     name: '读校准'
+  },
+  upgradeSend: {
+    code: 0xb5,
+    name: '发送升级文件'
   }
 }

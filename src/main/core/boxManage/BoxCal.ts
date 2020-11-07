@@ -1,5 +1,5 @@
 import NP from 'number-precision'
-import { getCalList, CONTROL_CODE } from '@/shared/config/port'
+import { CONTROL_CODE } from '@/shared/config/port'
 import {
   CAL_SET_MODEL,
   CAL_READ_POST_MODEL,
@@ -17,29 +17,7 @@ import {
 } from '@/shared/config/calibrate'
 import ipcManage from '../IpcManage'
 import configManage from '../ConfigManage'
-import dayjs from 'dayjs'
-import { TIME_FORMAT } from '@/shared/utils'
-import RunPointQueue from './CalQueue/CalTypeQueue'
-
-/** 修调类型队列 */
-interface CalTypeQueueItem {
-  masterId: number
-  slaverId: number
-  calType: string
-  calTypeName: string
-  meanwhile: boolean
-  pointerList: number[]
-  unit: string
-}
-
-/** 根据修调类型生成修调点队列 */
-interface CalRangeQueueItem {
-  channelIds: number[]
-  rangeNum: number
-  pointIndex: number
-}
-
-// type NowRunQueue = ReturnType<BoxCal['calTypeRunQueue']>
+import RunPointQueue, { TypeQueueItem } from './libs/CalTypeQueue'
 
 /** 机柜校准控制 */
 export default class BoxCal {
@@ -171,13 +149,13 @@ export default class BoxCal {
 
   /** 读工装校准 */
   async readCalTool(opts: ipcReq.CalToolReadSamp) {
-    this.calToolBefore(opts.config.ip)
+    await this.calToolBefore(opts.config.ip)
     return await this.readCalSamp(opts.readCal, true)
   }
 
   /** 设置工装校准 */
   async setCalTool(opts: ipcReq.CalToolSet) {
-    this.calToolBefore(opts.config.ip)
+    await this.calToolBefore(opts.config.ip)
     return await this.setCal(opts.setCal, true)
   }
 
@@ -228,7 +206,7 @@ export default class BoxCal {
   /** 创建校准类型队列 */
   createCalTypeList(params: CalibrateTB.CalCreateTypeList) {
     const { masterId, slaverId, iRange, uRange, calType } = params
-    const list: CalTypeQueueItem[] = []
+    const list: TypeQueueItem[] = []
     CALIBRATE_TYPE.forEach(item => {
       if (calType.includes(item.type)) {
         const range = item.rangeType === 'A' ? iRange : uRange

@@ -1,10 +1,16 @@
 import { BoxManage } from './BoxManage'
 import { promises as fs } from 'fs'
-import { UPGRADE_MODEL, UPGRADE_BACK_MODEL } from '@/shared/model'
+import {
+  UPGRADE_MODEL,
+  UPGRADE_BACK_MODEL,
+  RESTART_MASTER
+} from '@/shared/model'
 import { BufWriteModel as BufModel } from '@/main/utils/bufModel'
 import communi from '../Request/Communi'
 import { CONTROL_CODE, ERROR_STATUS } from '@/shared/config/port'
 import UpgradeDevice from './libs/UpgradeDevice'
+import logger from '../Logger'
+import ipcManage from '../IpcManage'
 
 /** 机柜升级控制 */
 export default class BoxUpgrade {
@@ -13,6 +19,10 @@ export default class BoxUpgrade {
 
   constructor(parent: BoxManage) {
     this.parent = parent
+  }
+
+  upgradeEmitEnd() {
+    this.upgradeTask = null
   }
 
   async upgradeStart(opts: ipcReq.UpgradeForm) {
@@ -27,11 +37,16 @@ export default class BoxUpgrade {
       boxUpgrade: this
     })
     await this.upgradeTask.start()
-    console.log('upgrade', opts)
+    return
   }
 
   async sendFileData(opts: any) {
     const { masterId } = opts
+    // return new Promise(r => {
+    //   setTimeout(() => {
+    //     r(1)
+    //   }, 1000)
+    // })
     const writeModel = new BufModel({
       model: UPGRADE_MODEL
     })
@@ -59,6 +74,41 @@ export default class BoxUpgrade {
       throw new Error(`ErrorCode ${ERROR_STATUS[errCode]}`)
     }
     return true
+  }
+
+  async masterRestart(opts: any) {
+    const { masterId, restartType } = opts
+    const writeModel = new BufModel({
+      model: RESTART_MASTER
+    })
+    writeModel.writer('masterId', masterId)
+    if (restartType === 2) {
+      writeModel.writerBit('salverId', [], 1)
+    }
+    await communi.post({
+      control: CONTROL_CODE.restartMaster,
+      data: writeModel.buf,
+      masterId
+    })
+    return
+  }
+
+  /** 发送升级信息到桌面 */
+  sendUpdateInfo(type: string, data: any) {
+    const result = {
+      data,
+      type,
+      info: this.upgradeTask
+        ? {
+            isRun: this.upgradeTask.isRun,
+            percent: this.upgradeTask.percent,
+            upgradeType: this.upgradeTask.upgradeType
+          }
+        : null
+    }
+    ipcManage.send('/boxUpdate/updateInfo', () => {
+      return result
+    })
   }
 }
 

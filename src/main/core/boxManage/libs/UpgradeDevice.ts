@@ -2,6 +2,8 @@ import * as fs from 'fs'
 import { promisify } from 'util'
 import BoxUpgrade from '../BoxUpgrade'
 import logger from '../../Logger'
+import NP from 'number-precision'
+import _throttle from 'lodash/throttle'
 
 // const fs = fsOrigin.promises
 const readPromsie = promisify(fs.read)
@@ -39,6 +41,11 @@ export default class UpgradeDevice {
   queue: MasterQueue
   queueItemNow!: MasterQueue[0]
 
+  percent = 0
+  percentTotal = 0
+  percentCur = 0
+  sendPercentFun: any = null
+
   constructor({ filePath, masterIds, boxUpgrade, upgradeType }: Params) {
     this.filePath = filePath
     this.masterIds = masterIds
@@ -56,30 +63,47 @@ export default class UpgradeDevice {
 
   /** 开始升级 */
   async start() {
+    if (this.isRun) return
+    this.isRun = true
     await this.readFileInfo()
     await this.openFile()
-    return this.next()
+    this.next()
+    return
   }
 
-  end() {
+  end(isSuccess = false) {
     this.isRun = false
     if (this.fileHandle) {
       this.fileHandle.close()
     }
+    if (isSuccess) {
+      this.boxUpgrade.sendUpdateInfo('success', `${this.upgradeName} 升级成功`)
+    }
+    this.boxUpgrade.upgradeEmitEnd()
+  }
+
+  setError(err: Error) {
+    this.boxUpgrade.sendUpdateInfo(
+      'error',
+      `${this.upgradeName}升级发生错误已退出，${err.message}`
+    )
+    this.end()
   }
 
   async next() {
     try {
       if (!this.queueItemNow || this.queueItemNow.last >= this.fileInfo.size) {
         const queueItem = this.queue.shift()
-        if (!queueItem) return this.end()
+        if (!queueItem) return this.end(true)
         this.queueItemNow = queueItem
       }
       await this.sendFileData()
-      return this.next()
+      await this.checkRestart()
+      this.next()
+      return
     } catch (err) {
       logger.error(err)
-      this.end()
+      this.setError(err)
     }
   }
 
@@ -87,11 +111,11 @@ export default class UpgradeDevice {
   async readFileInfo() {
     const info = await fs.promises.stat(this.filePath)
     const data = await fs.promises.readFile(this.filePath)
-    logger.info(info)
     this.fileInfo = {
       size: info.size,
       check: this.getCheck(data)
     }
+    this.percentTotal = NP.times(this.fileInfo.size, this.queue.length)
   }
 
   /** 打开文件 */
@@ -99,14 +123,16 @@ export default class UpgradeDevice {
     this.fileHandle = await fs.promises.open(this.filePath, 'r')
   }
 
+  /** 读文件 */
   async readFile(buf: Buffer, start: number, length: number, position: number) {
     return readPromsie(this.fileHandle.fd, buf, start, length, position)
   }
 
   /** 根据主控创建队列 */
   createMasterQueue(masterIds: number[]) {
-    return masterIds.map(id => {
+    return masterIds.map((id, index) => {
       return {
+        index,
         masterId: id,
         last: 0
       }
@@ -116,6 +142,25 @@ export default class UpgradeDevice {
   /** 获取校验和 */
   getCheck(buf: Buffer) {
     return buf.reduce((total, item) => (total += item), 0)
+  }
+
+  /** 计算百分比 */
+  updatePercent(bufLen: number) {
+    this.percentCur += bufLen
+    this.percent = NP.round(NP.divide(this.percentCur, this.percentTotal), 6)
+    this.sendPercent()
+  }
+
+  /** 发送百分比信息 */
+  sendPercent() {
+    if (!this.sendPercentFun) {
+      this.sendPercentFun = _throttle(() => {
+        if (this.isRun && this.percent < 1) {
+          this.boxUpgrade.sendUpdateInfo('info', '')
+        }
+      }, 1000)
+    }
+    this.sendPercentFun()
   }
 
   /** 发送文件数据 */
@@ -128,7 +173,7 @@ export default class UpgradeDevice {
     if (sizeRead !== sizeLimt) {
       buf = buf.slice(0, sizeRead + 1)
     }
-    this.queueItemNow.last = last + buf.length
+    this.queueItemNow.last = last + sizeRead
     const check = this.getCheck(buf)
     logger.debug(buf.toString('hex'))
     await this.boxUpgrade.sendFileData({
@@ -141,6 +186,18 @@ export default class UpgradeDevice {
       buf,
       totalCheck: this.fileInfo.check
     })
+    this.updatePercent(sizeRead)
     return
+  }
+
+  /** 机柜发送完文件后重启 */
+  async checkRestart() {
+    const runItem = this.queueItemNow
+    if (runItem && runItem.last >= this.fileInfo.size) {
+      await this.boxUpgrade.masterRestart({
+        masterId: this.queueItemNow.masterId,
+        restartType: this.upgradeType
+      })
+    }
   }
 }

@@ -4,7 +4,7 @@ import { MessageBox } from 'element-ui'
 declare module 'element-ui/types/message-box' {
   interface ElMessageBoxOptions {
     /** 反转提示框 确定和取消 */
-    userReversal: boolean
+    userReversal?: boolean
   }
 }
 

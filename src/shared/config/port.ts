@@ -387,5 +387,9 @@ export const CONTROL_CODE = {
   upgradeSend: {
     code: 0xb5,
     name: '发送升级文件'
+  },
+  restartMaster: {
+    code: 0xb4,
+    name: '重启机柜'
   }
 }

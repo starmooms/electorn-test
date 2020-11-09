@@ -376,3 +376,9 @@ export const UPGRADE_BACK_MODEL: Model[] = [
   { name: 'offset', bytLen: 4 },
   { name: 'errCode', bytLen: 1 }
 ]
+
+/** 重启机柜 */
+export const RESTART_MASTER: Model[] = [
+  { name: 'masterId', bytLen: 1 },
+  { name: 'slaverId', bytLen: 1 }             //
+]

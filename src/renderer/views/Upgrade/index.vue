@@ -1,80 +1,114 @@
 <template>
   <div>
     <el-divider content-position="left">机柜升级</el-divider>
-    <el-form ref="form" :model="form" label-width="100px">
-      <el-form-item label="机柜">
-        <el-select
-          v-model="form.masterIds"
-          multiple
-          collapse-tags
-          placeholder="请选择机柜"
-        >
-          <el-option
-            v-for="item in staticMaster"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          ></el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item class="limt-form-item" label="选择更新文件">
-        <el-input v-model="form.filePath">
-          <file-select
-            slot="append"
-            v-model="form.filePath"
-            openType="file"
-            :fileType="fileType"
-          ></file-select>
-        </el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="submit">立即升级</el-button>
-      </el-form-item>
-    </el-form>
+    <UpdateForm @submit="submit" :upgradeType="1" />
     <el-divider content-position="left">丛控升级</el-divider>
+    <UpdateForm @submit="submit" :upgradeType="2" />
+    <UpdateDialog
+      :show.sync="updateShow"
+      :title="updateName"
+      :masterInfo="updateMasterInfo"
+      :percent="updatePercent"
+    />
   </div>
 </template>
 <script lang="ts">
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import { Vue, Component } from 'vue-property-decorator'
-import FileSelect from '@/renderer/components/FileSelect.vue'
 import { upgradeStart } from '@/renderer/ipc/channel'
+import UpdateDialog from './components/UpdateDialog.vue'
+import UpdateForm from './components/UpdateForm.vue'
 
 @Component({
   components: {
-    FileSelect
+    UpdateDialog,
+    UpdateForm
   }
 })
 export default class Upgrade extends Vue {
-  form = {
-    masterIds: [],
-    filePath: ''
-  }
+  updateShow = false
+  updateType = 0
+  updateMasterInfo = ''
 
-  fileType = ['hex']
+  info: any = null
+
+  get updatePercent() {
+    return this.info ? Math.floor(this.info.percent * 100) : 0
+  }
 
   get staticMaster() {
     return ChannelStatus.staticChList.master
   }
 
-  async submit() {
-    this.form.masterIds.sort((a, b) => a - b)
-    const { masterIds, filePath } = this.form
-    if (masterIds.length === 0) {
-      return this.$message.error('请先选择机柜')
-    } else if (!filePath) {
-      return this.$message.error('请先选择更新文件')
+  get updateName() {
+    return this.updateType === 1
+      ? '机柜升级'
+      : this.updateType === 2
+      ? '丛控升级'
+      : ''
+  }
+
+  async submit(params: ipcReq.UpgradeForm) {
+    const result = await upgradeStart(params)
+    if (result.status) {
+      if (this.info) {
+        this.info.percent = 0
+      }
+      this.updateMasterInfo = params.masterIds.map(i => i + 1).join('、')
+      this.openUpgradeDialog(params.upgradeType)
     }
-    await upgradeStart({
-      masterIds,
-      filePath,
-      upgradeType: 1
+  }
+
+  openUpgradeDialog(upgradeType: number) {
+    this.updateType = upgradeType
+    this.updateShow = true
+  }
+
+  closeAfterMessage(
+    type: 'success' | 'warning' | 'info' | 'error',
+    msg: string
+  ) {
+    setTimeout(() => {
+      this.$elConfirm(msg, {
+        type,
+        showCancelButton: false
+      }).finally(() => {
+        this.updateShow = false
+      })
     })
+  }
+
+  /** 接收消息 */
+  onSend() {
+    this.$command.on({
+      eventName: '/boxUpdate/updateInfo',
+      onEmit: data => {
+        this.info = data.info
+
+        if (data.type === 'success') {
+          this.closeAfterMessage('success', `${this.updateName} 成功`)
+        } else if (data.type === 'error') {
+          this.closeAfterMessage('error', data.data)
+        }
+
+        if (!this.updateShow && this.info && this.info.isRun) {
+          this.openUpgradeDialog(this.info.upgradeType)
+        }
+      },
+      vm: this
+    })
+  }
+
+  mounted() {
+    this.onSend()
   }
 }
 </script>
 <style lang="scss" scoped>
 .limt-form-item {
   width: 420px;
+}
+.select-master {
+  width: 246px;
 }
 </style>

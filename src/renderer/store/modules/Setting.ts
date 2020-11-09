@@ -11,32 +11,12 @@ import { getStoreConfig } from '@/renderer/ipc/storeConfig'
 import { sampSetReadStatus } from '@/renderer/ipc/channel'
 config.rawError = true
 
-interface UserConfig {
-  sampling: {
-    U: {
-      max: number
-      min: number
-    }
-    I: {
-      max: number
-      min: number
-    }
-  }
-  base: {
-    portPath: string
-  }
-  sampChartConfig: Store.SampChartConfig
-}
-
 @Module({ dynamic: true, store, name: 'setting' })
 export default class SettingImpl extends VuexModule {
-  public userConfig: UserConfig | null = null
+  public userConfig: StoreT.UserConfg | null = null
   public $readTranslate = false
   public mainDbPath = ''
-
-  get sampling() {
-    return this.userConfig!.sampling
-  }
+  public titleBar = false
 
   get portPath() {
     return this.userConfig!.base.portPath
@@ -54,13 +34,17 @@ export default class SettingImpl extends VuexModule {
     return this.userConfig!.sampChartConfig
   }
 
+  get historyFilePath() {
+    return this.userConfig!.historyFilePath
+  }
+
   @Mutation
   private SETREADTRANSLATE(status: boolean) {
     this.$readTranslate = status
   }
 
   @Mutation
-  UPDATE_USERCONFIG(userConfig: UserConfig) {
+  UPDATE_USERCONFIG(userConfig: StoreT.UserConfg) {
     this.userConfig = userConfig
   }
 
@@ -68,6 +52,12 @@ export default class SettingImpl extends VuexModule {
   @Mutation
   UPDATE_MAINDBPATH(path: string) {
     this.mainDbPath = path
+  }
+
+  /** 设置titleBar是否显示 */
+  @Mutation
+  UPDATE_TITLEBAR(status: boolean) {
+    this.titleBar = status
   }
 
   @Action

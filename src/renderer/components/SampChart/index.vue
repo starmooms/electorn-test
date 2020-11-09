@@ -1,7 +1,12 @@
 <template>
   <div class="echart-box">
     <action-box v-if="showAction"></action-box>
-    <v-chart ref="echart" manual-update :autoresize="true"></v-chart>
+    <v-chart
+      ref="echart"
+      manual-update
+      :autoresize="true"
+      @zr:click="handleClick"
+    ></v-chart>
   </div>
 </template>
 
@@ -48,11 +53,11 @@ export default class SampChart extends Vue {
   }
 
   xData!: string[]
-  sampling = SettingStatus.sampling
   sampData: Port.SampItem[] = []
 
   chartSamp!: string | null
   polar!: any
+  selectSamp!: Port.SampItem | null
 
   get sampChartConfig() {
     return SettingStatus.sampChartConfig
@@ -65,7 +70,6 @@ export default class SampChart extends Vue {
 
   @Watch('sampChartConfig', { deep: true })
   changeConfig() {
-    console.log('d?')
     this.refreshConfig()
   }
 
@@ -122,8 +126,8 @@ export default class SampChart extends Vue {
       }
     }
 
+    this.selectSamp = null
     const chartConfig = this.getChartConfig()
-
     const polar = _merge(
       {
         dataset: {
@@ -131,6 +135,7 @@ export default class SampChart extends Vue {
         },
         tooltip: {
           trigger: 'axis',
+          // axisPointer: {},
           transitionDuration: 0.4,
           padding: 10,
           textStyle: {
@@ -138,15 +143,22 @@ export default class SampChart extends Vue {
           },
           confine: true,
           extraCssText: 'width: 170px',
-          formatter(params) {
+          formatter: params => {
             let htmlStr = ''
+            let mainInfo = true
             for (let i = 0; i < params.length; i++) {
               const { seriesName, marker, value, dimensionNames } = params[i]
-              if (i === 0) {
-                const xName = value[dimensionNames[0]] // 时间
-                const workerId = `工步ID：${value.stepId + 1}`
+              if (value.stepTime === 0) continue
+              if (mainInfo) {
+                this.selectSamp = value
+                const stepId = value.stepId + 1
+                const workerId = `工序：${stepId}（${stepId}-${value.loopNum}）`
                 const workerStatus = `工步信息：${value.workerName}`
-                htmlStr += `${xName}</br>${workerId}</br>${workerStatus}</br>`
+                const stepTime = `工步时间：${value.stepTime}s`
+                // const xName = `总工步时间：${value[dimensionNames[0]]}s` // 时间
+                const date = `日期：${value.createTimeStr}`
+                htmlStr += `${workerId}</br>${workerStatus}</br>${stepTime}</br>${date}</br>`
+                mainInfo = false
               }
               const yKey = dimensionNames[1]
               if (yKey) {
@@ -194,7 +206,6 @@ export default class SampChart extends Vue {
           containLabel: false
         },
         xAxis: {
-          type: 'time',
           axisLine: { onZero: false }
         }
       },
@@ -272,7 +283,7 @@ export default class SampChart extends Vue {
       series: [
         {
           name: y1.name,
-          dimensions: ['createTimeStr', y1.key],
+          dimensions: ['stepTimeTotal', y1.key],
           lineStyle: { color: y1.color },
           itemStyle: { color: y1.color },
           yAxisIndex: 0,
@@ -282,7 +293,7 @@ export default class SampChart extends Vue {
         },
         {
           name: y2.name,
-          dimensions: ['createTimeStr', y2.key],
+          dimensions: ['stepTimeTotal', y2.key],
           lineStyle: { color: y2.color },
           itemStyle: { color: y2.color },
           yAxisIndex: 1,
@@ -298,7 +309,6 @@ export default class SampChart extends Vue {
   refreshConfig() {
     if (this.$refs.echart) {
       const cof = this.getChartConfig()
-      console.log(cof)
       this.$refs.echart.mergeOptions(cof)
     }
   }
@@ -321,6 +331,12 @@ export default class SampChart extends Vue {
   /** 获取echart实例 */
   getEchart(cb: (echart: any) => any) {
     cb(this.$refs?.echart?.chart)
+  }
+
+  handleClick() {
+    if (this.selectSamp) {
+      this.$emit('locate', this.selectSamp)
+    }
   }
 
   mounted() {

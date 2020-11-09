@@ -1,50 +1,58 @@
 <template>
-  <el-dialog
-    title="工步模板"
-    :close-on-click-modal="false"
-    :visible.sync="dialog"
-    width="600px"
-  >
-    <el-table :data="list" border height="30vh">
-      <el-table-column label="模板名称" prop="name">
-        <template slot-scope="{ row }">
-          <div class="name-box">
-            <template v-if="row.edit">
-              <el-input class="edit-input" v-model.trim="row.name" />
-              <el-button
-                class="cancel-btn"
-                type="warning"
-                @click="cancelEdit(row)"
-              >
-                取消
-              </el-button>
-            </template>
-            <span v-else>{{ row.name }}</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="240px">
-        <template slot-scope="{ row, $index }">
-          <el-button v-if="row.edit" type="success" @click="saveEdit(row)">
+  <div>
+    <el-dialog
+      title="工步模板"
+      :close-on-click-modal="false"
+      :visible.sync="dialog"
+      width="600px"
+    >
+      <el-table :data="list" border height="30vh">
+        <el-table-column label="模板名称" prop="name">
+          <template slot-scope="{ row }">
+            <div class="name-box">
+              <template v-if="row.edit">
+                <el-input class="edit-input" v-model.trim="row.name" />
+                <el-button
+                  class="cancel-btn"
+                  type="warning"
+                  @click="cancelEdit(row)"
+                >
+                  取消
+                </el-button>
+              </template>
+              <span v-else>{{ row.name }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="240px">
+          <template slot-scope="{ row, $index }">
+            <!-- <el-button v-if="row.edit" type="success" @click="saveEdit(row)">
             确定
           </el-button>
           <el-button v-else type="primary" @click="row.edit = true">
             模板名称
-          </el-button>
-          <el-button type="success" @click="stepsTplUse(row)">
-            应用
-          </el-button>
-          <el-button type="danger" @click="delTpl(row, $index)">
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+          </el-button> -->
+            <el-button type="success" @click="stepsTplUse(row)">
+              应用
+            </el-button>
+            <el-button type="primary" @click="editTpl(row)">编辑</el-button>
+            <el-button type="danger" @click="delTpl(row, $index)">
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
 
-    <div slot="footer">
-      <el-button @click="closeModal">取 消</el-button>
-    </div>
-  </el-dialog>
+      <div slot="footer">
+        <el-button @click="closeModal">取 消</el-button>
+      </div>
+    </el-dialog>
+    <StepTplEditDialog
+      :show.sync="editShow"
+      :editRow="editRow"
+      @saveTplSuccess="editTplSaveSuccess"
+    />
+  </div>
 </template>
 <script lang="ts">
 import { Vue, Component, PropSync, Emit, Watch } from 'vue-property-decorator'
@@ -54,13 +62,21 @@ import {
   setStoreConfig
 } from '@/renderer/ipc/storeConfig'
 import { typedKeys } from '@/shared/utils'
+import StepTplEditDialog from './StepTplEditDialog.vue'
 
-@Component
+@Component({
+  components: {
+    StepTplEditDialog
+  }
+})
 export default class StepTplUse extends Vue {
   @PropSync('show', { type: Boolean, default: false })
   private dialog!: boolean
 
   list: any = []
+
+  editShow = false
+  editRow = null
 
   @Emit('tplUse')
   stepsTplUse(item: any) {
@@ -131,6 +147,17 @@ export default class StepTplUse extends Vue {
 
   closeModal() {
     this.dialog = false
+  }
+
+  editTpl(row: any) {
+    this.editRow = row
+    this.editShow = true
+  }
+
+  editTplSaveSuccess(params: any) {
+    const changeItem = this.list.find(item => item.id === params.id)
+    changeItem.tplData = params.tplData
+    changeItem.name = params.name
   }
 }
 </script>

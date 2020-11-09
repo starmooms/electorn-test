@@ -21,10 +21,10 @@
             <br />
             电流: {{ sampData.I }}
             <template v-if="waitStatus.indexOf(sampData.workerCode) < 0">
+              <!-- <br />
+              启动时刻：{{ channelData.workerStart }} -->
               <br />
-              启动时刻：{{ channelData.workerStart }}
-              <br />
-              当前工步：{{ sampData.workerId }}
+              当前工步：{{ sampData.stepId + 1 }}
             </template>
 
             <template v-if="sampData.errorMsg">
@@ -33,7 +33,15 @@
             </template>
           </div>
         </div>
-        <svg-icon class="channel-icon" icon-class="batter"></svg-icon>
+        <div class="channel-text-icon">
+          <i class="channe-b-top-icon"></i>
+          <div class="channel-border-icon">
+            U：{{ sampData.U }}
+            <br />
+            I：{{ sampData.I }}
+          </div>
+        </div>
+        <!-- <svg-icon class="channel-icon" icon-class="batter"></svg-icon> -->
       </div>
       <template v-slot:menu>
         <a href="javascript:;" @click="changeStatus('start')">启动</a>
@@ -58,6 +66,7 @@ import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { Vue, Component, Prop } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { getDefatulSamp } from '@/renderer/utils/util'
+import { CHANNEL_STATUS_END } from '@/shared/config/port'
 
 @Component({
   components: {
@@ -70,14 +79,10 @@ export default class ChannelItem extends Vue {
   @Prop({ type: Object, required: true }) channelData!: Port.ChannelItem
 
   tipShow = false
-  waitStatus = ['00', '02']
+  waitStatus = CHANNEL_STATUS_END
 
   get id() {
     return this.channelData.id
-  }
-
-  get portPath() {
-    return SettingStatus.portPath
   }
 
   get batteryCtxMenu() {
@@ -100,7 +105,6 @@ export default class ChannelItem extends Vue {
   changeStatus(status: string) {
     if (status === 'start') {
       this.$emit('start', {
-        path: this.portPath,
         slaverIds: [this.slaverId],
         channelIds: [this.id],
         masterIds: [this.masterId]
@@ -108,7 +112,6 @@ export default class ChannelItem extends Vue {
     } else {
       this.$emit('setChannelStatus', {
         params: {
-          path: this.portPath,
           slaverId: this.slaverId,
           channelId: this.id,
           masterId: this.masterId,
@@ -136,7 +139,6 @@ export default class ChannelItem extends Vue {
     this.$command.send('/createdWin', {
       type: 'channel',
       data: {
-        path: this.portPath,
         masterId: this.masterId,
         slaverId: this.slaverId,
         channelId: this.id
@@ -159,25 +161,61 @@ export default class ChannelItem extends Vue {
 }
 </script>
 <style lang="scss">
+$noConnect-cl: #ccc;
+
 .channel-item {
   cursor: pointer;
   text-align: center;
   &:hover {
-    .channel-icon {
+    .channel-icon,
+    .channel-text-icon {
       transform: translate3d(0, -4px, 0);
-    }
-  }
-
-  @each $status, $val in $statusColor {
-    &.#{$status} .channel-icon {
-      color: $val;
     }
   }
 
   .channel-icon {
     transition: all 0.2s;
-    color: #606266;
+    color: $noConnect-cl;
     font-size: 40px;
+  }
+
+  .channel-text-icon {
+    display: inline-block;
+    position: relative;
+    box-sizing: border-box;
+    transition: all 0.2s;
+    font-size: 0;
+    .channe-b-top-icon {
+      display: inline-block;
+      width: 24px;
+      height: 4px;
+      background-color: $noConnect-cl;
+    }
+    .channel-border-icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 82px;
+      height: 48px;
+      box-sizing: border-box;
+      border: 4px solid $noConnect-cl;
+      font-size: 12px;
+    }
+  }
+  @each $status, $val in $statusColor {
+    &.#{$status} {
+      .channel-icon {
+        color: $val;
+      }
+      .channel-text-icon {
+        .channe-b-top-icon {
+          background-color: $val;
+        }
+        .channel-border-icon {
+          border-color: $val;
+        }
+      }
+    }
   }
 
   .sigh-box {
@@ -185,7 +223,7 @@ export default class ChannelItem extends Vue {
     top: 0;
     right: 50%;
     color: $--color-error;
-    margin-right: -40px;
+    margin-right: -54px;
   }
 }
 

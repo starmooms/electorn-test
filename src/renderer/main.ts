@@ -3,7 +3,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './utils/class-component-hooks'
-import Element from 'element-ui'
+import '@/renderer/components/ElementUI'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import '@/renderer/components/vxeTabel'
 
@@ -18,9 +18,6 @@ import { beforeRender } from './ipc/storeConfig'
 
 const init = () => {
   Vue.config.productionTip = false
-  Vue.use(Element, {
-    size: 'mini'
-  })
 
   Vue.use(command)
   Vue.component('title-box', TitleBox)

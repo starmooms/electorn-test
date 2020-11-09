@@ -47,8 +47,8 @@ export default class StepTplSave extends Vue {
   }
 
   async stepsTplSave() {
+    if (this.loading) return
     try {
-      if (this.loading) return
       this.loading = true
       if (!this.stepTplName) {
         return this.$message.info('请先输入模板名称')

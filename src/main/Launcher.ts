@@ -15,14 +15,14 @@ import WorkStepSee from './window/WorkStepSee'
 import createHistoryWin from './window/HistoryWin'
 import UpdateManager from './core/UpdateManager'
 import './core/ConfigManage'
-import RedisServer from './core/redis/RedisServer'
-import redisClient, { RedisClient } from './core/redis/RedisClient'
-import logger, { sysLognow, sysFilePath } from './core/Logger'
+// import RedisServer from './core/redis/RedisServer'
+// import redisClient, { RedisClient } from './core/redis/RedisClient'
+import logger, { sysLognow, sysFilePath, createSysLog } from './core/Logger'
 import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
-import udpManage from './core/connect/UdpManage'
+// import udpManage from './core/connect/UdpManage'
 import boxManage from './core/boxManage/BoxManage'
-import createSeparat from './window/Separat'
+import createSorting from './window/Sorting'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -33,15 +33,15 @@ export default class Launcher {
   usbManager!: USBManager
   beforeMainWin: beforeMainWin | null = null
   updateManager = this.initUpdaterManager()
-  redisServer!: RedisServer
-  redisClient!: RedisClient
+  // redisServer!: RedisServer
+  // redisClient!: RedisClient
 
   constructor(beforeMainWin?: beforeMainWin) {
     if (beforeMainWin) {
       this.beforeMainWin = beforeMainWin
     }
-    this.beforeWin()
     this.makeSingleInstance(() => {
+      this.beforeWin()
       this.init()
     })
   }
@@ -88,7 +88,7 @@ export default class Launcher {
     if (this.beforeMainWin) {
       this.beforeMainWin()
     }
-    this.win = winManager.createdWin('mainWin')
+    this.win = winManager.createdWin('mainWin', undefined, undefined, true)
     this.win.on('close', event => {
       logger.info(winManager.winList)
       if (this.win) {
@@ -149,7 +149,7 @@ export default class Launcher {
     // powerSaveBlocker.stop(id)
 
     // await mainDb.connect()
-
+    createSysLog()
     ipcManage.handle('/sysLog/sysLogInfo', () => {
       return {
         start: sysLognow,
@@ -166,18 +166,18 @@ export default class Launcher {
         case 'history':
           createHistoryWin(data.data)
           break
-        case 'separat':
-          createSeparat()
+        case 'sorting':
+          createSorting()
           break
         default:
           throw new Error(`${data.type} win no defined`)
       }
     })
 
-    this.redisServer = RedisServer.getInstance()
-    this.redisServer.start().finally(() => {
-      redisClient.initRedis()
-    })
+    // this.redisServer = RedisServer.getInstance()
+    // this.redisServer.start().finally(() => {
+    //   redisClient.initRedis()
+    // })
     this.startRender()
   }
 
@@ -193,7 +193,7 @@ export default class Launcher {
       const mainDbFilePath = (await mainDb.connect()) as string
       await boxManage.create()
       this.usbManager = new USBManager()
-      udpManage.start()
+      // udpManage.start()
       return mainDbFilePath
     } catch (err) {
       logger.error(err)
@@ -220,10 +220,10 @@ export default class Launcher {
         this.usbManager.destory()
       }
       await mainDb.close()
-      await redisClient.close()
-      if (this.redisServer) {
-        await this.redisServer.stop()
-      }
+      // await redisClient.close()
+      // if (this.redisServer) {
+      //   await this.redisServer.stop()
+      // }
       winManager.closeOtherWin()
     } catch (err) {
       dialog.showErrorBox('derstoryWin Error', err)

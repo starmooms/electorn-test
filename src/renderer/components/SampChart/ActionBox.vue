@@ -108,7 +108,7 @@ export default class Pane extends Vue {
     return { label: SAMPCHART_Y_MAP[key].name, value: key }
   })
   y2List = [...this.y1List, { label: '无', value: null }]
-  form: Store.SampChartConfig = {
+  form: StoreT.SampChartConfig = {
     y1: 'U',
     y2: 'I',
     y1Limt: {
@@ -158,7 +158,6 @@ export default class Pane extends Vue {
   }
 
   async showChartSave() {
-    console.log(this.form)
     await setStoreConfig({
       type: 'userConfig',
       key: 'sampChartConfig',

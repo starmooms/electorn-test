@@ -1,6 +1,9 @@
 import sqlite3 from 'sqlite3'
 import logger from '@/main/core/Logger'
+import is from 'electron-is'
+import { remote } from 'electron'
 const sqlite = sqlite3.verbose()
+// logger.debug(`sqlite version ${sqlite.VERSION}`)
 
 export default class Sqlite {
   db!: sqlite3.Database
@@ -21,7 +24,7 @@ export default class Sqlite {
         return
       }
       this.db = new sqlite.Database(this.fileName, err => {
-        logger.info('创建连接')
+        // logger.info('创建连接')
         if (err === null) {
           resolve(err)
         } else {
@@ -29,6 +32,8 @@ export default class Sqlite {
         }
       })
       this.isConnect = true
+    }).catch(err => {
+      return this.handleError<null>(err)
     })
   }
 
@@ -42,6 +47,8 @@ export default class Sqlite {
           reject(err)
         }
       })
+    }).catch(err => {
+      return this.handleError<null>(err)
     })
   }
 
@@ -55,6 +62,8 @@ export default class Sqlite {
           reject(err)
         }
       })
+    }).catch(err => {
+      return this.handleError<null>(err)
     })
   }
 
@@ -68,6 +77,8 @@ export default class Sqlite {
           resolve(data)
         }
       })
+    }).catch(err => {
+      return this.handleError<T>(err)
     })
   }
 
@@ -81,6 +92,33 @@ export default class Sqlite {
           resolve((data as unknown) as T)
         }
       })
+    }).catch(err => {
+      return this.handleError<T>(err)
+    })
+  }
+
+  /** each */
+  each<T = any>(sql: string, cb: (row: T) => any, params: any = {}) {
+    return new Promise((resolve, reject) => {
+      this.db.each(
+        sql,
+        params,
+        (err, row) => {
+          if (err) {
+            reject(err)
+          }
+          cb(row)
+        },
+        err => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(true)
+          }
+        }
+      )
+    }).catch(err => {
+      return this.handleError<boolean>(err)
     })
   }
 
@@ -92,14 +130,58 @@ export default class Sqlite {
           reject(err)
         } else {
           this.isConnect = false
+          logger.info(`关闭连接 ${this.fileName}`)
           resolve(err)
         }
       })
+    }).catch(err => {
+      return this.handleError<null>(err)
     })
+  }
+
+  handleError<T>(err: any): T {
+    if (is.renderer()) {
+      remote.dialog.showMessageBox(remote.getCurrentWindow(), {
+        type: 'error',
+        title: 'sqlite Error',
+        message: err.message
+      })
+    }
+    throw err
   }
 
   /** 将sql最后一个‘,’，替换掉 */
   static replaceSql(sql: string, end = '') {
     return sql.replace(/,$/, end)
+  }
+
+  /** 获取分页数据 */
+  async getPageSql<T = any>({
+    limit,
+    page,
+    tableName,
+    order,
+    where
+  }: Db.PageUtilParams) {
+    if (!page || page < 1) {
+      page = 1
+    }
+    const whereSql = where ? ` WHERE ${where}` : ''
+    const orderSql = order ? ` ORDER BY ${order}` : ''
+
+    const list = await this.all<T[]>(
+      `SELECT * FROM ${tableName}${whereSql}${orderSql} LIMIT ${limit} OFFSET ${limit *
+        (page - 1)};`
+    )
+    const countKey = `COUNT(*)`
+    const count = await this.get(
+      `SELECT ${countKey} FROM ${tableName}${whereSql};`
+    )
+    return {
+      limit,
+      page,
+      total: count[countKey],
+      list
+    }
   }
 }

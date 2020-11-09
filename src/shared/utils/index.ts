@@ -1,3 +1,6 @@
+import NP from 'number-precision'
+NP.enableBoundaryChecking(false)
+
 declare type typedKeys = <T>(o: T) => Array<keyof T>
 /** 可以返回类型的 Object.keys */
 export const typedKeys = Object.keys as typedKeys
@@ -63,3 +66,39 @@ export function setDeep(val: any, keys: string[] | number[], target = {}) {
 }
 
 export const TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss'
+
+/** 获取默认主控信息 */
+export function getMasterInfoObj(): IpConfigT.MasterInfo {
+  return {
+    version: '',
+    masterId: -1,
+    machineId: '',
+    ip: '',
+    mask: '',
+    gateway: '',
+    slaverList: [],
+    status: 1,
+    errMsg: ''
+  }
+}
+
+export function computedCalAB(x1: number, y1: number, x2: number, y2: number) {
+  const a = NP.round(NP.divide(NP.minus(y2, y1), NP.minus(x2, x1)), 6)
+  if (isNaN(a)) {
+    throw new Error('computedAB a is NaN')
+  }
+  const b = NP.round(NP.minus(y1, NP.times(a, x1)), 6)
+  return { a, b }
+}
+
+/** 计算量程 */
+export function createRange(start: number, end: number, step: number) {
+  const list: number[] = []
+  let i = start
+  const stepM = NP.divide(step, 1000)
+  while (i <= end) {
+    list.push(i)
+    i = NP.plus(i, stepM)
+  }
+  return list
+}

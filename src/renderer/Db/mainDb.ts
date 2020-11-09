@@ -26,4 +26,28 @@ export default class MainDb extends MainDbCom {
       list
     }
   }
+
+  async getHistoryList({
+    fileId,
+    startTime,
+    endTime,
+    limit,
+    page
+  }: Db.GetHistoryParams) {
+    const { channelHistory } = this.tables
+    let where = ''
+    if (startTime > 0 && endTime > 0) {
+      where += `startTime>=${startTime} AND startTime<${endTime}`
+    }
+    if (fileId) {
+      where += `fileId LIKE '%${fileId}%'`
+    }
+    return this.sqlite.getPageSql({
+      order: 'startTime DESC',
+      where,
+      tableName: channelHistory,
+      limit,
+      page
+    })
+  }
 }

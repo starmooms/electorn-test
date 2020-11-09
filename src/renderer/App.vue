@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <div v-if="titleBar">ddd</div>
     <router-view />
   </div>
 </template>
@@ -20,11 +21,13 @@ export default class App extends Vue {
     return SettingStatus.portPath
   }
 
+  get titleBar() {
+    return SettingStatus.titleBar
+  }
+
   @Watch('portPath')
   checkPortPath() {
-    if (this.portPath) {
-      ChannelStatus.getList()
-    }
+    ChannelStatus.getList()
   }
 
   mounted() {

@@ -31,7 +31,12 @@ class WinManager {
    * @param name 窗口名
    * @param pageUrl 路由
    */
-  createdWin(name: string, pageUrl = '') {
+  createdWin(
+    name: string,
+    pageUrl = '',
+    opts: Electron.BrowserWindowConstructorOptions = {},
+    setMenu = false
+  ) {
     const hasWin = this.getWin(name, true)
     if (hasWin) return hasWin
 
@@ -39,18 +44,19 @@ class WinManager {
     if (pageUrl) pageUrl = `#/${pageUrl}`
     if (!devUrl) pageUrl = `index.html${pageUrl}`
 
-    const opts: Electron.BrowserWindowConstructorOptions = {}
     const nowFous = BrowserWindow.getFocusedWindow()
     if (nowFous) {
-      const offset = this.winList.size * 20
       const [x, y] = nowFous.getPosition()
-      opts.x = x + offset
-      opts.y = y + offset
+      const offset = this.winList.size * 20
+      if (x > 0 && y > 0) {
+        opts.x = x + offset
+        opts.y = y + offset
+      }
     }
 
     const win = new BrowserWindow({
-      width: 800,
-      height: 600,
+      width: 1200 + 16,
+      height: 880,
       // backgroundColor: '#2e2c29',
       webPreferences: {
         // backgroundThrottling: false,
@@ -74,6 +80,10 @@ class WinManager {
         // }
         // win.webContents.on('did-finish-load', finishLoadListener)
       }
+    }
+
+    if (setMenu !== true) {
+      win.setMenu(null)
     }
 
     this.winList.set(name, win)

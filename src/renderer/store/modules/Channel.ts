@@ -7,11 +7,9 @@ import {
   Mutation
 } from 'vuex-module-decorators'
 import store from '@/renderer/store'
-import { channelList } from '@/shared/config/port'
-import { deepClone, setDeep } from '@/shared/utils'
 import { getChannelList } from '@/renderer/ipc/channel'
-import { SettingStatus } from './Setting'
 import Vue from 'vue'
+import { getStaticChList } from '@/shared/config/channel'
 
 config.rawError = true
 
@@ -33,6 +31,7 @@ interface SetSamp {
 export default class ChannelImpl extends VuexModule {
   public list: Port.MasterList | null = null
   public channelMap: ChannelMap | null = null
+  public masterListLen = 0
   public statusList = [
     // { name: '启动', action: 'start' },
     { name: '暂停', action: 'pause' },
@@ -41,6 +40,7 @@ export default class ChannelImpl extends VuexModule {
     { name: '关闭', action: 'close' }
   ]
   public sampMap: SampMap = {}
+  public staticChList = getStaticChList()
 
   public workerStatus = {
     vacant: '空置',
@@ -59,7 +59,7 @@ export default class ChannelImpl extends VuexModule {
         const channel = this.channelMap![`${item.masterId}_${item.slaverId}_${item.channelId}`] // eslint-disable-line
         if (channel) {
           channel.nowStatus = item.status
-          channel.filePath = item.status === 'RUN' ? channel.filePath : ''
+          channel.filePath = item.filePath
         }
       })
     }
@@ -68,6 +68,7 @@ export default class ChannelImpl extends VuexModule {
   @Mutation
   SET_CHANNELLIST(list: Port.MasterList) {
     this.list = list
+    this.masterListLen = Object.keys(list).length
     const channelMap: any = {}
     Object.entries(this.list).forEach(([mKey, master]) => {
       Object.entries(master.slaverList).forEach(([sKey, slaver]) => {

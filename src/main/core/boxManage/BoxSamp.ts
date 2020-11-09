@@ -15,6 +15,8 @@ import dayjs from 'dayjs'
 import ipcManage from '../IpcManage'
 import winManager from '../WinManager'
 import { BoxManage } from './BoxManage'
+import { testFilePath } from '@/main/utils/mock'
+import { TIME_FORMAT } from '@/shared/utils'
 
 /** 机柜采样控制 */
 export default class BoxSamp {
@@ -79,6 +81,49 @@ export default class BoxSamp {
     return writeModel
   }
 
+  /** 读通用采样工步数据 */
+  getStepData(bufModel: BufModel) {
+    return {
+      workerCode: bufModel.readHex('workerCode'),
+      stepId: bufModel.read('stepId'),
+      U: bufModel.read('U') / 10,
+      I: bufModel.read('I') / 10,
+      vol: bufModel.read('vol') / 10,
+      epower: bufModel.read('epower') / 10
+    }
+  }
+
+  /** 读通用采样状态数据 */
+  getStatusData(bufModel: BufModel) {
+    return {
+      projectId: bufModel.read('projectId'),
+      loopNum: bufModel.read('loopNum'),
+      stepTime: bufModel.read('stepTime') / 10
+    }
+  }
+
+  /** 主数据库记录通道状态 */
+  async mainSaveChannelStatus(channelStatus: Port.ChannelChangeItem[]) {
+    try {
+      if (channelStatus.length > 0) {
+        await mainDb.saveChannelStatus(channelStatus)
+      }
+    } catch (err) {
+      logger.error('mainSaveChannelStatus Error:', err)
+    }
+  }
+
+  /** 主数据库记录错误列表 */
+  async mainSaveError(errorList: Port.ErrorListItem[]) {
+    try {
+      if (errorList.length > 0) {
+        await mainDb.saveErrorList(errorList)
+      }
+    } catch (err) {
+      logger.error('mainSaveError Error:', err)
+    }
+  }
+
   /** 发送读采样请求 */
   async readSamp() {
     const masterId = 0
@@ -86,22 +131,26 @@ export default class BoxSamp {
     // 发送读采样请求
     this.readSampWrite.writer('masterId', masterId)
     let resultBuf: Buffer
-    if (this.parent.isDev) {
-      const a = `0000000801010000a10000000100000035980000000000000000000000000100000001a10000000100000035980000000000000000000000000100000002020000000100000035980000000000000000000000000100000003020000000100000035980000000000000000000000000100000004020000000100000035980000000000000000000000000100000005020000000100000035980000000000000000000000000100000006020000000100000035980000000000000000000000000100000007020000000100000035980000000000000000000000000100000000000100000001000000010001000000010001` // eslint-disable-line
+    if (this.parent.useDev) {
+      // const a = `00000008000008000000a10100004886ffffff60000000000000000000000000010001000000040001a10100003bd900000000000000000000000000000000010001000000040002a10100003b8a00000000000000000000000000000000010001000000040003a10100003bd600000000000000000000000000000000010001000000040004a10100004ad200000000000000000000000000000000010001000000040005a10100003c0a00000000000000000000000000000000010001000000040006a10100003b1f00000000000000000000000000000000010001000000040007a1010000821100001bad000000000000000000000000010001000000040003900000003bd200000000000000040000000601000000010001000000650004900000004a9e00000000000000040000000701000000010001000000650005900000003c0f00000000000000040000000601000000010001000000650006900000003b18000000000000000400000006010000000100010000006500079000000082160000000000000000000000000100000001000100000065000090000000482300000000000000030000000701000000010001000000650001900000003bc500000000000000040000000601000000010001000000650002900000003b790000000000000004000000060100000001000100000065` // eslint-disable-line
+      // const a = `00000008000000000000b002000086cbffffc5880000007b000001a3000000004000010000012f0001b00200008888ffffc5a40000007a000001ac000000004000010000012e0002b00200008a88ffffc6de0000007c000001c0000000004000010000012e0003b00200008e23ffffffd50000000000000003000000004000010000012e0004b00200008b70ffffc4610000007f000001c7000000004000010000012e0005b002000086bcffffc64f0000137c0000441f0000000040000100002f6c000600000000001a000000000000000000000000000000000000000000000000070000000000170000000000000000000000000000000000000000000000` // eslint-disable-line
+      const a = `00000008000800000000a300000000000000000000000000000000000000000093000100000001000100000000000000000000000000000000000000000000930001000000010002a3000000000000000000000000000000000000000000930001000000010003a3000000000000000000000000000000000000000000930001000000010004a3000000000000000000000000000000000000000000930001000000010005a3000000000000000000000000000000000000000000930001000000010006a3000000000000000000000000000000000000000000930001000000010007a30000000000000000000000000000000000000000009300010000000000000000009300a300008df800000000000100010000009300a30000002800000000000100020000009300a30000932900000000000100030000009300a30000926d00000000000100040000009300a3000091bf00000000000100050000009300a30000932900000000000100060000009300a30000906f00000000000100070000009300a3000090f5000000000001` // eslint-disable-line
       resultBuf = Buffer.from(a, 'hex')
     } else {
-      logger.info('读采样发送', this.readSampWrite.buf.toString('hex'))
+      logger.debug('读采样发送', this.readSampWrite.buf.toString('hex'))
       resultBuf = await communi.post({
         control: CONTROL_CODE.sampRead,
         data: this.readSampWrite.buf,
         masterId
       })
-      logger.info('读采样返回', resultBuf.toString('hex'))
+      logger.debug('读采样返回', resultBuf.toString('hex'))
     }
+    logger.debug('sampStart ==> 开始处理采样')
     const readModel = new BufModel({
       model: SAMP_MODEL,
       readBuf: resultBuf
     })
+    readModel.showAll()
     const {
       sampList,
       saveSampList,
@@ -109,15 +158,15 @@ export default class BoxSamp {
       changeFilePath,
       errorList
     } = this.readSampModel(masterId, readModel)
+    logger.debug('数据处理完成')
 
     try {
-      await historyDbCache.saveSamp(saveSampList)
-      if (channelStatus.length > 0) {
-        await mainDb.saveChannelStatus(channelStatus)
-      }
-      if (errorList.length > 0) {
-        await mainDb.saveErrorList(errorList)
-      }
+      await Promise.all([
+        historyDbCache.saveSamp(saveSampList),
+        this.mainSaveChannelStatus(channelStatus),
+        this.mainSaveError(errorList)
+      ])
+      logger.debug('存储数据完成')
       if (channelStatus.length > 0 || changeFilePath.length > 0) {
         ipcManage.commonMsg('updateChannelList', [
           ...channelStatus,
@@ -128,9 +177,7 @@ export default class BoxSamp {
       logger.error(err)
     }
     this.sendWin(masterId, sampList)
-    // if (errorList.length > 0) {
-    //   redisClient.saveError(errorList)
-    // }
+    logger.debug('sampEnd ==> 采样处理结束')
   }
 
   /** 发送采样列表到渲染端 */
@@ -147,10 +194,26 @@ export default class BoxSamp {
     }
   }
 
+  /** 判断是否需要存储采样 */
+  sampShouldSave(last, now, save) {
+    return save && Math.abs(last - now) >= save
+  }
+
+  /** 更新采样上次时间记录 */
+  channelSaveTime({ data, channel }: Port.ChannelSaveSampTime) {
+    if (!channel) {
+      const fullId = `${data.masterId}_${data.slaverId}_${data.channelId}`
+      channel = this.channelMap.get(fullId)
+    }
+    if (channel) {
+      channel.lastSaveTime = data.stepTime
+    }
+  }
+
   /** 解析采样返回, 改变通道状态 */
   readSampModel(masterId: number, readModel: BufModel) {
     const nowUnix = dayjs().unix()
-    const nowTime = dayjs().valueOf()
+    const nowDateTime = dayjs().format(TIME_FORMAT)
     const projectSamp: Port.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
     const getProjectSamp: Port.GetProjectSamp = (projectId, key) => {
       let sampItem = projectSamp[projectId]
@@ -159,21 +222,26 @@ export default class BoxSamp {
           projectId,
           sampList: [],
           changeStatusList: [],
-          endStatusList: []
+          startList: [],
+          featureList: [],
+          specialList: [],
+          endList: []
         }
         projectSamp[projectId] = sampItem
       }
       return sampItem[key]
     }
 
+    this.readStartList(masterId, readModel, getProjectSamp)
     const { sampList, changeFilePath } = this.readSampList(
       masterId,
       readModel,
       getProjectSamp,
       nowUnix,
-      nowTime
+      nowDateTime
     )
-    this.readEndStatusList(masterId, readModel, getProjectSamp)
+    this.readEndList(masterId, readModel, getProjectSamp)
+    this.readFeatureList(masterId, readModel, getProjectSamp)
     const errorList = this.readErrorList(readModel)
 
     // 将需要存储的采样对象，改为列表数组
@@ -202,7 +270,7 @@ export default class BoxSamp {
     readModel: BufModel,
     getProjectSamp: Port.GetProjectSamp,
     nowUnix: number,
-    nowTime: number
+    nowDateTime: string
   ) {
     /** 本此读取采样返回列表 */
     const sampList: Port.SampItem[] = []
@@ -216,17 +284,12 @@ export default class BoxSamp {
         masterId: masterId,
         slaverId: readItem.read('slaverId'),
         channelId: readItem.read('channelId'),
-        workerCode: workerCode,
-        workerId: readItem.read('workerId'),
-        U: readItem.read('U') / 10,
-        I: readItem.read('I') / 10,
-        vol: readItem.read('vol') / 10,
-        epower: readItem.read('epower') / 10,
-        projectId: readItem.read('projectId'),
-        loopNum: readItem.read('loopNum'),
+        ...this.getStepData(readItem),
+        ...this.getStatusData(readItem),
         errorCode: errCode,
         errorMsg: errCode !== '00' ? CHANNEL_ERR_STATUS[errCode] : '',
         workerStatus: CHANNEL_STATUS[workerCode] || this.parent.noWorkerStatus,
+        endCode: '00',
         createTime: nowUnix
       }
       sampList.push(samp)
@@ -246,22 +309,30 @@ export default class BoxSamp {
       let nowStatus = lastStatus // 通道当前状态，默认为上回状态，下面通过采样判断
 
       let shouldSaveSamp = false // 是否保存采样
+      let saveSampUpdateTime = false // 保存采样更新保存时间
       let changeChannel: Port.ChannelChangeItem | null = null
 
+      // const testPath = testFilePath(samp)
+
       // 判断状态变化
-      if (!nowStatus || !lastSamp || lastSamp.workerCode !== samp.workerCode) {
+      if (
+        !nowStatus ||
+        !lastSamp ||
+        lastSamp.workerCode !== samp.workerCode ||
+        lastSamp.projectId !== samp.projectId
+      ) {
         nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
-        if (lastStatus !== nowStatus) {
-          shouldSaveSamp = true
+        const filePath = historyDbCache.getFilePath(samp.projectId)
+        if (lastStatus !== nowStatus || channel.filePath !== filePath) {
           channel.nowStatus = nowStatus
-          channel.filePath = historyDbCache.getFilePath(samp.projectId)
+          channel.filePath = filePath
           changeChannel = {
             masterId: samp.masterId,
             slaverId: samp.slaverId,
             channelId: samp.channelId,
-            time: nowTime,
+            time: nowDateTime,
             status: nowStatus,
-            filePath: channel.filePath
+            filePath: filePath
           }
           const projectId = samp.projectId
           const saveSampStatus = getProjectSamp(projectId, 'changeStatusList')
@@ -270,48 +341,50 @@ export default class BoxSamp {
       }
 
       // 判断是否需要存储采样
-      if (!shouldSaveSamp && lastSamp) {
-        if (lastSamp.projectId !== samp.projectId) {
+      if (!shouldSaveSamp && lastSamp && nowStatus === 'RUN') {
+        const saveConf = historyDbCache.getSaveConf(samp.projectId)
+        if (!saveConf) {
           shouldSaveSamp = true
-        } else if (nowStatus === 'RUN') {
-          const saveConf = historyDbCache.getSaveConf(samp.projectId)
-          if (!saveConf) {
+        } else {
+          if (!channel.filePath) {
+            channel.filePath = historyDbCache.getFilePath(samp.projectId)
+            changeFilePath.push({
+              masterId: samp.masterId,
+              slaverId: samp.slaverId,
+              channelId: samp.channelId,
+              time: nowDateTime,
+              filePath: channel.filePath,
+              status: channel.nowStatus!
+            })
+          }
+
+          if (
+            channel.lastSaveTime === null ||
+            channel.lastSaveTime === samp.stepTime ||
+            this.sampShouldSave(
+              channel.lastSaveTime,
+              samp.stepTime,
+              saveConf.time
+            )
+          ) {
+            saveSampUpdateTime = true
             shouldSaveSamp = true
-          } else {
-            if (!channel.filePath) {
-              channel.filePath = historyDbCache.getFilePath(samp.projectId)
-              changeFilePath.push({
-                masterId: samp.masterId,
-                slaverId: samp.slaverId,
-                channelId: samp.channelId,
-                time: nowTime,
-                filePath: channel.filePath,
-                status: channel.nowStatus!
-              })
-            }
-            if (
-              !channel.lastSaveTime ||
-              nowTime - channel.lastSaveTime >= saveConf.time
-            ) {
-              shouldSaveSamp = true
-            } else if (
-              saveConf.I &&
-              Math.abs(lastSamp.I - samp.I) >= saveConf.I
-            ) {
-              shouldSaveSamp = true
-            } else if (
-              saveConf.U &&
-              Math.abs(lastSamp.U - samp.U) >= saveConf.U
-            ) {
-              shouldSaveSamp = true
-            }
+          } else if (this.sampShouldSave(lastSamp.I, samp.I, saveConf.I)) {
+            shouldSaveSamp = true
+          } else if (this.sampShouldSave(lastSamp.U, samp.U, saveConf.U)) {
+            shouldSaveSamp = true
           }
         }
       }
 
       if (shouldSaveSamp) {
         const saveSampList = getProjectSamp(samp.projectId, 'sampList')
-        channel.lastSaveTime = nowTime
+        if (saveSampUpdateTime) {
+          this.channelSaveTime({
+            channel,
+            data: samp
+          })
+        }
         saveSampList.push(samp)
       }
     })
@@ -322,21 +395,80 @@ export default class BoxSamp {
     }
   }
 
-  /** 读采样返回的结束状态列表 */
-  readEndStatusList(
+  /** 读采样开始状态 */
+  readStartList(
     masterId: number,
     readModel: BufModel,
     getProjectSamp: Port.GetProjectSamp
   ) {
-    readModel.ecahList('endStatusList', readItem => {
+    readModel.ecahList('startList', readItem => {
       const projectId = readItem.read('projectId')
-      const saveSampEnd = getProjectSamp(projectId, 'endStatusList')
-      saveSampEnd.push({
-        masterId: masterId,
+      const start = getProjectSamp(projectId, 'startList')
+      const data: Port.SampStart = {
+        masterId,
         slaverId: readItem.read('slaverId'),
         channelId: readItem.read('channelId'),
-        workerId: readItem.read('workerId'),
-        endCode: readItem.readHex('endCode')
+        stepId: readItem.read('stepId'),
+        workerCode: readItem.readHex('workerCode'),
+        U: readItem.read('U') / 10,
+        I: readItem.read('I') / 10,
+        loopNum: readItem.read('loopNum'),
+        vol: 0,
+        epower: 0,
+        stepTime: 0,
+        errorCode: '00',
+        endCode: '00'
+      }
+      start.push(data)
+      this.channelSaveTime({ data })
+    })
+  }
+
+  /** 读采样返回的结束状态列表 */
+  readEndList(
+    masterId: number,
+    readModel: BufModel,
+    getProjectSamp: Port.GetProjectSamp
+  ) {
+    readModel.ecahList('endList', readItem => {
+      const projectId = readItem.read('projectId')
+      const result = {
+        masterId,
+        slaverId: readItem.read('slaverId'),
+        channelId: readItem.read('channelId'),
+        ...this.getStepData(readItem),
+        ...this.getStatusData(readItem),
+        endCode: readItem.readHex('endCode'),
+        errorCode: '00'
+      }
+      const list = getProjectSamp(
+        projectId,
+        result.endCode === '0f' ? 'specialList' : 'endList'
+      )
+      list.push(result)
+    })
+  }
+
+  /** 读采样特征状态 */
+  readFeatureList(
+    masterId: number,
+    readModel: BufModel,
+    getProjectSamp: Port.GetProjectSamp
+  ) {
+    logger.debug('读特征列表')
+    readModel.ecahList('featureList', readItem => {
+      const projectId = readItem.read('projectId')
+      const feature = getProjectSamp(projectId, 'featureList')
+      logger.debug(`读到特征列表`)
+      feature.push({
+        masterId,
+        slaverId: readItem.read('slaverId'),
+        channelId: readItem.read('channelId'),
+        ...this.getStepData(readItem),
+        ...this.getStatusData(readItem),
+        featureType: readItem.read('featureType'),
+        errorCode: '00',
+        endCode: '00'
       })
     })
   }

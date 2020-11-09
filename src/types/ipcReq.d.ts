@@ -82,6 +82,15 @@ declare namespace ipcReq {
     I: StepDataSaveItem
   }
 
+  /** 特征电压 */
+  interface Features {
+    v1: number | null
+    v2: number | null
+    v3: number | null
+    v4: number | null
+    v5: number | null
+  }
+
   /** 写工步并启动，传递参数 */
   interface WriteSteps {
     masterIds: number[]
@@ -97,6 +106,7 @@ declare namespace ipcReq {
       TimeMin: ProtectItem
       warnVal: ProtectItem
     }
+    features: Features
     dataSave: StepsDataSave
     startId: number
     filePath: string
@@ -152,5 +162,81 @@ declare namespace ipcReq {
     channelIdList?: number[]
     startId?: number
     status: string
+  }
+
+  interface LampSetOpts {
+    list: SortingT.BoxLampResult
+  }
+
+  /** IP编辑机柜信息 */
+  interface MasterInfoSetOpts {
+    masterId: number
+    ip: string
+    mask: string
+    gateway: string
+    machineId: string
+    ipOld: string
+  }
+
+  /** 删除ip机柜 */
+  interface MasterInfoDelIp {
+    masterId: number
+    ip: string
+  }
+
+  /** 校准--开始 */
+  interface CalStart {
+    config: CalibrateT.CalConfSubmitForm
+    calType: string[]
+  }
+
+  interface CalReadSamp {
+    masterId: number
+    slaverId: number
+    channelIds: number[]
+    /** 1：读采样 2：读AB */
+    type: number
+    calType: string
+  }
+
+  interface CalToolReadSamp {
+    readCal: CalReadSamp
+    config: {
+      ip: string
+    }
+  }
+
+  /** 写校准参数 */
+  interface SetCalOpts {
+    /** 1：通道校准 2：设置AB值 3：工装校准 4：清除校准值 5:复检 6:关闭输出 */
+    type: number
+    masterId: number
+    slaverId: number
+    channelIds: number[]
+    /** 1：充电电压 2：充电电流 3：放电电流 */
+    calType?: string
+    /** 电压/电流(修调点) */
+    pointer?: number
+    abList?: CalibrateTB.AbListItem[]
+  }
+
+  interface CalToolSet {
+    setCal: SetCalOpts
+    config: {
+      ip: string
+    }
+  }
+
+  interface CalRecheck extends CalStart {
+    recheckForm: CalibrateTR.RecheckSumbitForm
+    iRange: number[]
+    uRange: number[]
+  }
+
+  interface UpgradeForm {
+    masterIds: number[]
+    filePath: string
+    /** 1：机柜升级 2：从控升级 */
+    upgradeType: 1 | 2
   }
 }

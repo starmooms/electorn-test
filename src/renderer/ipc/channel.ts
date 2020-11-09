@@ -29,6 +29,66 @@ export function readCal(data: ipcReq.CalOpts) {
   return $command.invoke(`/port/cal/read`, data)
 }
 
+/** 设置点灯 */
+export function lampSet(data: ipcReq.LampSetOpts) {
+  return $command.invoke(`/port/lamp/set`, data)
+}
+
+/** 获取ip列表 */
+export function getIpList() {
+  return $command.invoke(`/port/masterInfo/ipList`)
+}
+
+/** 刷新链接返回ip列表 */
+export function refreshIpConnect() {
+  return $command.invoke(`/port/masterInfo/refreshConnect`)
+}
+
+/** 编辑机柜信息 */
+export function setMasterInfo(data: ipcReq.MasterInfoSetOpts) {
+  return $command.invoke(`/port/masterInfo/set`, data)
+}
+
+/** 删除某项ip */
+export function delIpItem(data: ipcReq.MasterInfoDelIp) {
+  return $command.invoke(`/port/masterInfo/delIp`, data)
+}
+
+/** 开始校准 */
+export function calStart(data: ipcReq.CalStart) {
+  return $command.invoke(`/port/cal/start`, data)
+}
+
+/** 停止校准 */
+export function calStop() {
+  return $command.invoke(`/port/cal/stop`)
+}
+
+/** 离开页面校准页面 */
+export function calLeave() {
+  return $command.invoke(`/port/cal/leave`)
+}
+
+/** 复检开始 */
+export function recheck(data: ipcReq.CalRecheck) {
+  return $command.invoke(`/port/cal/recheck`, data)
+}
+
+/** 读工装校准 */
+export function calToolRead(data: ipcReq.CalToolReadSamp) {
+  return $command.invoke(`/port/cal/calToolRead`, data)
+}
+
+/** 设置工装校准 */
+export function calToolSet(data: ipcReq.CalToolSet) {
+  return $command.invoke(`/port/cal/calToolSet`, data)
+}
+
+/** 设置工装校准 */
+export function upgradeStart(data: ipcReq.UpgradeForm) {
+  return $command.invoke(`/port/upgrade/start`, data)
+}
+
 export function getChannelList() {
   return $command.invoke(`/port/channelList`)
 }

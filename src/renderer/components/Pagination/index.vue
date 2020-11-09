@@ -36,23 +36,40 @@ export default class Pagination extends Vue {
     }
   })
   pageSizes!: []
+  @Prop({ type: String, default: '#main-left' }) autoScrollDom!: string
+
+  scrollDom!: Element
 
   handleSizeChange(val) {
     this.$emit('pagination', { page: this.currentPage, limit: val })
-    if (this.autoScroll) {
-      scrollTo({
-        dom: document.querySelector('#main-left')!
-      })
-    }
+    this.checkScroll()
   }
 
   handleCurrentChange(val) {
     this.$emit('pagination', { page: val, limit: this.pageSize })
+    this.checkScroll()
+  }
+
+  checkScroll() {
     if (this.autoScroll) {
-      scrollTo({
-        dom: document.querySelector('#main-left')!
-      })
+      const dom = this.getScrollDom()
+      if (dom) {
+        scrollTo({
+          dom
+        })
+      }
     }
+  }
+
+  getScrollDom() {
+    if (!this.scrollDom) {
+      this.scrollDom = document.querySelector(`${this.autoScrollDom}`)!
+    }
+    return this.scrollDom
+  }
+
+  setScrollDom(dom: Element) {
+    this.scrollDom = dom
   }
 }
 </script>

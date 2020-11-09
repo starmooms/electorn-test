@@ -138,6 +138,13 @@ class Agreement {
     // console.log('readData的buf', buf)
     // logger.info('数据域长度', dataLen)
     const dataEndLen = dataLen + dataStart
+    const result = {
+      originBuf: buf,
+      buf: buf.slice(dataStart, dataEndLen),
+      sId: toHex(buf.readUInt16BE(8), 2),
+      errCode: toHex(buf.readUInt8(7), 1),
+      masterId: buf.readUInt8(4)
+    }
     // const checkBuf = buf.slice(0, dataEndLen)
     // const crc16Buf = buf.readUInt16BE(dataEndLen)
     // if (this.crc16(checkBuf) !== crc16Buf) {
@@ -145,13 +152,7 @@ class Agreement {
     // }
     // logger.info('数据域内容', buf.slice(dataStart, dataEndLen))
     // logger.info('流水号', toHex(buf.readUInt16BE(8), 2))
-    return {
-      originBuf: buf,
-      buf: buf.slice(dataStart, dataEndLen),
-      sId: toHex(buf.readUInt16BE(8), 2),
-      errCode: toHex(buf.readInt8(7), 1),
-      masterId: buf.readInt8(4)
-    }
+    return result
   }
 }
 

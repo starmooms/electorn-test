@@ -24,6 +24,16 @@ const routes: Array<RouteConfig> = [
         path: '/errorLog',
         name: 'errorLog',
         component: () => import('@/renderer/views/ErrorLog/index.vue')
+      },
+      {
+        path: '/calibrate',
+        name: 'calibrate',
+        component: () => import('@/renderer/views/Calibrate/index.vue')
+      },
+      {
+        path: '/upgrade',
+        name: 'upgrade',
+        component: () => import('@/renderer/views/Upgrade/index.vue')
       }
     ]
   },
@@ -59,9 +69,9 @@ const routes: Array<RouteConfig> = [
         component: () => import('@/renderer/views/History/index.vue')
       },
       {
-        path: '/separat',
-        name: 'Separat',
-        component: () => import('@/renderer/views/Separat/index.vue')
+        path: '/sorting',
+        name: 'Sorting',
+        component: () => import('@/renderer/views/Sorting/index.vue')
       }
     ]
   }
@@ -70,6 +80,14 @@ const routes: Array<RouteConfig> = [
 const router = new VueRouter({
   mode: 'hash',
   routes
+})
+
+router.beforeEach(async (to, from, next) => {
+  // console.log(to, from, next)
+  // if (to.meta.titleBar) {
+  //   SettingStatus.UPDATE_TITLEBAR(true)
+  // }
+  next()
 })
 
 export default router

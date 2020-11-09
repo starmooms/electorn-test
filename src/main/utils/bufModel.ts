@@ -1,7 +1,7 @@
 import { deepClone } from '@/shared/utils'
 import logger from '../core/Logger'
 import { BufModelT } from '@/types/BufModel'
-import { toHex } from '.'
+import { toHex, replaceAscii } from '.'
 
 // export interface Model {
 //   name: string
@@ -99,10 +99,10 @@ class BufModel<T = any> {
         listTarget.listAction = []
         listTarget.bytLen = listBufModel.bufLength
         this.listModel.push(listTarget)
-        // logger.debug(
+        // logger.log(
         //   '列表添加++++++++',
         //   target.name,
-        //   listBufModel.bufLength * listLen[target.name]
+        //   listBufModel.bufLength * len
         // )
         this.bufLength += listBufModel.bufLength * len
       } else {
@@ -201,40 +201,74 @@ export class BufWriteModel {
     return this.writer(name, parseInt(bitArr.reverse().join(''), 2))
   }
 
+  /** 写ip */
+  writerIp(name: string, ip: string) {
+    const { offset } = this.getOffset(name)
+    Buffer.from(ip.split('.')).copy(this.buf, offset)
+  }
+
+  /** 写16进制 */
+  writerHex(name: string, data: string) {
+    const { offset } = this.getOffset(name)
+    this.buf.write(data, offset, 'hex')
+  }
+
+  getOffset(name: string) {
+    const target = this.getTarget(name)
+    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+    const offset = this.start + target.offset
+    return {
+      offset,
+      target
+    }
+  }
+
   /** 直接读数值 */
   read(name: string) {
-    try {
-      const target = this.getTarget(name)
-      if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
-      const offset = this.start + target.offset
-      // logger.info(
-      //   target.name,
-      //   this.buf.slice(offset, offset + target.bytLen).toString('hex')
-      // )
-      if (target.type === 'float') {
-        return this.buf.readFloatBE(offset)
-      }
-      if (target.type === 'int') {
-        return this.buf.readIntBE(offset, target.bytLen)
-      }
-      return this.buf.readUIntBE(offset, target.bytLen)
-    } catch (err) {
-      console.log(name)
-      throw err
+    const { target, offset } = this.getOffset(name)
+    // logger.info(
+    //   target.name,
+    //   this.buf.slice(offset, offset + target.bytLen).toString('hex')
+    // )
+    if (target.type === 'float') {
+      return this.buf.readFloatBE(offset)
     }
+    if (target.type === 'int') {
+      return this.buf.readIntBE(offset, target.bytLen)
+    }
+    return this.buf.readUIntBE(offset, target.bytLen)
+  }
+
+  /** 读字符 默认ascii */
+  readStr(name: string, encoding = 'ascii') {
+    const { target, offset } = this.getOffset(name)
+    let str = this.buf.toString(encoding, offset, offset + target.bytLen)
+    if (encoding === 'ascii') {
+      str = replaceAscii(str)
+    }
+    return str
   }
 
   /** 读16进制数值 */
   readHex(name: string) {
-    const target = this.getTarget(name)
-    const data = this.read(name)
-    return toHex(data, target.bytLen)
+    return this.readStr(name, 'hex')
+  }
+
+  /** 读Ip */
+  readIp(name: string) {
+    const { target, offset } = this.getOffset(name)
+    return this.buf.slice(offset, offset + target.bytLen).join('.')
   }
 
   readFloat(name: string, fractionDigits = 6) {
     const n = fractionDigits > 1 ? 10 ** fractionDigits : 1
     // console.log(this.read(name) + Number.EPSILON)
     return Math.round(this.read(name) * n) / n
+  }
+
+  /** 连接 */
+  concat(buf: Buffer) {
+    this.buf = Buffer.concat([this.buf, buf])
   }
 
   ecahList(
@@ -246,6 +280,34 @@ export class BufWriteModel {
       target.listAction.forEach((item, index) => {
         cb(item, index)
       })
+    }
+  }
+
+  showAll(result: any[] = [], log = true) {
+    try {
+      Object.keys(this.bufModel.modelTarget).forEach(item => {
+        // logger.info(this.getTarget(item))
+        const data = this.getTarget(item)
+        if (data.type === 'list') {
+          const listObj: any[] = [`listName: ${item}`]
+          result.push(listObj)
+          this.ecahList(item, listModel => {
+            const subItem: any = []
+            listObj.push(subItem)
+            listModel.showAll(subItem, false)
+          })
+        } else {
+          result.push(`${item} : ${this.readHex(item)}`)
+          // logger.info(item, this.readHex(item))
+        }
+      })
+    } catch (err) {
+      logger.error('SHOW ALL ERROR', err)
+      throw err
+    } finally {
+      if (log) {
+        logger.info(JSON.stringify(result, null, 2))
+      }
     }
   }
 }

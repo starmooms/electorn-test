@@ -74,3 +74,9 @@ export function sliceBufFormNum(buf: Buffer, spliceArr: sliceItem[]) {
   }
   return result
 }
+
+/** ascii字符过滤 */
+export function replaceAscii(str: string) {
+  // return str.replace(/[^\x20-\x7E]+/g, '')
+  return str.replace(/(\x00)+$/g, '') // eslint-disable-line
+}

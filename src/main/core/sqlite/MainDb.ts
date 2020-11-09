@@ -4,6 +4,7 @@ import { app } from 'electron'
 import * as path from 'path'
 import dayjs from 'dayjs'
 import historyDbCache from './HistoryDBCache'
+import logger from '../Logger'
 
 interface TableName {
   name: string
@@ -80,6 +81,7 @@ class MainDb extends MainDbCom {
         "endTime" integer DEFAULT NULL
       );
       CREATE INDEX "channel_history_start_time" ON "${channelStatus}" ("startTime");
+      CREATE INDEX "channel_history_file_id" ON "${channelStatus}" ("fileId");
       `
     }
 
@@ -170,6 +172,19 @@ class MainDb extends MainDbCom {
     // }
 
     // this.sqlite.exec(sql)
+  }
+
+  /** 工步结束 */
+  async workEnd(historyId: number) {
+    try {
+      const { channelHistory } = this.tables
+      const now = dayjs().valueOf()
+      await this.sqlite.run(
+        `UPDATE ${channelHistory} SET endTime=${now} WHERE id='${historyId}'`
+      )
+    } catch (err) {
+      logger.error('main.workEnd Error', err.message)
+    }
   }
 
   /** 根据id获取单条历史记录 */

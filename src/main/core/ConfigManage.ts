@@ -5,36 +5,55 @@ import uuid from 'node-uuid'
 /* eslint-disable quote-props */
 // prettier-ignore
 /* eslint-enable quote-props */
+const userConfigDefault: StoreT.UserConfg = {
+  sampChartConfig: {
+    y1: 'U',
+    y2: 'I',
+    y1Limt: {
+      min: 0,
+      max: 10000
+    },
+    y2Limt: {
+      min: -6000,
+      max: 6000
+    }
+  },
+  calibrateConfig: {
+    config: {
+      toolIp: '',
+      masterId: null,
+      slaverId: null,
+      channelId: [],
+      standard: 0.0005,
+      uRangeId: 0,  
+      iRangeId: 0
+    },
+    recheckForm: {
+      IStep: null,
+      IStart: null,
+      IEnd: null,
+      UStep: null,
+      UStart: null,
+      UEnd: null,
+    }
+  },
+  historyFilePath: '',
+  ipList: [],
+  base: {
+    requestType: 'Port',
+    portPath: ''
+  }
+}
 
 class ConfigManage {
   userConfig = new Store({
     name: 'user',
-    defaults: {
-      sampling: {
-        U: { max: 10000, min: 0 },
-        I: { max: 6000, min: -6000 }
-      },
-      sampChartConfig: {
-        y1: 'U',
-        y2: 'I',
-        y1Limt: {
-          min: 0,
-          max: 10000
-        },
-        y2Limt: {
-          min: -6000,
-          max: 6000
-        }
-      },
-      base: {
-        portPath: ''
-      }
-    }
+    defaults: userConfigDefault
   })
 
   /** 分容设置 */
-  separatConfig = new Store({
-    name: 'separat',
+  sortingConfig = new Store({
+    name: 'sorting',
     defaults: {
       levelAttr: [],
       levelList: [] as any[]
@@ -43,8 +62,7 @@ class ConfigManage {
 
   workStepTpl = new Store({
     name: 'workStepTpl',
-    defaults: {
-    }
+    defaults: {}
   })
 
   constructor() {
@@ -52,12 +70,13 @@ class ConfigManage {
   }
 
   init() {
+    this.checkStore(this.userConfig, userConfigDefault)
     ipcManage.handle('/config/get', (event, data: any) => {
       switch (data.type) {
         case 'workStepTpl':
           return this.workStepTpl.store
-        case 'separat':
-          return this.separatConfig.store
+        case 'sorting':
+          return this.sortingConfig.store
         case 'userConfig':
           return this.userConfig.store
         default:
@@ -65,16 +84,16 @@ class ConfigManage {
       }
     })
     ipcManage.handle('/config/set', (event, data: any) => {
-      if(!data.data) throw new Error('NO DATA')
+      if (!data.data) throw new Error('NO DATA')
       switch (data.type) {
         case 'workStepTpl':
           this.workStepTplSave(data.data)
           break
-        case 'separat':
-          if(!data.key){
-            this.separatConfig.set(data.data)
-          }else{
-            this.separatConfig.set(data.key, data.data)
+        case 'sorting':
+          if (!data.key) {
+            this.sortingConfig.set(data.data)
+          } else {
+            this.sortingConfig.set(data.key, data.data)
           }
           break
         case 'userConfig':
@@ -96,7 +115,24 @@ class ConfigManage {
     })
   }
 
-  setWorkStepTpl(key: string, value:any) {
+  /**
+   * 检查默认参数，
+   * electron-store 已设置过的对象的属性， 如果新加默认属性会无效，这里强制添加新的默认参数
+   * */
+  checkStore(store: Store<any>, target: any, lastKey = '') {
+    for (const key in target) {
+      const storeKey = lastKey ? `${lastKey}.${key}` : key
+      const v = store.get(storeKey)
+      const defaultVal = target[key]
+      if (v === void 0) {
+        store.set(storeKey, defaultVal)
+      } else if (typeof defaultVal === 'object') {
+        this.checkStore(store, defaultVal, storeKey)
+      }
+    }
+  }
+
+  setWorkStepTpl(key: string, value: any) {
     return this.workStepTpl.set(key, value)
   }
 
@@ -105,8 +141,12 @@ class ConfigManage {
       if (!data.name) throw new Error('name is no null')
       const has = this.workStepTpl.has(data.id)
       if (!has) throw new Error(`${data.id} Tpl No find`)
-
-      this.workStepTpl.set(`${data.id}.name`, data.name)
+      ;['name', 'tplData'].forEach(key => {
+        const val = data[key]
+        if (val) {
+          this.workStepTpl.set(`${data.id}.${key}`, val)
+        }
+      })
     } else {
       const id = uuid.v4().replace('-', '')
       this.setWorkStepTpl(id, {
@@ -120,7 +160,6 @@ class ConfigManage {
   workStepTplDel(data: any) {
     this.workStepTpl.delete(`${data.id}`)
   }
-
 }
 
 const configManage = new ConfigManage()

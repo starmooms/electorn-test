@@ -14,7 +14,7 @@
         <el-table-column prop="id" label="id" width="80"></el-table-column>
         <el-table-column
           prop="masterId"
-          label="主控"
+          label="机柜"
           width="80"
         ></el-table-column>
         <el-table-column
@@ -29,6 +29,11 @@
         ></el-table-column>
         <el-table-column
           prop="typeStr"
+          label="错误类型"
+          width="200"
+        ></el-table-column>
+        <el-table-column
+          prop="action"
           label="错误类型"
           width="200"
         ></el-table-column>
@@ -52,14 +57,12 @@
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
-import { RecycleScroller } from 'vue-virtual-scroller'
 import Pagination from '@/renderer/components/Pagination/index.vue'
 import mainDb from '@/renderer/Db/mainDb'
 import { ERROR_STATUS } from '@/shared/config/port'
 
 @Component({
   components: {
-    RecycleScroller,
     Pagination
   }
 })
@@ -91,6 +94,7 @@ export default class ErrorLog extends Vue {
   }
 
   async getList() {
+    if (this.loading) return
     try {
       this.loading = true
       const data = await this.db.getErrorList(this.listQuery)

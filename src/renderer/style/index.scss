@@ -12,6 +12,7 @@ body {
   font-family: Helvetica Neue,Helvetica,PingFang SC,Hiragino Sans GB,Microsoft YaHei,SimSun,sans-serif;
   font-variant: tabular-nums;
   min-width: 1200px;
+  user-select: none;
 }
 
 ::-webkit-scrollbar {
@@ -35,6 +36,11 @@ body {
   border-radius: 8px;
   background-color: #e4e4e4;
   border: 1px solid rgba(195, 195, 195, .4);
+}
+
+::selection{
+  background-color:rgba(170, 217, 255, 0.28);
+  color:#000;
 }
 
 ul {
@@ -78,6 +84,12 @@ a {
   justify-content: center;
   align-items: center;
 
+  &.auto-height {
+    .el-dialog{
+      max-height: none;
+    }
+  }
+
   .el-dialog{
     display: flex;
     flex-flow: column;
@@ -89,4 +101,8 @@ a {
       overflow: auto;
     }
   }
+}
+
+.el-message-box.up-zindex {
+  z-index: 2026;
 }

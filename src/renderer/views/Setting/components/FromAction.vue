@@ -1,7 +1,7 @@
 <template>
   <div class="from-action">
     <el-button type="primary" @click="submit">保存{{ title }}</el-button>
-    <el-button @click="reset">放弃</el-button>
+    <!-- <el-button @click="reset">放弃</el-button> -->
   </div>
 </template>
 <script lang="ts">

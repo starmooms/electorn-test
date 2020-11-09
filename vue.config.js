@@ -4,12 +4,6 @@ const WorkerPlugin = require('worker-plugin')
 /* eslint-enable */
 
 const isDev = process.env.NODE_ENV === 'development'
-const noPackMongo = process.env.PACk_MONGODB === 'false'
-const extraResourcesFilter = ['**/*']
-if (noPackMongo) {
-  extraResourcesFilter.push('!mongodb${/*}')
-  console.log('不打包mongodb')
-}
 
 function resolve(dir) {
   return path.join(__dirname, './', dir)
@@ -66,22 +60,22 @@ module.exports = {
         },
         appId: 'com.xxx.app',
         // compression: 'maximum',
-        compression: 'store',
+        // compression: 'store',
         mac: {
           target: ['dmg', 'zip']
         },
         win: {
-          target: ['nsis', 'zip'],
-          extraResources: {
-            from: './extra/win32/',
-            to: './',
-            filter: ['**/*']
-          },
-          extraFiles: {
-            from: './extra/localData/',
-            to: './',
-            filter: ['**/*']
-          }
+          target: ['nsis', 'zip']
+          // extraResources: {
+          //   from: './extra/win32/',
+          //   to: './',
+          //   filter: ['**/*']
+          // },
+          // extraFiles: {
+          //   from: './extra/localData/',
+          //   to: './',
+          //   filter: ['**/*']
+          // }
         },
         nsis: {
           oneClick: false,

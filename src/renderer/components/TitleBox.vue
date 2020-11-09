@@ -1,5 +1,5 @@
 <template>
-  <div class="title-box">
+  <div class="title-box" :class="size">
     <p class="title-box-txt">{{ name }}</p>
     <slot></slot>
   </div>
@@ -9,6 +9,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 @Component
 export default class TitleBox extends Vue {
   @Prop({ type: String, default: '' }) name!: ''
+  @Prop({ type: String, default: '' }) size!: ''
 }
 </script>
 
@@ -18,6 +19,15 @@ export default class TitleBox extends Vue {
   position: relative;
   padding: 30px 20px 10px;
   margin-top: 30px;
+  box-sizing: border-box;
+
+  &.mini {
+    padding: 18px 10px 10px;
+    .title-box-txt {
+      padding: 4px;
+    }
+  }
+
   .title-box-txt {
     position: absolute;
     top: 0;

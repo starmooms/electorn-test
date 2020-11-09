@@ -1,25 +1,43 @@
 <template>
   <div>
-    <template v-if="form">
-      <el-form ref="form" :model="form" label-width="25%">
-        <el-form-item label="串口" class="port-select">
-          <el-select v-model="form.portPath" placeholder="选择串口">
-            <el-option
-              v-for="item in portList"
-              :key="item.path"
-              :label="item.path"
-              :value="item.path"
-            ></el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <FromAction
-        ref="FromAction"
-        title="基础设置"
-        :data.sync="form"
-        @submit="submit"
-      ></FromAction>
-    </template>
+    <el-form ref="form" :model="form" label-width="25%">
+      <el-form-item label="通讯方式" class="port-select">
+        <el-select v-model="form.requestType" placeholder="选择通讯方式">
+          <el-option
+            v-for="item in requestList"
+            :key="item.type"
+            :label="item.name"
+            :value="item.type"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item
+        label="串口"
+        class="port-select"
+        v-if="form.requestType === 'Port'"
+      >
+        <el-select v-model="form.portPath" placeholder="选择串口">
+          <el-option
+            v-for="item in portList"
+            :key="item.path"
+            :label="item.path"
+            :value="item.path"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="IP设置" v-else-if="form.requestType === 'Tcp'">
+        <el-button @click="showIpConfig = true">IP设置</el-button>
+      </el-form-item>
+    </el-form>
+    <FromAction
+      ref="FromAction"
+      title="基础设置"
+      :data.sync="form"
+      @submit="submit"
+    ></FromAction>
+    <ip-config :show.sync="showIpConfig" />
   </div>
 </template>
 <script lang="ts">
@@ -28,10 +46,12 @@ import FromAction from './FromAction.vue'
 import { setStoreConfig } from '@/renderer/ipc/storeConfig'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { deepClone } from '@/shared/utils'
+import IpConfig from './ipConfig/index.vue'
 
 @Component({
   components: {
-    FromAction
+    FromAction,
+    IpConfig
   }
 })
 export default class Base extends Vue {
@@ -47,9 +67,17 @@ export default class Base extends Vue {
     key: 'base'
   }
 
+  requestList = [
+    { type: 'Port', name: '串口' },
+    { type: 'Tcp', name: '网口' }
+  ]
+
+  showIpConfig = false
+
   async submit() {
     const data = await setStoreConfig({
-      ...this.storeData,
+      type: 'userConfig',
+      key: 'base',
       data: this.form
     })
     if (data.status) {
@@ -89,3 +117,10 @@ export default class Base extends Vue {
   }
 }
 </script>
+
+<style>
+.commui-config {
+  display: flex;
+  margin-bottom: 40px;
+}
+</style>

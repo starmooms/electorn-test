@@ -1,4 +1,7 @@
 import dayjs from 'dayjs'
+import { WORKSTEPSINPUT, WORKSTEPS_TYPE_MAP } from '@/shared/config/port'
+import { deepClone } from '@/shared/utils'
+import path from 'path'
 
 export const formatTimeStr = 'YYYY-MM-DD HH:mm:ss'
 
@@ -6,6 +9,18 @@ export interface ChartFullNullOpts {
   time: number
   len: number
 }
+
+// declare type StepFormatList = {
+//   id: number
+//   loopNum: number
+//   type: string
+//   code: string
+//   input: {
+//     [key: string]: number
+//   }
+//   msg: string
+// }[]
+
 export function chartFullNull({ time, len }: ChartFullNullOpts) {
   const UData: string[][] = []
   const IData: string[][] = []
@@ -180,4 +195,153 @@ export const SAMPCHART_Y_MAP = {
     color: '#f7b521',
     key: 'epower'
   }
+}
+
+/** 精度计算加法 */
+export const computerAdd = (num1: number, num2: number, r = 10) => {
+  return (num1 * r + num2 * r) / r
+}
+
+/** 精度计算除法 */
+export const computerDiv = (num1: number, num2: number, r = 10) => {
+  return ((num1 * r) / (num2 * r)) * r
+}
+
+/**  */
+export const getPercent = (num1: number, num2: number, r = 2) => {
+  return computerDiv(num1, num2, 10 ** r).toFixed(r) + '%'
+}
+
+/** 格式化idList */
+export const idListFormat = (idList: string) => {
+  const idArr = idList.split(',').map(item => Number(item))
+  const idShowArr = idArr.map(item => item + 1).join(',')
+  return {
+    idArr,
+    idShowArr
+  }
+}
+
+/** 格式化时间戳 */
+export const dateFormat = (time: number) => {
+  if (time) {
+    return dayjs(time).format(formatTimeStr)
+  }
+  return ''
+}
+
+/** 工步循环列表 */
+export const stepLoop = (
+  list: UtilT.StepFormatList,
+  loopList: UtilT.StepFormatList = [],
+  start = 0,
+  end = list.length,
+  isDeep = false
+) => {
+  if (!isDeep) {
+    list = deepClone(list)
+  }
+  for (let i = start; i < end; i++) {
+    const item = list[i]
+    if (isDeep) item.loopNum += 1
+    item.loopId = `${item.id + 1}-${item.loopNum}`
+    loopList.push(deepClone(item))
+    if (item.type === 'loop') {
+      const startId = item.input.loopStart - 1
+      const loopNum = item.input.loopNum
+      const loopStartStep = list[startId]
+      if (loopStartStep) {
+        let loopStep = 0
+        // 循环次数
+        while (loopStep < loopNum) {
+          // 循环工步
+          stepLoop(list, loopList, startId, i, true)
+          ++loopStep
+        }
+      }
+    }
+  }
+  return loopList
+}
+
+/** 格式化工步 */
+export const stepsFormat = (
+  stepList: Db.StepList[],
+  checkLoop = false,
+  filterLoop = true
+) => {
+  let list: UtilT.StepFormatList = []
+  stepList.forEach((steps, index) => {
+    const stepInfo = WORKSTEPS_TYPE_MAP[steps.type]
+    if (!stepInfo) return
+    let msgData = ''
+    Object.entries(steps.input).forEach(([key, val]) => {
+      const valData: any = WORKSTEPSINPUT[key]
+      if (valData) {
+        msgData += `${valData.name}${val}${valData.unit}，`
+      }
+    })
+    if (msgData) {
+      msgData = msgData.slice(0, -1)
+    }
+    const showId = index + 1
+    list.push({
+      id: index,
+      showId,
+      loopNum: 1,
+      loopId: `${showId}-1`,
+      code: stepInfo.key,
+      type: stepInfo.type,
+      input: steps.input,
+      msg: `${stepInfo.name}：${msgData}`
+    })
+  })
+
+  if (checkLoop) {
+    list = stepLoop(list)
+  }
+
+  if (filterLoop) {
+    return list.filter(item => item.type !== 'loop')
+  }
+
+  return list
+}
+
+/** 格式化启动信息 */
+export const startInfoFormat = (
+  startInfo: Db.StartInfo
+): UtilT.StartInfoFormat => {
+  const idList: any = {}
+  ;['masterId', 'slaverId', 'channelId'].forEach(idKey => {
+    const idResult = idListFormat(startInfo[`${idKey}s`])
+    idList[`${idKey}Arr`] = idResult.idArr
+    idList[`${idKey}ShowStr`] = idResult.idShowArr
+  })
+
+  return {
+    ...startInfo,
+    ...idList,
+    stepList: stepsFormat(JSON.parse(startInfo.stepList), false, false),
+    protect: JSON.parse(startInfo.protect),
+    features: JSON.parse(startInfo.features),
+    dataSave: JSON.parse(startInfo.dataSave)
+  }
+}
+
+/** 解析路径 */
+export const PathResolve = (...args: string[]) => {
+  return path.resolve(...args)
+}
+
+/** 获取Vue父级组件 */
+export const getVmParent = <T = any>(vm: Vue, name: string): T => {
+  const parent = vm.$parent
+  if (parent) {
+    if (parent.$options.name === name) {
+      return parent as any
+    }
+    return getVmParent(parent, name)
+  }
+  return null as any
 }

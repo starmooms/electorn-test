@@ -20,8 +20,8 @@ interface Params {
  * @param {Function} callback
  */
 export function scrollTo({
-  to = 100,
-  duration = 800,
+  to = 0,
+  duration = 200,
   callback,
   dom = document.body
 }: Params = {}) {

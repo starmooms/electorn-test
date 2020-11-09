@@ -1,8 +1,7 @@
 import SerialPort from 'serialport'
 import usbDetection from 'usb-detection'
 import ipcManage from './IpcManage'
-import PortItem from './PortItem'
-import logger, { sysLog } from './Logger'
+// import PortItem from './PortItem'
 import boxManage from './boxManage/BoxManage'
 
 export interface ArgeementData {
@@ -11,11 +10,11 @@ export interface ArgeementData {
 }
 
 export default class USBManager {
-  cache = new Map<string, PortItem>()
+  // cache = new Map<string, PortItem>()
   hasEvent = false
   stepList: any[] | null = null
   protPath!: string
-  portItem!: PortItem
+  // portItem!: PortItem
 
   constructor() {
     this.init()
@@ -29,28 +28,11 @@ export default class USBManager {
     this.getPortList()
     this.setTranslate()
     this.setCal()
-    this.readCal()
+    this.setLamp()
+    this.setMasterInfo()
     this.getChannelList()
+    this.upgrade()
   }
-
-  // getPortPath() {
-  //   const lastPortPath = this.protPath
-  //   this.protPath = configManage.userConfig.get('base.portPath')
-  //   if (this.protPath !== lastPortPath) {
-  //     if (this.portItem) {
-  //       this.portItem.close()
-  //     }
-  //     if (this.protPath) {
-  //       this.portItem = new PortItem(this.protPath)
-  //     }
-  //   }
-  // }
-
-  // changePortPath() {
-  //   configManage.userConfig.onDidChange('base', () => {
-  //     this.getPortPath()
-  //   })
-  // }
 
   /** 开始监测USB */
   start() {
@@ -91,14 +73,6 @@ export default class USBManager {
     })
   }
 
-  getPortData() {
-    if (!this.portItem) {
-      sysLog.info('串口未初始化')
-      throw new Error('串口未初始化')
-    }
-    return this.portItem
-  }
-
   /** 写工步 */
   writeSteps() {
     ipcManage.handle('/port/writeWorkSteps', (event, data) => {
@@ -136,15 +110,65 @@ export default class USBManager {
 
   /** 设置校准 */
   setCal() {
-    ipcManage.handle('/port/cal/set', async (event, data) => {
-      return boxManage.boxCal.setCal(data)
+    // 开始校准
+    ipcManage.handle('/port/cal/start', async (event, data) => {
+      return boxManage.boxCal.start(data)
+    })
+
+    // 停止校准
+    ipcManage.handle('/port/cal/stop', async () => {
+      return boxManage.boxCal.setCalRunStop()
+    })
+
+    // 离开校准
+    ipcManage.handle('/port/cal/leave', async () => {
+      return boxManage.boxCal.leavePage()
+    })
+
+    // 开始复检
+    ipcManage.handle('/port/cal/recheck', async (event, data) => {
+      return boxManage.boxCal.recheck(data)
+    })
+
+    // 读工装校准
+    ipcManage.handle('/port/cal/calToolRead', async (event, data) => {
+      return boxManage.boxCal.readCalTool(data)
+    })
+
+    // 设置工装校准
+    ipcManage.handle('/port/cal/calToolSet', async (event, data) => {
+      return boxManage.boxCal.setCalTool(data)
     })
   }
 
-  /** 读校准 */
-  readCal() {
-    ipcManage.handle('/port/cal/read', async (event, data) => {
-      return boxManage.boxCal.readCal(data)
+  /** 设置升级控制 */
+  upgrade() {
+    // 设置工装校准
+    ipcManage.handle('/port/upgrade/start', async (event, data) => {
+      return boxManage.boxUpgrade.upgradeStart(data)
+    })
+  }
+
+  /** 设置点灯 */
+  setLamp() {
+    ipcManage.handle('/port/lamp/set', async (event, data) => {
+      return boxManage.boxLamp.setLamp(data)
+    })
+  }
+
+  /** 获取ip列表 */
+  setMasterInfo() {
+    ipcManage.handle('/port/masterInfo/ipList', async () => {
+      return boxManage.boxMasterInfo.getIpList()
+    })
+    ipcManage.handle('/port/masterInfo/delIp', async (event, data) => {
+      return boxManage.boxMasterInfo.delIpItem(data)
+    })
+    ipcManage.handle('/port/masterInfo/refreshConnect', async () => {
+      return boxManage.boxMasterInfo.refreshConnect()
+    })
+    ipcManage.handle('/port/masterInfo/set', async (event, data) => {
+      return boxManage.boxMasterInfo.setMasterInfo(data)
     })
   }
 

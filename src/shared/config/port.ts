@@ -16,25 +16,37 @@ export const WORKSTEPS = [
     name: '恒流充电',
     type: 'ICi',
     key: 'a1',
-    input: { worker: ['IStart'], limt: ['UEnd'] }
+    input: { worker: ['IStart'], limt: ['UEnd', 'limtTime'] },
+    rules: {
+      unReqire: ['limtTime']
+    }
   },
   {
     name: '恒压充电',
     type: 'UCi',
     key: 'a2',
-    input: { worker: ['UStart'], limt: ['IEnd'] }
+    input: { worker: ['UStart'], limt: ['IEnd', 'limtTime'] },
+    rules: {
+      unReqire: ['limtTime']
+    }
   },
   {
     name: '恒流恒压充电',
     type: 'IUCi',
     key: 'a3',
-    input: { worker: ['IStart', 'UEnd'], limt: ['stopI'] }
+    input: { worker: ['IStart', 'UEnd'], limt: ['stopI', 'limtTime'] },
+    rules: {
+      unReqire: ['limtTime']
+    }
   },
   {
     name: '恒流放电',
     type: 'IDisCi',
     key: 'b0',
-    input: { worker: ['IStart'], limt: ['UEnd'] }
+    input: { worker: ['IStart'], limt: ['UEnd', 'limtTime'] },
+    rules: {
+      unReqire: ['limtTime']
+    }
   },
   {
     name: '搁置',
@@ -74,7 +86,8 @@ WORKSTEPS.forEach(item => {
 // }
 
 export const WORKSTEPSINPUT = {
-  time: { unit: 's', name: '时间' },
+  time: { unit: 'min', name: '时间' },
+  limtTime: { unit: 'min', name: '时间限制', type: 'time' },
   // U: { unit: 'mV', name: '电压' },
   // I: { unit: 'mA', name: '电流' },
   W: { unit: 'W', name: '功率' },
@@ -85,8 +98,8 @@ export const WORKSTEPSINPUT = {
   stopI: { unit: 'mA', name: '截止电流' },
   IStart: { unit: 'mA', name: '起始电流', type: 'I' },
   IEnd: { unit: 'mA', name: '截止电流', type: 'I' },
-  UStart: { unit: 'mA', name: '起始电压', type: 'U' },
-  UEnd: { unit: 'mA', name: '截止电压', type: 'U' }
+  UStart: { unit: 'mV', name: '起始电压', type: 'U' },
+  UEnd: { unit: 'mV', name: '截止电压', type: 'U' }
 }
 
 // /** 读工步数据 */
@@ -128,6 +141,11 @@ export const ERROR_STATUS = {
   '16': '从控号错误',
   '17': '通道号错误',
   '18': '固定字节错误(前后缀)',
+  '19': '工步码错误',
+  '20': '工步码不存在',
+  '21': '工步列表为空',
+  '22': '通道处于保护状态中',
+  '23': '机身码错误',
   'ff': '未知错误'
 }
 
@@ -135,8 +153,8 @@ export const ERROR_STATUS = {
 export const END_STATUS = {
   '00': '未结束',
   '01': '时间到',
-  '02': '电压到',
-  '03': '终止电流到',
+  '02': '到达指定电压',
+  '03': '到达指定电流',
   '04': '-▲V到',
   '05': '电流异常',
   '06': '电压异常',
@@ -146,6 +164,9 @@ export const END_STATUS = {
   '0a': '无电池或电池接触不良',
   '0b': '不良电池',
   '0c': '补充电容量到结束',
+  '0d': '电压超过最大电压',
+  '0e': '电压低于最低电压',
+  '0f': '恒流转恒压',
   'ff': '未知结束'
 }
 
@@ -156,12 +177,12 @@ export const CHANNEL_ERR_STATUS = {
   '02': '漏电流异常',
   '03': '电压上限异常',
   '04': '电流异常',
-  '05': '无电压无电流',
+  '05': '实时电压超过目标电压',
   '06': '容量异常',
-  '07': '实时电压超过平均数值',
+  '07': '无电压无电流',
   '08': '温度异常',
   '09': '电压下限异常',
-  '0a': '',
+  '0a': '离线',
   'ff': '未知报警'
 }
 
@@ -201,9 +222,10 @@ for (let i = 0; i < 20; i++) {
         samp: null,
         workerStart: null,
         workerEnd: null,
-        filePath: '',
+        filePath: null,
         lastSamp: null,
-        nowStatus: null
+        lastSaveTime: null,
+        nowStatus: 'END'
       }
     }
     slaverObj[j] = {
@@ -214,7 +236,7 @@ for (let i = 0; i < 20; i++) {
   }
   channelList[i] = {
     id: i,
-    name: `主控${i + 1}`,
+    name: `机柜${i + 1}`,
     slaverList: slaverObj
   }
 }
@@ -252,7 +274,6 @@ export function getCalList() {
 }
 
 // 保护参数
-export const PROTECT_ITEM_MODE = [2, 2, 2, 2, 2, 2, 4]
 export const PROTECT = [
   { name: '恒压充保护电压偏差(mV)', type: 'UCi', index: 0 },
   { name: '恒流充保护电流偏差(mA)', type: 'ICi', index: 1 },
@@ -335,12 +356,40 @@ export const CONTROL_CODE = {
       name: '通道复位'
     }
   },
-  calSet: {
-    code: 0xaa,
-    name: '设置校准'
+  // calSet: {
+  //   code: 0xaa,
+  //   name: '设置校准'
+  // },
+  // calRead: {
+  //   code: 0x8a,
+  //   name: '读校准'
+  // },
+  lampSet: {
+    code: 0xa3,
+    name: '通道灯设置'
   },
-  calRead: {
+  masterInfoRead: {
+    code: 0x86,
+    name: '读主控信息'
+  },
+  masterInfoSet: {
+    code: 0xb3,
+    name: '写主控信息'
+  },
+  calibrateSet: {
+    code: 0xaa,
+    name: '写校准'
+  },
+  calibrateRead: {
     code: 0x8a,
     name: '读校准'
+  },
+  upgradeSend: {
+    code: 0xb5,
+    name: '发送升级文件'
+  },
+  restartMaster: {
+    code: 0xb4,
+    name: '重启机柜'
   }
 }

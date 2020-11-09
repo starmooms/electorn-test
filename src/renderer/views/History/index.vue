@@ -6,48 +6,50 @@
         @changeData="changeChannelPos"
       ></ChannelPosition>
       <el-button @click="refresh" type="primary">刷新</el-button>
+      <el-button @click="startInfoOpen" type="primary">查看启动信息</el-button>
     </div>
     <split-pane class="main-box" split="vertical">
       <template slot="paneL">
         <div class="left-container pane-container">
-          <samp-chart ref="sampChart"></samp-chart>
+          <samp-chart ref="sampChart" @locate="locate"></samp-chart>
         </div>
       </template>
       <template slot="paneR">
         <div class="right-container pane-container">
           <samp-list
+            ref="sampList"
             :samp-data="sampData"
             :step-list="sampTableList"
           ></samp-list>
         </div>
       </template>
     </split-pane>
+    <start-info-dialog :show.sync="startInfoShow" :startInfo="startInfo" />
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-import { RecycleScroller } from 'vue-virtual-scroller'
 import SplitPane from '@/renderer/components/SplitPane/index.vue'
 import SampChart from '@/renderer/components/SampChart/index.vue'
-import SampList from './components/SampList.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
-import dayjs from 'dayjs'
-import { formatTimeStr } from '@/renderer/utils/util'
+import { computerAdd, startInfoFormat } from '@/renderer/utils/util'
+import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import {
   CHANNEL_STATUS,
   END_STATUS,
   WORKSTEPSINPUT
 } from '@/shared/config/port'
+import SampList from './components/SampList.vue'
 import ChannelPosition from './components/ChannelPosition.vue'
-import { ChannelStatus } from '@/renderer/store/modules/Channel'
+import StartInfoDialog from './components/StartInfoDialog.vue'
 
 @Component({
   components: {
-    RecycleScroller,
     SplitPane,
     SampChart,
     SampList,
-    ChannelPosition
+    ChannelPosition,
+    StartInfoDialog
   }
 })
 export default class History extends Vue {
@@ -55,12 +57,13 @@ export default class History extends Vue {
 
   $refs!: {
     sampChart: SampChart
+    sampList: SampList
   }
 
   sampData: any[] = []
   sampTableList: any[] = []
 
-  filePath = ''
+  filePath: string | null = null
   db!: HistoryDb | null
   loading = false
   position = {
@@ -68,7 +71,9 @@ export default class History extends Vue {
     slaverId: 0,
     channelId: 0
   }
-  stepList: any[] = []
+
+  startInfo: null | UtilT.StartInfoFormat = null
+  startInfoShow = false
 
   get nowChannel() {
     return !this.isHistory && ChannelStatus.channelMap
@@ -78,15 +83,19 @@ export default class History extends Vue {
       : null
   }
 
+  get stepList() {
+    return this.startInfo ? this.startInfo.stepList : []
+  }
+
   async closeDb() {
     if (this.db) {
-      this.stepList = []
+      this.startInfo = null
       await this.db.close()
       this.db = null
     }
   }
 
-  async openDb(filePath: string) {
+  async openDb(filePath: string | null) {
     try {
       this.loading = true
       if (this.filePath !== filePath) {
@@ -109,7 +118,7 @@ export default class History extends Vue {
   async getWorkStep() {
     if (!this.db) return
     const data = await this.db.getWorkStep()
-    this.stepList = JSON.parse(data.stepList)
+    this.startInfo = startInfoFormat(data)
   }
 
   async getSampData() {
@@ -128,47 +137,53 @@ export default class History extends Vue {
       let lastStepIdId: null | number = null
       let lastLoopNum: null | number = null
       let lastStep: any = null
-      const dataEnd = data.length - 1
+      let lastStepTimeEnd = 0
+      let stepTimeMax = 0
+      const spamTotalLen = data.length
 
       this.sampTableList = []
       this.sampData = data.map((item, index) => {
         if (lastStepIdId !== item.stepId || item.loopNum !== lastLoopNum) {
           const steps = this.stepList[item.stepId]
           if (steps && steps.type !== 'loop') {
-            let msgData = ''
-            Object.entries(steps.input).forEach(([key, val]) => {
-              const valData: any = WORKSTEPSINPUT[key]
-              if (valData) {
-                msgData += `${valData.name}${val}${valData.unit}，`
-              }
-            })
-            if (msgData) {
-              msgData = msgData.slice(0, -1)
-            }
-
             const stepId = steps.id
             const showStepId = stepId + 1
             const loopNum = item.loopNum
             const nowStep = {
-              msg: `工序： ${showStepId}（${showStepId}-${loopNum}）${steps.name}：${msgData}`,
+              msg: `工序： ${showStepId}（${showStepId}-${loopNum}）${steps.msg}`,
               loopNum,
               start: index,
-              end: dataEnd
+              end: spamTotalLen
             }
             this.sampTableList.push(nowStep)
             if (lastStep) {
-              lastStep.end = index - 1
+              lastStep.end = index
+              // lastStepTimeEnd = computerAdd(
+              //   lastStepTimeEnd,
+              //   data[index - 1].stepTime
+              // )
+              lastStepTimeEnd = computerAdd(lastStepTimeEnd, stepTimeMax)
+              stepTimeMax = 0
             }
             lastStepIdId = stepId
             lastLoopNum = loopNum
             lastStep = nowStep
           }
         }
+        if (item.stepTime >= stepTimeMax) {
+          stepTimeMax = item.stepTime
+        } else {
+          console.warn('error', item, stepTimeMax, item.stepTime)
+        }
         return {
           sIndex: index + 1,
-          createTimeStr: dayjs.unix(item.createTime).format(formatTimeStr),
+          stepTimeTotal: computerAdd(lastStepTimeEnd, item.stepTime),
+          createTimeStr: item.createTime,
           workerName: CHANNEL_STATUS[item.workCode]?.name,
-          endStatus: item.endCode ? END_STATUS[item.endCode] : '',
+          endStatus:
+            item.endCode && item.endCode !== '00'
+              ? END_STATUS[item.endCode]
+              : '',
           ...item
         }
       })
@@ -182,11 +197,19 @@ export default class History extends Vue {
   }
 
   refresh() {
-    if (!this.isHistory && !this.db) {
+    if (
+      !this.isHistory &&
+      (!this.db || this.filePath !== this.nowChannel?.filePath)
+    ) {
       this.changeChannel()
     } else {
       this.getSampData()
     }
+  }
+
+  /** 查看启动信息 */
+  startInfoOpen() {
+    this.startInfoShow = true
   }
 
   reset() {
@@ -236,6 +259,13 @@ export default class History extends Vue {
       masterId: Number(this.$route.params.masterId),
       slaverId: Number(this.$route.params.slaverId),
       channelId: Number(this.$route.params.channelId)
+    }
+  }
+
+  /** 曲线点击定位 */
+  locate(samp: Port.SampItem) {
+    if (this.$refs.sampList) {
+      this.$refs.sampList.locate(samp)
     }
   }
 

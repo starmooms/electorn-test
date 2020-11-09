@@ -5,6 +5,10 @@ import is from 'electron-is'
 import BoxSamp from './BoxSamp'
 import BoxCal from './BoxCal'
 import BoxStatus from './BoxStatus'
+import BoxLamp from './BoxLamp'
+import BoxMasterInfo from './BoxMasterInfo'
+import communi from '../Request/Communi'
+import BoxUpgrade from './BoxUpgrade'
 
 interface PostOpts {
   timeout?: number
@@ -31,10 +35,13 @@ export class BoxManage {
     channelIds: '通道'
   }
   initChannelResolve!: Promise<any>
-  isDev = is.dev()
+  useDev = is.dev() && communi.requestType === 'Port'
   boxSamp = new BoxSamp(this)
   boxCal = new BoxCal(this)
   boxStatus = new BoxStatus(this)
+  boxLamp = new BoxLamp(this)
+  boxMasterInfo = new BoxMasterInfo(this)
+  boxUpgrade = new BoxUpgrade(this)
 
   create() {
     this.initChannelResolve = this.initChannelStatusList()

@@ -27,7 +27,11 @@ class Command {
         console.log(msg)
         msg = msg.message || JSON.stringify(msg)
       }
-      Vue.prototype.$message.error(msg)
+      Vue.prototype.$message.error({
+        type: 'error',
+        dangerouslyUseHTMLString: true,
+        message: msg
+      })
     } catch (err) {
       console.error(err, 'errMsg')
     }

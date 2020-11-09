@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div v-if="portPath">
+    <div>
       <el-form size="medium" :inline="true">
         <el-button @click="setTranslate">
           {{ readTranslate ? '关闭采样' : '打开采样' }}
@@ -11,7 +11,7 @@
         <el-button type="primary" @click="openBatch">
           机柜批量操作
         </el-button>
-        <el-button type="primary" @click="openSeparat">
+        <el-button type="primary" @click="openSorting">
           容量分选
         </el-button>
         <el-button type="primary" @click="sysLogOpen">
@@ -38,7 +38,7 @@
       <title-box name="通道列表">
         <SelectMaster v-model="activeMasterId"></SelectMaster>
         <transition name="el-fade-in">
-          <div v-if="activeMaster">
+          <div v-if="activeMaster" class="channel-main-box">
             <!-- <el-divider content-position="left">
               机柜{{ activeMaster.id + 1 }}
             </el-divider> -->
@@ -116,7 +116,6 @@
       ></SetChannelStatus>
       <sys-log :show.sync="sysLogShow"></sys-log>
     </div>
-    <div v-else>请先设置串口</div>
   </div>
 </template>
 
@@ -157,7 +156,6 @@ export default class Home extends Vue {
 
   // portItem: any = null
   portList: any[] = []
-  portPath = SettingStatus.portPath
 
   stepsShow = false
   stepsBatch = false
@@ -208,7 +206,6 @@ export default class Home extends Vue {
 
   stepsSetShow(channelMsg: any) {
     this.stepsShowItem = {
-      path: this.portPath,
       ...channelMsg
     }
     this.stepsBatch = false
@@ -260,9 +257,9 @@ export default class Home extends Vue {
     })
   }
 
-  openSeparat() {
+  openSorting() {
     this.$command.send('/createdWin', {
-      type: 'separat'
+      type: 'sorting'
     })
   }
 
@@ -270,7 +267,7 @@ export default class Home extends Vue {
     if (this.trendUnRegister) {
       this.trendUnRegister()
     }
-    if (!this.portPath || this.activeMasterId === null) {
+    if (this.activeMasterId === null) {
       return
     }
 
@@ -366,9 +363,12 @@ export default class Home extends Vue {
     }
   }
 }
-
+.channel-main-box {
+  padding-bottom: 40px;
+}
 .box-card {
   margin-top: 40px;
+  overflow: initial;
   .box-card-header {
     display: flex;
     justify-content: space-between;

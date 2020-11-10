@@ -26,6 +26,7 @@ module.exports = {
     }
   },
   chainWebpack: config => {
+    config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
     config.module
       .rule('svg')
       .exclude.add(resolve('src/renderer/icons'))

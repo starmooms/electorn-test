@@ -126,7 +126,7 @@ export default class BoxSamp {
 
   /** 发送读采样请求 */
   async readSamp() {
-    const masterId = 0
+    const masterId = 1
 
     // 发送读采样请求
     this.readSampWrite.writer('masterId', masterId)
@@ -150,7 +150,7 @@ export default class BoxSamp {
       model: SAMP_MODEL,
       readBuf: resultBuf
     })
-    readModel.showAll()
+    // readModel.showAll()
     const {
       sampList,
       saveSampList,

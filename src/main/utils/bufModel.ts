@@ -306,7 +306,7 @@ export class BufWriteModel {
       throw err
     } finally {
       if (log) {
-        logger.info(JSON.stringify(result, null, 2))
+        logger.debug(JSON.stringify(result, null, 2))
       }
     }
   }

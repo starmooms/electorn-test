@@ -10,8 +10,7 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 // import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Launcher from './Launcher'
 import logger from './core/Logger'
-import debug from 'debug'
-import tcpServe from './core/connect/TcpServe'
+import './core/connect/childTcp'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 app.allowRendererProcessReuse = false

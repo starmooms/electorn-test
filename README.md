@@ -91,3 +91,8 @@ https://www.cnblogs.com/XT-xutao/p/9912264.html
 
 ### 精度计算
 https://www.cnblogs.com/stella1024/p/11905773.html?utm_source=tuicool
+
+
+### sqlite 提高写入速度
+https://libaineu2004.blog.csdn.net/article/details/108815466
+https://blog.csdn.net/qq_18059143/article/details/103323840

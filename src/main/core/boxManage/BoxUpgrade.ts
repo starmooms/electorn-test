@@ -83,7 +83,7 @@ export default class BoxUpgrade {
     })
     writeModel.writer('masterId', masterId)
     if (restartType === 2) {
-      writeModel.writerBit('salverId', [], 1)
+      writeModel.writerBit('slaverId', [], 1)
     }
     await communi.post({
       control: CONTROL_CODE.restartMaster,

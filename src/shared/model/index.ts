@@ -380,5 +380,5 @@ export const UPGRADE_BACK_MODEL: Model[] = [
 /** 重启机柜 */
 export const RESTART_MASTER: Model[] = [
   { name: 'masterId', bytLen: 1 },
-  { name: 'slaverId', bytLen: 1 }             //
+  { name: 'slaverId', bytLen: 1 } //
 ]

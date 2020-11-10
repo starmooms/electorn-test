@@ -91,3 +91,8 @@ https://www.cnblogs.com/XT-xutao/p/9912264.html
 
 ### 精度计算
 https://www.cnblogs.com/stella1024/p/11905773.html?utm_source=tuicool
+
+### 打包exe方法
+nexe包，把child.js打包成一个独立的exe可执行程序
+
+https://stackoverflow.com/questions/1609637/is-it-possible-to-insert-multiple-rows-at-a-time-in-an-sqlite-database/1734067#1734067

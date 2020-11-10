@@ -48,6 +48,9 @@ module.exports = {
   },
   pluginOptions: {
     electronBuilder: {
+      chainWebpackMainProcess(config) {
+        config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
+      },
       nodeIntegration: true,
       mainProcessFile: 'src/main/background.ts',
       mainProcessWatch: ['src/main'],

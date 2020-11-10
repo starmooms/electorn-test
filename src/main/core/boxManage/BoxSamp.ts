@@ -16,7 +16,9 @@ import ipcManage from '../IpcManage'
 import winManager from '../WinManager'
 import { BoxManage } from './BoxManage'
 import { testFilePath } from '@/main/utils/mock'
-import { TIME_FORMAT } from '@/shared/utils'
+import { TIME_FORMAT, typedKeys } from '@/shared/utils'
+import Bluebird from 'bluebird'
+import { getStaticChList } from '@/shared/config/channel'
 
 /** 机柜采样控制 */
 export default class BoxSamp {
@@ -27,6 +29,8 @@ export default class BoxSamp {
   isRead = false
   timer: NodeJS.Timeout | null = null
   readSampWrite = this.getReadSampWrite()
+
+  masterList = getStaticChList().master
 
   constructor(parent: BoxManage) {
     this.parent = parent
@@ -59,7 +63,62 @@ export default class BoxSamp {
     this.timer = setTimeout(async () => {
       try {
         this.readSampNow = true
-        await this.readSamp()
+
+        const result = {
+          changeFilePath: [] as Port.ChannelChangeItem[],
+          errorList: [] as Port.ErrorListItem[]
+        }
+        const projectSamp: Port.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
+        const getProjectSamp: Port.GetProjectSamp = (projectId, key) => {
+          let sampItem = projectSamp[projectId]
+          if (!sampItem) {
+            sampItem = {
+              projectId,
+              sampList: [],
+              changeStatusList: [],
+              startList: [],
+              featureList: [],
+              specialList: [],
+              endList: []
+            }
+            projectSamp[projectId] = sampItem
+          }
+          return sampItem[key]
+        }
+
+        await Promise.all(
+          this.masterList.map(async item => {
+            try {
+              const data = await this.readSamp(item.id, getProjectSamp)
+              Object.keys(result).forEach(key => {
+                result[key] = [...result[key], ...data[key]]
+              })
+            } catch (err) {
+              logger.error(`${item.id} samp Error`, err)
+            }
+          })
+        )
+
+        // 将需要存储的采样对象，改为列表数组
+        let channelStatus: Port.ChannelChangeItem[] = []
+        const saveSampList = Object.entries(projectSamp).map(data => {
+          const saveSamp = data[1]
+          const changeStatusItem = saveSamp.changeStatusList
+          if (changeStatusItem.length > 0) {
+            channelStatus = [...channelStatus, ...changeStatusItem]
+          }
+          return saveSamp
+        })
+
+        await this.saveDb({
+          saveSampList,
+          channelStatus,
+          ...result
+        })
+
+        // await Bluebird.mapSeries(this.masterList, async item => {
+        //   await this.readSamp(item.id)
+        // })
       } catch (err) {
         logger.error(err)
       } finally {
@@ -124,10 +183,29 @@ export default class BoxSamp {
     }
   }
 
-  /** 发送读采样请求 */
-  async readSamp() {
-    const masterId = 0
+  async saveDb({ saveSampList, channelStatus, changeFilePath, errorList }) {
+    try {
+      const s = Date.now()
+      logger.error('存储数据存储开始', saveSampList.length)
+      await Promise.all([
+        historyDbCache.saveSamp(saveSampList),
+        this.mainSaveChannelStatus(channelStatus),
+        this.mainSaveError(errorList)
+      ])
+      logger.error('存储数据完成', Date.now() - s)
+      if (channelStatus.length > 0 || changeFilePath.length > 0) {
+        ipcManage.commonMsg('updateChannelList', [
+          ...channelStatus,
+          ...changeFilePath
+        ])
+      }
+    } catch (err) {
+      logger.error(err)
+    }
+  }
 
+  /** 发送读采样请求 */
+  async readSamp(masterId: number, getProjectSamp: Port.GetProjectSamp) {
     // 发送读采样请求
     this.readSampWrite.writer('masterId', masterId)
     let resultBuf: Buffer
@@ -141,43 +219,53 @@ export default class BoxSamp {
       resultBuf = await communi.post({
         control: CONTROL_CODE.sampRead,
         data: this.readSampWrite.buf,
-        masterId
+        masterId: 1
       })
       logger.debug('读采样返回', resultBuf.toString('hex'))
     }
-    logger.debug('sampStart ==> 开始处理采样')
+    const s = Date.now()
+    logger.error('sampStart ==> 开始处理采样', masterId)
     const readModel = new BufModel({
       model: SAMP_MODEL,
       readBuf: resultBuf
     })
-    readModel.showAll()
+    // readModel.showAll()
     const {
       sampList,
-      saveSampList,
-      channelStatus,
+      // saveSampList,
+      // channelStatus,
       changeFilePath,
       errorList
-    } = this.readSampModel(masterId, readModel)
-    logger.debug('数据处理完成')
+    } = this.readSampModel(masterId, readModel, getProjectSamp)
+    logger.error('数据处理完成', masterId, Date.now() - s)
 
-    try {
-      await Promise.all([
-        historyDbCache.saveSamp(saveSampList),
-        this.mainSaveChannelStatus(channelStatus),
-        this.mainSaveError(errorList)
-      ])
-      logger.debug('存储数据完成')
-      if (channelStatus.length > 0 || changeFilePath.length > 0) {
-        ipcManage.commonMsg('updateChannelList', [
-          ...channelStatus,
-          ...changeFilePath
-        ])
-      }
-    } catch (err) {
-      logger.error(err)
-    }
+    // try {
+    //   await Promise.all([
+    //     historyDbCache.saveSamp(saveSampList),
+    //     this.mainSaveChannelStatus(channelStatus),
+    //     this.mainSaveError(errorList)
+    //   ])
+    //   logger.error('存储数据完成', masterId, Date.now() - s)
+    //   if (channelStatus.length > 0 || changeFilePath.length > 0) {
+    //     ipcManage.commonMsg('updateChannelList', [
+    //       ...channelStatus,
+    //       ...changeFilePath
+    //     ])
+    //   }
+    // } catch (err) {
+    //   logger.error(err)
+    // }
+    // logger.error('结果', masterId, sampList.length)
+
     this.sendWin(masterId, sampList)
-    logger.debug('sampEnd ==> 采样处理结束')
+
+    return {
+      // saveSampList,
+      // channelStatus,
+      changeFilePath,
+      errorList
+    }
+    // logger.debug('sampEnd ==> 采样处理结束', masterId, Date.now() - s)
   }
 
   /** 发送采样列表到渲染端 */
@@ -211,26 +299,13 @@ export default class BoxSamp {
   }
 
   /** 解析采样返回, 改变通道状态 */
-  readSampModel(masterId: number, readModel: BufModel) {
+  readSampModel(
+    masterId: number,
+    readModel: BufModel,
+    getProjectSamp: Port.GetProjectSamp
+  ) {
     const nowUnix = dayjs().unix()
     const nowDateTime = dayjs().format(TIME_FORMAT)
-    const projectSamp: Port.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
-    const getProjectSamp: Port.GetProjectSamp = (projectId, key) => {
-      let sampItem = projectSamp[projectId]
-      if (!sampItem) {
-        sampItem = {
-          projectId,
-          sampList: [],
-          changeStatusList: [],
-          startList: [],
-          featureList: [],
-          specialList: [],
-          endList: []
-        }
-        projectSamp[projectId] = sampItem
-      }
-      return sampItem[key]
-    }
 
     this.readStartList(masterId, readModel, getProjectSamp)
     const { sampList, changeFilePath } = this.readSampList(
@@ -244,21 +319,21 @@ export default class BoxSamp {
     this.readFeatureList(masterId, readModel, getProjectSamp)
     const errorList = this.readErrorList(readModel)
 
-    // 将需要存储的采样对象，改为列表数组
-    let channelStatus: Port.ChannelChangeItem[] = []
-    const saveSampList = Object.entries(projectSamp).map(data => {
-      const saveSamp = data[1]
-      const changeStatusItem = saveSamp.changeStatusList
-      if (changeStatusItem.length > 0) {
-        channelStatus = [...channelStatus, ...changeStatusItem]
-      }
-      return saveSamp
-    })
+    // // 将需要存储的采样对象，改为列表数组
+    // let channelStatus: Port.ChannelChangeItem[] = []
+    // const saveSampList = Object.entries(projectSamp).map(data => {
+    //   const saveSamp = data[1]
+    //   const changeStatusItem = saveSamp.changeStatusList
+    //   if (changeStatusItem.length > 0) {
+    //     channelStatus = [...channelStatus, ...changeStatusItem]
+    //   }
+    //   return saveSamp
+    // })
 
     return {
       sampList,
-      saveSampList,
-      channelStatus,
+      // saveSampList,
+      // channelStatus,
       changeFilePath,
       errorList
     }
@@ -455,11 +530,9 @@ export default class BoxSamp {
     readModel: BufModel,
     getProjectSamp: Port.GetProjectSamp
   ) {
-    logger.debug('读特征列表')
     readModel.ecahList('featureList', readItem => {
       const projectId = readItem.read('projectId')
       const feature = getProjectSamp(projectId, 'featureList')
-      logger.debug(`读到特征列表`)
       feature.push({
         masterId,
         slaverId: readItem.read('slaverId'),

@@ -174,20 +174,25 @@ export class BufWriteModel {
 
   /** 直接写数值 */
   writer(name: string, value: number | string) {
-    const target = this.getTarget(name)
-    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
-    const data = (value as unknown) as number
-    const offset = this.start + target.offset
-    if (target.type === 'float') {
-      // if (typeof data === 'number') {
-      //   data = Math.round((data + Number.EPSILON) * 100) / 100
-      // }
-      return this.buf.writeFloatBE(data, offset)
+    try {
+      const target = this.getTarget(name)
+      if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+      const data = (value as unknown) as number
+      const offset = this.start + target.offset
+      if (target.type === 'float') {
+        // if (typeof data === 'number') {
+        //   data = Math.round((data + Number.EPSILON) * 100) / 100
+        // }
+        return this.buf.writeFloatBE(data, offset)
+      }
+      if (target.type === 'int') {
+        return this.buf.writeIntBE(data, offset, target.bytLen)
+      }
+      return this.buf.writeUIntBE(data, offset, target.bytLen)
+    } catch (err) {
+      logger.error(name, value)
+      throw err
     }
-    if (target.type === 'int') {
-      return this.buf.writeIntBE(data, offset, target.bytLen)
-    }
-    return this.buf.writeUIntBE(data, offset, target.bytLen)
   }
 
   /** 按位写 */

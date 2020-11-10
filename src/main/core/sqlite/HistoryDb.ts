@@ -454,12 +454,15 @@ export default class HistoryDb extends HistoryDbCom {
         }
       }
 
+      logger.info('start save sql')
       if (sql) {
+        logger.error(sql)
         await this.sqlite.exec(sql) // exec 连续执行语句，中间错误后中断
       }
       if (hasEnd) {
         await this.checkCanClose()
       }
+      logger.info('start save sql end')
     } catch (err) {
       logger.error(sql)
       throw err

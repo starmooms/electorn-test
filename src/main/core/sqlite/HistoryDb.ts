@@ -151,9 +151,9 @@ export default class HistoryDb extends HistoryDbCom {
         "createTime" DATETIME,
         PRIMARY KEY ("fullId", "stepId", "loopNum")
       );
-      CREATE INDEX "step_statis_fullId" ON "step_statistics" ("fullId");
-      CREATE INDEX "step_statis_stepId" ON "step_statistics" ("stepId");
-      CREATE INDEX "step_statis_loopNum" ON "step_statistics" ("loopNum");`
+      CREATE INDEX "step_statis_fullId" ON "${stepStatistics}" ("fullId");
+      CREATE INDEX "step_statis_stepId" ON "${stepStatistics}" ("stepId");
+      CREATE INDEX "step_statis_loopNum" ON "${stepStatistics}" ("loopNum");`
     }
 
     // CREATE UNIQUE INDEX "step_statis_uniqueId" ON "step_statistics" ("fullId", "loopNum", "stepId");
@@ -166,6 +166,10 @@ export default class HistoryDb extends HistoryDbCom {
       );
       INSERT INTO ${systemVersion} (version) VALUES ('${APP_VERSON}');`
     }
+
+    sql += `PRAGMA synchronous=OFF;` // 关闭同步
+    sql += `PRAGMA Journal_Mode=WAL;` // 减少锁定
+    sql += `PRAGMA Cache_Size=8000;` // 加大缓存
 
     if (sql) {
       await this.sqlite.exec(sql)
@@ -417,11 +421,13 @@ export default class HistoryDb extends HistoryDbCom {
       const time = dayjs().format(TIME_FORMAT)
       // 添加采样记录
       if (saveSampList.length > 0) {
+        sql += `BEGIN;        `
         sql += `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepTime, loopNum, stepId, workCode, errorCode, endCode, createTime) VALUES`
         saveSampList.forEach(item => {
           sql += `(${item.masterId}, ${item.slaverId}, ${item.channelId}, ${item.U}, ${item.I}, ${item.vol}, ${item.epower}, ${item.stepTime}, ${item.loopNum}, ${item.stepId}, '${item.workerCode}', '${item.errorCode}', '${item.endCode}', '${time}'),`
         })
         sql = Sqlite.replaceSql(sql, ';')
+        sql += `COMMIT;`
       }
 
       sql += this.saveStart(startList, time)

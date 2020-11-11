@@ -2,7 +2,7 @@
   "name": "upper-computer",
   "author": "GXM",
   "description": "upper computer for battery detection",
-  "version": "0.2.76",
+  "version": "0.2.77",
   "private": true,
   "engines": {
     "node": ">=12.18.2"
@@ -13,7 +13,8 @@
     "dev": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3"
+    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
+    "what": "electron-builder install-app-deps"
   },
   "main": "background.js",
   "dependencies": {
@@ -25,6 +26,7 @@
     "electron-store": "^6.0.0",
     "electron-updater": "^4.3.4",
     "element-ui": "^2.13.2",
+    "fix-path": "^3.0.0",
     "forever-monitor": "^3.0.1",
     "iconv-lite": "^0.6.2",
     "ioredis": "^4.17.3",

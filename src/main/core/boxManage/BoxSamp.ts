@@ -1,9 +1,7 @@
-import mainDb from '@/main/core/sqlite/MainDb'
 import {
   CHANNEL_ERR_STATUS,
   CHANNEL_STATUS,
   CHANNEL_STATUS_END,
-  ERROR_STATUS,
   CONTROL_CODE
 } from '@/shared/config/port'
 import { SAMP_MODEL, COMMON_READ } from '@/shared/model'
@@ -15,22 +13,32 @@ import dayjs from 'dayjs'
 import ipcManage from '../IpcManage'
 import winManager from '../WinManager'
 import { BoxManage } from './BoxManage'
-import { testFilePath } from '@/main/utils/mock'
 import { TIME_FORMAT } from '@/shared/utils'
+import SampSaveQueue from './libs/SampSaveQueue'
+
+/** 记录采样参数 */
+interface AddSampQueue {
+  projectSamp: Port.SaveSampData
+  errorList: Port.ErrorListItem[]
+  changeFilePath: Port.ChannelChangeItem[]
+}
 
 /** 机柜采样控制 */
 export default class BoxSamp {
   private readSampNow = false
   parent: BoxManage
   channelMap: BoxManage['channelMap']
+  masterList: BoxManage['staticChList']['master']
 
   isRead = false
   timer: NodeJS.Timeout | null = null
   readSampWrite = this.getReadSampWrite()
+  sampQueue = new SampSaveQueue()
 
   constructor(parent: BoxManage) {
     this.parent = parent
     this.channelMap = this.parent.channelMap
+    this.masterList = this.parent.staticChList.master
   }
 
   clearTimer() {
@@ -59,7 +67,47 @@ export default class BoxSamp {
     this.timer = setTimeout(async () => {
       try {
         this.readSampNow = true
-        await this.readSamp()
+
+        const projectSamp: Port.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
+        const getProjectSamp: Port.GetProjectSamp = (projectId, key) => {
+          let sampItem = projectSamp[projectId]
+          if (!sampItem) {
+            sampItem = {
+              projectId,
+              sampList: [],
+              changeStatusList: [],
+              startList: [],
+              featureList: [],
+              specialList: [],
+              endList: []
+            }
+            projectSamp[projectId] = sampItem
+          }
+          return sampItem[key]
+        }
+
+        const result = {
+          errorList: [] as Port.ErrorListItem[],
+          changeFilePath: [] as Port.ChannelChangeItem[]
+        }
+
+        await Promise.all(
+          this.masterList.map(async item => {
+            try {
+              const data = await this.readSamp(item.id, getProjectSamp)
+              Object.keys(result).forEach(key => {
+                result[key] = [...result[key], ...data[key]]
+              })
+            } catch (err) {
+              logger.error('readSamp Error', err)
+            }
+          })
+        )
+
+        this.addSampQueue({
+          projectSamp,
+          ...result
+        })
       } catch (err) {
         logger.error(err)
       } finally {
@@ -69,6 +117,34 @@ export default class BoxSamp {
         }
       }
     }, 1000)
+  }
+
+  /** 采样数据处理完成后存储更新状态 */
+  async addSampQueue({ projectSamp, errorList, changeFilePath }: AddSampQueue) {
+    // 将需要存储的采样对象，改为列表数组
+    let channelStatus: Port.ChannelChangeItem[] = []
+    const saveSampList = Object.entries(projectSamp).map(data => {
+      const saveSamp = data[1]
+      const changeStatusItem = saveSamp.changeStatusList
+      if (changeStatusItem.length > 0) {
+        channelStatus = [...channelStatus, ...changeStatusItem]
+      }
+      return saveSamp
+    })
+
+    // 发送通道状态到页面
+    if (channelStatus.length > 0 || changeFilePath.length > 0) {
+      ipcManage.commonMsg('updateChannelList', [
+        ...channelStatus,
+        ...changeFilePath
+      ])
+    }
+    // 推送进队列
+    this.sampQueue.addQueue({
+      saveSampList,
+      channelStatus,
+      errorList
+    })
   }
 
   /** 读采样 发送BufModel */
@@ -102,38 +178,12 @@ export default class BoxSamp {
     }
   }
 
-  /** 主数据库记录通道状态 */
-  async mainSaveChannelStatus(channelStatus: Port.ChannelChangeItem[]) {
-    try {
-      if (channelStatus.length > 0) {
-        await mainDb.saveChannelStatus(channelStatus)
-      }
-    } catch (err) {
-      logger.error('mainSaveChannelStatus Error:', err)
-    }
-  }
-
-  /** 主数据库记录错误列表 */
-  async mainSaveError(errorList: Port.ErrorListItem[]) {
-    try {
-      if (errorList.length > 0) {
-        await mainDb.saveErrorList(errorList)
-      }
-    } catch (err) {
-      logger.error('mainSaveError Error:', err)
-    }
-  }
-
   /** 发送读采样请求 */
-  async readSamp() {
-    const masterId = 1
-
+  async readSamp(masterId: number, getProjectSamp: Port.GetProjectSamp) {
     // 发送读采样请求
     this.readSampWrite.writer('masterId', masterId)
     let resultBuf: Buffer
     if (this.parent.useDev) {
-      // const a = `00000008000008000000a10100004886ffffff60000000000000000000000000010001000000040001a10100003bd900000000000000000000000000000000010001000000040002a10100003b8a00000000000000000000000000000000010001000000040003a10100003bd600000000000000000000000000000000010001000000040004a10100004ad200000000000000000000000000000000010001000000040005a10100003c0a00000000000000000000000000000000010001000000040006a10100003b1f00000000000000000000000000000000010001000000040007a1010000821100001bad000000000000000000000000010001000000040003900000003bd200000000000000040000000601000000010001000000650004900000004a9e00000000000000040000000701000000010001000000650005900000003c0f00000000000000040000000601000000010001000000650006900000003b18000000000000000400000006010000000100010000006500079000000082160000000000000000000000000100000001000100000065000090000000482300000000000000030000000701000000010001000000650001900000003bc500000000000000040000000601000000010001000000650002900000003b790000000000000004000000060100000001000100000065` // eslint-disable-line
-      // const a = `00000008000000000000b002000086cbffffc5880000007b000001a3000000004000010000012f0001b00200008888ffffc5a40000007a000001ac000000004000010000012e0002b00200008a88ffffc6de0000007c000001c0000000004000010000012e0003b00200008e23ffffffd50000000000000003000000004000010000012e0004b00200008b70ffffc4610000007f000001c7000000004000010000012e0005b002000086bcffffc64f0000137c0000441f0000000040000100002f6c000600000000001a000000000000000000000000000000000000000000000000070000000000170000000000000000000000000000000000000000000000` // eslint-disable-line
       const a = `00000008000800000000a300000000000000000000000000000000000000000093000100000001000100000000000000000000000000000000000000000000930001000000010002a3000000000000000000000000000000000000000000930001000000010003a3000000000000000000000000000000000000000000930001000000010004a3000000000000000000000000000000000000000000930001000000010005a3000000000000000000000000000000000000000000930001000000010006a3000000000000000000000000000000000000000000930001000000010007a30000000000000000000000000000000000000000009300010000000000000000009300a300008df800000000000100010000009300a30000002800000000000100020000009300a30000932900000000000100030000009300a30000926d00000000000100040000009300a3000091bf00000000000100050000009300a30000932900000000000100060000009300a30000906f00000000000100070000009300a3000090f5000000000001` // eslint-disable-line
       resultBuf = Buffer.from(a, 'hex')
     } else {
@@ -141,43 +191,30 @@ export default class BoxSamp {
       resultBuf = await communi.post({
         control: CONTROL_CODE.sampRead,
         data: this.readSampWrite.buf,
-        masterId
+        masterId: 1
       })
       logger.debug('读采样返回', resultBuf.toString('hex'))
     }
-    logger.debug('sampStart ==> 开始处理采样')
+    logger.info('sampStart ==> 开始处理采样')
+
     const readModel = new BufModel({
       model: SAMP_MODEL,
       readBuf: resultBuf
     })
     // readModel.showAll()
-    const {
-      sampList,
-      saveSampList,
-      channelStatus,
-      changeFilePath,
-      errorList
-    } = this.readSampModel(masterId, readModel)
-    logger.debug('数据处理完成')
+    const { sampList, changeFilePath, errorList } = this.readSampModel(
+      masterId,
+      readModel,
+      getProjectSamp
+    )
 
-    try {
-      await Promise.all([
-        historyDbCache.saveSamp(saveSampList),
-        this.mainSaveChannelStatus(channelStatus),
-        this.mainSaveError(errorList)
-      ])
-      logger.debug('存储数据完成')
-      if (channelStatus.length > 0 || changeFilePath.length > 0) {
-        ipcManage.commonMsg('updateChannelList', [
-          ...channelStatus,
-          ...changeFilePath
-        ])
-      }
-    } catch (err) {
-      logger.error(err)
-    }
     this.sendWin(masterId, sampList)
-    logger.debug('sampEnd ==> 采样处理结束')
+    logger.info('sampEnd ==> 采样处理结束')
+    return {
+      sampList,
+      errorList,
+      changeFilePath
+    }
   }
 
   /** 发送采样列表到渲染端 */
@@ -211,26 +248,13 @@ export default class BoxSamp {
   }
 
   /** 解析采样返回, 改变通道状态 */
-  readSampModel(masterId: number, readModel: BufModel) {
+  readSampModel(
+    masterId: number,
+    readModel: BufModel,
+    getProjectSamp: Port.GetProjectSamp
+  ) {
     const nowUnix = dayjs().unix()
     const nowDateTime = dayjs().format(TIME_FORMAT)
-    const projectSamp: Port.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
-    const getProjectSamp: Port.GetProjectSamp = (projectId, key) => {
-      let sampItem = projectSamp[projectId]
-      if (!sampItem) {
-        sampItem = {
-          projectId,
-          sampList: [],
-          changeStatusList: [],
-          startList: [],
-          featureList: [],
-          specialList: [],
-          endList: []
-        }
-        projectSamp[projectId] = sampItem
-      }
-      return sampItem[key]
-    }
 
     this.readStartList(masterId, readModel, getProjectSamp)
     const { sampList, changeFilePath } = this.readSampList(
@@ -244,21 +268,8 @@ export default class BoxSamp {
     this.readFeatureList(masterId, readModel, getProjectSamp)
     const errorList = this.readErrorList(readModel)
 
-    // 将需要存储的采样对象，改为列表数组
-    let channelStatus: Port.ChannelChangeItem[] = []
-    const saveSampList = Object.entries(projectSamp).map(data => {
-      const saveSamp = data[1]
-      const changeStatusItem = saveSamp.changeStatusList
-      if (changeStatusItem.length > 0) {
-        channelStatus = [...channelStatus, ...changeStatusItem]
-      }
-      return saveSamp
-    })
-
     return {
       sampList,
-      saveSampList,
-      channelStatus,
       changeFilePath,
       errorList
     }

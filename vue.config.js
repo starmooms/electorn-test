@@ -14,6 +14,9 @@ module.exports = {
   configureWebpack: {
     devtool: isDev ? 'source-map' : 'none',
     plugins: [new WorkerPlugin()]
+    // optimization: {
+    //   minimize: false
+    // }
   },
   css: {
     loaderOptions: {
@@ -26,7 +29,7 @@ module.exports = {
     }
   },
   chainWebpack: config => {
-    config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
+    // config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
     config.module
       .rule('svg')
       .exclude.add(resolve('src/renderer/icons'))
@@ -49,6 +52,10 @@ module.exports = {
   },
   pluginOptions: {
     electronBuilder: {
+      chainWebpackMainProcess(config) {
+        config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
+        // config.plugins.delete('uglify')
+      },
       nodeIntegration: true,
       mainProcessFile: 'src/main/background.ts',
       mainProcessWatch: ['src/main'],
@@ -56,10 +63,12 @@ module.exports = {
       // preload: 'src/main/preload.ts',
       builderOptions: {
         // productName: '中文名',
+        // asar: false,
         electronDownload: {
           mirror: 'https://npm.taobao.org/mirrors/electron/'
         },
         appId: 'com.xxx.app',
+        // npmRebuild: false,
         // compression: 'maximum',
         // compression: 'store',
         mac: {

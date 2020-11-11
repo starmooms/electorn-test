@@ -96,3 +96,13 @@ https://www.cnblogs.com/stella1024/p/11905773.html?utm_source=tuicool
 ### sqlite 提高写入速度
 https://libaineu2004.blog.csdn.net/article/details/108815466
 https://blog.csdn.net/qq_18059143/article/details/103323840
+
+
+### electron 总是重新构建
+https://github.com/electron-userland/electron-builder/issues/3329
+https://www.cnblogs.com/qirui/p/8328015.html  // 打包速度
+
+
+### 子进程
+https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/898
+yarn electron:build --mode development  // 打包时使用开发模式

@@ -37,7 +37,7 @@ const sendSamp = (data: Buffer) => {
     wItem.writer('projectId', 120)
     wItem.writer('loopNum', 1)
     wItem.writer('stepId', 0)
-    wItem.writerHex('workerCode', '00')
+    wItem.writerHex('workerCode', 'a1')
     // if (U > 50000) {
     //   wItem.writer('errCode', '01')
     // }
@@ -110,7 +110,7 @@ const transfromModel = new TransfromModel(onData)
 // '192.168.0.201', 5002
 export default function tcpServe() {
   const tcpServer = net.createServer(socket => {
-    console.log('链接成功')
+    logger.info('链接成功')
     socketSend = socket
     socket.on('data', data => {
       console.log('tcpserver 收到数据', data.toString('hex'))
@@ -118,11 +118,14 @@ export default function tcpServe() {
       // sendSamp(socket, data)
     })
     socket.on('error', err => {
-      console.log('错误tcpServer', err)
+      logger.error('错误tcpServer', err)
     })
     socket.on('end', () => {
-      console.log('关闭tcpServer')
+      logger.info('关闭tcpServer')
     })
   })
   tcpServer.listen(31111, '192.168.0.93')
+  tcpServer.on('error', err => {
+    logger.error('错误tcpServer', err)
+  })
 }

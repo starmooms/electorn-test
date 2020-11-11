@@ -9,6 +9,7 @@ import BoxLamp from './BoxLamp'
 import BoxMasterInfo from './BoxMasterInfo'
 import communi from '../Request/Communi'
 import BoxUpgrade from './BoxUpgrade'
+import { getStaticChList } from '@/shared/config/channel'
 
 interface PostOpts {
   timeout?: number
@@ -36,6 +37,9 @@ export class BoxManage {
   }
   initChannelResolve!: Promise<any>
   useDev = is.dev() && communi.requestType === 'Port'
+  /** 静态通道列表 */
+  staticChList = getStaticChList()
+
   boxSamp = new BoxSamp(this)
   boxCal = new BoxCal(this)
   boxStatus = new BoxStatus(this)

@@ -95,6 +95,7 @@ declare namespace Port {
     time: string
     status: 'RUN' | 'END'
     filePath: string
+    isUpdateFile: boolean // 触发文件路径更新，但不改变status
   }
 
   interface ChannelChangeFilePath {

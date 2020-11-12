@@ -122,6 +122,13 @@ export default class Sqlite {
     })
   }
 
+  // /** 并行执行 */
+  // parallelize(fun: any) {
+  //   return new Promise((resolve, reject)=>{
+
+  //   })
+  // }
+
   /** 关闭连接 */
   close() {
     return new Promise<null>((resolve, reject) => {

@@ -82,14 +82,6 @@ export const getSampChartList = async (
   }
 }
 
-export const setSampChartList = (list: Port.SampItem[]) => {
-  list.map(item => {
-    const time =
-      item.createTimeStr || dayjs.unix(item.createTime).format(formatTimeStr)
-    return [time, item.U, item.I]
-  })
-}
-
 export const stepListSetInput = (item: any) => {
   return {
     label: `${item.name}：${item.data}${item.unit}`
@@ -278,7 +270,11 @@ export const stepsFormat = (
     Object.entries(steps.input).forEach(([key, val]) => {
       const valData: any = WORKSTEPSINPUT[key]
       if (valData) {
-        msgData += `${valData.name}${val}${valData.unit}，`
+        if (val === null) {
+          msgData += `无${valData.name},`
+        } else {
+          msgData += `${valData.name}${val}${valData.unit}，`
+        }
       }
     })
     if (msgData) {

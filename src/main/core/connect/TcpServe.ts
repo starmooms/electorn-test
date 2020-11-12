@@ -8,6 +8,7 @@ const sendSamp = (data: Buffer) => {
   // socket.write(Buffer.from('你好', 'utf-8'))
   const id = data.slice(8, 8 + 2).toString('hex')
   const sampLen = 256
+  const porjectId = 122 //122
   const writeModel = new BufModel({
     model: SAMP_MODEL,
     listLen: {
@@ -33,7 +34,7 @@ const sendSamp = (data: Buffer) => {
     wItem.writer('I', r)
     wItem.writer('vol', r)
     wItem.writer('epower', r)
-    wItem.writer('projectId', 120)
+    wItem.writer('projectId', porjectId)
     wItem.writer('loopNum', 1)
     wItem.writer('stepId', 0)
     wItem.writerHex('workerCode', 'a1')
@@ -49,7 +50,7 @@ const sendSamp = (data: Buffer) => {
     wItem.writer('I', Math.floor(Math.random() * 100000))
     wItem.writer('vol', Math.floor(Math.random() * 100000))
     wItem.writer('epower', Math.floor(Math.random() * 100000))
-    wItem.writer('projectId', 120)
+    wItem.writer('projectId', porjectId)
     wItem.writer('loopNum', 1)
     wItem.writer('stepId', 0)
     wItem.writer('stepTime', 6666)
@@ -68,7 +69,7 @@ const sendSamp = (data: Buffer) => {
     wItem.writer('I', Math.floor(Math.random() * 100000))
     wItem.writer('vol', Math.floor(Math.random() * 100000))
     wItem.writer('epower', Math.floor(Math.random() * 100000))
-    wItem.writer('projectId', 120)
+    wItem.writer('projectId', porjectId)
     wItem.writer('loopNum', 1)
     wItem.writer('stepId', 0)
     wItem.writer('stepTime', 6666)

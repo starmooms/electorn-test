@@ -22,7 +22,7 @@ declare namespace Port {
     fullId: string
     workerStart: number | null
     workerEnd: number | null
-    nowStatus: null | 'RUN' | 'END'
+    status: null | 'RUN' | 'END'
     lastSaveTime: number | null
     filePath: string | null
   }
@@ -60,6 +60,7 @@ declare namespace Port {
   interface SampStatusData {
     loopNum: number
     stepTime: number
+    createTime: string
     errorCode: string
     endCode: string
   }
@@ -80,7 +81,7 @@ declare namespace Port {
     errorCode: string
     errorMsg: string
     workerStatus: { name: string; status: string }
-    createTime: number
+    createTime: string
     projectId: number
     /**  */
     createTimeStr?: string

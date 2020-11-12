@@ -1,7 +1,7 @@
 import SerialPort from 'serialport'
 import is from 'electron-is'
 
-import agreement, { ReadResult } from '@/main/core/Agreement'
+import agreement from '@/main/core/Agreement'
 import logger, { sysLog } from '@/main/core/Logger'
 import TransfromParser from '@/main/utils/transfromParser'
 import NotifyUtil from '@/main/utils/notifyUtil'

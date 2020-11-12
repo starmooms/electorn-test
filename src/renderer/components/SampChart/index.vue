@@ -76,7 +76,7 @@ export default class SampChart extends Vue {
   checkList(list: Port.SampItem[]) {
     return list.map(item => {
       if (!item.createTimeStr) {
-        item.createTimeStr = dayjs.unix(item.createTime).format(formatTimeStr)
+        item.createTimeStr = item.createTime
       }
       return item
     })

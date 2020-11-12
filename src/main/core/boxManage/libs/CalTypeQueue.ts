@@ -169,7 +169,8 @@ export default class RunPointQueue {
       if (!this.isRun) return
       await this.pointRead()
       await this.pointSendCheck()
-      return this.next()
+      this.next()
+      return
     } catch (err) {
       this.setError(err)
     }

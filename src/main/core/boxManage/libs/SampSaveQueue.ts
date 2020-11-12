@@ -2,10 +2,14 @@ import mainDb from '../../sqlite/MainDb'
 import logger from '../../Logger'
 import historyDbCache from '../../sqlite/HistoryDBCache'
 
-interface QueueItem {
+interface QueueItemData {
   saveSampList: Port.SaveSampItem[]
   channelStatus: Port.ChannelChangeItem[]
   errorList: Port.ErrorListItem[]
+}
+
+interface QueueItem extends QueueItemData {
+  addTime: number
 }
 
 /** 采样存储队列 */
@@ -15,22 +19,42 @@ export default class SampSaveQueue {
 
   // constructor() {}
 
-  addQueue(queue: QueueItem) {
-    this.queue.push(queue)
+  /** 添加队列 */
+  addQueue(queue: QueueItemData) {
+    this.queue.push({
+      addTime: Date.now(),
+      ...queue
+    })
     this.next()
   }
 
-  async next() {
-    if (this.isRun) return
+  /** 检查队列状态是否异常 */
+  checkQueue() {
     if (this.queue.length > 10) {
       logger.warn('采样数据堆积超过10条', this.queue.length)
     }
+  }
+
+  /** 检查消费是否延迟 */
+  checkDelay(queue: QueueItem) {
+    if (Date.now() - queue.addTime > 3000) {
+      logger.warn('采样处理延迟超过3s')
+    }
+  }
+
+  /** 触发消费队列 */
+  async next() {
+    this.checkQueue()
+    if (this.isRun) return
+
     const item = this.queue.shift()
     if (item) {
       this.isRun = true
+      this.checkDelay(item)
       await this.runSaveSamp(item)
       this.isRun = false
       this.next()
+      return
     }
   }
 

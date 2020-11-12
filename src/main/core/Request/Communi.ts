@@ -118,7 +118,7 @@ class Communi {
             headMsg += tcpClient.ip
           }
         }
-        reject(new Error(`${headMsg} POST Error：${msg}`))
+        reject(new Error(`${headMsg} POST_Error ${msg}`))
         clearTimeout(timer)
       }
 

@@ -38,7 +38,7 @@ export default class BoxSamp {
   constructor(parent: BoxManage) {
     this.parent = parent
     this.channelMap = this.parent.channelMap
-    this.masterList = this.parent.staticChList.master
+    this.masterList = [{ id: 0, name: '机柜1' }] // this.parent.staticChList.master
   }
 
   clearTimer() {
@@ -91,6 +91,7 @@ export default class BoxSamp {
           changeFilePath: [] as Port.ChannelChangeItem[]
         }
 
+        logger.info('采样开始')
         await Promise.all(
           this.masterList.map(async item => {
             try {
@@ -99,10 +100,11 @@ export default class BoxSamp {
                 result[key] = [...result[key], ...data[key]]
               })
             } catch (err) {
-              logger.error('readSamp Error', err)
+              logger.error('readSamp_Error', err)
             }
           })
         )
+        logger.info('采样结束')
 
         this.addSampQueue({
           projectSamp,
@@ -191,11 +193,11 @@ export default class BoxSamp {
       resultBuf = await communi.post({
         control: CONTROL_CODE.sampRead,
         data: this.readSampWrite.buf,
-        masterId: 1
+        masterId
       })
       logger.debug('读采样返回', resultBuf.toString('hex'))
     }
-    logger.info('sampStart ==> 开始处理采样')
+    // logger.info('sampStart ==> 开始处理采样')
 
     const readModel = new BufModel({
       model: SAMP_MODEL,
@@ -209,7 +211,7 @@ export default class BoxSamp {
     )
 
     this.sendWin(masterId, sampList)
-    logger.info('sampEnd ==> 采样处理结束')
+    // logger.info('sampEnd ==> 采样处理结束')
     return {
       sampList,
       errorList,
@@ -253,19 +255,17 @@ export default class BoxSamp {
     readModel: BufModel,
     getProjectSamp: Port.GetProjectSamp
   ) {
-    const nowUnix = dayjs().unix()
-    const nowDateTime = dayjs().format(TIME_FORMAT)
+    const createTime = dayjs().format(TIME_FORMAT)
 
-    this.readStartList(masterId, readModel, getProjectSamp)
+    this.readStartList(masterId, readModel, getProjectSamp, createTime)
     const { sampList, changeFilePath } = this.readSampList(
       masterId,
       readModel,
       getProjectSamp,
-      nowUnix,
-      nowDateTime
+      createTime
     )
-    this.readEndList(masterId, readModel, getProjectSamp)
-    this.readFeatureList(masterId, readModel, getProjectSamp)
+    this.readEndList(masterId, readModel, getProjectSamp, createTime)
+    this.readFeatureList(masterId, readModel, getProjectSamp, createTime)
     const errorList = this.readErrorList(readModel)
 
     return {
@@ -275,12 +275,31 @@ export default class BoxSamp {
     }
   }
 
+  /** 修改通道状态，并返回通道修改对象 */
+  setChannel(
+    channel: Port.ChannelItem,
+    samp: Port.SampItem,
+    update: Partial<Pick<Port.ChannelChangeItem, 'status' | 'filePath'>>
+  ) {
+    Object.keys(update).forEach((key: string) => {
+      channel[key] = update[key]
+    })
+
+    return {
+      masterId: samp.masterId,
+      slaverId: samp.slaverId,
+      channelId: samp.channelId,
+      time: samp.createTime,
+      status: channel.status,
+      filePath: channel.filePath
+    } as Port.ChannelChangeItem
+  }
+
   /** 读采样返回中的采样列表 */
   readSampList(
     masterId: number,
     readModel: BufModel,
     getProjectSamp: Port.GetProjectSamp,
-    nowUnix: number,
     nowDateTime: string
   ) {
     /** 本此读取采样返回列表 */
@@ -301,7 +320,7 @@ export default class BoxSamp {
         errorMsg: errCode !== '00' ? CHANNEL_ERR_STATUS[errCode] : '',
         workerStatus: CHANNEL_STATUS[workerCode] || this.parent.noWorkerStatus,
         endCode: '00',
-        createTime: nowUnix
+        createTime: nowDateTime
       }
       sampList.push(samp)
       if (samp.projectId === 0) return // 采样工程id为0，直接返回
@@ -316,14 +335,11 @@ export default class BoxSamp {
       const lastSamp = channel.samp // eslint-disable-line
       channel.samp = samp
 
-      const lastStatus = channel.nowStatus // 通道上次状态
+      const lastStatus = channel.status // 通道上次状态
       let nowStatus = lastStatus // 通道当前状态，默认为上回状态，下面通过采样判断
 
       let shouldSaveSamp = false // 是否保存采样
       let saveSampUpdateTime = false // 保存采样更新保存时间
-      let changeChannel: Port.ChannelChangeItem | null = null
-
-      // const testPath = testFilePath(samp)
 
       // 判断状态变化
       if (
@@ -335,16 +351,10 @@ export default class BoxSamp {
         nowStatus = CHANNEL_STATUS_END.includes(samp.workerCode) ? 'END' : 'RUN' // eslint-disable-line
         const filePath = historyDbCache.getFilePath(samp.projectId)
         if (lastStatus !== nowStatus || channel.filePath !== filePath) {
-          channel.nowStatus = nowStatus
-          channel.filePath = filePath
-          changeChannel = {
-            masterId: samp.masterId,
-            slaverId: samp.slaverId,
-            channelId: samp.channelId,
-            time: nowDateTime,
+          const changeChannel = this.setChannel(channel, samp, {
             status: nowStatus,
-            filePath: filePath
-          }
+            filePath
+          })
           const projectId = samp.projectId
           const saveSampStatus = getProjectSamp(projectId, 'changeStatusList')
           saveSampStatus.push(changeChannel)
@@ -358,15 +368,11 @@ export default class BoxSamp {
           shouldSaveSamp = true
         } else {
           if (!channel.filePath) {
-            channel.filePath = historyDbCache.getFilePath(samp.projectId)
-            changeFilePath.push({
-              masterId: samp.masterId,
-              slaverId: samp.slaverId,
-              channelId: samp.channelId,
-              time: nowDateTime,
-              filePath: channel.filePath,
-              status: channel.nowStatus!
+            const filePath = historyDbCache.getFilePath(samp.projectId)
+            const changeChannel = this.setChannel(channel, samp, {
+              filePath
             })
+            changeFilePath.push(changeChannel)
           }
 
           if (
@@ -410,7 +416,8 @@ export default class BoxSamp {
   readStartList(
     masterId: number,
     readModel: BufModel,
-    getProjectSamp: Port.GetProjectSamp
+    getProjectSamp: Port.GetProjectSamp,
+    createTime: string
   ) {
     readModel.ecahList('startList', readItem => {
       const projectId = readItem.read('projectId')
@@ -428,7 +435,8 @@ export default class BoxSamp {
         epower: 0,
         stepTime: 0,
         errorCode: '00',
-        endCode: '00'
+        endCode: '00',
+        createTime
       }
       start.push(data)
       this.channelSaveTime({ data })
@@ -439,7 +447,8 @@ export default class BoxSamp {
   readEndList(
     masterId: number,
     readModel: BufModel,
-    getProjectSamp: Port.GetProjectSamp
+    getProjectSamp: Port.GetProjectSamp,
+    createTime: string
   ) {
     readModel.ecahList('endList', readItem => {
       const projectId = readItem.read('projectId')
@@ -450,7 +459,8 @@ export default class BoxSamp {
         ...this.getStepData(readItem),
         ...this.getStatusData(readItem),
         endCode: readItem.readHex('endCode'),
-        errorCode: '00'
+        errorCode: '00',
+        createTime
       }
       const list = getProjectSamp(
         projectId,
@@ -464,7 +474,8 @@ export default class BoxSamp {
   readFeatureList(
     masterId: number,
     readModel: BufModel,
-    getProjectSamp: Port.GetProjectSamp
+    getProjectSamp: Port.GetProjectSamp,
+    createTime: string
   ) {
     logger.debug('读特征列表')
     readModel.ecahList('featureList', readItem => {
@@ -479,7 +490,8 @@ export default class BoxSamp {
         ...this.getStatusData(readItem),
         featureType: readItem.read('featureType'),
         errorCode: '00',
-        endCode: '00'
+        endCode: '00',
+        createTime
       })
     })
   }

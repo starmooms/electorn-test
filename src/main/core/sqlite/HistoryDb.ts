@@ -289,17 +289,12 @@ export default class HistoryDb extends HistoryDbCom {
     )
     logger.info('有关闭状态', data)
     if (!data) {
-      // const { stepsInfo } = this.tables
-      // const now = dayjs().format(TIME_FORMAT)
-      // await this.sqlite.run(
-      //   `UPDATE '${stepsInfo}' SET endTime='${now}' WHERE id=(SELECT MAX(id) FROM '${stepsInfo}');`
-      // )
       await this.closeDb('isEnd')
     }
   }
 
   /** 生成 统计表保存开始列表sql */
-  saveStart(list: Db.startList, now: string) {
+  saveStart(list: Db.startList) {
     let sql = ''
     if (list.length > 0) {
       const { stepStatistics } = this.tables
@@ -311,8 +306,8 @@ export default class HistoryDb extends HistoryDbCom {
           stepId: item.stepId,
           workCode: `'${item.workerCode}'`,
           startU: item.U,
-          startTime: `'${now}'`,
-          createTime: `'${now}'`
+          startTime: `'${item.createTime}'`,
+          createTime: `'${item.createTime}'`
         })
       })
       // sql += `INSERT INTO ${stepStatistics} (masterId, slaverId, channelId, fullId, stepId, workCode, loopNum, startU, startTime, createTime) VALUES`
@@ -328,7 +323,7 @@ export default class HistoryDb extends HistoryDbCom {
   }
 
   /** 生成 统计表保存结束列表sql */
-  saveEnd(list: Db.endList, now: string) {
+  saveEnd(list: Db.endList) {
     let sql = ''
     if (list.length > 0) {
       const { stepStatistics } = this.tables
@@ -345,7 +340,7 @@ export default class HistoryDb extends HistoryDbCom {
           vol: item.vol,
           epower: item.epower,
           endCode: `'${item.endCode}'`,
-          endTime: `'${now}'`,
+          endTime: `'${item.createTime}'`,
           avgU: `(SELECT ROUND(AVG(U),2) FROM 'samp_data' WHERE masterId=${item.masterId} AND slaverID=${item.slaverId} AND channelId=${item.channelId} AND loopNum=${item.loopNum} AND stepId=${item.stepId})`
         })
         // sql += `UPDATE ${stepStatistics} avgU=(
@@ -418,21 +413,19 @@ export default class HistoryDb extends HistoryDbCom {
         ...endList,
         ...sampList
       ]
-      const time = dayjs().format(TIME_FORMAT)
+
       // 添加采样记录
       if (saveSampList.length > 0) {
-        sql += `BEGIN;        `
         sql += `INSERT INTO ${sampData} (masterId, slaverId, channelId, U, I, vol, epower, stepTime, loopNum, stepId, workCode, errorCode, endCode, createTime) VALUES`
         saveSampList.forEach(item => {
-          sql += `(${item.masterId}, ${item.slaverId}, ${item.channelId}, ${item.U}, ${item.I}, ${item.vol}, ${item.epower}, ${item.stepTime}, ${item.loopNum}, ${item.stepId}, '${item.workerCode}', '${item.errorCode}', '${item.endCode}', '${time}'),`
+          sql += `(${item.masterId}, ${item.slaverId}, ${item.channelId}, ${item.U}, ${item.I}, ${item.vol}, ${item.epower}, ${item.stepTime}, ${item.loopNum}, ${item.stepId}, '${item.workerCode}', '${item.errorCode}', '${item.endCode}', '${item.createTime}'),`
         })
         sql = Sqlite.replaceSql(sql, ';')
-        sql += `COMMIT;`
       }
 
-      sql += this.saveStart(startList, time)
+      sql += this.saveStart(startList)
       sql += this.saveFeature(featureList)
-      sql += this.saveEnd(endList, time)
+      sql += this.saveEnd(endList)
 
       // // 添加结束状态
       // if (endStatusList.length > 0) {
@@ -452,11 +445,11 @@ export default class HistoryDb extends HistoryDbCom {
           endUpdate
         } = this.handleChangeChannel(changeStatusList)
         if (startTime) {
-        sql += `UPDATE ${channelInfo} SET startTime='${startTime}' WHERE fullId IN (${startUpdate.join(',')}) AND startTime is NULL;` // eslint-disable-line
+          sql += `UPDATE ${channelInfo} SET startTime='${startTime}' WHERE fullId IN (${startUpdate.join(',')}) AND startTime is NULL;` // eslint-disable-line
         }
         if (endTime) {
           hasEnd = true
-        sql += `UPDATE ${channelInfo} SET endTime='${endTime}' WHERE fullId IN (${endUpdate.join(',')}) AND endTime is NULL;` // eslint-disable-line
+          sql += `UPDATE ${channelInfo} SET endTime='${endTime}' WHERE fullId IN (${endUpdate.join(',')}) AND endTime is NULL;` // eslint-disable-line
         }
       }
 

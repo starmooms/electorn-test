@@ -87,7 +87,7 @@ export class BoxManage {
     channelStatus.forEach((item: any) => {
       const channel = this.channelMap.get(item.fullId)
       if (channel) {
-        channel.nowStatus = item.status
+        channel.status = item.status
       }
     })
     return this.channelList

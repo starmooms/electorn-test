@@ -1,6 +1,7 @@
 import HistoryDbCom from '@/shared/sqlite/HistoryDbCom'
 import path from 'path'
 import { getFullIdData, getStaticInsert } from '@/shared/sqlite/sqlUtil'
+import { resolve } from 'bluebird'
 
 export default class HistoryDb extends HistoryDbCom {
   constructor(filePath: string) {
@@ -49,9 +50,11 @@ export default class HistoryDb extends HistoryDbCom {
       }
       return staticItem
     }
+
+    console.time()
     await Promise.all([
       this.sqlite.each(
-        `SELECT masterId, slaverId, channelId, U, workCode FROM "samp_data" WHERE id IN (
+        `SELECT masterId, slaverId, channelId, U, workCode FROM ${sampData} WHERE id IN (
         SELECT MIN(id) id FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId
       );`,
         row => {
@@ -60,7 +63,7 @@ export default class HistoryDb extends HistoryDbCom {
         }
       ),
       this.sqlite.each(
-        `SELECT masterId, slaverId, channelId, U, I, epower, vol, stepTime, endCode FROM "samp_data" WHERE id IN (
+        `SELECT masterId, slaverId, channelId, U, I, epower, vol, stepTime, endCode FROM ${sampData} WHERE id IN (
         SELECT MAX(id) id FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId
       );`,
         row => {
@@ -76,6 +79,8 @@ export default class HistoryDb extends HistoryDbCom {
         }
       )
     ])
+    console.timeEnd()
+
     const getUpdateSql = getStaticInsert(stepStatistics)
     staticMap.forEach(staticItem => {
       const { start, end, avgU } = staticItem

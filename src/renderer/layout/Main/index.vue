@@ -27,6 +27,6 @@ export default class Main extends Vue {}
 .nav-left {
   flex: 1;
   overflow: auto;
-  padding: 46px 20px;
+  padding: 16px 20px;
 }
 </style>

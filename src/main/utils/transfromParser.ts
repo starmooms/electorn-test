@@ -1,6 +1,5 @@
 import { Transform, TransformOptions } from 'stream'
 import agreement from '@/main/core/Agreement'
-import logger from '../core/Logger'
 
 interface Opts extends TransformOptions {
   delimiter: Buffer

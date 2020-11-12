@@ -1,5 +1,4 @@
 import net from 'net'
-import logger from '../Logger'
 import { BufWriteModel as BufModel } from '@/main/utils/bufModel'
 import { SAMP_MODEL } from '@/shared/model'
 import { TransfromModel } from '@/main/utils/transfromParser'
@@ -23,8 +22,8 @@ const sendSamp = (data: Buffer) => {
   // writeModel.writer('endLen', 10)
   // writeModel.writer('featureLen', 255)
 
-  // logger.info('sampLen', writeModel.read('sampLen'))
-  // logger.info('featureLen', writeModel.read('featureLen'))
+  // console.log('sampLen', writeModel.read('sampLen'))
+  // console.log('featureLen', writeModel.read('featureLen'))
   writeModel.ecahList('sampList', (wItem, index) => {
     const r = Math.floor(Math.random() * 10000)
     const U = r
@@ -75,12 +74,12 @@ const sendSamp = (data: Buffer) => {
     wItem.writer('stepTime', 6666)
     wItem.writerHex('workerCode', 'a1')
     wItem.writer('featureType', (slaverId % 5) + 1)
-    // logger.info(slaverId, 'd:', (slaverId % 5) + 1)
+    // console.log(slaverId, 'd:', (slaverId % 5) + 1)
     // if (U > 50000) {
     //   wItem.writer('errCode', '01')
     // }
   })
-  // logger.info('end')
+  // console.log('end')
 
   const resultBuf = Buffer.from(
     `6801010000688500${id}011f${writeModel.buf.toString('hex')}8f6bedededed`,
@@ -89,12 +88,12 @@ const sendSamp = (data: Buffer) => {
 
   resultBuf.writeUInt16BE(writeModel.buf.length, 10)
   console.log('tcpServer返回', id)
-  // logger.debug('流水号', id)
-  // logger.info(resultBuf.toString('hex'))
+  // console.log('流水号', id)
+  // console.log(resultBuf.toString('hex'))
   if (socketSend) {
     socketSend.write(resultBuf, err => {
       if (err) {
-        logger.error('TcpServe Error', err)
+        console.log('TcpServe Error', err)
       }
     })
   }
@@ -110,7 +109,7 @@ const transfromModel = new TransfromModel(onData)
 // '192.168.0.201', 5002
 export default function tcpServe() {
   const tcpServer = net.createServer(socket => {
-    logger.info('链接成功')
+    console.log('链接成功')
     socketSend = socket
     socket.on('data', data => {
       console.log('tcpserver 收到数据', data.toString('hex'))
@@ -118,14 +117,14 @@ export default function tcpServe() {
       // sendSamp(socket, data)
     })
     socket.on('error', err => {
-      logger.error('错误tcpServer', err)
+      console.log('错误tcpServer', err)
     })
     socket.on('end', () => {
-      logger.info('关闭tcpServer')
+      console.log('关闭tcpServer')
     })
   })
   tcpServer.listen(31111, '192.168.0.93')
   tcpServer.on('error', err => {
-    logger.error('错误tcpServer', err)
+    console.log('错误tcpServer', err)
   })
 }

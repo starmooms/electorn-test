@@ -1,11 +1,6 @@
 import HistoryDbCom from '@/shared/sqlite/HistoryDbCom'
 import path from 'path'
-import {
-  getFullIdData,
-  getInsertOrUpdateAllTpl,
-  getStaticInsert
-} from '@/shared/sqlite/sqlUtil'
-import logger from '@/main/core/Logger'
+import { getFullIdData, getStaticInsert } from '@/shared/sqlite/sqlUtil'
 
 export default class HistoryDb extends HistoryDbCom {
   constructor(filePath: string) {

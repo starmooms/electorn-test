@@ -15,26 +15,26 @@
         <el-table-column
           prop="masterId"
           label="机柜"
-          width="80"
+          width="46"
         ></el-table-column>
         <el-table-column
           prop="slaverIds"
           label="丛控"
-          width="80"
+          width="46"
         ></el-table-column>
         <el-table-column
           prop="channelIds"
           label="通道"
-          width="80"
+          width="46"
         ></el-table-column>
         <el-table-column
           prop="typeStr"
           label="错误类型"
-          width="200"
+          width="140"
         ></el-table-column>
         <el-table-column
           prop="action"
-          label="错误类型"
+          label="控制命令"
           width="200"
         ></el-table-column>
         <el-table-column prop="errCodeStr" label="错误信息"></el-table-column>

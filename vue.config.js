@@ -12,7 +12,7 @@ function resolve(dir) {
 module.exports = {
   lintOnSave: isDev,
   configureWebpack: {
-    devtool: isDev ? 'source-map' : 'none',
+    devtool: 'source-map', // isDev ? 'source-map' : 'none',
     plugins: [new WorkerPlugin()]
     // optimization: {
     //   minimize: false

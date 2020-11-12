@@ -1,7 +1,6 @@
 import { deepClone } from '@/shared/utils'
-import logger from '../core/Logger'
 import { BufModelT } from '@/types/BufModel'
-import { toHex, replaceAscii } from '.'
+import { replaceAscii } from '.'
 
 // export interface Model {
 //   name: string
@@ -302,11 +301,11 @@ export class BufWriteModel {
         }
       })
     } catch (err) {
-      logger.error('SHOW ALL ERROR', err)
+      console.error('SHOW ALL ERROR', err)
       throw err
     } finally {
       if (log) {
-        logger.debug(JSON.stringify(result, null, 2))
+        console.log(JSON.stringify(result, null, 2))
       }
     }
   }

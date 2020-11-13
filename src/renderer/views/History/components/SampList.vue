@@ -3,6 +3,7 @@
     <div class="action-box">
       <el-button type="primary" @click="showDetails">详细数据</el-button>
       <el-button type="primary" @click="showSteps">过程数据</el-button>
+      <el-button type="primary" @click="exportExcel">导出Excel</el-button>
     </div>
     <div class="samp-table virtual-table">
       <DynamicScroller
@@ -243,6 +244,9 @@ export default class SampList extends Vue {
       }
     })
   }
+
+  /** 导出 */
+  exportExcel() {}
 }
 </script>
 

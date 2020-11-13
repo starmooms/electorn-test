@@ -296,6 +296,10 @@ export default class Home extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.home {
+  padding-bottom: 40px;
+}
+
 .color-box {
   .color-box-list {
     display: flex;

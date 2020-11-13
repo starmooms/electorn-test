@@ -22,6 +22,17 @@ interface AddSampQueue {
   errorList: Port.ErrorListItem[]
 }
 
+type ChUpdateStatus = Partial<
+  Pick<Port.ChannelChangeItem, 'status' | 'filePath'>
+>
+
+interface ReadSampParams {
+  masterId: number
+  readModel: BufModel
+  getProjectSamp: Port.GetProjectSamp
+  createTime: string
+}
+
 /** 机柜采样控制 */
 export default class BoxSamp {
   private readSampNow = false
@@ -37,7 +48,7 @@ export default class BoxSamp {
   constructor(parent: BoxManage) {
     this.parent = parent
     this.channelMap = this.parent.channelMap
-    this.masterList = [{ id: 0, name: '机柜1' }] // this.parent.staticChList.master
+    this.masterList = this.parent.staticChList.master // [{ id: 0, name: '机柜1' }] // this.parent.staticChList.master
   }
 
   clearTimer() {
@@ -66,48 +77,7 @@ export default class BoxSamp {
     this.timer = setTimeout(async () => {
       try {
         this.readSampNow = true
-
-        const projectSamp: Port.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
-        const getProjectSamp: Port.GetProjectSamp = (projectId, key) => {
-          let sampItem = projectSamp[projectId]
-          if (!sampItem) {
-            sampItem = {
-              projectId,
-              sampList: [],
-              changeStatusList: [],
-              startList: [],
-              featureList: [],
-              specialList: [],
-              endList: []
-            }
-            projectSamp[projectId] = sampItem
-          }
-          return sampItem[key]
-        }
-
-        const result = {
-          errorList: [] as Port.ErrorListItem[]
-        }
-
-        logger.info('采样开始')
-        await Promise.all(
-          this.masterList.map(async item => {
-            try {
-              const data = await this.readSamp(item.id, getProjectSamp)
-              Object.keys(result).forEach(key => {
-                result[key] = [...result[key], ...data[key]]
-              })
-            } catch (err) {
-              logger.error('readSamp_Error', err)
-            }
-          })
-        )
-        logger.info('采样结束')
-
-        this.addSampQueue({
-          projectSamp,
-          ...result
-        })
+        await this.startReadSamp()
       } catch (err) {
         logger.error(err)
       } finally {
@@ -117,6 +87,43 @@ export default class BoxSamp {
         }
       }
     }, 1000)
+  }
+
+  async startReadSamp() {
+    const projectSamp: Port.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
+    const getProjectSamp: Port.GetProjectSamp = (projectId, key) => {
+      let sampItem = projectSamp[projectId]
+      if (!sampItem) {
+        sampItem = {
+          projectId,
+          sampList: [],
+          changeStatusList: [],
+          startList: [],
+          featureList: [],
+          specialList: [],
+          endList: []
+        }
+        projectSamp[projectId] = sampItem
+      }
+      return sampItem[key]
+    }
+
+    let errorList: Port.ErrorListItem[] = []
+
+    logger.info('采样开始')
+    await Promise.all(
+      this.masterList.map(async item => {
+        try {
+          const data = await this.readSamp(item.id, getProjectSamp)
+          errorList = errorList.concat(data.errorList)
+        } catch (err) {
+          logger.error('readSamp_Error', err)
+        }
+      })
+    )
+    logger.info('采样结束')
+
+    this.addSampQueue({ projectSamp, errorList })
   }
 
   /** 采样数据处理完成后存储更新状态 */
@@ -136,10 +143,14 @@ export default class BoxSamp {
     if (channelStatus.length > 0) {
       ipcManage.commonMsg('updateChannelList', [...channelStatus])
     }
+
+    // 过滤掉文件改变
+    const filterUpdateFile = channelStatus.filter(v => !v.isUpdateFile)
+
     // 推送进队列
     this.sampQueue.addQueue({
       saveSampList,
-      channelStatus,
+      channelStatus: filterUpdateFile,
       errorList
     })
   }
@@ -175,6 +186,20 @@ export default class BoxSamp {
     }
   }
 
+  /** 发送采样列表到渲染端 */
+  sendWin(masterId: number, sampList: Port.SampItem[]) {
+    const win = winManager.getWin('mainWin')
+    if (win) {
+      ipcManage.send(
+        `/port/translate/${masterId}`,
+        () => {
+          return { list: sampList }
+        },
+        win
+      )
+    }
+  }
+
   /** 发送读采样请求 */
   async readSamp(masterId: number, getProjectSamp: Port.GetProjectSamp) {
     // 发送读采样请求
@@ -184,13 +209,13 @@ export default class BoxSamp {
       const a = `00000008000800000000a300000000000000000000000000000000000000000093000100000001000100000000000000000000000000000000000000000000930001000000010002a3000000000000000000000000000000000000000000930001000000010003a3000000000000000000000000000000000000000000930001000000010004a3000000000000000000000000000000000000000000930001000000010005a3000000000000000000000000000000000000000000930001000000010006a3000000000000000000000000000000000000000000930001000000010007a30000000000000000000000000000000000000000009300010000000000000000009300a300008df800000000000100010000009300a30000002800000000000100020000009300a30000932900000000000100030000009300a30000926d00000000000100040000009300a3000091bf00000000000100050000009300a30000932900000000000100060000009300a30000906f00000000000100070000009300a3000090f5000000000001` // eslint-disable-line
       resultBuf = Buffer.from(a, 'hex')
     } else {
-      logger.info('读采样发送', this.readSampWrite.buf.toString('hex'))
+      logger.debug('读采样发送', this.readSampWrite.buf.toString('hex'))
       resultBuf = await communi.post({
         control: CONTROL_CODE.sampRead,
         data: this.readSampWrite.buf,
-        masterId
+        masterId: 1
       })
-      logger.info('读采样返回', resultBuf.toString('hex'))
+      logger.debug('读采样返回', resultBuf.toString('hex'))
     }
     // logger.info('sampStart ==> 开始处理采样')
 
@@ -210,20 +235,6 @@ export default class BoxSamp {
     return {
       sampList,
       errorList
-    }
-  }
-
-  /** 发送采样列表到渲染端 */
-  sendWin(masterId: number, sampList: Port.SampItem[]) {
-    const win = winManager.getWin('mainWin')
-    if (win) {
-      ipcManage.send(
-        `/port/translate/${masterId}`,
-        () => {
-          return { list: sampList }
-        },
-        win
-      )
     }
   }
 
@@ -251,15 +262,17 @@ export default class BoxSamp {
   ) {
     const createTime = dayjs().format(TIME_FORMAT)
 
-    this.readStartList(masterId, readModel, getProjectSamp, createTime)
-    const { sampList } = this.readSampList(
+    const params = {
       masterId,
       readModel,
       getProjectSamp,
       createTime
-    )
-    this.readEndList(masterId, readModel, getProjectSamp, createTime)
-    this.readFeatureList(masterId, readModel, getProjectSamp, createTime)
+    }
+
+    this.readStartList(params)
+    const { sampList } = this.readSampList(params)
+    this.readEndList(params)
+    this.readFeatureList(params)
     const errorList = this.readErrorList(readModel)
 
     return {
@@ -272,10 +285,7 @@ export default class BoxSamp {
   setChannel(
     channel: Port.ChannelItem,
     samp: Port.SampItem,
-    projectId: number,
-    getProjectSamp: Port.GetProjectSamp,
-    update: Partial<Pick<Port.ChannelChangeItem, 'status' | 'filePath'>>,
-    isUpdateFile = false
+    update: ChUpdateStatus
   ) {
     Object.keys(update).forEach((key: string) => {
       channel[key] = update[key]
@@ -287,20 +297,13 @@ export default class BoxSamp {
       time: samp.createTime,
       status: channel.status!,
       filePath: channel.filePath!,
-      isUpdateFile
+      isUpdateFile: false
     }
-    const saveSampStatus = getProjectSamp(projectId, 'changeStatusList')
-    saveSampStatus.push(data)
-    return
+    return data
   }
 
   /** 读采样返回中的采样列表 */
-  readSampList(
-    masterId: number,
-    readModel: BufModel,
-    getProjectSamp: Port.GetProjectSamp,
-    nowDateTime: string
-  ) {
+  readSampList({ masterId, readModel, getProjectSamp, createTime }: ReadSampParams) { // eslint-disable-line
     /** 本此读取采样返回列表 */
     const sampList: Port.SampItem[] = []
 
@@ -318,7 +321,7 @@ export default class BoxSamp {
         errorMsg: errCode !== '00' ? CHANNEL_ERR_STATUS[errCode] : '',
         workerStatus: CHANNEL_STATUS[workerCode] || this.parent.noWorkerStatus,
         endCode: '00',
-        createTime: nowDateTime
+        createTime: createTime
       }
       sampList.push(samp)
       const projectId = samp.projectId
@@ -333,12 +336,18 @@ export default class BoxSamp {
 
       const lastSamp = channel.samp // eslint-disable-line
       channel.samp = samp
-
       const lastStatus = channel.status // 通道上次状态
       let nowStatus = lastStatus // 通道当前状态，默认为上回状态，下面通过采样判断
-
       let shouldSaveSamp = false // 是否保存采样
       let saveSampUpdateTime = false // 保存采样更新保存时间
+
+      /** 更新通道状态 */
+      const changeStatus = (update: ChUpdateStatus, isUpdateFile = false) => {
+        const data = this.setChannel(channel, samp, update)
+        const saveSampStatus = getProjectSamp(projectId, 'changeStatusList')
+        data.isUpdateFile = isUpdateFile
+        saveSampStatus.push(data)
+      }
 
       // 判断状态变化
       if (
@@ -350,7 +359,7 @@ export default class BoxSamp {
         nowStatus = CHANNEL_STATUS_END.includes(workerCode) ? 'END' : 'RUN' // eslint-disable-line
         const filePath = historyDbCache.getFilePath(projectId)
         if (lastStatus !== nowStatus || channel.filePath !== filePath) {
-          this.setChannel(channel, samp, projectId, getProjectSamp, {
+          changeStatus({
             status: nowStatus,
             filePath
           })
@@ -364,16 +373,11 @@ export default class BoxSamp {
           shouldSaveSamp = true
         } else {
           if (!channel.filePath) {
-            this.setChannel(
-              channel,
-              samp,
-              projectId,
-              getProjectSamp,
-              {
-                filePath: historyDbCache.getFilePath(projectId)
-              },
-              true
-            )
+            // 上位机初始化时，如果通道正在运行，历史数据库没有打开
+            // 首次读采样，打开数据库。 第二次读采样，才将文件路径绑定到通道上
+            // 仅更新路径
+            const filePath = historyDbCache.getFilePath(projectId)
+            changeStatus({ filePath }, true)
           }
           if (
             channel.lastSaveTime === null ||
@@ -397,10 +401,7 @@ export default class BoxSamp {
       if (shouldSaveSamp) {
         const saveSampList = getProjectSamp(samp.projectId, 'sampList')
         if (saveSampUpdateTime) {
-          this.channelSaveTime({
-            channel,
-            data: samp
-          })
+          this.channelSaveTime({ channel, data: samp })
         }
         saveSampList.push(samp)
       }
@@ -412,12 +413,7 @@ export default class BoxSamp {
   }
 
   /** 读采样开始状态 */
-  readStartList(
-    masterId: number,
-    readModel: BufModel,
-    getProjectSamp: Port.GetProjectSamp,
-    createTime: string
-  ) {
+  readStartList({ masterId, readModel, getProjectSamp, createTime }: ReadSampParams) { // eslint-disable-line
     readModel.ecahList('startList', readItem => {
       const projectId = readItem.read('projectId')
       const start = getProjectSamp(projectId, 'startList')
@@ -443,12 +439,7 @@ export default class BoxSamp {
   }
 
   /** 读采样返回的结束状态列表 */
-  readEndList(
-    masterId: number,
-    readModel: BufModel,
-    getProjectSamp: Port.GetProjectSamp,
-    createTime: string
-  ) {
+  readEndList({ masterId, readModel, getProjectSamp, createTime }: ReadSampParams) { // eslint-disable-line
     readModel.ecahList('endList', readItem => {
       const projectId = readItem.read('projectId')
       const result = {
@@ -470,12 +461,7 @@ export default class BoxSamp {
   }
 
   /** 读采样特征状态 */
-  readFeatureList(
-    masterId: number,
-    readModel: BufModel,
-    getProjectSamp: Port.GetProjectSamp,
-    createTime: string
-  ) {
+  readFeatureList({ masterId, readModel, getProjectSamp, createTime }: ReadSampParams) { // eslint-disable-line
     logger.debug('读特征列表')
     readModel.ecahList('featureList', readItem => {
       const projectId = readItem.read('projectId')

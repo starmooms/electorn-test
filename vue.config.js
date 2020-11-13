@@ -68,7 +68,7 @@ module.exports = {
           mirror: 'https://npm.taobao.org/mirrors/electron/'
         },
         appId: 'com.xxx.app',
-        // npmRebuild: false,
+        npmRebuild: false,
         // compression: 'maximum',
         // compression: 'store',
         mac: {

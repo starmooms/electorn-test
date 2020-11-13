@@ -103,6 +103,10 @@ https://www.cnblogs.com/dongweiq/p/5486433.html
 ### electron 总是重新构建
 https://github.com/electron-userland/electron-builder/issues/3329
 https://www.cnblogs.com/qirui/p/8328015.html  // 打包速度
+https://blog.csdn.net/weixin_30335575/article/details/95836259
+https://npm.taobao.org/mirrors
+https://www.jianshu.com/p/6615ff3cb0c1
+https://blog.yasking.org/a/zh-install-electron-development-2020.html
 
 
 ### 子进程

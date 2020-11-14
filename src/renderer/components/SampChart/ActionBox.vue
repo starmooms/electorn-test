@@ -85,7 +85,7 @@ import SampChart from './index.vue'
 import FileSelect from '@/renderer/components/FileSelect.vue'
 import fs from 'fs'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
-import { getStoreConfig, setStoreConfig } from '@/renderer/ipc/storeConfig'
+import { setStoreConfig } from '@/renderer/ipc/storeConfig'
 import { deepClone } from '@/shared/utils'
 import { SAMPCHART_Y_MAP } from '@/renderer/utils/util'
 

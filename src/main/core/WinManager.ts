@@ -68,18 +68,19 @@ class WinManager {
     })
 
     let protocolPath = `app://./`
+    win.webContents.openDevTools()
     if (devUrl) {
       protocolPath = devUrl
-      if (!process.env.IS_TEST) {
-        win.webContents.openDevTools()
-        // https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/698
-        // const finishLoadListener = () => {
-        //   logger.info('reload ====>')
-        //   win.webContents.reload()
-        //   win.webContents.removeListener('did-finish-load', finishLoadListener)
-        // }
-        // win.webContents.on('did-finish-load', finishLoadListener)
-      }
+      // if (!process.env.IS_TEST) {
+      //   win.webContents.openDevTools()
+      //   // https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/698
+      //   // const finishLoadListener = () => {
+      //   //   logger.info('reload ====>')
+      //   //   win.webContents.reload()
+      //   //   win.webContents.removeListener('did-finish-load', finishLoadListener)
+      //   // }
+      //   // win.webContents.on('did-finish-load', finishLoadListener)
+      // }
     }
 
     if (setMenu !== true) {

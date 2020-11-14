@@ -8,7 +8,7 @@ const sendSamp = (data: Buffer) => {
   // socket.write(Buffer.from('你好', 'utf-8'))
   const id = data.slice(8, 8 + 2).toString('hex')
   const sampLen = 256
-  const porjectId = 122 //122
+  const porjectId = 122 //122 // 120
   const writeModel = new BufModel({
     model: SAMP_MODEL,
     listLen: {

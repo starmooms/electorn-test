@@ -3,7 +3,7 @@
     <div class="action-box">
       <el-button type="primary" @click="showDetails">详细数据</el-button>
       <el-button type="primary" @click="showSteps">过程数据</el-button>
-      <el-button type="primary" @click="exportExcel">导出Excel</el-button>
+      <el-button type="primary" @click="handleExport">导出Excel</el-button>
     </div>
     <div class="samp-table virtual-table">
       <DynamicScroller
@@ -95,16 +95,20 @@
         </template>
       </DynamicScroller>
     </div>
+
+    <ExportExcel ref="exportExcel" />
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+import ExportExcel from '@/renderer/components/ExportExcel/index.vue'
 
 @Component({
   components: {
     DynamicScroller,
-    DynamicScrollerItem
+    DynamicScrollerItem,
+    ExportExcel
   }
 })
 export default class SampList extends Vue {
@@ -113,6 +117,7 @@ export default class SampList extends Vue {
 
   $refs!: {
     virtualScroll: DynamicScroller
+    exportExcel: ExportExcel
   }
 
   stepShow: boolean[] = []
@@ -246,7 +251,42 @@ export default class SampList extends Vue {
   }
 
   /** 导出 */
-  exportExcel() {}
+  handleExport() {
+    if (this.stepList.length === 0 || this.sampData.length === 0) {
+      return this.$message.error('暂无数据')
+    }
+    this.$refs.exportExcel.exportHandle(() => {
+      const rows: any[] = []
+      // this.stepList.forEach(steps => {
+      //   for (let i = steps.start; i < steps.end; i++) {
+      //     const sampItem = this.sampData[i]
+      //     rows.push({
+      //       steps: steps.msg,
+      //       U: sampItem.U,
+      //       I: sampItem.I,
+      //       vol: sampItem.vol,
+      //       epower: sampItem.epower,
+      //       endStatus: sampItem.endStatus,
+      //       stepTime: sampItem.stepTime,
+      //       createTime: sampItem.createTime
+      //     })
+      //   }
+      // })
+      return {
+        columns: [
+          { header: '工序', key: 'msg', width: 25 },
+          { header: '电压mV', key: 'U', width: 25 },
+          { header: '电流mA', key: 'I', width: 25 },
+          { header: '容量mAh', key: 'vol', width: 25 },
+          { header: '电量mWh', key: 'epower', width: 25 },
+          { header: '结束标志', key: 'endStatus', width: 25 },
+          { header: '时间s', key: 'stepTime', width: 25 },
+          { header: '日期', key: 'createTime', width: 25 }
+        ],
+        rows: this.sampData
+      }
+    })
+  }
 }
 </script>
 

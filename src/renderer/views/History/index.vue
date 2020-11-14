@@ -42,6 +42,7 @@ import {
 import SampList from './components/SampList.vue'
 import ChannelPosition from './components/ChannelPosition.vue'
 import StartInfoDialog from './components/StartInfoDialog.vue'
+import logger from '@/main/core/Logger'
 
 @Component({
   components: {
@@ -110,6 +111,7 @@ export default class History extends Vue {
       this.getSampData()
     } catch (err) {
       console.error(err)
+      this.$message.error(err.message)
     } finally {
       this.loading = false
     }
@@ -118,6 +120,9 @@ export default class History extends Vue {
   async getWorkStep() {
     if (!this.db) return
     const data = await this.db.getWorkStep()
+    if (!data) {
+      throw new Error('缺少工步信息')
+    }
     this.startInfo = startInfoFormat(data)
   }
 
@@ -134,40 +139,37 @@ export default class History extends Vue {
         $channelId: this.position.channelId
       })
 
-      let lastStepIdId: null | number = null
-      let lastLoopNum: null | number = null
-      let lastStep: any = null
+      let nowStep: any = null
       let lastStepTimeEnd = 0
       let stepTimeMax = 0
       const spamTotalLen = data.length
 
       this.sampTableList = []
       this.sampData = data.map((item, index) => {
-        if (lastStepIdId !== item.stepId || item.loopNum !== lastLoopNum) {
+        if (
+          !nowStep ||
+          nowStep.stepId !== item.stepId ||
+          nowStep.loopNum !== item.loopNum
+        ) {
           const steps = this.stepList[item.stepId]
           if (steps && steps.type !== 'loop') {
             const stepId = steps.id
             const showStepId = stepId + 1
             const loopNum = item.loopNum
-            const nowStep = {
+            const newStep = {
               msg: `工序： ${showStepId}（${showStepId}-${loopNum}）${steps.msg}`,
+              stepId,
               loopNum,
               start: index,
               end: spamTotalLen
             }
-            this.sampTableList.push(nowStep)
-            if (lastStep) {
-              lastStep.end = index
-              // lastStepTimeEnd = computerAdd(
-              //   lastStepTimeEnd,
-              //   data[index - 1].stepTime
-              // )
+            this.sampTableList.push(newStep)
+            if (nowStep) {
+              nowStep.end = index
               lastStepTimeEnd = computerAdd(lastStepTimeEnd, stepTimeMax)
               stepTimeMax = 0
             }
-            lastStepIdId = stepId
-            lastLoopNum = loopNum
-            lastStep = nowStep
+            nowStep = newStep
           }
         }
         if (item.stepTime >= stepTimeMax) {
@@ -184,6 +186,7 @@ export default class History extends Vue {
             item.endCode && item.endCode !== '00'
               ? END_STATUS[item.endCode]
               : '',
+          msg: nowStep.msg,
           ...item
         }
       })

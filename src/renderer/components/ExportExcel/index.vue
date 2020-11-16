@@ -1,14 +1,14 @@
 <template>
-  <div>
+  <div style="display:none;">
     <file-select
       ref="fileSelect"
       :isSave="true"
       :fileFilter="fileFilter"
       @saveFile="exprotFile"
     >
-      <el-button type="primary">
-        导出曲线
-      </el-button>
+      <!-- <el-button type="primary">
+        导出Excel
+      </el-button> -->
     </file-select>
   </div>
 </template>

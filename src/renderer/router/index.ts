@@ -58,7 +58,7 @@ const routes: Array<RouteConfig> = [
         props: {
           isHistory: true
         },
-        component: () => import('@/renderer/views/History/index.vue')
+        component: () => import('@/renderer/views/History/History.vue')
       },
       {
         path: '/nowChannel/:masterId/:slaverId/:channelId',
@@ -66,7 +66,7 @@ const routes: Array<RouteConfig> = [
         props: {
           isHistory: false
         },
-        component: () => import('@/renderer/views/History/index.vue')
+        component: () => import('@/renderer/views/History/channelCur.vue')
       },
       {
         path: '/sorting',

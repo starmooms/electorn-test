@@ -28,7 +28,7 @@
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
+import { Vue, Component, Prop, PropSync } from 'vue-property-decorator'
 import SplitPane from '@/renderer/components/SplitPane/index.vue'
 import SampChart from '@/renderer/components/SampChart/index.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
@@ -50,6 +50,21 @@ import StartInfoDialog from './components/StartInfoDialog.vue'
 })
 export default class History extends Vue {
   @Prop({ type: Boolean, default: true }) isHistory!: boolean
+  @Prop({
+    type: Object,
+    default() {
+      return {
+        masterId: 0,
+        slaverId: 0,
+        channelId: 0
+      }
+    }
+  })
+  position!: {
+    masterId: number
+    slaverId: number
+    channelId: number
+  }
 
   $refs!: {
     sampChart: SampChart
@@ -62,22 +77,9 @@ export default class History extends Vue {
   filePath: string | null = null
   db!: HistoryDb | null
   loading = false
-  position = {
-    masterId: 0,
-    slaverId: 0,
-    channelId: 0
-  }
 
   startInfo: null | UtilT.StartInfoFormat = null
   startInfoShow = false
-
-  get nowChannel() {
-    return !this.isHistory && ChannelStatus.channelMap
-      ? ChannelStatus.channelMap[
-          `${this.position.masterId}_${this.position.slaverId}_${this.position.channelId}`
-        ]
-      : null
-  }
 
   get stepList() {
     return this.startInfo ? this.startInfo.stepList : []
@@ -103,9 +105,10 @@ export default class History extends Vue {
           await this.getWorkStep()
         }
       }
-      this.getSampData()
+      await this.getSampData()
     } catch (err) {
       console.error(err)
+      this.reset()
       this.$message.error(err.message)
     } finally {
       this.loading = false
@@ -195,14 +198,7 @@ export default class History extends Vue {
   }
 
   refresh() {
-    if (
-      !this.isHistory &&
-      (!this.db || this.filePath !== this.nowChannel?.filePath)
-    ) {
-      this.changeChannel()
-    } else {
-      this.getSampData()
-    }
+    this.$emit('refresh')
   }
 
   /** 查看启动信息 */
@@ -216,64 +212,17 @@ export default class History extends Vue {
     this.$refs.sampChart.setCharts(this.sampData)
   }
 
-  @Watch('nowChannel')
-  changeChannel() {
-    if (this.nowChannel) {
-      this.openDb(this.nowChannel.filePath)
-    }
-  }
-
   changeChannelPos(data: any) {
-    this.position = data
-    if (this.isHistory) {
-      this.getSampData()
-    }
-  }
-
-  changeFileHandle() {
-    this.$command.on({
-      eventName: '/history/changeFile',
-      onEmit: async (opt: any) => {
-        if (opt.filePath) {
-          this.openDb(opt.filePath)
-        }
-      },
-      vm: this
+    Object.keys(data).forEach(key => {
+      this.position[key] = data[key]
     })
-  }
-
-  changeChannelHandle() {
-    this.$command.on({
-      eventName: '/channel/channelPosition',
-      onEmit: (opt: any) => {
-        this.position = opt
-      },
-      vm: this
-    })
-  }
-
-  setPosition() {
-    this.position = {
-      masterId: Number(this.$route.params.masterId),
-      slaverId: Number(this.$route.params.slaverId),
-      channelId: Number(this.$route.params.channelId)
-    }
+    this.$emit('changePosition', data)
   }
 
   /** 曲线点击定位 */
   locate(samp: Port.SampItem) {
     if (this.$refs.sampList) {
       this.$refs.sampList.locate(samp)
-    }
-  }
-
-  mounted() {
-    if (this.isHistory) {
-      this.openDb(this.$route.params.filePath)
-      this.changeFileHandle()
-    } else {
-      this.setPosition()
-      this.changeChannelHandle()
     }
   }
 

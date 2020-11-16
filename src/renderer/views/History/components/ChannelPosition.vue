@@ -61,7 +61,7 @@ export default class ChPosition extends Vue {
     this.channelId = this.position.channelId + 1
   }
 
-  @Watch('position')
+  @Watch('position', { deep: true })
   changePostion() {
     this.setFromPostion()
   }

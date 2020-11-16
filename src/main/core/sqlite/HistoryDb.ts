@@ -169,7 +169,7 @@ export default class HistoryDb extends HistoryDbCom {
 
     sql += `PRAGMA synchronous=OFF;` // 关闭同步
     // sql += `PRAGMA Journal_Mode=DELETE;`  // WAL模式是持久性的，必须手动更改回来
-    // sql += `PRAGMA Journal_Mode=WAL;` // WAL模式
+    sql += `PRAGMA Journal_Mode=WAL;` // WAL模式
     sql += `PRAGMA Cache_Size=8000;` // 加大缓存
 
     if (sql) {

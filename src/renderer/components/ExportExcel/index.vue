@@ -23,8 +23,8 @@ import Exceljs from 'exceljs/lib/exceljs.nodejs.js'
 // }
 
 type ExportDataCb = () => {
-  row: any[]
-  columns: any[]
+  row: Exceljs.Column[]
+  columns: Exceljs.Column[]
 }
 
 @Component({

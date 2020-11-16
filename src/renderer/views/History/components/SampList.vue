@@ -256,22 +256,6 @@ export default class SampList extends Vue {
       return this.$message.error('暂无数据')
     }
     this.$refs.exportExcel.exportHandle(() => {
-      const rows: any[] = []
-      // this.stepList.forEach(steps => {
-      //   for (let i = steps.start; i < steps.end; i++) {
-      //     const sampItem = this.sampData[i]
-      //     rows.push({
-      //       steps: steps.msg,
-      //       U: sampItem.U,
-      //       I: sampItem.I,
-      //       vol: sampItem.vol,
-      //       epower: sampItem.epower,
-      //       endStatus: sampItem.endStatus,
-      //       stepTime: sampItem.stepTime,
-      //       createTime: sampItem.createTime
-      //     })
-      //   }
-      // })
       return {
         columns: [
           { header: '工序', key: 'msg', width: 25 },

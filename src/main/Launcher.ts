@@ -7,20 +7,16 @@ import {
 } from 'electron'
 import is from 'electron-is'
 import USBManager from './core/USBManager'
-import Update from './Update'
-import MenuManager from './MenuManager'
+import MenuManager from './core/MenuManager'
 import winManager from './core/WinManager'
 import ipcManage from './core/IpcManage'
 import WorkStepSee from './window/WorkStepSee'
 import createHistoryWin from './window/HistoryWin'
 import UpdateManager from './core/UpdateManager'
 import './core/ConfigManage'
-// import RedisServer from './core/redis/RedisServer'
-// import redisClient, { RedisClient } from './core/redis/RedisClient'
 import logger, { sysLognow, sysFilePath, createSysLog } from './core/Logger'
 import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
-// import udpManage from './core/connect/UdpManage'
 import boxManage from './core/boxManage/BoxManage'
 import createSorting from './window/Sorting'
 
@@ -29,12 +25,9 @@ declare type beforeMainWin = () => void
 
 export default class Launcher {
   win: BrowserWindow | null = null
-  update: Update | null = null
   usbManager!: USBManager
   beforeMainWin: beforeMainWin | null = null
   updateManager = this.initUpdaterManager()
-  // redisServer!: RedisServer
-  // redisClient!: RedisClient
 
   constructor(beforeMainWin?: beforeMainWin) {
     if (beforeMainWin) {
@@ -90,7 +83,6 @@ export default class Launcher {
     }
     this.win = winManager.createdWin('mainWin', undefined, undefined, true)
     this.win.on('close', event => {
-      logger.info(winManager.winList)
       if (this.win) {
         event.preventDefault()
         dialog
@@ -143,12 +135,7 @@ export default class Launcher {
       }
     })
     const id = powerSaveBlocker.start('prevent-app-suspension')
-    // setInterval(() => {
-    //   logger.debug('powerSaveBlocker', powerSaveBlocker.isStarted(id), id)
-    // }, 1000)
-    // powerSaveBlocker.stop(id)
 
-    // await mainDb.connect()
     createSysLog()
     ipcManage.handle('/sysLog/sysLogInfo', () => {
       return {
@@ -220,10 +207,6 @@ export default class Launcher {
         this.usbManager.destory()
       }
       await mainDb.close()
-      // await redisClient.close()
-      // if (this.redisServer) {
-      //   await this.redisServer.stop()
-      // }
       winManager.closeOtherWin()
     } catch (err) {
       dialog.showErrorBox('derstoryWin Error', err)
@@ -239,9 +222,6 @@ export default class Launcher {
     if (is.mas()) {
       return
     }
-
-    // const enabled = this.configManager.getUserConfig('auto-check-update')
-    // const lastTime = this.configManager.getUserConfig('last-check-update-time')
     const updateManager = new UpdateManager({
       autoCheck: false,
       beforeQuit: () => {
@@ -254,42 +234,15 @@ export default class Launcher {
 
   handleUpdaterEvents() {
     if (!this.updateManager) return
-    // this.updateManager.on('checking', event => {
-    //   this.menuManager.updateMenuItemEnabledState(
-    //     'app.check-for-updates',
-    //     false
-    //   )
-    //   this.trayManager.updateMenuItemEnabledState(
-    //     'app.check-for-updates',
-    //     false
-    //   )
-    //   this.configManager.setUserConfig('last-check-update-time', Date.now())
-    // })
 
     this.updateManager.on('download-progress', (event: any) => {
       if (!this.win) return
       this.win.setProgressBar(event.percent / 100)
     })
 
-    // this.updateManager.on('update-not-available', event => {
-    //   // this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)
-    //   // this.trayManager.updateMenuItemEnabledState('app.check-for-updates', true)
-    // })
-
     this.updateManager.on('update-downloaded', () => {
-      // this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)
-      // this.trayManager.updateMenuItemEnabledState('app.check-for-updates', true)
       if (!this.win) return
       this.win.setProgressBar(0)
     })
-
-    // this.updateManager.on('will-updated', event => {
-    //   // this.windowManager.setWillQuit(true)
-    // })
-
-    // this.updateManager.on('update-error', event => {
-    //   this.menuManager.updateMenuItemEnabledState('app.check-for-updates', true)
-    //   this.trayManager.updateMenuItemEnabledState('app.check-for-updates', true)
-    // })
   }
 }

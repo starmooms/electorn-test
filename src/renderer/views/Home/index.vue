@@ -39,21 +39,9 @@
         <SelectMaster v-model="activeMasterId"></SelectMaster>
         <transition name="el-fade-in">
           <div v-if="activeMaster" class="channel-main-box">
-            <!-- <el-divider content-position="left">
-              机柜{{ activeMaster.id + 1 }}
-            </el-divider> -->
             <el-card class="box-card" shadow="never">
               <div slot="header" class="box-card-header">
                 <span>{{ activeMaster.name }}</span>
-                <!-- <el-dropdown>
-                  <el-button type="text">
-                    操作
-                    <i class="el-icon-arrow-down el-icon--right"></i>
-                  </el-button>
-                  <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item>批量操作从控</el-dropdown-item>
-                  </el-dropdown-menu>
-                </el-dropdown> -->
               </div>
               <ul class="slaver-list">
                 <li
@@ -73,7 +61,6 @@
                         :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
                         @stepEditOpen="stepsSetShow"
                         @start="channelStart"
-                        @calEditOpen="calOpen"
                         @setChannelStatus="setChannelStatus"
                       ></channel-item>
                     </div>
@@ -101,8 +88,6 @@
         :isBatch="stepsBatch"
         @openSysLog="sysLogOpen"
       ></StepSetModal>
-
-      <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
 
       <BatchModal
         ref="batchModal"
@@ -138,7 +123,6 @@ import SysLog from '@/renderer/components/SysLog/index.vue'
   components: {
     StepSetModal,
     FileSelect,
-    CalModal,
     BatchModal,
     SlaverDetails,
     SelectMaster,
@@ -164,9 +148,6 @@ export default class Home extends Vue {
     slaverId: null,
     channelId: null
   }
-
-  calShow = false
-  calShowItem: ipcReq.CalOpts | null = null
 
   batchShow = false
 
@@ -221,11 +202,6 @@ export default class Home extends Vue {
   stepsBatchOpen() {
     this.stepsBatch = true
     this.stepsShow = true
-  }
-
-  calOpen(channelMsg: ipcReq.CalOpts) {
-    this.calShowItem = channelMsg
-    this.calShow = true
   }
 
   openBatch() {

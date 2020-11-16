@@ -53,16 +53,12 @@
         >
           {{ menu.name }}
         </a>
-        <a href="javascript:;" @click="calEditOpen">
-          局部设置
-        </a>
       </template>
     </ContextMenu>
   </div>
 </template>
 <script lang="ts">
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
-import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { Vue, Component, Prop } from 'vue-property-decorator'
 import ContextMenu from '@/renderer/components/ContextMenu.vue'
 import { getDefatulSamp } from '@/renderer/utils/util'
@@ -122,18 +118,6 @@ export default class ChannelItem extends Vue {
     }
   }
 
-  // /** 更新采样 */
-  // updateSamp(sampData: Port.SampItem) {
-  //   // this.sampData = {
-  //   //   U: sampData.U,
-  //   //   I: sampData.I,
-  //   //   workerId: sampData.workerId,
-  //   //   errorMsg: sampData.errorMsg,
-  //   //   workerStatus: sampData.workerStatus,
-  //   //   workerCode: sampData.workerCode
-  //   // }
-  // }
-
   /** 打开通道详细页面 */
   showChannel() {
     this.$command.send('/createdWin', {
@@ -152,11 +136,6 @@ export default class ChannelItem extends Vue {
       slaverId: this.slaverId,
       channelId: this.id
     }
-  }
-
-  /** 打开局部设置 */
-  calEditOpen() {
-    this.$emit('calEditOpen', this.getChannelMsg())
   }
 }
 </script>

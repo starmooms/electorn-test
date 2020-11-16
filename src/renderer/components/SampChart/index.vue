@@ -21,12 +21,9 @@ import 'echarts/lib/component/dataZoom'
 import 'echarts/lib/component/legend'
 import 'echarts/lib/component/visualMap'
 import 'echarts/lib/component/graphic'
-// import { merge } from '@/shared/utils'
 import _merge from 'lodash/merge'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
-import { formatTimeStr, SAMPCHART_Y_MAP } from '@/renderer/utils/util'
-// import getSampWorker from '@/renderer/utils/getSampWorker'
-import dayjs from 'dayjs'
+import { SAMPCHART_Y_MAP } from '@/renderer/utils/util'
 import ActionBox from './ActionBox.vue'
 
 interface UpdateOpts {
@@ -52,7 +49,6 @@ export default class SampChart extends Vue {
     echart: ECharts
   }
 
-  xData!: string[]
   sampData: Port.SampItem[] = []
 
   chartSamp!: string | null

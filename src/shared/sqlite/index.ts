@@ -18,7 +18,7 @@ export default class Sqlite {
   connect() {
     return new Promise<null>((resolve, reject) => {
       if (this.isConnect) return
-      logger.info('sql connect', this.fileName)
+      // logger.info('sql connect', this.fileName)
       if (!this.fileName) {
         reject(`connect fileName undefined`)
         return

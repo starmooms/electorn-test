@@ -42,7 +42,6 @@ import {
 import SampList from './components/SampList.vue'
 import ChannelPosition from './components/ChannelPosition.vue'
 import StartInfoDialog from './components/StartInfoDialog.vue'
-import logger from '@/main/core/Logger'
 
 @Component({
   components: {

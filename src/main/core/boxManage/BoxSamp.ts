@@ -48,7 +48,7 @@ export default class BoxSamp {
   constructor(parent: BoxManage) {
     this.parent = parent
     this.channelMap = this.parent.channelMap
-    this.masterList = this.parent.staticChList.master // [{ id: 0, name: '机柜1' }] // this.parent.staticChList.master
+    this.masterList = [{ id: 0, name: '机柜1' }] // this.parent.staticChList.master
   }
 
   clearTimer() {
@@ -213,7 +213,7 @@ export default class BoxSamp {
       resultBuf = await communi.post({
         control: CONTROL_CODE.sampRead,
         data: this.readSampWrite.buf,
-        masterId: 1
+        masterId
       })
       logger.debug('读采样返回', resultBuf.toString('hex'))
     }

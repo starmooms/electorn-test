@@ -63,6 +63,14 @@ class HistoryDbCache {
     }
   }
 
+  closeAllDb() {
+    const closeArr: any[] = []
+    this.historyDbMap.forEach(item => {
+      closeArr.push(item.db.close())
+    })
+    return Promise.all(closeArr)
+  }
+
   /** 获取缓存，不存在则根据historyId，尝试打开 */
   async getItemAsync(historyId) {
     try {

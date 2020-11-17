@@ -33,7 +33,6 @@ export default class History extends Vue {
     this.$command.on({
       eventName: '/history/changeFile',
       onEmit: async (opt: any) => {
-        console.log('??d')
         if (opt.filePath) {
           this.openDb(opt.filePath)
         }

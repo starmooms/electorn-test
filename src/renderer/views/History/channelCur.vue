@@ -87,6 +87,7 @@ export default class ChannelCur extends Vue {
   mounted() {
     this.getRouter()
     this.changeChannelHandle()
+    this.changeChannel()
   }
 }
 </script>

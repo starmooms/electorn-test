@@ -19,6 +19,7 @@ import mainDb from './core/sqlite/MainDb'
 import configManage from './core/ConfigManage'
 import boxManage from './core/boxManage/BoxManage'
 import createSorting from './window/Sorting'
+import historyDbCache from './core/sqlite/HistoryDBCache'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -207,6 +208,7 @@ export default class Launcher {
         this.usbManager.destory()
       }
       await mainDb.close()
+      await historyDbCache.closeAllDb()
       winManager.closeOtherWin()
     } catch (err) {
       dialog.showErrorBox('derstoryWin Error', err)

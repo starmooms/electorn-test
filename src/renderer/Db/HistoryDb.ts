@@ -1,11 +1,24 @@
 import HistoryDbCom from '@/shared/sqlite/HistoryDbCom'
 import path from 'path'
 import { getFullIdData, getStaticInsert } from '@/shared/sqlite/sqlUtil'
-import { resolve } from 'bluebird'
+import beforeClose from '../utils/BeforClose'
 
 export default class HistoryDb extends HistoryDbCom {
+  bindClose = this.close.bind(this)
+
   constructor(filePath: string) {
     super(path.resolve(filePath))
+    this.beforeWinClose()
+  }
+
+  beforeWinClose() {
+    beforeClose.on(this.bindClose)
+  }
+
+  async close() {
+    super.close()
+    beforeClose.off(this.bindClose)
+    return null
   }
 
   /** 获取采样内容 */

@@ -113,7 +113,7 @@ export default class UpdateManager extends EventEmitter {
     this.emit('update-error', error)
     const msg =
       error == null ? '检查更新失败' : (error.stack || error).toString()
-    this.updater.logger!.warn(`[Motrix] update-error: ${msg}`)
+    this.updater.logger!.warn(`update-error: ${msg}`)
     dialog.showErrorBox('检查更新错误', msg)
   }
 }

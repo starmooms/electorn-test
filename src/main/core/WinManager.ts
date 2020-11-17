@@ -1,6 +1,7 @@
 import { BrowserWindow } from 'electron'
 import logger from './Logger'
 import path from 'path'
+import ipcManage from './IpcManage'
 
 class WinManager {
   win: BrowserWindow | null = null
@@ -25,6 +26,14 @@ class WinManager {
       }
     })
   }
+
+  // /** 关闭窗口前通知页面 */
+  // beforeClose(win: BrowserWindow) {
+  //   win.on('close', event => {
+  //     event.preventDefault()
+  //     ipcManage.send()
+  //   })
+  // }
 
   /**
    * 创建窗口

@@ -310,9 +310,7 @@ export default class BoxCal {
           }
         : null
     }
-    ipcManage.send('/calibrate/pointResult', () => {
-      return result
-    })
+    ipcManage.send('/calibrate/pointResult', result)
   }
 
   /** 离开页面时关闭工装 */

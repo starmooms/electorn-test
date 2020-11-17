@@ -87,9 +87,8 @@ class IpcManage {
     ipcMain.removeHandler(channel)
   }
 
-  async send(channel: string, cb: SendCb, win?: BrowserWindow) {
+  async send(channel: string, data: any, win?: BrowserWindow) {
     try {
-      const data = await cb()
       if (!win) {
         const mainWin = winManager.getWin('mainWin')
         if (!mainWin) {

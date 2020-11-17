@@ -58,10 +58,10 @@ export default class USBManager {
   }
 
   /** 发送列表 */
-  sendList() {
-    ipcManage.send('/port/sendList', async () => {
-      const list = await SerialPort.list()
-      return { list }
+  async sendList() {
+    const list = await SerialPort.list()
+    ipcManage.send('/port/sendList', {
+      list
     })
   }
 

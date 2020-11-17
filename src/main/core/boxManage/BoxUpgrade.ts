@@ -106,9 +106,7 @@ export default class BoxUpgrade {
           }
         : null
     }
-    ipcManage.send('/boxUpdate/updateInfo', () => {
-      return result
-    })
+    ipcManage.send('/boxUpdate/updateInfo', result)
   }
 }
 

@@ -188,16 +188,7 @@ export default class BoxSamp {
 
   /** 发送采样列表到渲染端 */
   sendWin(masterId: number, sampList: Port.SampItem[]) {
-    const win = winManager.getWin('mainWin')
-    if (win) {
-      ipcManage.send(
-        `/port/translate/${masterId}`,
-        () => {
-          return { list: sampList }
-        },
-        win
-      )
-    }
+    ipcManage.send(`/port/translate/${masterId}`, { list: sampList })
   }
 
   /** 发送读采样请求 */

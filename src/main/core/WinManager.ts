@@ -27,13 +27,23 @@ class WinManager {
     })
   }
 
-  // /** 关闭窗口前通知页面 */
-  // beforeClose(win: BrowserWindow) {
-  //   win.on('close', event => {
-  //     event.preventDefault()
-  //     ipcManage.send()
-  //   })
-  // }
+  /** 监听页面发送过来的销毁事件 */
+  handleDestory() {
+    ipcManage.on('/win/closed', (event, { winName }) => {
+      const win = this.getWin(winName)
+      if (win) {
+        win.destroy()
+      }
+    })
+  }
+
+  /** 关闭窗口前通知页面 */
+  beforeClose(win: BrowserWindow) {
+    win.on('close', event => {
+      event.preventDefault()
+      // ipcManage.send('/win/close')
+    })
+  }
 
   /**
    * 创建窗口

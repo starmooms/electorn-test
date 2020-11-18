@@ -82,23 +82,23 @@ export default class Launcher {
     if (this.beforeMainWin) {
       this.beforeMainWin()
     }
-    this.win = winManager.createdWin('mainWin', undefined, undefined, true)
-    this.win.on('close', event => {
-      if (this.win) {
-        event.preventDefault()
-        dialog
-          .showMessageBox({
-            type: 'info',
-            title: '关闭程序',
-            message: '确定关闭程序',
-            buttons: ['是', '否'],
-            cancelId: 1
-          })
-          .then(({ response }) => {
-            if (response === 0) {
-              this.destoryWin()
-            }
-          })
+    winManager.init()
+    this.win = winManager.createdWin({
+      name: 'mainWin',
+      pageUrl: '',
+      setMenu: true,
+      beforeClose: async next => {
+        const { response } = await dialog.showMessageBox({
+          type: 'info',
+          title: '关闭程序',
+          message: '确定关闭程序',
+          buttons: ['是', '否'],
+          cancelId: 1
+        })
+        if (response === 0) {
+          await this.destoryWin()
+          next()
+        }
       }
     })
     return this.win
@@ -161,11 +161,6 @@ export default class Launcher {
           throw new Error(`${data.type} win no defined`)
       }
     })
-
-    // this.redisServer = RedisServer.getInstance()
-    // this.redisServer.start().finally(() => {
-    //   redisClient.initRedis()
-    // })
     this.startRender()
   }
 
@@ -181,7 +176,6 @@ export default class Launcher {
       const mainDbFilePath = (await mainDb.connect()) as string
       await boxManage.create()
       this.usbManager = new USBManager()
-      // udpManage.start()
       return mainDbFilePath
     } catch (err) {
       logger.error(err)
@@ -201,7 +195,7 @@ export default class Launcher {
     })
   }
 
-  async destoryWin(destroy = true) {
+  async destoryWin() {
     try {
       this.win!.hide()
       if (this.usbManager) {
@@ -213,9 +207,6 @@ export default class Launcher {
     } catch (err) {
       dialog.showErrorBox('derstoryWin Error', err)
     } finally {
-      if (destroy) {
-        this.win!.destroy()
-      }
       this.win = null
     }
   }
@@ -226,8 +217,13 @@ export default class Launcher {
     }
     const updateManager = new UpdateManager({
       autoCheck: false,
-      beforeQuit: () => {
-        return this.destoryWin(false)
+      beforeQuit: async () => {
+        await this.destoryWin()
+        await winManager.closeWin({
+          name: 'mainWin',
+          destory: false
+        })
+        return
       }
     })
     this.handleUpdaterEvents()

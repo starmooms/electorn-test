@@ -11,30 +11,8 @@ export default function createHistoryWin(opts: Opts) {
     win.webContents.send('/history/changeFile', opts)
     return true
   }
-  winManager.createdWin(
-    winName,
-    `${winName}/${encodeURIComponent(opts.filePath)}`
-  )
+  winManager.createdWin({
+    name: winName,
+    pageUrl: `${winName}/${encodeURIComponent(opts.filePath)}`
+  })
 }
-
-// export default class SlaverTrend {
-//   constructor(opts: Opts) {
-//     this.createdWin(opts)
-//   }
-
-//   createdWin(opts: Opts) {
-//     // const { path, slaverId, masterId } = this.opts
-//     // const basePath = `${encodeURIComponent(path)}/${masterId}/${slaverId}`
-//     // const winName = `port/SlaverTrend/${basePath}`
-//     // const portItem = this.usbManager.getPortData(path)
-//     const winName = `history`
-//     if (winManager.getWin(winName, true)) {
-//       return true
-//     }
-
-//     // if (!portItem) {
-//     //   throw new Error(`串口 ${path} 不存在`)
-//     // }
-//     winManager.createdWin('historyWin', `history`)
-//   }
-// }

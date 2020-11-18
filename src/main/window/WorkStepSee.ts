@@ -1,5 +1,4 @@
 import winManager from '../core/WinManager'
-import ipcManage from '../core/IpcManage'
 import USBManager from '../core/USBManager'
 
 interface Opts {
@@ -20,8 +19,7 @@ export default class WorkStepSee {
   }
 
   createdWin() {
-    const { path, slaverId, masterId, channelId } = this.opts
-    // const basePath = `${encodeURIComponent(path)}/${masterId}/${slaverId}`
+    const { slaverId, masterId, channelId } = this.opts
     const winName = 'nowChannel'
     const winPath = `nowChannel/${masterId}/${slaverId}/${channelId}`
     const hasWin = winManager.getWin(winName, true)
@@ -33,27 +31,9 @@ export default class WorkStepSee {
       })
       return
     }
-    winManager.createdWin(winName, winPath)
-    // const winName = `port/WorkerSee/${basePath}`
-    // if (winManager.getWin(winName, true)) {
-    //   return true
-    // }
-    // const portItem = this.usbManager.getPortData(path)
-    // if (!portItem) {
-    //   return false
-    // }
-
-    // const win = winManager.createdWin(winName, `${winName}/${channelId}`)
-
-    // /** 读采样 */
-    // const closeTranslate = portItem.emitTranslate({
-    //   masterId,
-    //   slaverId,
-    //   winName
-    // })
-
-    // win.on('closed', () => {
-    //   closeTranslate()
-    // })
+    winManager.createdWin({
+      name: winName,
+      pageUrl: winPath
+    })
   }
 }

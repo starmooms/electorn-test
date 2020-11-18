@@ -72,6 +72,7 @@ export default class BoxCal {
     })
 
     // writerModel.showAll()
+    logger.debug('设置校准发送', writerModel.buf.toString('hex'))
 
     await communi.post({
       control: CONTROL_CODE.calibrateSet,
@@ -102,12 +103,16 @@ export default class BoxCal {
     writeModel.writer('readType', opts.type)
     writeModel.writerHex('calType', opts.calType)
 
+    logger.debug('读校准发送', writeModel.buf.toString('hex'))
+
     const resultBuf = await communi.post({
       control: CONTROL_CODE.calibrateRead,
       data: writeModel.buf,
       masterId,
       requestType: reqType
     })
+
+    logger.debug('读校准返回', resultBuf.toString('hex'))
 
     const readModel = new BufModel({
       model: CAL_READ_MODEL,

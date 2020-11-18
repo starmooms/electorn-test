@@ -1,45 +1,33 @@
-import { remote } from 'electron'
+import command from '../command'
 
+/** 全局关闭回调 */
 class BeofreClose {
   events = new Set<any>()
   constructor() {
-    console.log('??')
     this.init()
   }
 
+  /** 监听关闭事件 */
   init() {
-    window.addEventListener('beforeunload', this.handleEvents)
+    command.on({
+      eventName: '/win/close',
+      onEmit: data => {
+        this.handleEvents(data)
+      }
+    })
   }
 
-  handleEvents = (e: any, ...args) => {
-    console.log(e)
-    console.log(args)
+  /** 触发窗口关闭前 */
+  async handleEvents(data: any) {
     if (this.events.size > 0) {
-      // setTimeout(() => {
-      //   alert('3')
-      //   window.removeEventListener('beforeunload', this.handleEvents)
-      //   win.close()
-      // }, 1000)
-      setTimeout(() => {
-        this.handle()
-      }, 1000)
-      e.returnValue = false
-
-      // setTimeout(() => {
-
-      //   this.events.values()
-      //   win.close()
-      // })
-      // e.returnValue = false
+      try {
+        await Promise.all(Array.from(this.events).map(fun => fun()))
+      } catch (err) {
+        console.error(err)
+        alert(err)
+      }
     }
-  }
-
-  async handle() {
-    const win = remote.getCurrentWindow()
-    await Promise.all(Array.from(this.events).map(fun => fun()))
-    window.removeEventListener('beforeunload', this.handleEvents)
-    console.log(win)
-    win.close()
+    command.send('/win/closed', data)
   }
 
   on(cb: any) {

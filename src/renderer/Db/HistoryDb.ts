@@ -16,7 +16,8 @@ export default class HistoryDb extends HistoryDbCom {
   }
 
   async close() {
-    super.close()
+    // this.sqlite.db.interrupt()
+    await super.close()
     beforeClose.off(this.bindClose)
     return null
   }

@@ -59,11 +59,15 @@ export default class BoxUpgrade {
     writeModel.writer('totalCheck', opts.totalCheck)
     writeModel.concat(opts.buf)
 
+    logger.debug('升级发送', writeModel.buf.toString('hex'))
+
     const resultBuf = await communi.post({
       control: CONTROL_CODE.upgradeSend,
       data: writeModel.buf,
       masterId
     })
+
+    logger.debug('升级返回', resultBuf.toString('hex'))
 
     const readModel = new BufModel({
       model: UPGRADE_BACK_MODEL,

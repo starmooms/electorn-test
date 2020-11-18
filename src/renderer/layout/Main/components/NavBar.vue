@@ -2,28 +2,18 @@
   <div id="nav-bar">
     <nav>
       <ul class="nav-list">
-        <li class="nav-item">
-          <router-link to="/">端口调试</router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/errorLog">
-            错误日志
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/calibrate">
-            通道校准
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/upgrade">
-            设备升级
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/setting">
-            <svg-icon icon-class="setting"></svg-icon>
-            设置
+        <li
+          class="nav-item"
+          v-for="menu in menuList"
+          :key="menu.name"
+          :class="{ active: menu.name === activeMenu }"
+        >
+          <router-link :to="menu.path">
+            <svg-icon
+              v-if="menu.meta.icon"
+              :icon-class="menu.meta.icon"
+            ></svg-icon>
+            {{ menu.meta.title }}
           </router-link>
         </li>
       </ul>
@@ -32,11 +22,18 @@
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
+import { HomeRouter } from '@/renderer/router/index'
 
 @Component({
   name: 'NavBar'
 })
-export default class NavBar extends Vue {}
+export default class NavBar extends Vue {
+  menuList = HomeRouter
+
+  get activeMenu() {
+    return this.$route.name
+  }
+}
 </script>
 
 <style lang="scss">
@@ -53,10 +50,19 @@ $subnav-fontCl: #fff;
   .nav-item {
     line-height: 40px;
     border-bottom: 1px solid #797979;
-    color: #fff;
+    color: #ccc;
+    transition: all 0.3s;
     a {
       display: block;
       padding-left: 10px;
+    }
+
+    &.active {
+      color: #fff;
+      background-color: #606266;
+    }
+    &:hover {
+      color: #fff;
     }
   }
 }

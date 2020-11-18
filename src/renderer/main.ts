@@ -15,6 +15,7 @@ import TitleBox from '@/renderer/components/TitleBox.vue'
 import '@/renderer/icons'
 import { SettingStatus } from './store/modules/Setting'
 import { beforeRender } from './ipc/storeConfig'
+import '@/renderer/utils/BeforClose'
 
 const init = () => {
   Vue.config.productionTip = false

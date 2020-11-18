@@ -1,15 +1,7 @@
 'use strict'
-import {
-  app,
-  protocol,
-  BrowserWindow,
-  powerMonitor,
-  powerSaveBlocker
-} from 'electron'
+import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
-// import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Launcher from './Launcher'
-import logger from './core/Logger'
 import './core/connect/childTcp'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -22,6 +14,7 @@ protocol.registerSchemesAsPrivileged([
 let beforeMainWin: any = () => {
   createProtocol('app')
 }
+
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   // tcpServe()

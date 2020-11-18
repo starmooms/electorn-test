@@ -18,8 +18,6 @@ declare type handListener = (
 class IpcManage {
   emitList: any = {}
 
-  // constructor() {}
-
   ipcError(err: any, win?: BrowserWindow) {
     if (!win) {
       const mainWin = winManager.getWin('mainWin')
@@ -103,8 +101,8 @@ class IpcManage {
   }
 
   commonMsg(channel: string, ...args: any[]) {
-    winManager.winList.forEach(win => {
-      win.webContents.send('commomMsg', channel, ...args)
+    winManager.winList.forEach(winItem => {
+      winItem.win.webContents.send('commomMsg', channel, ...args)
     })
   }
 }

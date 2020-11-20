@@ -13,10 +13,15 @@ interface CloseOpts extends DestoryOpts {
 /** 窗口关闭前回调 */
 declare type CloseNext = (opts?: DestoryOpts) => Promise<unknown>
 
-/** 窗口Map */
-interface WinItem {
+/** 窗口Map设置 */
+interface WinItemConf {
   win: BrowserWindow
   beforeClose?: (next: CloseNext) => any
+}
+
+/** 窗口Map */
+interface WinItem extends WinItemConf {
+  isSendClose: boolean
 }
 
 /** 关闭窗口回调Map */
@@ -78,7 +83,11 @@ class WinManager {
   }
 
   private handleCloseWin({ name, destory }: CloseOpts) {
-    const win = this.getWin(name)
+    const winItem = this.winList.get(name)
+    if (!winItem) return
+
+    winItem.isSendClose = true
+    const win = winItem.win
     if (win && destory !== false) {
       win.destroy()
     }
@@ -101,7 +110,7 @@ class WinManager {
           return resolve()
         }
 
-        win.hide()
+        // win.hide()
         this.closeMap.set(winName, {
           cb: resolve,
           closeOpts: closeOpts
@@ -112,7 +121,7 @@ class WinManager {
   }
 
   /** 设置win */
-  setWinList(name: string, winItem: WinItem) {
+  setWinList(name: string, winItem: WinItemConf) {
     const win = winItem.win
 
     win.on('closed', () => {
@@ -122,7 +131,7 @@ class WinManager {
     /** 设置通知页面关闭 */
     win.on('close', event => {
       const winItem = this.winList.get(name)
-      if (winItem) {
+      if (winItem && winItem.isSendClose === false) {
         event.preventDefault()
         const next = (opts: DestoryOpts = {}) => {
           return this.closeWin({ name, ...opts })
@@ -135,7 +144,10 @@ class WinManager {
       }
     })
 
-    this.winList.set(name, winItem)
+    this.winList.set(name, {
+      ...winItem,
+      isSendClose: false
+    })
   }
 
   /**

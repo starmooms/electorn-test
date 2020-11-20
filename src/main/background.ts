@@ -3,6 +3,7 @@ import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import Launcher from './Launcher'
 import './core/connect/childTcp'
+import logger from './core/Logger'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 app.allowRendererProcessReuse = false
@@ -18,6 +19,9 @@ let beforeMainWin: any = () => {
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   // tcpServe()
+
+  logger.info(process.versions)
+
   if (process.platform === 'win32') {
     process.on('message', data => {
       if (data === 'graceful-exit') {

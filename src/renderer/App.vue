@@ -38,6 +38,9 @@ export default class App extends Vue {
           // 更新通道列表
           ChannelStatus.UPDATE_CHANNELLIST(data)
           break
+        case 'userConfig':
+          SettingStatus.UPDATE_USERCONFIG(data)
+          break
         default:
           console.error(`${channel} undefined`)
           return

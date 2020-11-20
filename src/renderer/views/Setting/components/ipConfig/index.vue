@@ -67,7 +67,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, PropSync } from 'vue-property-decorator'
+import { Component, Vue, PropSync, Prop } from 'vue-property-decorator'
 import IpEdit from './IpEdit.vue'
 import DetailsInfo from './DetailsInfo.vue'
 import { setStoreConfig } from '@/renderer/ipc/storeConfig'
@@ -78,6 +78,7 @@ import {
   refreshIpConnect,
   setMasterInfo
 } from '@/renderer/ipc/channel'
+import Base from '../Base.vue'
 
 @Component({
   components: {
@@ -88,6 +89,9 @@ import {
 export default class IpConfig extends Vue {
   @PropSync('show', { type: Boolean, default: false })
   private dialog!: boolean
+  @Prop({ type: Object }) baseConfig!: any
+
+  $parent!: Base
 
   ipShow = false
   addMasterShow = false
@@ -196,6 +200,12 @@ export default class IpConfig extends Vue {
 
   /** 刷新连接 */
   async refreshConnect() {
+    if (this.baseConfig.SettingStatus !== 'Tcp') {
+      const change = await this.$elConfirm('连接Tcp通讯方式将转换为网口模式')
+      if (!change) return
+      await this.$parent.updateRequestType()
+    }
+
     try {
       this.loading = true
       const data = await refreshIpConnect()

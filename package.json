@@ -2,7 +2,7 @@
   "name": "upper-computer",
   "author": "GXM",
   "description": "upper computer for battery detection",
-  "version": "0.2.79",
+  "version": "0.2.83",
   "private": true,
   "engines": {
     "node": ">=12.18.2"
@@ -15,12 +15,6 @@
     "postuninstall---": "electron-builder install-app-deps"
   },
   "main": "background.js",
-  "npmArgs": [
-    "dist-url=https://npm.taobao.org/mirrors/atom-shell/"
-  ],
-  "electronDownload": {
-    "mirror": "https://npm.taobao.org/mirrors/electron/"
-  },
   "dependencies": {
     "bluebird": "^3.7.2",
     "core-js": "^3.6.5",

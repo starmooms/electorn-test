@@ -150,6 +150,10 @@ export default class History extends Vue {
           nowStep.loopNum !== item.loopNum
         ) {
           const steps = this.stepList[item.stepId]
+          if (!steps) {
+            throw new Error('缺少工步信息')
+          }
+
           if (steps && steps.type !== 'loop') {
             const stepId = steps.id
             const showStepId = stepId + 1
@@ -175,6 +179,7 @@ export default class History extends Vue {
         } else {
           console.warn('error', item, stepTimeMax, item.stepTime)
         }
+
         return {
           sIndex: index + 1,
           stepTimeTotal: computerAdd(lastStepTimeEnd, item.stepTime),
@@ -192,6 +197,7 @@ export default class History extends Vue {
       this.$refs.sampChart.setCharts(this.sampData)
     } catch (err) {
       console.error(err)
+      this.$message.error(err.message)
     } finally {
       this.loading = false
     }

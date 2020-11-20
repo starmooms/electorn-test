@@ -122,13 +122,6 @@ export class BufWriteModel {
       this.buf = opts.parent.buf
       this.start = opts.parent.start
       this.bufModel = opts.parent.bufModel
-      // logger.info(
-      //   this.start,
-      //   this.bufModel.bufLength,
-      //   this.buf
-      //     .slice(this.start, this.start + this.bufModel.bufLength)
-      //     .toString('hex')
-      // )
     } else {
       if (!opts.model) {
         throw new Error(`BufWriteModel model undefined`)

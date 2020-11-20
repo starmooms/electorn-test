@@ -44,7 +44,6 @@ export default class StepTplUse extends Vue {
   changeDialog(v: boolean) {
     if (v === true) {
       this.$nextTick(() => {
-        console.log(this.editRow)
         this.tplName = this.editRow.name
         this.id = this.editRow.id
         this.$refs.stepTplEdit.useTplData(this.editRow.tplData)

@@ -14,7 +14,7 @@
           </el-radio-group>
         </el-form-item> -->
         <el-form-item>
-          <el-input readonly v-model="historyFile">
+          <el-input :disabled="false" v-model="historyFile">
             <el-button
               class="historySelect"
               slot="append"

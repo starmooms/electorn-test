@@ -25,7 +25,7 @@ const userConfigDefault: StoreT.UserConfg = {
       slaverId: null,
       channelId: [],
       standard: 0.0005,
-      uRangeId: 0,  
+      uRangeId: 0,
       iRangeId: 0
     },
     recheckForm: {

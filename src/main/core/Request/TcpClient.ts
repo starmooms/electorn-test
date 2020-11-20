@@ -2,17 +2,9 @@ import logger from '../Logger'
 import net from 'net'
 import { TransfromModel } from '@/main/utils/transfromParser'
 import { EventEmitter } from 'events'
+import { RequestStatus } from './Communi'
 
-// interface TcpClientParams {
-//   ip: string
-//   port: number
-//   onData: (buf: Buffer) => any
-//   onEnd?: () => any
-//   onError?: (err: Error) => any
-// }
-
-// declare type TcpClientParamsP = Partial<Pick<TcpClient>>
-declare type TcpClientParams = Pick<TcpClient, 'ip' | 'port' | 'masterId'> // & TcpClientParamsP
+declare type TcpClientParams = Pick<TcpClient, 'ip' | 'port' | 'masterId'>
 
 export default class TcpClient extends EventEmitter {
   ip: string
@@ -88,6 +80,41 @@ export default class TcpClient extends EventEmitter {
     return tcpClient
   }
 
+  // /** 发送信息 */
+  // async write(buf: Buffer, cb?: (err?: Error | undefined) => void) {
+  //   if (!this.isConnect) {
+  //     if (!this.tcpClient.connecting) {
+  //       this.createTcpClient()
+  //     }
+  //     await this.waitConnect()
+  //   }
+  //   this.tcpClient.write(buf, cb)
+  // }
+
+  /** 如果未连接，连接后发送 */
+  async waitWrite(
+    buf: Buffer,
+    setError: (msg: string) => any,
+    status: RequestStatus
+  ) {
+    if (!this.isConnect) {
+      if (!this.tcpClient.connecting) {
+        this.createTcpClient()
+      }
+      await this.waitConnect()
+    }
+
+    if (status.isWait) {
+      this.tcpClient.write(buf, err => {
+        if (err) {
+          setError(err.message)
+        }
+      })
+    }
+
+    return
+  }
+
   /** 链接成功返回Promsie */
   waitConnect() {
     return new Promise<null>((resolve, reject) => {
@@ -95,13 +122,26 @@ export default class TcpClient extends EventEmitter {
         resolve(null)
         return
       }
-      this.tcpClient.once('connect', resolve)
-      this.tcpClient.once('error', reject)
-      setTimeout(() => {
-        this.tcpClient.removeListener('connect', resolve)
-        this.tcpClient.removeListener('connect', reject)
+      let timeOut: any = null
+      let handleSuccess: any = null
+      const handleError = (err: Error) => {
+        this.tcpClient.removeListener('connect', handleSuccess)
+        clearTimeout(timeOut)
+        reject(err)
+      }
+      handleSuccess = () => {
+        this.tcpClient.removeListener('error', handleError)
+        clearTimeout(timeOut)
+        resolve(null)
+      }
+
+      this.tcpClient.once('connect', handleSuccess)
+      this.tcpClient.once('error', handleError)
+      timeOut = setTimeout(() => {
+        this.tcpClient.removeListener('connect', handleSuccess)
+        this.tcpClient.removeListener('error', handleError)
         reject(`${this.ip} connect Time Out`)
-      }, 3000)
+      }, 2000)
     })
   }
 

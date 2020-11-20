@@ -37,7 +37,7 @@
       :data.sync="form"
       @submit="submit"
     ></FromAction>
-    <ip-config :show.sync="showIpConfig" />
+    <ip-config :show.sync="showIpConfig" :baseConfig="form" />
   </div>
 </template>
 <script lang="ts">
@@ -61,11 +61,6 @@ export default class Base extends Vue {
 
   form = deepClone(SettingStatus.base)
   portList: any[] = []
-
-  storeData = {
-    type: 'userConfig',
-    key: 'base'
-  }
 
   requestList = [
     { type: 'Port', name: '串口' },
@@ -92,11 +87,17 @@ export default class Base extends Vue {
     this.$refs.FromAction.update()
   }
 
+  /** 子组件ipConfig调用，更改连接类型 */
+  updateRequestType() {
+    this.form = this.$refs.FromAction.rollBack()
+    this.form.requestType = 'Tcp'
+    return this.submit()
+  }
+
   getPortList() {
     this.$command.on({
       eventName: '/port/sendList',
       onEmit: data => {
-        console.log(data)
         this.portList = data.list.map(item => {
           return {
             readTranslate: false,

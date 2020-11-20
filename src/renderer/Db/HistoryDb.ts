@@ -16,7 +16,7 @@ export default class HistoryDb extends HistoryDbCom {
   }
 
   async close() {
-    // this.sqlite.db.interrupt()
+    await this.sqlite.db.interrupt()
     await super.close()
     beforeClose.off(this.bindClose)
     return null
@@ -66,33 +66,37 @@ export default class HistoryDb extends HistoryDbCom {
     }
 
     console.time()
-    await Promise.all([
-      this.sqlite.each(
-        `SELECT masterId, slaverId, channelId, U, workCode FROM ${sampData} WHERE id IN (
-        SELECT MIN(id) id FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId
-      );`,
-        row => {
-          const item = getMap(row)
-          item.start = row
-        }
-      ),
-      this.sqlite.each(
-        `SELECT masterId, slaverId, channelId, U, I, epower, vol, stepTime, endCode FROM ${sampData} WHERE id IN (
-        SELECT MAX(id) id FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId
-      );`,
-        row => {
-          const item = getMap(row)
-          item.end = row
-        }
-      ),
-      this.sqlite.each(
-        `SELECT masterId, slaverId, channelId, ROUND(AVG(U),2) FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId`,
-        row => {
-          const item = getMap(row)
-          item.avgU = row['ROUND(AVG(U),2)']
-        }
-      )
-    ])
+    // 查询启示列表
+    const startList = await this.sqlite.all(
+      `SELECT masterId, slaverId, channelId, U, workCode FROM ${sampData} WHERE id IN (
+      SELECT MIN(id) id FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId
+    );`
+    )
+    startList.forEach(row => {
+      const item = getMap(row)
+      item.start = row
+    })
+
+    // 查询结束列表
+    const endList = await this.sqlite.all(
+      `SELECT masterId, slaverId, channelId, U, I, epower, vol, stepTime, endCode FROM ${sampData} WHERE id IN (
+      SELECT MAX(id) id FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId
+    );`
+    )
+    endList.forEach(row => {
+      const item = getMap(row)
+      item.end = row
+    })
+
+    // 查询平均电压
+    const avgsKey = 'ROUND(AVG(U),2)'
+    const avgsList = await this.sqlite.all(
+      `SELECT masterId, slaverId, channelId, ${avgsKey} FROM ${sampData} WHERE loopNum=${loopNum} AND stepId=${stepId} GROUP BY masterId, slaverId, channelId`
+    )
+    avgsList.forEach(row => {
+      const item = getMap(row)
+      item.avgU = row[avgsKey]
+    })
     console.timeEnd()
 
     const getUpdateSql = getStaticInsert(stepStatistics)

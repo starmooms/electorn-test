@@ -19,6 +19,13 @@ interface PostOpts {
   requestType?: Communi['requestType'] | 'calTool' | null
 }
 
+export interface RequestStatus {
+  masterId: number
+  isWait: boolean
+}
+
+export type SetError = (msg: string) => void
+
 export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
 
 /** 通讯方式 */
@@ -102,9 +109,15 @@ class Communi {
       })
       let timer: NodeJS.Timeout // eslint-disable-line
 
+      const status: RequestStatus = {
+        isWait: true,
+        masterId
+      }
       const sId = agrData.sId
-      const setError = (msg: string) => {
+      const setError: SetError = (msg: string) => {
         this.emitList.delete(sId)
+        status.isWait = false
+
         let headMsg = ''
         if (requestType === 'Port') {
           headMsg += this.serialPort!.path
@@ -114,7 +127,6 @@ class Communi {
         } else if (requestType === 'Tcp') {
           const tcpClient = this.tpcRequest.getClient(masterId)
           if (tcpClient) {
-            tcpClient.ip
             headMsg += tcpClient.ip
           }
         }
@@ -123,10 +135,6 @@ class Communi {
       }
 
       this.emitList.set(sId, ({ masterId, errCode, buf, originBuf }) => {
-        if (isDev) {
-          // logger.debug(control.name, '返回', buf.toString('hex'))
-          // logger.debug(control.name, '返回数据域', buf.toString('hex'))
-        }
         if (errCode !== '00') {
           const errMsg = ERROR_STATUS[errCode] || errCode
           mainDb.saveErrorList([
@@ -147,28 +155,22 @@ class Communi {
         clearTimeout(timer)
       })
 
-      if (isDev) {
-        // logger.debug(control.name, '发送', agrData.buf.toString('hex'))
-        // logger.debug(control.name, '发送数据域', data.toString('hex'))
-      }
-
-      if (requestType === 'Port') {
-        if (!this.serialPort) {
-          setError('串口未初始化')
-          return
-        }
-        this.serialPort.post(agrData.buf, setError)
-      } else if (requestType === 'Tcp') {
-        this.tpcRequest.post(agrData.buf, setError, masterId)
-      } else if (requestType === 'calTool') {
-        this.tpcRequest.calToolPost(agrData.buf, setError)
-      } else {
-        setError(`requestType ${requestType} No Found`)
-      }
-
       timer = setTimeout(() => {
         setError(`${requestType} Time Out`)
       }, timeout || 5000)
+
+      if (requestType === 'Port') {
+        if (!this.serialPort) {
+          return setError('串口未初始化')
+        }
+        this.serialPort.post(agrData.buf, setError)
+      } else if (requestType === 'Tcp') {
+        this.tpcRequest.post(agrData.buf, setError, status)
+      } else if (requestType === 'calTool') {
+        this.tpcRequest.calToolPost(agrData.buf, setError, status)
+      } else {
+        setError(`requestType ${requestType} No Found`)
+      }
     })
   }
 

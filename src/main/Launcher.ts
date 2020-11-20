@@ -135,7 +135,8 @@ export default class Launcher {
         this.updateManager.check()
       }
     })
-    const id = powerSaveBlocker.start('prevent-app-suspension')
+
+    powerSaveBlocker.start('prevent-app-suspension')
 
     createSysLog()
     ipcManage.handle('/sysLog/sysLogInfo', () => {

@@ -17,6 +17,7 @@
         v-for="(master, mKey) in list"
         :key="mKey"
         :label="labelKey ? mKey : master.id"
+        :disabled="connectList.includes(master.id)"
       >
         {{ master.name }}
       </component>
@@ -44,6 +45,10 @@ export default class SelectMaster extends Vue {
 
   set masterAll(v: boolean) {
     this.activeId = v ? this.listId : []
+  }
+
+  get connectList() {
+    return [0]
   }
 
   get list() {

@@ -1,12 +1,11 @@
 <template>
   <div id="app">
-    <div v-if="titleBar">ddd</div>
     <router-view />
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'vue-property-decorator'
+import { Component, Vue } from 'vue-property-decorator'
 import { ipcRenderer } from 'electron'
 import { SettingStatus } from './store/modules/Setting'
 import { ChannelStatus } from './store/modules/Channel'
@@ -17,15 +16,10 @@ export default class App extends Vue {
   tips = ''
   downloadPercent = 0
 
-  get portPath() {
-    return SettingStatus.portPath
-  }
-
   get titleBar() {
     return SettingStatus.titleBar
   }
 
-  @Watch('portPath')
   checkPortPath() {
     ChannelStatus.getList()
   }

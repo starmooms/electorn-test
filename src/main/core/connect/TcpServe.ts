@@ -2,6 +2,7 @@ import net from 'net'
 import { BufWriteModel as BufModel } from '@/main/utils/bufModel'
 import { SAMP_MODEL } from '@/shared/model'
 import { TransfromModel } from '@/main/utils/transfromParser'
+import agreement from '../Agreement'
 
 let socketSend: net.Socket
 const sendSamp = (data: Buffer) => {
@@ -82,12 +83,26 @@ const sendSamp = (data: Buffer) => {
   })
   // console.log('end')
 
-  const resultBuf = Buffer.from(
-    `6801010000688500${id}011f${writeModel.buf.toString('hex')}8f6bedededed`,
+  // const resultBuf = Buffer.from(
+  //   `6801010000688500${id}011f${writeModel.buf.toString('hex')}8f6bedededed`,
+  //   'hex'
+  // )
+
+  const headBuf = Buffer.from(
+    `6801010000688500${id}011f${writeModel.buf.toString('hex')}`,
     'hex'
   )
+  headBuf.writeUInt16BE(writeModel.buf.length, 10)
+  const crc16 = agreement.crc16(headBuf)
+  const crc16buf = Buffer.alloc(2)
+  crc16buf.writeUInt16BE(crc16, 0)
+  const resultBuf = Buffer.concat([
+    headBuf,
+    crc16buf,
+    Buffer.from('edededed', 'hex')
+  ])
 
-  resultBuf.writeUInt16BE(writeModel.buf.length, 10)
+  // resultBuf.writeUInt16BE(writeModel.buf.length, 10)
   console.log('tcpServer返回', id)
   // console.log('流水号', id)
   // console.log(resultBuf.toString('hex'))

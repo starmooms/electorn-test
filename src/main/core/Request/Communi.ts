@@ -1,12 +1,10 @@
 import { ERROR_STATUS } from '@/shared/config/port'
 import agreement, { ReadResult } from '@/main/core/Agreement'
 import SerialPortRequest from '@/main/core/Request/SerialPortRequest'
-import configManage from '../ConfigManage'
-import mainDb from '../sqlite/MainDb'
-import TcpRequest from './TcpRequest'
-import logger from '../Logger'
-import is from 'electron-is'
-const isDev = is.dev()
+import configManage from '@/main/core/ConfigManage'
+import mainDb from '@/main/core/sqlite/MainDb'
+import TcpRequest from '@/main/core/Request/TcpRequest'
+import logger from '@/main/core/Logger'
 
 interface PostOpts {
   timeout?: number
@@ -24,6 +22,7 @@ export interface RequestStatus {
   isWait: boolean
 }
 
+export type RequestType = 'Port' | 'Tcp'
 export type SetError = (msg: string) => void
 
 export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
@@ -31,17 +30,11 @@ export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
 /** 通讯方式 */
 class Communi {
   emitList: CommuniEmitList = new Map()
-  requestType: 'Port' | 'Tcp' = 'Tcp'
+  requestType: RequestType = 'Tcp'
   tpcRequest = new TcpRequest(this)
 
   portPath!: string
   serialPort: SerialPortRequest | null = null
-
-  constructor() {
-    this.changeConfig()
-    this.createSerialPort()
-    this.createTcpRequest(true)
-  }
 
   createSerialPort() {
     if (this.requestType !== 'Port') {
@@ -69,24 +62,26 @@ class Communi {
    * tcp 打开关闭
    * @param connectIp 是否创建连接
    */
-  createTcpRequest(connectIp: boolean) {
+  async createTcpRequest(connectIp: boolean) {
     if (this.requestType === 'Tcp') {
       if (connectIp) {
-        this.tpcRequest.createdConnect()
+        await this.tpcRequest.createdConnect()
       }
     } else {
       this.tpcRequest.close()
     }
   }
 
-  changeConfig() {
+  /**
+   * 根据设置生成连接
+   * @connectIp 是否主动连接ip
+   */
+  async updateConfig(connectIp = false) {
+    const lastType = this.requestType
     this.requestType = configManage.userConfig.get('base.requestType')
-    configManage.userConfig.onDidChange('base', () => {
-      const lastType = this.requestType
-      this.requestType = configManage.userConfig.get('base.requestType')
-      this.createSerialPort()
-      this.createTcpRequest(lastType !== this.requestType) // 如果通讯类型没变化，不需要主动重连tcp
-    })
+    this.createSerialPort()
+    await this.createTcpRequest(connectIp || lastType !== this.requestType) // 如果通讯类型没变化，不需要主动重连tcp
+    return
   }
 
   post({
@@ -134,7 +129,11 @@ class Communi {
         clearTimeout(timer)
       }
 
-      this.emitList.set(sId, ({ masterId, errCode, buf, originBuf }) => {
+      this.emitList.set(sId, ({ masterId, errCode, buf, originBuf, check }) => {
+        if (!check) {
+          logger.error('checkCrc Error', originBuf.toString('hex'))
+          return setError('通讯校验码错误')
+        }
         if (errCode !== '00') {
           const errMsg = ERROR_STATUS[errCode] || errCode
           mainDb.saveErrorList([
@@ -147,9 +146,7 @@ class Communi {
               errCode: errCode
             }
           ])
-
-          setError(`Error_Code ${errMsg}`)
-          return
+          return setError(`Error_Code ${errMsg}`)
         }
         resolve(buf)
         clearTimeout(timer)

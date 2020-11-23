@@ -67,7 +67,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, PropSync, Prop } from 'vue-property-decorator'
+import { Component, Vue, PropSync, Watch } from 'vue-property-decorator'
 import IpEdit from './IpEdit.vue'
 import DetailsInfo from './DetailsInfo.vue'
 import { setStoreConfig } from '@/renderer/ipc/storeConfig'
@@ -79,6 +79,7 @@ import {
   setMasterInfo
 } from '@/renderer/ipc/channel'
 import Base from '../Base.vue'
+import { SettingStatus } from '@/renderer/store/modules/Setting'
 
 @Component({
   components: {
@@ -89,7 +90,6 @@ import Base from '../Base.vue'
 export default class IpConfig extends Vue {
   @PropSync('show', { type: Boolean, default: false })
   private dialog!: boolean
-  @Prop({ type: Object }) baseConfig!: any
 
   $parent!: Base
 
@@ -108,6 +108,15 @@ export default class IpConfig extends Vue {
   // 查看详情
   detailsShow = false
   detailsInfo: null | IpConfigT.MasterInfo = null
+
+  get requresType() {
+    return SettingStatus.base.requestType
+  }
+
+  @Watch('dialog')
+  changeDialog() {
+    this.getIpList()
+  }
 
   addMasterOpen(item?: IpConfigT.IpTcpItem) {
     this.editMaster = item ? item : null
@@ -200,8 +209,8 @@ export default class IpConfig extends Vue {
 
   /** 刷新连接 */
   async refreshConnect() {
-    if (this.baseConfig.SettingStatus !== 'Tcp') {
-      const change = await this.$elConfirm('连接Tcp通讯方式将转换为网口模式')
+    if (this.requresType !== 'Tcp') {
+      const change = await this.$elConfirm('当前通讯方式将转换为网口模式')
       if (!change) return
       await this.$parent.updateRequestType()
     }
@@ -221,10 +230,6 @@ export default class IpConfig extends Vue {
 
   dialogClose() {
     this.dialog = false
-  }
-
-  mounted() {
-    this.getIpList()
   }
 }
 </script>

@@ -1,7 +1,8 @@
 import { toHex, FixZero } from '../utils'
+import logger from './Logger'
 
 export type ReadResult = ReturnType<Agreement['readData']>
-export type SetDataBack = ReturnType<Agreement['setData']>
+export type SetDataBack = ReturnType<Agreement['createData']>
 export interface CreateData {
   data?: Buffer | string
   code: number
@@ -41,34 +42,34 @@ class Agreement {
     return id
   }
 
-  setData(data: string | Buffer, code = 0x00) {
-    let dataBuf: null | Buffer = null
-    if (data) {
-      dataBuf = typeof data === 'string' ? Buffer.from(data, 'hex') : data
-    }
-    const dataLen = dataBuf ? dataBuf.length : 0
-    const dataLenByt = toHex(dataLen, 2)
-    const dataLenBuf = Buffer.from(dataLenByt, 'hex')
+  // setData(data: string | Buffer, code = 0x00) {
+  //   let dataBuf: null | Buffer = null
+  //   if (data) {
+  //     dataBuf = typeof data === 'string' ? Buffer.from(data, 'hex') : data
+  //   }
+  //   const dataLen = dataBuf ? dataBuf.length : 0
+  //   const dataLenByt = toHex(dataLen, 2)
+  //   const dataLenBuf = Buffer.from(dataLenByt, 'hex')
 
-    // 流水号
-    const sId = toHex(this.getId(), 2)
-    const sIdBuf = Buffer.from(sId, 'hex')
+  //   // 流水号
+  //   const sId = toHex(this.getId(), 2)
+  //   const sIdBuf = Buffer.from(sId, 'hex')
 
-    const header = Buffer.from([0x68, 0x00, 0x01, 0xff, 0xff, 0x68, code, 0x00])
-    const resultBufArr = [header, sIdBuf, dataLenBuf]
-    if (dataLen > 0 && dataBuf) {
-      resultBufArr.push(dataBuf)
-    }
-    const checkData = Buffer.concat(resultBufArr)
-    const check = Buffer.alloc(2)
-    check.writeUIntBE(this.crc16(checkData), 0, 2)
-    resultBufArr.push(check)
-    resultBufArr.push(this.getEnd())
-    const buf = Buffer.concat(resultBufArr)
-    // console.log('发送', buf)
-    // this.readData(buf)
-    return { buf, sId }
-  }
+  //   const header = Buffer.from([0x68, 0x00, 0x01, 0xff, 0xff, 0x68, code, 0x00])
+  //   const resultBufArr = [header, sIdBuf, dataLenBuf]
+  //   if (dataLen > 0 && dataBuf) {
+  //     resultBufArr.push(dataBuf)
+  //   }
+  //   const checkData = Buffer.concat(resultBufArr)
+  //   const check = Buffer.alloc(2)
+  //   check.writeUInt16BE(12, 0)
+  //   resultBufArr.push(check)
+  //   resultBufArr.push(this.getEnd())
+  //   const buf = Buffer.concat(resultBufArr)
+  //   // console.log('发送', buf)
+  //   // this.readData(buf)
+  //   return { buf, sId }
+  // }
 
   createData({ data, code, type, masterId, slaverId }: CreateData) {
     let dataBuf: null | Buffer = null
@@ -87,7 +88,7 @@ class Agreement {
     const checkData =
       dataLen > 0 && dataBuf ? Buffer.concat([header, dataBuf]) : header
     const check = Buffer.alloc(2)
-    check.writeUIntBE(this.crc16(checkData), 0, 2)
+    check.writeUInt16BE(this.crc16(checkData), 0)
     const buf = Buffer.concat([checkData, check, this.getEnd()])
     return {
       buf,
@@ -95,43 +96,41 @@ class Agreement {
     }
   }
 
-  showDetails(result) {
-    function getResult(s, l = 2) {
-      return `${FixZero(s.toString(16), l)}`
-    }
-    function getBufResults(b) {
-      let s = ''
-      for (let i = 0; i < b.length; i++) {
-        s += ` ${getResult(b[i])}`
-      }
-      return s
-    }
-    console.log('resutl', result)
-    console.log('帧起始符：', getResult(result[0]))
-    console.log('从机类型：', getResult(result[1]))
-    console.log('版本号：', getResult(result[2]))
-    console.log('地址 主控：', getResult(result[3]))
-    console.log('地址 从控：', getResult(result[4]))
-    console.log('帧起始符：', getResult(result[5]))
-    console.log('控制码：', getResult(result[6]))
-    console.log('错误码：', getResult(result[7]))
-    console.log('流水号：', getBufResults([result[8], result[9]]))
-    console.log('数据域长度', getBufResults([result[10], result[11]]))
-    // console.log(parseInt(`${result[10]}${result[11]}`, 10))
-    const n = parseInt(`${result[10]}${result[11]}`, 10)
-    const sIndex = 12 + n
-    const data = result.slice(12, sIndex)
-    console.log('数据域：', getBufResults(data))
-    console.log('校验码：', getBufResults([result[sIndex], result[sIndex + 1]]))
-    console.log(
-      '帧结束符：',
-      getBufResults([result[sIndex + 2], result[sIndex + 6]])
-    )
-  }
+  // showDetails(result) {
+  //   function getResult(s, l = 2) {
+  //     return `${FixZero(s.toString(16), l)}`
+  //   }
+  //   function getBufResults(b) {
+  //     let s = ''
+  //     for (let i = 0; i < b.length; i++) {
+  //       s += ` ${getResult(b[i])}`
+  //     }
+  //     return s
+  //   }
+  //   console.log('resutl', result)
+  //   console.log('帧起始符：', getResult(result[0]))
+  //   console.log('从机类型：', getResult(result[1]))
+  //   console.log('版本号：', getResult(result[2]))
+  //   console.log('地址 主控：', getResult(result[3]))
+  //   console.log('地址 从控：', getResult(result[4]))
+  //   console.log('帧起始符：', getResult(result[5]))
+  //   console.log('控制码：', getResult(result[6]))
+  //   console.log('错误码：', getResult(result[7]))
+  //   console.log('流水号：', getBufResults([result[8], result[9]]))
+  //   console.log('数据域长度', getBufResults([result[10], result[11]]))
+  //   // console.log(parseInt(`${result[10]}${result[11]}`, 10))
+  //   const n = parseInt(`${result[10]}${result[11]}`, 10)
+  //   const sIndex = 12 + n
+  //   const data = result.slice(12, sIndex)
+  //   console.log('数据域：', getBufResults(data))
+  //   console.log('校验码：', getBufResults([result[sIndex], result[sIndex + 1]]))
+  //   console.log(
+  //     '帧结束符：',
+  //     getBufResults([result[sIndex + 2], result[sIndex + 6]])
+  //   )
+  // }
 
   readData(buf: Buffer) {
-    // console.log('接收', buf)
-    // buf = Buffer.from('6801010000688900001000ac00000000000101000000000000000004000000000000000000000000000000000000009000000005000000000000000000000000000000000000000000000000000000000100900000000a000000000000000000000000000000000000000000000000000000000200900000000f0000000000000000000000000000000000000000000000000000000003007000000000000000000000000000000000000000000003000000000000000000ee1bedededed', 'hex') // eslint-disable-line
     const dataStart = 12
     const dataLen = buf.readUInt16BE(10)
     // logger.info('readData的buf', buf)
@@ -143,13 +142,14 @@ class Agreement {
       buf: buf.slice(dataStart, dataEndLen),
       sId: toHex(buf.readUInt16BE(8), 2),
       errCode: toHex(buf.readUInt8(7), 1),
-      masterId: buf.readUInt8(4)
+      masterId: buf.readUInt8(4),
+      check: true
     }
-    // const checkBuf = buf.slice(0, dataEndLen)
-    // const crc16Buf = buf.readUInt16BE(dataEndLen)
-    // if (this.crc16(checkBuf) !== crc16Buf) {
-    //   logger.info('校验失败', crc16Buf.toString(16))
-    // }
+    const checkBuf = buf.slice(0, dataEndLen)
+    const crc16Buf = buf.readUInt16BE(dataEndLen)
+    if (this.crc16(checkBuf) !== crc16Buf) {
+      result.check = false
+    }
     // logger.info('数据域内容', buf.slice(dataStart, dataEndLen))
     // logger.info('流水号', toHex(buf.readUInt16BE(8), 2))
     return result

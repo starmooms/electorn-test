@@ -38,7 +38,6 @@ export default class BoxSamp {
   private readSampNow = false
   parent: BoxManage
   channelMap: BoxManage['channelMap']
-  masterList: BoxManage['staticChList']['master']
 
   isRead = false
   timer: NodeJS.Timeout | null = null
@@ -48,7 +47,6 @@ export default class BoxSamp {
   constructor(parent: BoxManage) {
     this.parent = parent
     this.channelMap = this.parent.channelMap
-    this.masterList = [{ id: 0, name: '机柜1' }] // this.parent.staticChList.master
   }
 
   clearTimer() {
@@ -112,9 +110,9 @@ export default class BoxSamp {
 
     logger.info('采样开始')
     await Promise.all(
-      this.masterList.map(async item => {
+      this.parent.connectMaster.map(async item => {
         try {
-          const data = await this.readSamp(item.id, getProjectSamp)
+          const data = await this.readSamp(item.masterId, getProjectSamp)
           errorList = errorList.concat(data.errorList)
         } catch (err) {
           logger.error('readSamp_Error', err)

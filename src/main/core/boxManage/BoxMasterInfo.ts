@@ -20,6 +20,17 @@ export default class BoxMasterInfo {
     this.parent = parent
   }
 
+  /** 删除ip连接 */
+  async closeIpItem(masterId: number) {
+    await communi.tpcRequest.closeTcpItem(masterId)
+    this.updateConnect()
+  }
+
+  /** 刷新boxMange 当前连接机柜 */
+  updateConnect() {
+    this.parent.updateConnectMaster()
+  }
+
   async getMasterInfo(masterId: number) {
     const info: IpConfigT.MasterInfo = getMasterInfoObj()
     info.status = communi.tpcRequest.getClientStatus(masterId)
@@ -63,17 +74,6 @@ export default class BoxMasterInfo {
       }
     }
     return info
-
-    // if (!communi.tpcRequest) {
-    //   throw new Error('未生成Tcp管理对象')
-    // }
-    // list.map(ip => {
-    //   try {
-    //     communi.tpcRequest!.getMasterInfo(ip)
-    //   } catch (err) {
-    //     logger.error(err)
-    //   }
-    // })
   }
 
   /** 获取ip列表 */
@@ -111,13 +111,14 @@ export default class BoxMasterInfo {
     const { list, ipItem, index } = this.findIpItem(opts.masterId, opts.ip)
     list.splice(index, 1)
     configManage.userConfig.set('ipList', list)
-    await communi.tpcRequest.closeTcpItem(ipItem.masterId)
+    await this.closeIpItem(ipItem.masterId)
     return true
   }
 
   /** 刷新连接 */
   async refreshConnect() {
     await communi.tpcRequest.createdConnect()
+    this.updateConnect()
     return await this.getIpList()
   }
 
@@ -153,7 +154,7 @@ export default class BoxMasterInfo {
       const { list, index } = this.findIpItem(opts.masterId, opts.ipOld)
       list[index].ip = ip
       configManage.userConfig.set('ipList', list)
-      await communi.tpcRequest.closeTcpItem(opts.masterId)
+      await this.closeIpItem(opts.masterId)
       status = 1
     }
     return {

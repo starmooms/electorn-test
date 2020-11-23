@@ -1,4 +1,4 @@
-import { sysLog } from '../Logger'
+import logger, { sysLog } from '../Logger'
 import { channelList } from '@/shared/config/port'
 import mainDb from '../sqlite/MainDb'
 import is from 'electron-is'
@@ -10,6 +10,7 @@ import BoxMasterInfo from './BoxMasterInfo'
 import communi from '../Request/Communi'
 import BoxUpgrade from './BoxUpgrade'
 import { getStaticChList } from '@/shared/config/channel'
+import configManage from '../ConfigManage'
 
 interface PostOpts {
   timeout?: number
@@ -18,6 +19,10 @@ interface PostOpts {
     code: number
     name: string
   }
+  masterId: number
+}
+
+interface ConnectMaster {
   masterId: number
 }
 
@@ -39,6 +44,8 @@ export class BoxManage {
   useDev = is.dev() && communi.requestType === 'Port'
   /** 静态通道列表 */
   staticChList = getStaticChList()
+  /** 当前连接的机柜 */
+  connectMaster: ConnectMaster[] = []
 
   boxSamp = new BoxSamp(this)
   boxCal = new BoxCal(this)
@@ -48,7 +55,10 @@ export class BoxManage {
   boxUpgrade = new BoxUpgrade(this)
 
   create() {
-    this.initChannelResolve = this.initChannelStatusList()
+    this.initChannelResolve = Promise.all([
+      this.initChannelStatusList(),
+      this.initCommuni()
+    ])
     return this.initChannelResolve
   }
 
@@ -97,6 +107,41 @@ export class BoxManage {
   async getChannelList() {
     await this.initChannelResolve
     return this.channelList
+  }
+
+  /** 创建初始化Communi */
+  async initCommuni() {
+    await this.updateConfig(true)
+    // 监听串口改变或模式改变时
+    configManage.userConfig.onDidChange('base', () => {
+      this.updateConfig()
+    })
+    return
+  }
+
+  /** 更新当前连接机柜 */
+  async updateConfig(connentIp = false) {
+    // 先更新 ip连接
+    await communi.updateConfig(connentIp)
+    this.updateConnectMaster()
+  }
+
+  /** 更新机柜连接列表 */
+  updateConnectMaster() {
+    const requestType = configManage.userConfig.get('base.requestType')
+    this.connectMaster = []
+    if (requestType === 'Tcp') {
+      communi.tpcRequest.tcpMap.forEach(item => {
+        this.connectMaster.push({
+          masterId: item.masterId
+        })
+      })
+    } else if (requestType === 'Port') {
+      this.connectMaster.push({
+        masterId: 0
+      })
+    }
+    logger.info('通道？？改变', this.connectMaster)
   }
 }
 

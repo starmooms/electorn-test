@@ -17,7 +17,7 @@
         v-for="(master, mKey) in list"
         :key="mKey"
         :label="labelKey ? mKey : master.id"
-        :disabled="connectList.includes(master.id)"
+        :disabled="!master.isConnect"
       >
         {{ master.name }}
       </component>
@@ -39,20 +39,20 @@ export default class SelectMaster extends Vue {
 
   get masterAll() {
     return this.isCheckbox
-      ? (this.value as number[]).length === this.listId.length
+      ? (this.value as number[]).length === this.connectList.length
       : false
   }
 
   set masterAll(v: boolean) {
-    this.activeId = v ? this.listId : []
-  }
-
-  get connectList() {
-    return [0]
+    this.activeId = v ? this.connectList.map(item => item.id) : []
   }
 
   get list() {
-    return ChannelStatus.list
+    return ChannelStatus.masterChStatusList
+  }
+
+  get connectList() {
+    return this.list.filter(item => item.isConnect)
   }
 
   get groupName() {
@@ -74,18 +74,8 @@ export default class SelectMaster extends Vue {
     this.activeId = this.value
   }
 
-  @Watch('list')
-  changeList() {
-    if (this.listId.length === 0 && this.list) {
-      this.listId = Object.keys(this.list).map(key => {
-        return this.list![key].id
-      })
-    }
-  }
-
   mounted() {
     this.changeValue()
-    this.changeList()
   }
 }
 </script>

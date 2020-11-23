@@ -11,6 +11,8 @@ import communi from '../Request/Communi'
 import BoxUpgrade from './BoxUpgrade'
 import { getStaticChList } from '@/shared/config/channel'
 import configManage from '../ConfigManage'
+import { BoxManageT } from '@/types/BoxManageT'
+import ipcManage from '../IpcManage'
 
 interface PostOpts {
   timeout?: number
@@ -45,7 +47,7 @@ export class BoxManage {
   /** 静态通道列表 */
   staticChList = getStaticChList()
   /** 当前连接的机柜 */
-  connectMaster: ConnectMaster[] = []
+  connectMaster: BoxManageT.MasterCnnect[] = []
 
   boxSamp = new BoxSamp(this)
   boxCal = new BoxCal(this)
@@ -130,6 +132,7 @@ export class BoxManage {
   updateConnectMaster() {
     const requestType = configManage.userConfig.get('base.requestType')
     this.connectMaster = []
+
     if (requestType === 'Tcp') {
       communi.tpcRequest.tcpMap.forEach(item => {
         this.connectMaster.push({
@@ -137,11 +140,16 @@ export class BoxManage {
         })
       })
     } else if (requestType === 'Port') {
-      this.connectMaster.push({
-        masterId: 0
+      const portMaster: number[] = configManage.userConfig.get(
+        'base.portMaster'
+      )
+      portMaster.forEach(masterId => {
+        this.connectMaster.push({
+          masterId: masterId
+        })
       })
     }
-    logger.info('通道？？改变', this.connectMaster)
+    ipcManage.commonMsg('updateConnect', this.connectMaster)
   }
 }
 

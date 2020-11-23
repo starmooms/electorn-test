@@ -29,11 +29,13 @@ export default class App extends Vue {
     ipcRenderer.on('commomMsg', (event, channel, data) => {
       switch (channel) {
         case 'updateChannelList':
-          // 更新通道列表
-          ChannelStatus.UPDATE_CHANNELLIST(data)
+          ChannelStatus.UPDATE_CHANNELLIST(data) // 更新通道列表
           break
         case 'userConfig':
-          SettingStatus.UPDATE_USERCONFIG(data)
+          SettingStatus.UPDATE_USERCONFIG(data) // 更新用户设置
+          break
+        case 'updateConnect':
+          ChannelStatus.SET_MASTERCONNECT(data) // 更新机柜连接
           break
         default:
           console.error(`${channel} undefined`)

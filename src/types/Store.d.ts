@@ -30,6 +30,7 @@ declare namespace StoreT {
     base: {
       requestType: string
       portPath: string
+      portMaster: number[]
     }
   }
 

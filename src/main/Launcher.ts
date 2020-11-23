@@ -191,7 +191,8 @@ export default class Launcher {
       const userConfig = configManage.userConfig.store
       return {
         userConfig,
-        mainData
+        mainData,
+        connectMasterList: boxManage.connectMaster
       }
     })
   }

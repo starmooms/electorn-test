@@ -12,20 +12,19 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item
-        label="串口"
-        class="port-select"
-        v-if="form.requestType === 'Port'"
-      >
-        <el-select v-model="form.portPath" placeholder="选择串口">
-          <el-option
-            v-for="item in portList"
-            :key="item.path"
-            :label="item.path"
-            :value="item.path"
-          ></el-option>
-        </el-select>
-      </el-form-item>
+      <template v-if="form.requestType === 'Port'">
+        <el-form-item label="串口" class="port-select">
+          <el-select v-model="form.portPath" placeholder="选择串口">
+            <el-option
+              v-for="item in portList"
+              :key="item.path"
+              :label="item.path"
+              :value="item.path"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+        <SelectMasterForm v-model="form.portMaster" />
+      </template>
 
       <el-form-item label="IP设置" v-else-if="form.requestType === 'Tcp'">
         <el-button @click="showIpConfig = true">IP设置</el-button>
@@ -47,11 +46,13 @@ import { setStoreConfig } from '@/renderer/ipc/storeConfig'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { deepClone } from '@/shared/utils'
 import IpConfig from './ipConfig/index.vue'
+import SelectMasterForm from '@/renderer/components/SelectMasterForm/index.vue'
 
 @Component({
   components: {
     FromAction,
-    IpConfig
+    IpConfig,
+    SelectMasterForm
   }
 })
 export default class Base extends Vue {

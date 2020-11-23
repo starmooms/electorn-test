@@ -10,6 +10,7 @@ import store from '@/renderer/store'
 import { getChannelList } from '@/renderer/ipc/channel'
 import Vue from 'vue'
 import { getStaticChList } from '@/shared/config/channel'
+import { BoxManageT } from '@/types/BoxManageT'
 
 config.rawError = true
 
@@ -42,6 +43,11 @@ export default class ChannelImpl extends VuexModule {
   public sampMap: SampMap = {}
   public staticChList = getStaticChList()
 
+  /** 机柜静态总列表 */
+  masterChList = this.staticChList.master
+  /** 机柜连接列表 */
+  masterConnectList: BoxManageT.MasterCnnect[] = []
+
   public workerStatus = {
     vacant: '空置',
     pause: '暂停',
@@ -50,6 +56,16 @@ export default class ChannelImpl extends VuexModule {
     run: '运行',
     protect: '保护',
     error: '异常'
+  }
+
+  /** 机柜列表，带连接状态 */
+  get masterChStatusList() {
+    return this.masterChList.map(item => {
+      return {
+        ...item,
+        isConnect: this.masterConnectList.some(c => c.masterId === item.id)
+      }
+    })
   }
 
   @Mutation
@@ -85,6 +101,11 @@ export default class ChannelImpl extends VuexModule {
   SET_SAMPMAP({ masterId, samp }: SetSamp) {
     const key = `${masterId}_${samp.slaverId}_${samp.channelId}`
     Vue.set(this.sampMap, key, samp)
+  }
+
+  @Mutation
+  SET_MASTERCONNECT(list: BoxManageT.MasterCnnect[]) {
+    this.masterConnectList = list
   }
 
   @Action

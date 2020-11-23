@@ -41,7 +41,8 @@ const userConfigDefault: StoreT.UserConfg = {
   ipList: [],
   base: {
     requestType: 'Port',
-    portPath: ''
+    portPath: '',
+    portMaster: []
   }
 }
 

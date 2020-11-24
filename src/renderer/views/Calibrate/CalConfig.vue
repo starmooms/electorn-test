@@ -4,6 +4,15 @@
       <el-form-item class="form-item" label="工装IP">
         <el-input v-model="form.toolIp"></el-input>
       </el-form-item>
+      <el-form-item class="form-item">
+        <el-button
+          :loading="toolIpLoading"
+          type="primary"
+          @click="checkToolIpConnect"
+        >
+          测试连接
+        </el-button>
+      </el-form-item>
       <!-- <div>
         <template v-if="deviceEdit.edit">
           <el-button type="primary" @click="deviceIpEditSave">
@@ -106,6 +115,7 @@ import {
 import { deepClone } from '@/shared/utils'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import ToolCalConfig from './components/ToolCalConfig.vue'
+import { calCheckToolIp } from '@/renderer/ipc/channel'
 
 @Component({
   components: {
@@ -129,6 +139,8 @@ export default class CalConfig extends Vue {
     uRangeId: 0,
     iRangeId: 0
   }
+
+  toolIpLoading = false
 
   get config() {
     return SettingStatus.userConfig?.calibrateConfig?.config
@@ -169,36 +181,29 @@ export default class CalConfig extends Vue {
     this.$emit('toolCalStart', data)
   }
 
-  // deviceEdit = {
-  //   edit: false,
-  //   deviceIp: this.form.deviceIp,
-  //   last: this.form.deviceIp
-  // }
-
-  // /** 工装ip编辑打开、关闭 */
-  // deviceIpEditSet() {
-  //   const status = !this.deviceEdit.edit
-  //   this.deviceEdit.edit = status
-  // }
-
-  // /** 工装ip取消编辑 */
-  // deviceIpEditCanncel() {
-  //   this.deviceEdit.deviceIp = this.deviceEdit.last
-  //   this.deviceIpEditSet()
-  // }
-
-  // /** 工装ip保存编辑 */
-  // deviceIpEditSave() {
-  //   this.deviceEdit.last = this.deviceEdit.deviceIp
-  //   this.deviceIpEditSet()
-  // }
-
   getToolIp() {
     if (!this.form.toolIp) {
       this.$message.info('请先填写工装IP')
       return false
     }
     return this.form.toolIp
+  }
+
+  /** 测试工装ip连接 */
+  async checkToolIpConnect() {
+    if (this.toolIpLoading) return
+    const ip = this.getToolIp()
+    try {
+      this.toolIpLoading = true
+      if (ip) {
+        const data = await calCheckToolIp(ip)
+        if (data.status) {
+          this.$message.success('连接成功')
+        }
+      }
+    } finally {
+      this.toolIpLoading = false
+    }
   }
 
   mounted() {

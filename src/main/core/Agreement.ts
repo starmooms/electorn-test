@@ -145,11 +145,12 @@ class Agreement {
       masterId: buf.readUInt8(4),
       check: true
     }
-    const checkBuf = buf.slice(0, dataEndLen)
-    const crc16Buf = buf.readUInt16BE(dataEndLen)
-    if (this.crc16(checkBuf) !== crc16Buf) {
-      result.check = false
-    }
+    // const checkBuf = buf.slice(0, dataEndLen)
+    // const crc16Buf = buf.readUInt16BE(dataEndLen)
+    // if (this.crc16(checkBuf) !== crc16Buf) {
+    //   result.check = false
+    // }
+
     // logger.info('数据域内容', buf.slice(dataStart, dataEndLen))
     // logger.info('流水号', toHex(buf.readUInt16BE(8), 2))
     return result

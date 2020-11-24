@@ -212,12 +212,12 @@ export default class ToolCalTabel extends Vue {
     try {
       this.loading = true
       const computerRestul = this.computAb()
-      if (!computerRestul.status) {
-        const msg = computerRestul.errorPoint.map(
-          item => `${item}${this.calTypeKey}`
-        )
-        return this.$message.error(`${msg.join('、')} 未采样`)
-      }
+      // if (!computerRestul.status) {
+      //   const msg = computerRestul.errorPoint.map(
+      //     item => `${item}${this.calTypeKey}`
+      //   )
+      //   return this.$message.error(`${msg.join('、')} 未采样`)
+      // }
 
       const abList = computerRestul.abList
       if (abList.length === 0) {

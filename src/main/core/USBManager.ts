@@ -139,6 +139,11 @@ export default class USBManager {
     ipcManage.handle('/port/cal/calToolSet', async (event, data) => {
       return boxManage.boxCal.setCalTool(data)
     })
+
+    // 检查工装ip
+    ipcManage.handle('/port/cal/connectToolIp', async (event, data) => {
+      return boxManage.boxCal.connectToolIp(data)
+    })
   }
 
   /** 设置升级控制 */

@@ -138,9 +138,9 @@ export default class Calibrate extends Vue {
         recheckForm.UStep
       )
       if (iRange.length === 0) {
-        return this.$message.error('电流范围修0')
+        return this.$message.error('电流范围为0')
       } else if (uRange.length === 0) {
-        return this.$message.error('电压范围修0')
+        return this.$message.error('电压范围为0')
       }
 
       const result = await recheck({
@@ -283,25 +283,6 @@ export default class Calibrate extends Vue {
       vm: this
     })
   }
-
-  // /** 离开页面前 */
-  // async beforeLeave(next: any) {
-  //   try {
-  //     const result = await calLeave()
-  //     if(result.status){
-  //       const data = result.data
-  //       if(data.isCalRun) {
-  //         const confirm = await this.$elConfirm('校准正在运行中,')
-  //         if(confirm){
-
-  //         }
-  //       }
-  //     }
-  //   } catch (err) {
-  //     console.error(err)
-  //     next()
-  //   }
-  // }
 
   /** 离开页面前如果还在运行 */
   async isRunLeave(next: any) {

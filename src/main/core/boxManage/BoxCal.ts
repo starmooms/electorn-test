@@ -229,8 +229,8 @@ export default class BoxCal {
     return list
   }
 
-  /** 校准开始前 */
-  async beforCalStart(ip: string) {
+  /** 连接工装ip */
+  async connectToolIp(ip: string) {
     if (this.nowRunQueue && this.nowRunQueue.isRun) {
       throw new Error(`${this.nowRunQueue.runTypeName} 运行中`)
     }
@@ -250,7 +250,7 @@ export default class BoxCal {
     }
 
     this.saveConfig(opts.config)
-    await this.beforCalStart(opts.config.toolIp)
+    await this.connectToolIp(opts.config.toolIp)
 
     const queue = this.createCalTypeList({
       masterId,
@@ -280,7 +280,7 @@ export default class BoxCal {
     const { masterId, slaverId, channelId, toolIp } = config
 
     this.saveConfig(config, recheckForm)
-    await this.beforCalStart(toolIp)
+    await this.connectToolIp(toolIp)
 
     const queue = this.createCalTypeList({
       masterId,

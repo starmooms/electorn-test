@@ -141,3 +141,11 @@ declare namespace Db {
     avgU: null | number
   }
 }
+
+declare namespace DbErrorT {
+  interface DeleteParams {
+    startTime?: string
+    endTime?: string
+    id?: number
+  }
+}

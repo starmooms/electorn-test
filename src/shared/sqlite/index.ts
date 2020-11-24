@@ -177,14 +177,21 @@ export default class Sqlite {
     const whereSql = where ? ` WHERE ${where}` : ''
     const orderSql = order ? ` ORDER BY ${order}` : ''
 
-    const list = await this.all<T[]>(
-      `SELECT * FROM ${tableName}${whereSql}${orderSql} LIMIT ${limit} OFFSET ${limit *
-        (page - 1)};`
-    )
     const countKey = `COUNT(*)`
     const count = await this.get(
       `SELECT ${countKey} FROM ${tableName}${whereSql};`
     )
+    const total = count[countKey]
+    const pageCount = Math.ceil(total / limit)
+    if (page > pageCount) {
+      page = pageCount
+    }
+
+    const list = await this.all<T[]>(
+      `SELECT * FROM ${tableName}${whereSql}${orderSql} LIMIT ${limit} OFFSET ${limit *
+        (page - 1)};`
+    )
+
     return {
       limit,
       page,

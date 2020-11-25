@@ -119,8 +119,7 @@ export default class TcpClient extends EventEmitter {
   waitConnect() {
     return new Promise<null>((resolve, reject) => {
       if (this.isConnect) {
-        resolve(null)
-        return
+        return resolve(null)
       }
       let timeOut: any = null
       let handleSuccess: any = null

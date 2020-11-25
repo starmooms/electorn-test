@@ -31,6 +31,7 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <ChannelSelect chType="channel" :multiple="true" v-model="form.channel" />
     </el-form>
     <div>
       <el-button type="primary" @click="start">开始校准</el-button>
@@ -45,13 +46,20 @@ import {
   U_TOOL_RANGE_OPTS
 } from '@/shared/config/calibrate'
 import { deepClone } from '@/shared/utils'
+import ChannelSelect from './ChannelSelect.vue'
+import { sortForNumber } from '@/renderer/utils/util'
 
-@Component
+@Component({
+  components: {
+    ChannelSelect
+  }
+})
 export default class ToolCal extends Vue {
   form = {
     calType: null as null | string,
     iRange: null,
-    uRange: null
+    uRange: null,
+    channel: []
   }
   claType = []
   calTypeList = deepClone(CALIBRATE_TYPE)
@@ -71,6 +79,8 @@ export default class ToolCal extends Vue {
   start() {
     if (!this.selectType || !this.selectRangeType) {
       return this.$message.error('请选选择校准类型')
+    } else if (this.form.channel.length === 0) {
+      return this.$message.error('请选选择校准通道')
     }
 
     const rangeType = this.selectRangeType
@@ -84,9 +94,10 @@ export default class ToolCal extends Vue {
     if (!rangeItem) {
       return this.$message.error(`rangeId ${rangeId} undefined`)
     }
-    this.$emit('start', {
+    this.$emit('toolCalStart', {
       selectType: this.selectType,
-      selectRange: rangeItem
+      selectRange: rangeItem,
+      channelIds: sortForNumber(this.form.channel).slice()
     })
   }
 }

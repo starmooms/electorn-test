@@ -52,7 +52,6 @@ import CalConfig from './CalConfig.vue'
 import CalRun from './CalRun.vue'
 import CalReCheck from './CalReCheck.vue'
 import CalResult from './CalResult.vue'
-// import ToolCal from './ToolCal.vue'
 import { calLeave, calStart, calStop, recheck } from '@/renderer/ipc/channel'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import ToolCalTabel from './components/ToolCalTabel.vue'
@@ -68,7 +67,6 @@ import { createRange, deepClone, TIME_FORMAT } from '@/shared/utils'
     CalReCheck,
     CalResult,
     ToolCalTabel
-    // ToolCal
   }
 })
 export default class Calibrate extends Vue {
@@ -245,7 +243,7 @@ export default class Calibrate extends Vue {
     return this.$refs.calConfig.getToolIp()
   }
 
-  toolCalStart(data: any) {
+  toolCalStart(data: CalibrateTR.ToolCalCreateCal) {
     this.$refs.toolCalTabel.createCal(data)
   }
 

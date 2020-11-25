@@ -13,60 +13,17 @@
           测试连接
         </el-button>
       </el-form-item>
-      <!-- <div>
-        <template v-if="deviceEdit.edit">
-          <el-button type="primary" @click="deviceIpEditSave">
-            保持
-          </el-button>
-          <el-button @click="deviceIpEditCanncel">取消</el-button>
-        </template>
-        <el-button v-else type="primary" @click="deviceIpEditSet">
-          编辑
-        </el-button>
-      </div> -->
     </title-box>
+
     <title-box
       class="config-item"
       size="mini"
       name="设备"
       v-show="showRunConfig"
     >
-      <el-form-item class="form-item" label="机柜">
-        <el-select v-model="form.masterId" placeholder="请选择">
-          <el-option
-            v-for="item in channelList.master"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          ></el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item class="form-item" label="丛控">
-        <el-select v-model="form.slaverId" placeholder="请选择">
-          <el-option
-            v-for="item in channelList.slaver"
-            :key="item.value"
-            :label="item.name"
-            :value="item.id"
-          ></el-option>
-        </el-select>
-      </el-form-item>
-
-      <el-form-item class="form-item" label="通道">
-        <el-select
-          v-model="form.channelId"
-          multiple
-          collapse-tags
-          placeholder="请选择"
-        >
-          <el-option
-            v-for="item in channelList.channel"
-            :key="item.value"
-            :label="item.name"
-            :value="item.id"
-          ></el-option>
-        </el-select>
-      </el-form-item>
+      <channel-select chType="master" v-model="form.masterId" />
+      <channel-select chType="slaver" v-model="form.slaverId" />
+      <channel-select chType="channel" multiple v-model="form.channelId" />
 
       <el-form-item class="form-item" label="误差标准">
         <el-select v-model="form.standard" placeholder="请选择">
@@ -101,7 +58,8 @@
         </el-select>
       </el-form-item>
     </title-box>
-    <ToolCalConfig v-show="!showRunConfig" @start="toolCalStart" />
+
+    <ToolCalConfig v-show="!showRunConfig" v-on="$listeners" />
   </el-form>
 </template>
 <script lang="ts">
@@ -116,10 +74,12 @@ import { deepClone } from '@/shared/utils'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import ToolCalConfig from './components/ToolCalConfig.vue'
 import { calCheckToolIp } from '@/renderer/ipc/channel'
+import ChannelSelect from './components/ChannelSelect.vue'
 
 @Component({
   components: {
-    ToolCalConfig
+    ToolCalConfig,
+    ChannelSelect
   }
 })
 export default class CalConfig extends Vue {
@@ -224,7 +184,7 @@ export default class CalConfig extends Vue {
 
 <style lang="scss" scoped>
 .cal-config-box {
-  width: 260px;
+  width: 280px;
   .config-item {
     width: 100%;
     .form-item {

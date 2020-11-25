@@ -99,23 +99,24 @@ export default class ToolCalTabel extends Vue {
     return parent.getToolIp()
   }
 
-  createCal({ selectType, selectRange }: CalibrateTR.ToolCalCreateCal) {
+  createCal({
+    selectType,
+    selectRange,
+    channelIds
+  }: CalibrateTR.ToolCalCreateCal) {
     const { label: calTypeName, rangeType: unit, type } = selectType
     const rangeList = selectRange.value
     this.calType = type
     this.calTypeKey = unit
 
-    const channelNum = CHANNEL_NUM.channel.num
-    const channelIds: number[] = []
     const resultList: CalibrateTR.ToolCalChannelList[] = []
     const calSampResult: CalibrateTR.ToolCalSampResult = {}
     const calAbResult: CalibrateTR.ToolCalAbResult = {}
 
-    for (let i = 0; i < channelNum; i++) {
+    channelIds.forEach(channelId => {
       const sampResult: CalibrateTR.ToolCalSampResultItem = {}
       const abResult: CalibrateTR.ToolCalAbResultChItem = {}
       let lastPoint = 0
-      channelIds.push(i)
 
       rangeList.forEach((point, index) => {
         sampResult[point] = null
@@ -130,7 +131,7 @@ export default class ToolCalTabel extends Vue {
           }
           abResult[pointIndex] = abResultItem
           resultList.push({
-            channelId: i,
+            channelId,
             calTypeName: calTypeName,
             point1: lastPoint,
             point1Name: `${lastPoint} ${unit}`,
@@ -143,9 +144,9 @@ export default class ToolCalTabel extends Vue {
         lastPoint = point
       })
 
-      calSampResult[i] = sampResult
-      calAbResult[i] = abResult
-    }
+      calSampResult[channelId] = sampResult
+      calAbResult[channelId] = abResult
+    })
 
     this.resultList = resultList
     this.calSampResult = calSampResult
@@ -212,12 +213,12 @@ export default class ToolCalTabel extends Vue {
     try {
       this.loading = true
       const computerRestul = this.computAb()
-      // if (!computerRestul.status) {
-      //   const msg = computerRestul.errorPoint.map(
-      //     item => `${item}${this.calTypeKey}`
-      //   )
-      //   return this.$message.error(`${msg.join('、')} 未采样`)
-      // }
+      if (!computerRestul.status) {
+        const msg = computerRestul.errorPoint.map(
+          item => `${item}${this.calTypeKey}`
+        )
+        return this.$message.error(`${msg.join('、')} 未采样`)
+      }
 
       const abList = computerRestul.abList
       if (abList.length === 0) {

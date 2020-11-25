@@ -183,6 +183,8 @@ export default class SortingSetting extends Vue {
   configShow = false
   historyShow = false
 
+  sampLoading = false
+
   // @Watch('form', { deep: true })
   // c(v) {
   //   console.log(v)
@@ -237,6 +239,11 @@ export default class SortingSetting extends Vue {
     return this.historyItem
       ? this.historyItem.masterIdArr.length * this.masterChTotal
       : 0
+  }
+
+  /** 当前连接中的机柜 */
+  get connectMaster() {
+    return ChannelStatus.masterConnectList
   }
 
   /** 创建数据库连接 */
@@ -298,18 +305,27 @@ export default class SortingSetting extends Vue {
   }
 
   /** 发送点灯 */
-  async lampSbmit(list: ipcReq.LampSetOpts['list']) {
-    await lampSet({
-      list
-    })
+  async lampSbmit(list: ipcReq.LampSetOpts['list'], showTips = true) {
+    if (this.sampLoading) return
+    try {
+      this.sampLoading = true
+      const result = await lampSet({
+        list
+      })
+      if (result.status && showTips) {
+        this.$message.success('点灯成功')
+      }
+    } finally {
+      this.sampLoading = false
+    }
   }
 
   /** 一键关闭所有灯 */
   async lampCloseAll() {
     const masterTotal = {}
-    for (let i = 0; i < this.masterListLen; i++) {
-      masterTotal[i] = {}
-    }
+    this.connectMaster.forEach(item => {
+      masterTotal[item.masterId] = {}
+    })
     await this.lampSbmit(masterTotal)
   }
 

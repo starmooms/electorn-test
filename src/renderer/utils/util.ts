@@ -325,6 +325,11 @@ export const startInfoFormat = (
   }
 }
 
+/** 数组排序 */
+export const sortForNumber = (arr: number[]) => {
+  return arr.sort((a, b) => a - b)
+}
+
 /** 解析路径 */
 export const PathResolve = (...args: string[]) => {
   return path.resolve(...args)

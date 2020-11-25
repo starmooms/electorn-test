@@ -79,10 +79,6 @@ export default class Sorting extends Vue {
     }
   }
 
-  mounted() {
-    document.title = '容量分选'
-  }
-
   storingResult(data: SortingT.LevelEmitResult) {
     const xTabel = this.$refs?.detailsTabel?.$refs?.xTabel
     if (xTabel) {

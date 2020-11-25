@@ -95,6 +95,7 @@ declare namespace CalibrateTR {
       label: string
       value: number[]
     }
+    channelIds: number[]
   }
 
   interface ToolCalSampResultItem {

@@ -402,7 +402,7 @@ export default class HistoryDb extends HistoryDbCom {
     featureList,
     specialList,
     changeStatusList
-  }: Port.SaveSampItem) {
+  }: SampTB.SaveSampItem) {
     let sql = ''
     try {
       const { sampData, channelInfo } = this.tables

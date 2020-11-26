@@ -17,7 +17,7 @@ import SampSaveQueue from './libs/SampSaveQueue'
 
 /** 记录采样参数 */
 interface AddSampQueue {
-  projectSamp: Port.SaveSampData
+  projectSamp: SampTB.SaveSampData
   errorList: Port.ErrorListItem[]
 }
 
@@ -28,7 +28,7 @@ type ChUpdateStatus = Partial<
 interface ReadSampParams {
   masterId: number
   readModel: BufModel
-  getProjectSamp: Port.GetProjectSamp
+  getProjectSamp: SampTB.GetProjectSamp
   createTime: string
 }
 
@@ -87,8 +87,8 @@ export default class BoxSamp {
   }
 
   async startReadSamp() {
-    const projectSamp: Port.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
-    const getProjectSamp: Port.GetProjectSamp = (projectId, key) => {
+    const projectSamp: SampTB.SaveSampData = {} // 本此读取采样返回，需要写入对应的数据库
+    const getProjectSamp: SampTB.GetProjectSamp = (projectId, key) => {
       let sampItem = projectSamp[projectId]
       if (!sampItem) {
         sampItem = {
@@ -124,7 +124,7 @@ export default class BoxSamp {
   }
 
   /** 采样数据处理完成后存储更新状态 */
-  async addSampQueue({ projectSamp, errorList }: AddSampQueue) {
+  addSampQueue({ projectSamp, errorList }: AddSampQueue) {
     // 将需要存储的采样对象，改为列表数组
     let channelStatus: Port.ChannelChangeItem[] = []
     const saveSampList = Object.entries(projectSamp).map(data => {
@@ -184,12 +184,12 @@ export default class BoxSamp {
   }
 
   /** 发送采样列表到渲染端 */
-  sendWin(masterId: number, sampList: Port.SampItem[]) {
+  sendWin(masterId: number, sampList: SampTB.SampItem[]) {
     ipcManage.send(`/port/translate/${masterId}`, { list: sampList })
   }
 
   /** 发送读采样请求 */
-  async readSamp(masterId: number, getProjectSamp: Port.GetProjectSamp) {
+  async readSamp(masterId: number, getProjectSamp: SampTB.GetProjectSamp) {
     // 发送读采样请求
     this.readSampWrite.writer('masterId', masterId)
     let resultBuf: Buffer
@@ -246,7 +246,7 @@ export default class BoxSamp {
   readSampModel(
     masterId: number,
     readModel: BufModel,
-    getProjectSamp: Port.GetProjectSamp
+    getProjectSamp: SampTB.GetProjectSamp
   ) {
     const createTime = dayjs().format(TIME_FORMAT)
 
@@ -272,7 +272,7 @@ export default class BoxSamp {
   /** 修改通道状态，并返回通道修改对象 */
   setChannel(
     channel: Port.ChannelItem,
-    samp: Port.SampItem,
+    samp: SampTB.SampItem,
     update: ChUpdateStatus
   ) {
     Object.keys(update).forEach((key: string) => {
@@ -293,13 +293,13 @@ export default class BoxSamp {
   /** 读采样返回中的采样列表 */
   readSampList({ masterId, readModel, getProjectSamp, createTime }: ReadSampParams) { // eslint-disable-line
     /** 本此读取采样返回列表 */
-    const sampList: Port.SampItem[] = []
+    const sampList: SampTB.SampItem[] = []
 
     /** 读采样列表 */
     readModel.ecahList('sampList', readItem => {
       const workerCode = readItem.readHex('workerCode')
       const errCode = readItem.readHex('errCode')
-      const samp: Port.SampItem = {
+      const samp: SampTB.SampItem = {
         masterId: masterId,
         slaverId: readItem.read('slaverId'),
         channelId: readItem.read('channelId'),
@@ -405,7 +405,7 @@ export default class BoxSamp {
     readModel.ecahList('startList', readItem => {
       const projectId = readItem.read('projectId')
       const start = getProjectSamp(projectId, 'startList')
-      const data: Port.SampStart = {
+      const data = {
         masterId,
         slaverId: readItem.read('slaverId'),
         channelId: readItem.read('channelId'),

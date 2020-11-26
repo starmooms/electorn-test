@@ -261,7 +261,7 @@ export default class History extends Vue {
   }
 
   /** 曲线点击定位 */
-  locate(samp: Port.SampItem) {
+  locate(samp: SampTB.SampItem) {
     if (this.$refs.sampList) {
       this.$refs.sampList.locate(samp)
     }

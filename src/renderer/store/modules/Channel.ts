@@ -20,12 +20,12 @@ interface ChannelMap {
   [key: string]: Port.ChannelItem
 }
 interface SampMap {
-  [key: string]: Port.SampItem
+  [key: string]: SampTB.SampItem
 }
 
 interface SetSamp {
   masterId: number
-  samp: Port.SampItem
+  samp: SampTB.SampItem
 }
 
 @Module({ dynamic: true, store, name: 'channel' })

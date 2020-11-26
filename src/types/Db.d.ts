@@ -1,6 +1,6 @@
 /** 数据库相关 */
 declare namespace Db {
-  type SaveSampList = Port.SaveSampItem
+  type SaveSampList = SampTB.SaveSampItem
   type sampList = SaveSampList['sampList']
   type startList = SaveSampList['startList']
   type endList = SaveSampList['endList']

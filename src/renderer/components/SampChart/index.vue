@@ -49,11 +49,11 @@ export default class SampChart extends Vue {
     echart: ECharts
   }
 
-  sampData: Port.SampItem[] = []
+  sampData: SampTB.SampItem[] = []
 
   chartSamp!: string | null
   polar!: any
-  selectSamp!: Port.SampItem | null
+  selectSamp!: SampTB.SampItem | null
 
   get sampChartConfig() {
     return SettingStatus.sampChartConfig
@@ -67,15 +67,6 @@ export default class SampChart extends Vue {
   @Watch('sampChartConfig', { deep: true })
   changeConfig() {
     this.refreshConfig()
-  }
-
-  checkList(list: Port.SampItem[]) {
-    return list.map(item => {
-      if (!item.createTimeStr) {
-        item.createTimeStr = item.createTime
-      }
-      return item
-    })
   }
 
   setCharts(data: any[] = []) {
@@ -215,9 +206,9 @@ export default class SampChart extends Vue {
     this.$refs.echart.mergeOptions(polar)
   }
 
-  async update(data?: Port.SampItem[]) {
+  async update(data?: SampTB.SampItem[]) {
     if (data && data.length > 0) {
-      this.sampData = [...this.sampData, ...this.checkList(data)]
+      this.sampData = [...this.sampData, ...data]
       this.$refs.echart.mergeOptions({
         dataset: {
           source: this.sampData
@@ -227,8 +218,8 @@ export default class SampChart extends Vue {
   }
 
   /** 采样数据整理 */
-  async setBaseList(list: Port.SampItem[]) {
-    this.setCharts(this.checkList(list))
+  async setBaseList(list: SampTB.SampItem[]) {
+    this.setCharts(list)
   }
 
   /** 获取Y轴配置，添加默认和show属性 */

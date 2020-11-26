@@ -29,7 +29,7 @@ declare namespace ipcReq {
   /** 读采样数据返回 */
   interface SampReadDB {
     [key: string]: {
-      [key: string]: Port.SampItem[]
+      [key: string]: SampTB.SampItem[]
     }
   }
 

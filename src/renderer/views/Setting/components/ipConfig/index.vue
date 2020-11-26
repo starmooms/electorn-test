@@ -152,7 +152,6 @@ export default class IpConfig extends Vue {
       const data = await getIpList()
       if (data.status) {
         this.list = data.data
-        console.log(this.list)
       }
     } catch (err) {
       console.error(err)

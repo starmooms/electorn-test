@@ -3,7 +3,7 @@ import logger from '../../Logger'
 import historyDbCache from '../../sqlite/HistoryDBCache'
 
 interface QueueItemData {
-  saveSampList: Port.SaveSampItem[]
+  saveSampList: SampTB.SaveSampItem[]
   channelStatus: Port.ChannelChangeItem[]
   errorList: Port.ErrorListItem[]
 }

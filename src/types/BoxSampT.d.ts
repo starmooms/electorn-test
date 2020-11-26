@@ -63,4 +63,14 @@ declare namespace SampTB {
     /** 非工步结束的特殊的结束列表 */
     specialList: SampEnd[]
   }
+
+  interface SaveSampData {
+    [projectId: string]: SaveSampItem
+  }
+
+  type GetProjectSampKey = keyof SaveSampItem
+  type GetProjectSamp = <T extends GetProjectSampKey>(
+    porjectId: number,
+    key: T
+  ) => SaveSampItem[T]
 }

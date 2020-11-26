@@ -115,7 +115,9 @@ export default class IpConfig extends Vue {
 
   @Watch('dialog')
   changeDialog() {
-    this.getIpList()
+    if (this.dialog) {
+      this.getIpList()
+    }
   }
 
   addMasterOpen(item?: IpConfigT.IpTcpItem) {

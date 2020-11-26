@@ -20,6 +20,7 @@ import configManage from './core/ConfigManage'
 import boxManage from './core/boxManage/BoxManage'
 import createSorting from './window/Sorting'
 import historyDbCache from './core/sqlite/HistoryDBCache'
+import createNowChannelWin from './window/NowChannel'
 
 /** mainWin生成后执行 */
 declare type beforeMainWin = () => void
@@ -150,7 +151,7 @@ export default class Launcher {
       switch (data.type) {
         case 'channel':
           /** 查看通道 */
-          new WorkStepSee(data.data, this.usbManager)
+          createNowChannelWin(data.data)
           break
         case 'history':
           createHistoryWin(data.data)

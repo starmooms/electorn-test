@@ -3,20 +3,24 @@ export const STANDARD_OPTS = [0.0005, 0.0002, 0.0001]
 
 /** 校准---电压量程 */
 export const U_RANGE_OPTS = [
-  { id: 0, label: '0/1/2/3/4/5 V', value: [0, 1, 2, 3, 4, 5] }
+  { id: 0, label: '0/0.5/1/2/3/4/5 V', value: [0, 0.5, 1, 2, 3, 4, 5] }
 ]
 
 /** 校准---电流量程 */
 export const I_RANGE_OPTS = [
-  { id: 0, label: '0/0.1/0.5/1/2/3 A', value: [0, 0.1, 0.5, 1, 2, 3] }
+  {
+    id: 0,
+    label: '0/0.05/0.1/0.5/1/2/3 A',
+    value: [0, 0.05, 0.1, 0.5, 1, 2, 3]
+  }
 ]
 
 /** 工装校准--电压量程 */
 export const U_TOOL_RANGE_OPTS = [
   {
     id: 0,
-    label: '0.1-0.5/0.5-1/1-2/2-3/3-4/4-5 V',
-    value: [0.1, 0.5, 2, 3, 4, 5]
+    label: '0/0.5/1/2/3/4/5 V',
+    value: [0, 0.5, 1, 2, 3, 4, 5]
   }
 ]
 
@@ -24,8 +28,8 @@ export const U_TOOL_RANGE_OPTS = [
 export const I_TOOL_RANGE_OPTS = [
   {
     id: 0,
-    label: '0-0.05/0.05-0.1/0.1-0.5/0.5-1/1-2/2-3 A',
-    value: [0.05, 0.1, 0.5, 1, 2, 3]
+    label: '0/0.05/0.1/0.5/1/2/3 A',
+    value: [0, 0.05, 0.1, 0.5, 1, 2, 3]
   }
 ]
 

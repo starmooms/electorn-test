@@ -67,6 +67,7 @@ export default class TcpClient extends EventEmitter {
     })
     tcpClient.on('connect', () => {
       this.isConnect = true
+      // tcpClient.setKeepAlive(true, 2000)
       logger.debug(`${info} 链接成功`)
     })
     tcpClient.on('close', () => {
@@ -97,19 +98,27 @@ export default class TcpClient extends EventEmitter {
     setError: (msg: string) => any,
     status: RequestStatus
   ) {
-    if (!this.isConnect) {
-      if (!this.tcpClient.connecting) {
-        this.createTcpClient()
+    const handleError = (msg: string) => {
+      if (status.isWait) {
+        setError(msg)
       }
-      await this.waitConnect()
     }
+    try {
+      if (!this.isConnect) {
+        if (!this.tcpClient.connecting) {
+          await this.createTcpClient()
+        }
+        await this.waitConnect()
+      }
 
-    if (status.isWait) {
+      if (!status.isWait) return
       this.tcpClient.write(buf, err => {
         if (err) {
-          setError(err.message)
+          handleError(err.message)
         }
       })
+    } catch (err) {
+      handleError(err.message || err)
     }
 
     return
@@ -140,7 +149,7 @@ export default class TcpClient extends EventEmitter {
         this.tcpClient.removeListener('connect', handleSuccess)
         this.tcpClient.removeListener('error', handleError)
         reject(`${this.ip} connect Time Out`)
-      }, 2000)
+      }, 3000)
     })
   }
 

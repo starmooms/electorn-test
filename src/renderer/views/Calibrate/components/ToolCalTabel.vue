@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="loading">
     <div class="tool-cal-action">
       <el-button type="primary" @click="clean">清除</el-button>
       <el-button
@@ -29,25 +29,17 @@
       <vxe-table-column field="calTypeName" title="修调类型" min-width="80"></vxe-table-column>
       <vxe-table-column field="point1Name" title="修调点" width="80"></vxe-table-column>
       <vxe-table-column :title="`采样值(${calTypeKey})`" width="90">
-        <template v-slot="{ row }">
-          {{ row.sampResult[row.point1] }}
-        </template>
+        <template v-slot="{ row }">{{ row.sampResult[row.point1] }}</template>
       </vxe-table-column>
       <vxe-table-column field="point2Name" title="修调点" width="80"></vxe-table-column>
       <vxe-table-column :title="`采样值(${calTypeKey})`" width="90">
-        <template v-slot="{ row }">
-          {{ row.sampResult[row.point2] }}
-        </template>
+        <template v-slot="{ row }">{{ row.sampResult[row.point2] }}</template>
       </vxe-table-column>
       <vxe-table-column field="a" title="A" width="80">
-        <template v-slot="{ row }">
-          {{ row.abResult.a }}
-        </template>
+        <template v-slot="{ row }">{{ row.abResult.a }}</template>
       </vxe-table-column>
       <vxe-table-column field="b" title="B" width="80">
-        <template v-slot="{ row }">
-          {{ row.abResult.b }}
-        </template>
+        <template v-slot="{ row }">{{ row.abResult.b }}</template>
       </vxe-table-column>
       <!-- eslint-enable -->
     </vxe-grid>
@@ -60,7 +52,6 @@
 <script lang="ts">
 import { calToolRead, calToolSet } from '@/renderer/ipc/channel'
 import { getVmParent } from '@/renderer/utils/util'
-import { CHANNEL_NUM } from '@/shared/config/channel'
 import { computedCalAB } from '@/shared/utils'
 import { Vue, Component } from 'vue-property-decorator'
 import Calibrate from '../index.vue'
@@ -71,32 +62,70 @@ export default class ToolCalTabel extends Vue {
   loading = false
   rangeList: number[] = []
   calTypeKey = ''
+  /** 校准类型 */
   calType = ''
-
+  /** 当前通道 */
   channelIds: number[] = []
   /** 采样结果对象 */
   calSampResult: CalibrateTR.ToolCalSampResult = {}
   /** 采样计算ab结果对象 */
   calAbResult: CalibrateTR.ToolCalAbResult = {}
+  /** 通道结果显示 */
   resultList: CalibrateTR.ToolCalChannelList[] = []
 
-  clean() {
-    Object.entries(this.calAbResult).forEach(([, abResult]) => {
-      Object.entries(abResult).forEach(([, abResultItem]) => {
-        abResultItem.a = null
-        abResultItem.b = null
-      })
-    })
-    Object.entries(this.calSampResult).forEach(([, sampResult]) => {
-      for (const key in sampResult) {
-        sampResult[key] = null
-      }
-    })
-  }
-
+  /** 获取工装ip */
   getToolIp() {
     const parent = getVmParent<Calibrate>(this, 'Calibrate')
     return parent.getToolIp()
+  }
+
+  /** 设置校准, 清除校准 */
+  async calToolSet(params: Partial<ipcReq.SetCalOpts> & { type: number }) {
+    const ip = this.getToolIp()
+    if (ip === false) return
+    const data = await calToolSet({
+      config: {
+        ip
+      },
+      setCal: {
+        masterId: -1,
+        slaverId: 0,
+        channelIds: [],
+        ...params
+      }
+    })
+    return data
+  }
+
+  async clean() {
+    if (this.loading) return
+    try {
+      this.loading = true
+      if (this.channelIds.length === 0) {
+        return this.$message.info('未生成校准')
+      }
+      const data = await this.calToolSet({
+        type: 4,
+        channelIds: this.channelIds,
+        calType: this.calType
+      })
+      if (data && data.status) {
+        Object.entries(this.calAbResult).forEach(([, abResult]) => {
+          Object.entries(abResult).forEach(([, abResultItem]) => {
+            abResultItem.a = null
+            abResultItem.b = null
+          })
+        })
+        Object.entries(this.calSampResult).forEach(([, sampResult]) => {
+          for (const key in sampResult) {
+            sampResult[key] = null
+          }
+        })
+        this.$message.success('清除成功')
+      }
+    } finally {
+      this.loading = false
+    }
   }
 
   createCal({
@@ -159,6 +188,7 @@ export default class ToolCalTabel extends Vue {
   computAb() {
     const nullPoint: any = {}
     const abList: CalibrateTB.AbListItem[] = []
+    let computedError: null | Error = null
 
     this.channelIds.forEach(channelId => {
       const abResult = this.calAbResult[channelId]
@@ -172,12 +202,17 @@ export default class ToolCalTabel extends Vue {
           const point2Samp = sampResult[point]
           const abResultItem = abResult[pointIndex]
           if (point1Samp !== null && point2Samp !== null) {
-            const { a, b } = computedCalAB(
+            const { a, b, err } = computedCalAB(
               point1Samp,
               lastPoint,
               point2Samp,
-              point
+              point,
+              true
             )
+
+            if (err) {
+              computedError = err
+            }
             abResultItem.a = a
             abResultItem.b = b
             abList.push({
@@ -201,22 +236,28 @@ export default class ToolCalTabel extends Vue {
     const errorPoint = Object.keys(nullPoint)
       .map(Number)
       .sort((a, b) => a - b)
+
+    computedError = computedError as null | Error
     return {
-      status: errorPoint.length === 0,
+      status: errorPoint.length === 0 && !computedError,
       errorPoint,
-      abList
+      abList,
+      computedError: computedError
     }
   }
 
+  /** 提交AB 值 */
   async submit() {
     if (this.loading) return
     try {
       this.loading = true
       const computerRestul = this.computAb()
       if (!computerRestul.status) {
-        const msg = computerRestul.errorPoint.map(
-          item => `${item}${this.calTypeKey}`
-        )
+        const { computedError, errorPoint } = computerRestul
+        if (computedError) {
+          return this.$message.error(computedError.message)
+        }
+        const msg = errorPoint.map(item => `${item}${this.calTypeKey}`)
         return this.$message.error(`${msg.join('、')} 未采样`)
       }
 
@@ -225,22 +266,12 @@ export default class ToolCalTabel extends Vue {
         return this.$message.info('暂无数据')
       }
 
-      const ip = this.getToolIp()
-      if (ip === false) return
-      const data = await calToolSet({
-        config: {
-          ip
-        },
-        setCal: {
-          type: 2,
-          masterId: -1,
-          slaverId: 0,
-          channelIds: [],
-          calType: this.calType,
-          abList
-        }
+      const data = await this.calToolSet({
+        type: 2,
+        calType: this.calType,
+        abList
       })
-      if (data.status) {
+      if (data && data.status) {
         this.$message.success('工装校准成功')
       }
     } finally {
@@ -280,10 +311,6 @@ export default class ToolCalTabel extends Vue {
       this.loading = false
     }
   }
-
-  // mounted() {
-  //   this.createCal()
-  // }
 }
 </script>
 <style lang="scss" scoped>

@@ -12,7 +12,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
-let beforeMainWin: any = () => {
+let beforeMainWin: (() => void) | undefined = () => {
   createProtocol('app')
 }
 
@@ -34,7 +34,7 @@ if (isDevelopment) {
     })
   }
 
-  beforeMainWin = null
+  beforeMainWin = void 0
   app.whenReady().then(async () => {
     if (isDevelopment && !process.env.IS_TEST) {
       // 下载Vue调试工具

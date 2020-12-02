@@ -300,6 +300,7 @@ export const CAL_SET_MODEL: Model[] = [
   { name: 'channelBit', bytLen: 1 },
   { name: 'calType', bytLen: 1 },
   { name: 'pointer', bytLen: 4 },
+  { name: 'pointIndex', bytLen: 1 },
   { name: 'abLen', bytLen: 1 },
   {
     name: 'abList',

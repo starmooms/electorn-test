@@ -99,7 +99,11 @@ declare namespace CalibrateTR {
   }
 
   interface ToolCalSampResultItem {
-    [point: string]: number | null
+    [point: string]: {
+      /** 1：根据AB读采样 3：忽略AB读采样 */
+      type: 1 | 3
+      value: number | null
+    }
   }
   /** 工装校准采样结果 */
   interface ToolCalSampResult {

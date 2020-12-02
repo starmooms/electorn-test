@@ -34,7 +34,7 @@ export default class BoxCal {
    *  @isCalTool 是否工装通讯
    *  */
   async setCal(opts: ipcReq.SetCalOpts, isCalTool = false) {
-    const { calType, pointer } = opts
+    const { calType, pointer, pointIndex } = opts
     let masterId = opts.masterId
     const abList = opts.abList || []
     const abListLen = abList.length
@@ -62,6 +62,9 @@ export default class BoxCal {
     if (pointer) {
       writerModel.writer('pointer', NP.times(pointer, 1000))
     }
+    if (pointIndex) {
+      writerModel.writer('pointIndex', pointIndex)
+    }
     writerModel.ecahList('abList', (writeItem, index) => {
       const abItem = abList[index]
       writeItem.writer('channelId', abItem.channelId)
@@ -73,6 +76,7 @@ export default class BoxCal {
 
     // writerModel.showAll()
     logger.debug('设置校准发送', writerModel.buf.toString('hex'))
+    writerModel.showAll()
 
     await communi.post({
       control: CONTROL_CODE.calibrateSet,

@@ -2,7 +2,7 @@
 import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import Launcher from './Launcher'
-import './core/connect/childTcp'
+// import './core/connect/childTcp'
 import logger from './core/Logger'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'

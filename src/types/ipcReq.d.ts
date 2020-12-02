@@ -194,7 +194,7 @@ declare namespace ipcReq {
     masterId: number
     slaverId: number
     channelIds: number[]
-    /** 1：读采样 2：读AB */
+    /** 1：读采样 2：读AB 3：复检读采样 */
     type: number
     calType: string
   }
@@ -217,6 +217,8 @@ declare namespace ipcReq {
     calType?: string
     /** 电压/电流(修调点) */
     pointer?: number
+    /** 修调范围 */
+    pointIndex?: number
     abList?: CalibrateTB.AbListItem[]
   }
 

@@ -98,14 +98,8 @@ class BufModel<T = any> {
         listTarget.listAction = []
         listTarget.bytLen = listBufModel.bufLength
         this.listModel.push(listTarget)
-        // logger.log(
-        //   '列表添加++++++++',
-        //   target.name,
-        //   listBufModel.bufLength * len
-        // )
         this.bufLength += listBufModel.bufLength * len
       } else {
-        // logger.debug('单项添加', target.name, target.bytLen)
         this.bufLength += target.bytLen as number
       }
     })
@@ -134,13 +128,31 @@ export class BufWriteModel {
       this.buf = opts.readBuf
         ? opts.readBuf
         : Buffer.alloc(this.bufModel.bufLength)
+
+      if (!opts.readBuf) {
+        this.writeListLen(opts.listLen)
+      }
     }
     this.createListModel()
   }
 
+  /** 写入列表帧长度 */
+  writeListLen(listLen: BufWriteModelOpts['listLen']) {
+    if (listLen) {
+      Object.entries(listLen).forEach(([key, len]) => {
+        const model = this.getTarget(key)
+        if (model.type === 'list') {
+          this.writer(model.len, len)
+        }
+      })
+    }
+  }
+
   createListModel() {
-    if (this.bufModel.listModel.length > 0) {
-      this.bufModel.listModel.forEach(item => {
+    const listModel = this.bufModel.listModel
+
+    if (listModel.length > 0) {
+      listModel.forEach(item => {
         item.listAction = []
         for (let i = 0; i < item.listLength; i++) {
           const action = new BufWriteModel({
@@ -156,6 +168,7 @@ export class BufWriteModel {
     }
   }
 
+  /** 根据属性名获取target内容 */
   getTarget(name: string) {
     const target = this.bufModel.modelTarget[name]
     if (!target) {
@@ -263,6 +276,7 @@ export class BufWriteModel {
     this.buf = Buffer.concat([this.buf, buf])
   }
 
+  /** 循环列表项 */
   ecahList(
     name: string,
     cb: (BufWriteModel: BufWriteModel, index: number) => any

@@ -36,6 +36,8 @@ export default class BoxStatus {
     const projectId = await mainDb.workStart(data)
     configManage.userConfig.set('historyFilePath', data.filePath)
     masterIds.sort((a, b) => a - b)
+    slaverIds.sort((a, b) => a - b)
+    channelIds.sort((a, b) => a - b)
 
     const writerModel = new BufModel({
       model: WORKER_STEP_MODEL,
@@ -49,8 +51,6 @@ export default class BoxStatus {
     writerModel.writerBit('channelId', channelIds)
     writerModel.writer('projectId', projectId)
     writerModel.writer('workStart', data.startId)
-    writerModel.writer('protectLen', 1)
-    writerModel.writer('workerLen', listLen)
     writerModel.ecahList('protectList', writeItem => {
       PROTECT.forEach(item => {
         writeItem.writer(item.type, data.protect[item.type] || 0)
@@ -109,23 +109,6 @@ export default class BoxStatus {
     })
     return true
   }
-
-  // readStepsInput(readItem: BufModel, key: string) {
-  //   const inputItem = WORKSTEPSINPUT[key]
-  //   const readKey = inputItem.type || key
-  //   let data = readItem.read(readKey)
-  //   if (readKey === 'loopStart') {
-  //     data += 1
-  //   } else if (readKey === 'time') {
-  //     data = data / 60
-  //   }
-  //   return {
-  //     data,
-  //     unit: inputItem.unit,
-  //     name: inputItem.name,
-  //     type: readKey
-  //   }
-  // }
 
   readStepsInputData(readItem: BufModel, key: string) {
     const inputItem = WORKSTEPSINPUT[key]
@@ -191,12 +174,6 @@ export default class BoxStatus {
     readModel.ecahList('workerList', readItem => {
       const workerItem = WORKSTEPS_MAP[readItem.readHex('workerCode')]
       if (workerItem) {
-        // const input = workerItem.input
-        // const workerArr = input.other
-        //   ? input.worker.concat(input.other)
-        //   : input.worker
-        // const worker = workerArr.map(key => this.readStepsInput(readItem, key))
-        // const limt = input.limt.map(key => this.readStepsInput(readItem, key))
         const inputAttr = workerItem.input
         const inputKey = [...inputAttr.worker, ...inputAttr.limt]
         const input = {}
@@ -210,8 +187,6 @@ export default class BoxStatus {
           type: workerItem.type,
           name: workerItem.name,
           input
-          // worker,
-          // limt
         })
       }
     })

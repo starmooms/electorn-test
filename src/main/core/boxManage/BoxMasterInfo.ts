@@ -97,7 +97,7 @@ export default class BoxMasterInfo {
     })
     const ipItem = list[index]
     if (!ipItem) {
-      throw new Error('查找不到对应项')
+      throw new Error(`IP列表中查找不到对应项 masterId:${masterId} Ip:${ip}`)
     }
     return {
       index,

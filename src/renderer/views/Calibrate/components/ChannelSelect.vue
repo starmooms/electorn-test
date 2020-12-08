@@ -13,6 +13,7 @@
           :key="item.value"
           :label="item.name"
           :value="item.id"
+          :disabled="!item.isConnect"
         ></el-option>
       </el-select>
       <el-button
@@ -49,7 +50,16 @@ export default class ChannelSelect extends Vue {
   private multiple!: boolean
 
   private get chList() {
-    return ChannelStatus.staticChList[this.chType]
+    return this.chType === 'master'
+      ? ChannelStatus.masterChStatusList
+      : ChannelStatus.staticChList[this.chType]
+    // const list = ChannelStatus.staticChList[this.chType]
+    // if (this.chType === 'master') {
+    //   return list.filter(item => {
+    //     return ChannelStatus.masterConnectList.some(item => item.id)
+    //   })
+    // }
+    // return list
   }
 
   private get selectName() {

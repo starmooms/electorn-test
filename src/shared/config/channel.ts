@@ -1,6 +1,7 @@
 interface ListItem {
   readonly id: number
   readonly name: string
+  readonly isConnect: true // 仅用于保持类型一样，不看用于平淡
 }
 interface ChannelNumItem {
   readonly num: number
@@ -32,7 +33,8 @@ const getList = (numItem: ChannelNumItem) => {
   for (let i = 0; i < numItem.num; i++) {
     list.push({
       name: `${numItem.name}${i + 1}`,
-      id: i
+      id: i,
+      isConnect: true
     })
   }
   return list

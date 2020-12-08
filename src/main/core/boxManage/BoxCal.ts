@@ -52,7 +52,6 @@ export default class BoxCal {
       }
     })
     writerModel.writer('type', opts.type) // 1：通道校准 2：设置AB值 3：工装校准 4：清除校准值
-    writerModel.writer('abLen', abListLen)
     writerModel.writer('masterId', masterId)
     writerModel.writer('slaverId', opts.slaverId)
     writerModel.writerBit('channelBit', opts.channelIds)
@@ -84,6 +83,8 @@ export default class BoxCal {
       masterId,
       requestType: reqType
     })
+    // return true
+    return
   }
 
   /**
@@ -115,6 +116,11 @@ export default class BoxCal {
       masterId,
       requestType: reqType
     })
+
+    // const resultBuf = Buffer.from(
+    //   '00000102080000000000000100000000020000000003000000000400000000050000000006000000000700001a69',
+    //   'hex'
+    // )
 
     logger.debug('读校准返回', resultBuf.toString('hex'))
 
@@ -169,12 +175,16 @@ export default class BoxCal {
   }
 
   /** 获取读校准返回, 验证参数为空报错 */
-  getCalResultSamp(result: CalibrateTB.CalResult, channelId: number) {
+  getCalResultSamp(
+    result: CalibrateTB.CalResult,
+    channelId: number,
+    type: string
+  ) {
     const item = result[channelId]
     if (item && item.samp !== null) {
       return item.samp
     }
-    throw new Error(`read cal result channel:${channelId} Error`)
+    throw new Error(`${type}读通道:${channelId + 1} 没有返回采样`)
   }
 
   /** 开始校准队列 */
@@ -264,7 +274,6 @@ export default class BoxCal {
       uRange: uRange.value
     })
 
-    // queue, channelId, this
     const runQueue = new RunPointQueue({
       boxCal: this,
       runType: 1,
@@ -319,7 +328,7 @@ export default class BoxCal {
           }
         : null
     }
-    ipcManage.send('/calibrate/pointResult', result)
+    return ipcManage.send('/calibrate/pointResult', result)
   }
 
   /** 离开页面时关闭工装 */

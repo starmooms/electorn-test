@@ -46,15 +46,15 @@ import {
   U_TOOL_RANGE_OPTS
 } from '@/shared/config/calibrate'
 import { deepClone } from '@/shared/utils'
-import ChannelSelect from './ChannelSelect.vue'
 import { sortForNumber } from '@/renderer/utils/util'
+import ChannelSelect from '../ChannelSelect.vue'
 
 @Component({
   components: {
     ChannelSelect
   }
 })
-export default class ToolCal extends Vue {
+export default class ToolCalConfig extends Vue {
   form = {
     calType: null as null | string,
     iRange: null,

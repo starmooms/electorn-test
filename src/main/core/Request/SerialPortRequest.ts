@@ -38,7 +38,7 @@ export default class SerialPortRequest {
     })
     port.pipe(parser)
     parser.on('data', buf => {
-      logger.info('串口返回数据', buf.toString('hex'))
+      // logger.info('串口返回数据', buf.toString('hex'))
       this.errorNotify.notify()
 
       const result = agreement.readData(buf)

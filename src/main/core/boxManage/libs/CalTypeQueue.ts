@@ -1,5 +1,5 @@
 import NP from 'number-precision'
-import { deepClone, TIME_FORMAT, computedCalAB } from '@/shared/utils'
+import { TIME_FORMAT, computedCalAB } from '@/shared/utils'
 import BoxCal from '../BoxCal'
 import Bluebird from 'bluebird'
 import dayjs from 'dayjs'
@@ -52,6 +52,7 @@ export default class RunPointQueue {
   slaverId: number
   channelIds: number[] = []
   runType: 1 | 5
+  readType: 1 | 3
   runTypeName = ''
   standard: number
 
@@ -81,6 +82,7 @@ export default class RunPointQueue {
     this.boxCal = boxCal
     this.standard = standard
     this.runTypeName = this.runType === 1 ? '修调' : '复检'
+    this.readType = this.runType === 1 ? 3 : 1
   }
 
   start() {
@@ -168,7 +170,7 @@ export default class RunPointQueue {
       await Bluebird.delay(2000)
       if (!this.isRun) return
       await this.pointRead()
-      await this.pointSendCheck()
+      this.pointSendCheck()
       this.next()
       return
     } catch (err) {
@@ -233,17 +235,29 @@ export default class RunPointQueue {
       masterId: this.typeNow.masterId,
       slaverId: this.typeNow.slaverId,
       channelIds: channelIds,
-      calType: this.typeNow.calType,
-      type: 1
+      calType: this.typeNow.calType
     }
     const [sampResult, actualResult] = await Promise.all([
-      this.boxCal.readCalSamp(params),
-      this.boxCal.readCalSamp(params, true)
+      this.boxCal.readCalSamp({
+        ...params,
+        type: this.readType
+      }),
+      this.boxCal.readCalSamp(
+        {
+          ...params,
+          type: 1
+        },
+        true
+      )
     ])
     channelIds.forEach(channelId => {
       const cache = this.getPointResultCache(channelId)
-      const samp = this.boxCal.getCalResultSamp(sampResult, channelId)
-      const actual = this.boxCal.getCalResultSamp(actualResult, channelId)
+      const samp = this.boxCal.getCalResultSamp(sampResult, channelId, '通道')
+      const actual = this.boxCal.getCalResultSamp(
+        actualResult,
+        channelId,
+        '工装'
+      )
       cache[pointIndex] = {
         samp,
         actual
@@ -252,7 +266,7 @@ export default class RunPointQueue {
   }
 
   /** 检查是否需要发送ab值和结果列表 */
-  async pointSendCheck() {
+  pointSendCheck() {
     if (this.runType === 1) {
       this.sendCalRunResult()
     } else if (this.runType === 5) {
@@ -261,7 +275,7 @@ export default class RunPointQueue {
   }
 
   /** 计算存储ab值，发送校准结果到页面 */
-  async sendCalRunResult() {
+  sendCalRunResult() {
     const { channelIds, pointIndex } = this.getPointNow()
     if (pointIndex > 0 && this.isRun) {
       const point1Index = pointIndex - 1
@@ -275,17 +289,22 @@ export default class RunPointQueue {
       } = this.typeNow
       const point1Name = `${pointerList[point1Index]} ${unit}`
       const point2Name = `${pointerList[pointIndex]} ${unit}`
+      let hasError: Error | null = null
 
       const list = channelIds.map(channelId => {
         const point1 = this.getPointResult(channelId, point1Index)
         const point2 = this.getPointResult(channelId, pointIndex)
 
-        const { a, b } = computedCalAB(
+        const { a, b, err } = computedCalAB(
           point1.samp,
           point1.actual,
           point2.samp,
-          point2.actual
+          point2.actual,
+          true
         )
+        if (err) {
+          hasError = err
+        }
         this.abResultList.push({
           a,
           b,
@@ -310,6 +329,10 @@ export default class RunPointQueue {
         }
       })
       this.boxCal.sendCalResult('calRunResult', list)
+
+      if (hasError) {
+        throw hasError
+      }
     }
   }
 

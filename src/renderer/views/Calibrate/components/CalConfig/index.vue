@@ -72,9 +72,9 @@ import {
 } from '@/shared/config/calibrate'
 import { deepClone } from '@/shared/utils'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
-import ToolCalConfig from './components/ToolCalConfig.vue'
 import { calCheckToolIp } from '@/renderer/ipc/channel'
-import ChannelSelect from './components/ChannelSelect.vue'
+import ToolCalConfig from './ToolCalConfig.vue'
+import ChannelSelect from '../ChannelSelect.vue'
 
 @Component({
   components: {

@@ -48,16 +48,16 @@
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
-import CalConfig from './CalConfig.vue'
-import CalRun from './CalRun.vue'
-import CalReCheck from './CalReCheck.vue'
-import CalResult from './CalResult.vue'
+import dayjs from 'dayjs'
 import { calLeave, calStart, calStop, recheck } from '@/renderer/ipc/channel'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
-import ToolCalTabel from './components/ToolCalTabel.vue'
 import { CALIBRATE_TYPE } from '@/shared/config/calibrate'
-import dayjs from 'dayjs'
 import { createRange, deepClone, TIME_FORMAT } from '@/shared/utils'
+import CalConfig from './components/CalConfig/index.vue'
+import CalRun from './components/CalRun/index.vue'
+import CalReCheck from './components/CalReCheck.vue'
+import CalResult from './components/CalResult.vue'
+import ToolCalTabel from './components/ToolCalTabel.vue'
 
 @Component({
   name: 'Calibrate',
@@ -307,10 +307,6 @@ export default class Calibrate extends Vue {
 <style lang="scss" scoped>
 .calibrate-container {
   display: flex;
-  .calibrate-l {
-    // width: 400px;
-    // background-color: red;
-  }
   .calibrate-r {
     flex: 1 1 auto;
     margin-left: 40px;

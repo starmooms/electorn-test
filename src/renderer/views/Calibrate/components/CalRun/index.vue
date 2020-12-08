@@ -3,15 +3,6 @@
     <div class="cal-action-box">
       <div>
         <CalTypeSelect v-model="calType" />
-        <!-- <el-checkbox-group class="type-select" v-model="calType" size="mini">
-          <el-checkbox
-            v-for="item in calTypeList"
-            :key="item.type"
-            :label="item.type"
-          >
-            {{ item.label }}
-          </el-checkbox>
-        </el-checkbox-group> -->
       </div>
       <div class="action-btn-box">
         <el-button type="primary" @click="start">修调</el-button>
@@ -57,21 +48,18 @@
   </div>
 </template>
 <script lang="ts">
-import { CALIBRATE_TYPE } from '@/shared/config/calibrate'
-import { deepClone } from '@/shared/utils'
 import { Vue, Component, Prop } from 'vue-property-decorator'
-import CalTypeSelect from './components/CalTypeSelect.vue'
+import CalTypeSelect from './CalTypeSelect.vue'
 
 @Component({
   components: {
     CalTypeSelect
   }
 })
-export default class CalRight extends Vue {
+export default class CalRun extends Vue {
   @Prop({ type: Array, required: true }) calResultList!: any[]
 
   calType: string[] = []
-  calTypeList = deepClone(CALIBRATE_TYPE)
 
   getCalType() {
     if (this.calType.length <= 0) {
@@ -101,21 +89,4 @@ export default class CalRight extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
-.cal-run {
-  // .type-select {
-  //   width: 200px;
-  //   display: flex;
-  //   flex-flow: row wrap;
-  //   margin-right: 20px;
-  //   .el-checkbox {
-  //     flex: 0 0 50%;
-  //     margin-right: 0;
-  //     margin-bottom: 10px;
-  //     &:nth-of-type(2n) {
-  //       margin-right: 0;
-  //     }
-  //   }
-  // }
-}
-</style>
+<style lang="scss" scoped></style>

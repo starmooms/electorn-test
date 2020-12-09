@@ -42,16 +42,17 @@ $subnav-borderCl: #6b6b6b;
 $subnav-fontCl: #fff;
 
 #nav-bar {
-  background: $subnav-bgCl;
-  color: $subnav-fontCl;
   width: 200px;
   overflow: auto;
+  color: $subnav-fontCl;
+  background: $subnav-bgCl;
 
   .nav-item {
     line-height: 40px;
-    border-bottom: 1px solid #797979;
     color: #ccc;
+    border-bottom: 1px solid #797979;
     transition: all 0.3s;
+
     a {
       display: block;
       padding-left: 10px;
@@ -61,6 +62,7 @@ $subnav-fontCl: #fff;
       color: #fff;
       background-color: #606266;
     }
+
     &:hover {
       color: #fff;
     }

@@ -169,29 +169,37 @@ export default class CalReCheck extends Vue {
 .recheck {
   .step-leng {
     margin: 0 20px;
+
     .recheck-form-item {
-      width: 450px;
       display: flex;
+      width: 450px;
       margin-bottom: 10px;
+
       ::v-deep .el-input__inner {
         padding: 0 6px;
       }
+
       .step-item {
         margin-right: 16px;
       }
+
       .range-item {
         display: flex;
+
         .el-input {
           width: 52px;
         }
+
         .unit {
           margin: 0 4px;
         }
+
         .line {
-          margin: 0px 10px;
+          margin: 0 10px;
         }
       }
     }
+
     .el-form-item {
       margin-bottom: 0;
       // &:nth-last-child(1) {

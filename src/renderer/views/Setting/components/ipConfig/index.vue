@@ -239,14 +239,17 @@ export default class IpConfig extends Vue {
 .action-box {
   margin-bottom: 20px;
 }
+
 .ip-table ::v-deep {
   .el-table--enable-row-hover .el-table__body tr:hover > td {
     background-color: transparent;
   }
+
   .el-table__row.status_3,
   .el-table__row.status_4 {
     background-color: #ffd2d2;
   }
+
   .el-table__row.status_1 {
     background-color: #e4e4e4;
   }

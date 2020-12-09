@@ -240,15 +240,16 @@ export default class History extends Vue {
 
 <style lang="scss" scoped>
 .channel-select {
-  border-bottom: 1px solid #ccc;
   padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
 }
+
 .main-box {
   height: 80vh;
 
   .pane-container {
-    overflow: hidden;
     padding: 20px;
+    overflow: hidden;
   }
 
   .left-container {

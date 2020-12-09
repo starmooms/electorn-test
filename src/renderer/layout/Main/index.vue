@@ -21,12 +21,13 @@ export default class Main extends Vue {}
 
 <style lang="scss">
 #main {
-  height: 100%;
   display: flex;
+  height: 100%;
 }
+
 .nav-left {
   flex: 1;
-  overflow: auto;
   padding: 16px 20px;
+  overflow: auto;
 }
 </style>

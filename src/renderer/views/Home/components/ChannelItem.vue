@@ -143,8 +143,9 @@ export default class ChannelItem extends Vue {
 $noConnect-cl: #ccc;
 
 .channel-item {
-  cursor: pointer;
   text-align: center;
+  cursor: pointer;
+
   &:hover {
     .channel-icon,
     .channel-text-icon {
@@ -153,47 +154,34 @@ $noConnect-cl: #ccc;
   }
 
   .channel-icon {
-    transition: all 0.2s;
-    color: $noConnect-cl;
     font-size: 40px;
+    color: $noConnect-cl;
+    transition: all 0.2s;
   }
 
   .channel-text-icon {
-    display: inline-block;
     position: relative;
     box-sizing: border-box;
-    transition: all 0.2s;
+    display: inline-block;
     font-size: 0;
+    transition: all 0.2s;
+
     .channe-b-top-icon {
       display: inline-block;
       width: 24px;
       height: 4px;
       background-color: $noConnect-cl;
     }
+
     .channel-border-icon {
+      box-sizing: border-box;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       width: 82px;
       height: 48px;
-      box-sizing: border-box;
-      border: 4px solid $noConnect-cl;
       font-size: 12px;
-    }
-  }
-  @each $status, $val in $statusColor {
-    &.#{$status} {
-      .channel-icon {
-        color: $val;
-      }
-      .channel-text-icon {
-        .channe-b-top-icon {
-          background-color: $val;
-        }
-        .channel-border-icon {
-          border-color: $val;
-        }
-      }
+      border: 4px solid $noConnect-cl;
     }
   }
 
@@ -201,13 +189,30 @@ $noConnect-cl: #ccc;
     position: absolute;
     top: 0;
     right: 50%;
-    color: $--color-error;
     margin-right: -54px;
+    color: $--color-error;
+  }
+
+  @each $status, $val in $statusColor {
+    &.#{$status} {
+      .channel-icon {
+        color: $val;
+      }
+
+      .channel-text-icon {
+        .channe-b-top-icon {
+          background-color: $val;
+        }
+
+        .channel-border-icon {
+          border-color: $val;
+        }
+      }
+    }
   }
 }
 
 .channel-box {
-  position: relative;
   /* &:hover {
     .tip-box {
       display: block;
@@ -215,35 +220,41 @@ $noConnect-cl: #ccc;
   } */
 
   $tipW: 200px;
+
+  position: relative;
+
   .tip-box {
+
+    $tipIw: 6px;
+
     position: absolute;
     top: 100%;
     left: 50%;
+    z-index: 99;
+    box-sizing: border-box;
+    width: $tipW;
+    margin-top: 8px;
+    margin-left: -($tipW/2);
     font-size: 12px;
     line-height: 1.6;
     color: #fff;
-    z-index: 99;
-    width: $tipW;
-    box-sizing: border-box;
-    margin-top: 8px;
-    margin-left: -($tipW/2);
+
     .tip-box-wrap {
-      padding: 6px;
       display: inline-block;
-      border-radius: 4px;
+      padding: 6px;
       background-color: $--color-bg-reversal;
+      border-radius: 4px;
     }
 
-    $tipIw: 6px;
-    &:after {
-      content: '';
+    &::after {
       position: absolute;
-      left: 50%;
       bottom: 100%;
+      left: 50%;
       width: 0;
       height: 0;
-      border: $tipIw solid transparent;
       margin-left: -$tipIw;
+      content: '';
+      border: $tipIw solid transparent;
       border-bottom-color: $--color-bg-reversal;
     }
   }

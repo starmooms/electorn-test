@@ -64,8 +64,8 @@ export default class ChannelInfo extends Vue {
 </script>
 <style lang="scss" scoped>
 .sorting-result {
-  width: 500px;
   box-sizing: border-box;
+  width: 500px;
   padding: 10px;
 }
 
@@ -80,6 +80,7 @@ export default class ChannelInfo extends Vue {
   th {
     padding: 0;
   }
+
   .cell {
     white-space: nowrap;
   }

@@ -190,30 +190,19 @@ export default class CalConfig extends Vue {
 <style lang="scss" scoped>
 .cal-config-box {
   width: 280px;
+
   .config-item {
     width: 100%;
+
     .form-item {
       &:last-of-type {
         margin: 0;
       }
+
       ::v-deep .el-form-item__label {
         font-size: 13px;
       }
     }
   }
-}
-
-.card {
-  color: #1289fb;
-  font-family: PingFangSC, PingFangSC-Medium;
-  height: 20px;
-  text-align: right;
-  margin-left: 6px;
-  display: flex;
-  weight: 500px;
-  border-radius: 2px;
-  line-height: 20px;
-  font-size: 16px;
-  font-weight: 500;
 }
 </style>

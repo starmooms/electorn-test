@@ -13,7 +13,7 @@
       批量删除
     </el-button>
     <div v-loading="loading">
-      <el-table :data="list" stripe style="width: 100%" border>
+      <el-table :data="list" stripe style="width: 100%;" border>
         <!-- eslint-disable -->
         <el-table-column prop="id" label="id" width="80"></el-table-column>
         <el-table-column prop="masterId" label="机柜" width="46"></el-table-column>
@@ -165,6 +165,7 @@ export default class ErrorLog extends Vue {
 .refresh-btn {
   margin-bottom: 10px;
 }
+
 .delete-btn {
   padding: 0;
 }

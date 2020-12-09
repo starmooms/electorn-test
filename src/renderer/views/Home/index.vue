@@ -280,16 +280,18 @@ export default class Home extends Vue {
   .color-box-list {
     display: flex;
     align-items: center;
+
     li {
-      margin-right: 20px;
       display: inline-flex;
       align-items: center;
+      margin-right: 20px;
+
       .color-icon {
         width: 14px;
         height: 14px;
+        margin-right: 4px;
         background-color: #ccc;
         border-radius: 4px;
-        margin-right: 4px;
       }
 
       @each $status, $val in $statusColor {
@@ -305,24 +307,29 @@ export default class Home extends Vue {
   max-width: 860px;
   cursor: pointer;
   border-bottom: 1px solid #ccc;
+
   .master-box {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    line-height: 40px;
+    justify-content: space-between;
     padding: 0 20px;
+    line-height: 40px;
   }
 }
+
 .slaver-list {
   margin: 0;
 }
+
 .slaver-item {
-  border-bottom: 1px solid #ccc;
   padding: 14px 10px;
   background-color: #eff0f1;
+  border-bottom: 1px solid #ccc;
+
   &:last-child {
     border-bottom: none;
   }
+
   .slaver-channel-box {
     display: flex;
     align-items: center;
@@ -336,28 +343,34 @@ export default class Home extends Vue {
   // }
 
   .channel-list {
-    flex: 1 0 auto;
     display: flex;
+    flex: 1 0 auto;
+
     .channel-item {
       flex: 1 0 auto;
     }
   }
 }
+
 .channel-main-box {
   padding-bottom: 40px;
 }
+
 .box-card {
   margin-top: 40px;
   overflow: initial;
+
   .box-card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
   }
+
   ::v-deep {
     .el-card__header {
       padding: 8px 20px;
     }
+
     .el-card__body {
       padding: 0;
     }

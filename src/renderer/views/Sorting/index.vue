@@ -95,6 +95,7 @@ export default class Sorting extends Vue {
 .sorting-box {
   display: flex;
   height: 100%;
+
   .l-box {
     flex: 1;
     // display: flex;
@@ -115,28 +116,31 @@ export default class Sorting extends Vue {
         overflow: auto;
       }
     }
+
     .l-b-box {
-      height: 100%;
       width: 100%;
+      height: 100%;
     }
   }
+
   .r-box {
     flex-basis: 400px;
   }
 }
 
 .show-btn {
-  height: 100%;
-  background-color: #f8f8f9;
-  flex: 0 0 10px;
-  width: 10px;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.2s;
   box-sizing: border-box;
+  display: flex;
+  flex: 0 0 10px;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 100%;
+  overflow: hidden;
   cursor: pointer;
+  background-color: #f8f8f9;
+  transition: all 0.2s;
+
   &:hover {
     border: 1px solid #989898;
   }
@@ -144,7 +148,7 @@ export default class Sorting extends Vue {
 </style>
 <style>
 #defalut {
-  padding: 0;
   height: 100%;
+  padding: 0;
 }
 </style>

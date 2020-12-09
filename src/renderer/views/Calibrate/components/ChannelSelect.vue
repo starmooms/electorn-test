@@ -94,9 +94,10 @@ export default class ChannelSelect extends Vue {
 <style lang="scss" scoped>
 .select-container {
   display: flex;
+
   .select-all {
-    white-space: nowrap;
     margin-left: 12px;
+    white-space: nowrap;
   }
 }
 </style>

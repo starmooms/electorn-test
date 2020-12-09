@@ -139,19 +139,23 @@ export default class StartInfoDialog extends Vue {
 </script>
 <style lang="scss" scoped>
 .no-data {
-  text-align: center;
   padding: 20px;
+  text-align: center;
 }
+
 .start-info-context {
   p {
     margin: 4px 0;
   }
+
   .title {
     font-weight: bold;
     color: #333;
   }
+
   .cxt-item {
     margin-top: 16px;
+
     &:first-child {
       margin: 4px 0;
     }

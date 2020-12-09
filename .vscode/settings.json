@@ -8,7 +8,8 @@
   "eslint.enable": true,
   "eslint.quiet": false, // 安静模式忽略警告
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": true,
+    "source.fixAll.stylelint": true
   },
   "eslint.validate": [
     "javascript",
@@ -16,6 +17,19 @@
     "html",
     "vue"
   ],
+  "stylelint.enable": true,
+  "stylelint.stylelintPath": "./node_modules/stylelint",
+  // "stylelint.configOverrides": {
+  //   "rules": {
+  //     "order/properties-alphabetical-order": [false, { "disableFix": false }],
+  //     // "declaration-block-no-shorthand-property-overrides": false
+  //   }
+  // },
+  // "stylelint.syntax": [""],
+  "stylelint.autoFix": true,
+  // "vetur.format.defaultFormatter.scss": "prettier",
+  // "vetur.format.defaultFormatter.css": "prettier",
+
   // "terminal.integrated.shellArgs.windows": [
   //   "-NoExit",
   //   "/c",

@@ -350,12 +350,15 @@ export default class StepTplEdit extends Vue {
   .data-save-box {
     .data-save-item {
       margin-right: 32px;
+
       .disable {
         color: #adadad;
       }
+
       .lable {
         margin-left: 10px;
       }
+
       .data-save-input {
         width: 80px;
         margin-right: 4px;
@@ -366,13 +369,16 @@ export default class StepTplEdit extends Vue {
   .steps-edit-box {
     // margin: 20px 0;
     .step-edit-set-box {
-      margin: 10px 0;
       display: flex;
+      margin: 10px 0;
+
       .set-start {
         margin-left: 10px;
+
         .set-start-input {
           display: inline;
           margin: 0 6px;
+
           ::v-deep .el-input__inner {
             width: 36px;
             padding: 0 4px;
@@ -385,9 +391,11 @@ export default class StepTplEdit extends Vue {
   .data-feat-box {
     .data-feat-form {
       display: flex;
+
       .feat-form-item {
         margin-right: 14px;
       }
+
       ::v-deep {
         .el-form-item__content {
           width: 80px;
@@ -398,6 +406,7 @@ export default class StepTplEdit extends Vue {
 
   .step-list-tabel {
     background-color: #f5f7fa;
+
     ::v-deep {
       .el-table,
       .el-table tr,
@@ -405,6 +414,7 @@ export default class StepTplEdit extends Vue {
       .el-table--enable-row-transition .el-table__body td {
         background-color: transparent;
       }
+
       .el-table td,
       .el-table th {
         vertical-align: top;
@@ -416,9 +426,11 @@ export default class StepTplEdit extends Vue {
       flex-flow: row wrap;
       align-items: center;
       margin-bottom: -10px;
+
       .input-item {
         flex: 0 0 33.33%;
         margin-bottom: 10px;
+
         .input-name {
           display: inline-block;
           width: 90px;

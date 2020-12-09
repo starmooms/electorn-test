@@ -93,6 +93,7 @@ export default class UpdateForm extends Vue {
 .limt-form-item {
   width: 420px;
 }
+
 .select-master {
   width: 246px;
 }

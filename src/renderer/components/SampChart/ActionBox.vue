@@ -176,6 +176,7 @@ export default class Pane extends Vue {
   //   display: inline-block;
   // }
 }
+
 .chart-config-dialog {
   .form-confg-item {
     > ::v-deep .el-form-item__label {
@@ -185,12 +186,15 @@ export default class Pane extends Vue {
 
   .limt-box {
     display: flex;
+
     ::v-deep .el-form-item {
       display: flex;
       justify-content: flex-start;
+
       .el-form-item__label {
         width: 60px;
       }
+
       .el-form-item__content {
         width: 100px;
       }

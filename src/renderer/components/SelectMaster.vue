@@ -85,33 +85,34 @@ export default class SelectMaster extends Vue {
   display: flex;
   flex-flow: row wrap;
   border: 1px solid #ccc;
-  border-bottom: none;
+  border-bottom: 0;
 
   .master-group-item {
     flex: 10%;
 
-    &:nth-of-type(10n + 1):after {
-      content: '';
+    &:nth-of-type(10n + 1)::after {
       position: absolute;
       bottom: 0;
+      z-index: 99;
       width: 1000%;
       height: 1px;
-      background: #ccc;
-      z-index: 99;
       pointer-events: none;
+      content: '';
+      background: #ccc;
     }
+
     &:nth-of-type(10n) {
       .el-radio-button__inner,
       .el-checkbox-button__inner {
-        border: none;
+        border: 0;
       }
     }
 
     .el-radio-button__inner,
     .el-checkbox-button__inner {
-      display: block;
       box-sizing: border-box;
-      border: none;
+      display: block;
+      border: 0;
       border-right: 1px solid #ccc;
       border-radius: 0;
       transition: none;

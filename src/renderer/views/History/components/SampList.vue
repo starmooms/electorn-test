@@ -32,7 +32,8 @@
             </div>
             <div
               v-if="sampData.length === 0"
-              style="text-align: center;padding:10px;"
+              style="padding: 10px;
+  text-align: center;"
             >
               暂无数据
             </div>
@@ -280,22 +281,26 @@ $td-h: 24px;
 
 .virtual-table {
   border: 1px solid #dcdfe6;
+
   .th-item {
     display: flex;
     align-items: center;
+
     &.even {
       background-color: #f5f7fa;
     }
+
     .th-td {
-      flex: none;
+      position: relative;
       box-sizing: border-box;
+      flex: none;
+      height: $td-h;
       padding-left: 10px;
+      font-size: 12px;
+      line-height: $td-h;
       border-right: 1px solid #dcdfe6;
       border-bottom: 1px solid #dcdfe6;
-      font-size: 12px;
-      position: relative;
-      height: $td-h;
-      line-height: $td-h;
+
       /* &:after {
         content: '';
         position: absolute;
@@ -310,10 +315,10 @@ $td-h: 24px;
       }
 
       .td-text {
-        line-height: 1.2;
         width: 100%;
-        word-wrap: break-word;
+        line-height: 1.2;
         word-break: break-all;
+        word-wrap: break-word;
       }
     }
   }
@@ -330,9 +335,7 @@ $td-h: 24px;
 
 .samp-table {
   .th-item,
-  ::v-deep
-    .vue-recycle-scroller.direction-vertical
-    .vue-recycle-scroller__item-wrapper {
+  ::v-deep .vue-recycle-scroller.direction-vertical .vue-recycle-scroller__item-wrapper {
     min-width: 742px;
   }
 
@@ -341,9 +344,11 @@ $td-h: 24px;
     top: 0;
     z-index: 99;
   }
+
   .th-head {
     .th-item {
       background-color: #fff;
+
       .td-extend {
         background-color: transparent;
       }
@@ -352,20 +357,24 @@ $td-h: 24px;
 
   .th-item {
     padding-right: 0;
+
     .th-td {
       // flex: 1 0;
       // flex-grow: 1;
       // box-sizing: border-box;
     }
+
     .td-date {
       flex-grow: 1;
       min-width: 80px;
     }
+
     .td-index {
       width: 36px;
-      text-align: center;
       padding-left: 0;
+      text-align: center;
     }
+
     .td-u,
     .td-i,
     .td-vol,
@@ -374,6 +383,7 @@ $td-h: 24px;
     .td-step-time {
       width: 60px;
     }
+
     .td-work,
     .td-endStatus {
       width: 100px;
@@ -382,18 +392,19 @@ $td-h: 24px;
     .td-extend {
       width: 24px;
       min-width: 24px;
-      background-color: $oBackground;
-      text-align: center;
       padding-left: 0;
+      text-align: center;
+      background-color: $oBackground;
     }
+
     .td-step-msg {
       flex-grow: 1;
     }
   }
 
   .th-item.spam-step {
-    background-color: $oBackground;
     display: flex;
+    background-color: $oBackground;
 
     .th-td {
       height: 26px;
@@ -410,11 +421,12 @@ $td-h: 24px;
   .active {
     .th-item,
     .th-item .td-extend {
-      background-color: #409eff;
       color: #fff;
+      background-color: #409eff;
     }
   }
 }
+
 .table-box {
   min-width: 400px;
 }

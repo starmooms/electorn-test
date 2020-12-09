@@ -286,16 +286,20 @@ export default class LevelDialog extends Vue {
 
   .main-l {
     flex: 0 0 150px;
+
     .level-check {
       display: block;
+
       &.feature {
         display: inline-block;
       }
     }
   }
+
   .main-r {
     flex: 1 1 auto;
     overflow: auto;
+
     .action-box {
       margin-bottom: 10px;
     }

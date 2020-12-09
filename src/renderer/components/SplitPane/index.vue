@@ -127,26 +127,26 @@ export default class SplitPane extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.clearfix:after {
-  visibility: hidden;
+.clearfix::after {
   display: block;
-  font-size: 0;
-  content: ' ';
-  clear: both;
   height: 0;
+  clear: both;
+  font-size: 0;
+  visibility: hidden;
+  content: ' ';
 }
 
 .vue-splitter-container {
-  height: 100%;
   position: relative;
+  height: 100%;
 }
 
 .vue-splitter-container-mask {
-  z-index: 9999;
-  width: 100%;
-  height: 100%;
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 9999;
+  width: 100%;
+  height: 100%;
 }
 </style>

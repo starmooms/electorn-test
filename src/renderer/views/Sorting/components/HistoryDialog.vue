@@ -42,7 +42,7 @@
           ref="historyTabel"
           :data="list"
           stripe
-          style="width: 100%"
+          style="width: 100%;"
           height="52vh"
           border
         >
@@ -254,6 +254,7 @@ export default class HistoryDialog extends Vue {
 .filter-box {
   margin-bottom: 20px;
 }
+
 .history-page {
   padding: 0;
   margin-top: 20px;

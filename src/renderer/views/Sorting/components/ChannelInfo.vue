@@ -55,43 +55,49 @@ export default class ChannelInfo extends Vue {
 </script>
 <style lang="scss" scoped>
 .channel-info {
-  width: 100%;
-  height: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-flow: column;
+  width: 100%;
+  height: 100%;
   padding: 4px;
-  box-sizing: border-box;
 }
 
 .channel-slaver-box {
-  margin-left: 20px;
   margin-bottom: 6px;
+  margin-left: 20px;
   line-height: 14px;
+
   .channel-row {
     text-align: center;
   }
 }
 
 .channel-channel-box {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-flow: column;
+
   .channel-id-item {
-    flex: 1;
     display: flex;
+    flex: 1;
     align-items: center;
     margin-bottom: 6px;
+
     .channel-id {
       width: 20px;
       text-align: center;
     }
+
     .channel-row-box {
       flex: 1 0;
       height: 100%;
+
       .channel-status {
-        height: 100%;
         box-sizing: border-box;
+        height: 100%;
         border: 1px solid #333;
+
         &.action {
           background-color: red;
         }
@@ -103,10 +109,12 @@ export default class ChannelInfo extends Vue {
 .channel-row-box {
   display: flex;
   margin: 0;
+
   .channel-row {
     flex: 1 1;
     margin-left: 2px;
     overflow: hidden;
+
     &:nth-child(9n) {
       margin-left: 6px;
     }

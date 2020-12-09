@@ -193,23 +193,29 @@ export default class SlaverDetails extends Vue {
   margin-bottom: 20px;
 
   .action-box {
-    margin-top: 20px;
     display: flex;
     justify-content: flex-end;
+    margin-top: 20px;
   }
 
   .channel-list {
     display: flex;
     flex-flow: row wrap;
+
     .item {
+
       @include border-line;
-      background-color: #dcdcdc;
+
       margin-top: 20px;
+      background-color: #dcdcdc;
 
       .item-box {
-        padding: 6px;
-        box-sizing: border-box;
+
         @include border-line(border-bottom);
+
+        box-sizing: border-box;
+        padding: 6px;
+
         &:last-child {
           border-bottom: none;
         }
@@ -217,8 +223,8 @@ export default class SlaverDetails extends Vue {
 
       .title-box {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
 
         .tit {
           margin: 0;
@@ -227,31 +233,34 @@ export default class SlaverDetails extends Vue {
 
       .msg-box {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        font-size: 12px;
-        font-weight: bold;
+        justify-content: space-between;
         height: 76px;
         overflow: auto;
+        font-size: 12px;
+        font-weight: bold;
+
         p {
           margin: 0;
         }
+
         .msg-l {
           span {
             margin-right: 10px;
             line-height: 1.4;
           }
         }
+
         .msg-r {
           .now-txt {
-            color: #fff;
-            font-size: 14px;
             display: inline-block;
-            padding: 0 5px;
-            border-radius: 4px;
             height: 20px;
+            padding: 0 5px;
+            font-size: 14px;
             line-height: 19px;
+            color: #fff;
             letter-spacing: 2px;
+            border-radius: 4px;
           }
         }
 
@@ -263,25 +272,28 @@ export default class SlaverDetails extends Vue {
 
       .step-box {
         height: 200px;
-        overflow: auto;
         padding: 6px 0;
+        overflow: auto;
+
         .step-no-list {
           text-align: center;
         }
 
         .step-list {
-          float: left;
           box-sizing: border-box;
+          float: left;
+
           .step-item {
-            white-space: nowrap;
-            line-height: 24px;
+            box-sizing: border-box;
             display: inline-block;
             min-width: 100%;
             padding: 0 6px;
-            box-sizing: border-box;
+            line-height: 24px;
+            white-space: nowrap;
+
             &.active {
-              background-color: #67c23a;
               color: #fff;
+              background-color: #67c23a;
             }
           }
         }
@@ -298,8 +310,8 @@ export default class SlaverDetails extends Vue {
           }
 
           .step-box .step-list .step-item.active {
-            background-color: $val;
             color: #fff;
+            background-color: $val;
           }
         }
       }

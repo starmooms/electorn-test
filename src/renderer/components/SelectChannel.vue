@@ -102,6 +102,7 @@ export default class SelectChannel extends Vue {
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
+
   .slaver-select-item {
     flex: 0 0 12.5%;
     margin-right: 0;

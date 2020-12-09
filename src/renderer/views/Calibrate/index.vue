@@ -307,15 +307,17 @@ export default class Calibrate extends Vue {
 <style lang="scss" scoped>
 .calibrate-container {
   display: flex;
+
   .calibrate-r {
     flex: 1 1 auto;
     margin-left: 40px;
     overflow: hidden;
   }
+
   .cal-action-box {
     display: flex;
-    margin-bottom: 8px;
     margin-top: 14px;
+    margin-bottom: 8px;
   }
 }
 </style>
@@ -323,8 +325,8 @@ export default class Calibrate extends Vue {
 .calibrate-container {
   .cal-action-box {
     display: flex;
-    margin-bottom: 8px;
     margin-top: 14px;
+    margin-bottom: 8px;
 
     .title {
       margin: 0;
@@ -335,12 +337,15 @@ export default class Calibrate extends Vue {
       display: flex;
       flex-flow: row wrap;
       width: 150px;
+
       .el-button {
         margin: 0;
         margin-bottom: 10px;
+
         &:nth-of-type(2n + 1) {
           margin-right: 20px;
         }
+
         &:last-child,
         &:nth-last-of-type(2) {
           margin-bottom: 0;
@@ -351,9 +356,11 @@ export default class Calibrate extends Vue {
 
   .status-icon {
     font-size: 18px;
+
     &.success {
       color: #67c23a;
     }
+
     &.error {
       color: #f56c6c;
     }

@@ -1,5 +1,5 @@
 <template>
-  <div style="display:none;">
+  <div style="display: none;">
     <file-select
       ref="fileSelect"
       :isSave="true"

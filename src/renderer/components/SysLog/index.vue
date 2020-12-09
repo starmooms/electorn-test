@@ -150,6 +150,7 @@ export default class SysLog extends Vue {
 .syslog-dialog {
   ::v-deep & {
     min-width: 800px;
+
     .el-dialog__body {
       padding: 10px 20px;
     }

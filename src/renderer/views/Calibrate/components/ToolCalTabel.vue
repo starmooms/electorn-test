@@ -424,24 +424,29 @@ export default class ToolCalTabel extends Vue {
 <style lang="scss" scoped>
 .tool-cal-action {
   margin: 20px 0;
+
   .tool-switch {
     margin-left: 20px;
   }
+
   .samp-btn-box {
     margin-top: 10px;
   }
+
   .el-button {
     padding: 7px 6px;
   }
 }
+
 .tool-cal-table {
   ::v-deep .form-ab {
     background-color: #f7f7f7;
   }
 }
+
 .submit-box {
   display: flex;
-  margin-top: 20px;
   justify-content: flex-end;
+  margin-top: 20px;
 }
 </style>

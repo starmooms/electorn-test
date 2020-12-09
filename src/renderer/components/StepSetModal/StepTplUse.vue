@@ -164,6 +164,7 @@ export default class StepTplUse extends Vue {
 <style lang="scss" scoped>
 .name-box {
   display: flex;
+
   .edit-input {
     margin-right: 14px;
   }

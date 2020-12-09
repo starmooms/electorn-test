@@ -95,11 +95,13 @@ export default class BatchModal extends Vue {
 .batch-dialog {
   .batch-transfer {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+
     .right-footer {
       padding: 0 10px;
     }
+
     ::v-deep {
       .el-transfer-panel__footer {
         display: flex;

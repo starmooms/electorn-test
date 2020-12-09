@@ -15,14 +15,15 @@ export default class TitleBox extends Vue {
 
 <style lang="scss" scoped>
 .title-box {
-  border: 1px solid $--border-color-base;
   position: relative;
+  box-sizing: border-box;
   padding: 30px 20px 10px;
   margin-top: 30px;
-  box-sizing: border-box;
+  border: 1px solid $--border-color-base;
 
   &.mini {
     padding: 18px 10px 10px;
+
     .title-box-txt {
       padding: 4px;
     }
@@ -32,11 +33,12 @@ export default class TitleBox extends Vue {
     position: absolute;
     top: 0;
     left: 20px;
-    transform: translate(0, -50%);
+    padding: 10px;
     margin: 0;
     background-color: #fff;
-    padding: 10px;
+    transform: translate(0, -50%);
   }
+
   /* .title-box-txt {
     position: absolute;
     top: 0;

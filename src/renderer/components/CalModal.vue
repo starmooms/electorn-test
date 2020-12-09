@@ -69,13 +69,15 @@ export default class CalModal extends Vue {
 
 <style lang="scss">
 .cal-form {
-  height: 40vh;
-  overflow: auto;
   display: flex;
   flex-flow: row wrap;
+  height: 40vh;
+  overflow: auto;
+
   .form-item {
     flex: 0 1 50%;
     margin-right: 0;
+
     .el-form-item__content {
       width: 140px;
     }

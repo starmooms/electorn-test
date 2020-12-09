@@ -472,42 +472,45 @@ export default class SortingSetting extends Vue {
 </script>
 <style lang="scss" scoped>
 .sorting-setting {
-  height: 100%;
   box-sizing: border-box;
   display: flex;
   flex-flow: column;
+  height: 100%;
+
   .box-title {
     position: relative;
+
     .title {
-      border: 1px solid #ccc;
-      border-bottom: none;
-      margin: 0;
       display: inline-block;
       padding: 2px 10px;
+      margin: 0;
       background-color: #fff;
+      border: 1px solid #ccc;
+      border-bottom: none;
 
-      &:after {
-        content: '';
+      &::after {
         position: absolute;
-        left: 0;
         right: 0;
         bottom: 0;
-        height: 1px;
-        background-color: #ccc;
+        left: 0;
         z-index: -1;
+        height: 1px;
+        content: '';
+        background-color: #ccc;
       }
     }
   }
 
   .box-content {
     flex: 1;
+    overflow: auto;
     border: 1px solid #ccc;
     border-top: none;
-    overflow: auto;
+
     .box-item {
+      padding: 6px 12px;
       margin: 2px;
       margin-bottom: 10px;
-      padding: 6px 12px;
       border: 1px solid #b3b3b3;
     }
   }
@@ -517,15 +520,19 @@ export default class SortingSetting extends Vue {
   .historySelect {
     cursor: pointer;
   }
+
   .el-form-item {
     margin-bottom: 6px;
   }
+
   .form-title {
     margin-bottom: 6px;
   }
+
   .form-flex-item {
     ::v-deep .el-form-item__content {
       display: flex;
+
       .el-select {
         flex: 1;
         margin-right: 6px;
@@ -545,23 +552,24 @@ export default class SortingSetting extends Vue {
     margin-left: -10px;
 
     .master-item {
+      box-sizing: border-box;
       flex: 0 0 14.28%;
       padding-left: 10px;
-      box-sizing: border-box;
       margin-bottom: 10px;
 
       .master-box {
-        background-color: #a5a5a5;
-        font-weight: bold;
+        box-sizing: border-box;
+        padding: 2px 0;
         font-style: oblique;
+        font-weight: bold;
         text-align: center;
         cursor: pointer;
-        padding: 2px 0;
+        background-color: #a5a5a5;
         border: 2px solid #969696;
-        box-sizing: border-box;
 
         &.active {
           background-color: #fff;
+
           &.select {
             background-color: #0db2f9;
           }
@@ -574,13 +582,15 @@ export default class SortingSetting extends Vue {
     margin-top: -8px;
 
     .input-item {
-      font-size: 12px;
       display: flex;
       align-items: center;
       margin-bottom: 6px;
+      font-size: 12px;
+
       label {
         margin-left: 4px;
       }
+
       .input-val {
         width: 36%;
       }
@@ -589,8 +599,10 @@ export default class SortingSetting extends Vue {
     .condutc-input {
       display: flex;
       flex-flow: row wrap;
+
       .input-item {
         flex-basis: 50%;
+
         label {
           flex-basis: 64px;
         }

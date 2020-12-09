@@ -9,6 +9,7 @@ declare namespace CalibrateT {
     standard: number
     uRangeId: number
     iRangeId: number
+    sampTime: number
   }
 
   /** 校准设置表单 */

@@ -18,6 +18,7 @@ import {
 import ipcManage from '../IpcManage'
 import configManage from '../ConfigManage'
 import RunPointQueue, { TypeQueueItem } from './libs/CalTypeQueue'
+import handleError from '@/shared/config/handleError'
 
 /** 机柜校准控制 */
 export default class BoxCal {
@@ -75,7 +76,6 @@ export default class BoxCal {
 
     // writerModel.showAll()
     logger.debug('设置校准发送', writerModel.buf.toString('hex'))
-    writerModel.showAll()
 
     await communi.post({
       control: CONTROL_CODE.calibrateSet,
@@ -190,7 +190,7 @@ export default class BoxCal {
   /** 开始校准队列 */
   setCalRunStatus(queue: RunPointQueue) {
     if (this.isCalRun === true) {
-      throw new Error('Cal is Run now')
+      throw new handleError.TipsError(`修调正在运行中`)
     }
     this.isCalRun = true
     this.nowRunQueue = queue
@@ -281,7 +281,8 @@ export default class BoxCal {
       standard: opts.config.standard,
       masterId,
       slaverId,
-      channelIds: channelId
+      channelIds: channelId,
+      sampTime: opts.config.sampTime
     })
     this.setCalRunStatus(runQueue)
     return true
@@ -309,7 +310,8 @@ export default class BoxCal {
       standard: config.standard,
       masterId,
       slaverId,
-      channelIds: channelId
+      channelIds: channelId,
+      sampTime: opts.config.sampTime
     })
     this.setCalRunStatus(runQueue)
     return true

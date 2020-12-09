@@ -79,9 +79,8 @@ class IpcManage {
             msg = err.message
             break
           default:
-            // 未知错误
             logger.error('handle 未知错误', err)
-            msg = err.message
+            msg = err.message // 未知错误
             break
         }
         return {

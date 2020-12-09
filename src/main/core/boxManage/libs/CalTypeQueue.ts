@@ -41,6 +41,7 @@ declare type Params = Pick<
   | 'channelIds'
   | 'boxCal'
   | 'standard'
+  | 'sampTime'
 >
 
 /** 修调点队列 */
@@ -55,6 +56,7 @@ export default class RunPointQueue {
   readType: 1 | 3
   runTypeName = ''
   standard: number
+  sampTime: number
 
   pointQueue: PointQueueItem[] = []
   pointNow: PointQueueItem | null = null
@@ -72,7 +74,8 @@ export default class RunPointQueue {
     channelIds,
     boxCal,
     runType,
-    standard
+    standard,
+    sampTime
   }: Params) {
     this.runType = runType
     this.typeList = typeList
@@ -81,16 +84,19 @@ export default class RunPointQueue {
     this.channelIds = channelIds
     this.boxCal = boxCal
     this.standard = standard
+    this.sampTime = sampTime
     this.runTypeName = this.runType === 1 ? '修调' : '复检'
     this.readType = this.runType === 1 ? 3 : 1
   }
 
+  /** 开始 */
   start() {
     this.isRun = true
     this.next()
     this.boxCal.sendCalResult('info', null)
   }
 
+  /** 结束 */
   async end(isSuccess = false) {
     if (this.isRun === false) return
     this.isRun = false
@@ -104,6 +110,7 @@ export default class RunPointQueue {
     this.boxCal.stopCalEmit()
   }
 
+  /** 停止 */
   async stop() {
     if (this.isRun === false) return
     await this.end()
@@ -114,6 +121,7 @@ export default class RunPointQueue {
     return
   }
 
+  /** 结束并发送错误到页面 */
   setError(err: Error) {
     logger.error(err)
     this.end()
@@ -144,13 +152,10 @@ export default class RunPointQueue {
   /** 获取调修点结果 */
   getPointResult(channelId: number, pointIndex: number) {
     const cache = this.getPointResultCache(channelId)
-    if (cache) {
-      const result = cache[pointIndex]
-      if (result) {
-        return result
-      }
+    if (!cache || !cache[pointIndex]) {
+      throw new Error(`getPointerResult Error ${channelId}_${pointIndex}`)
     }
-    throw new Error(`pointerResult Error ${channelId}_${pointIndex}`)
+    return cache[pointIndex]
   }
 
   /** 清空调修点结果 */
@@ -167,7 +172,7 @@ export default class RunPointQueue {
       }
       this.pointNow = this.pointQueue.shift()!
       await this.pointSet()
-      await Bluebird.delay(2000)
+      await Bluebird.delay(this.sampTime * 1000)
       if (!this.isRun) return
       await this.pointRead()
       this.pointSendCheck()

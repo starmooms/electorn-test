@@ -57,6 +57,10 @@
           ></el-option>
         </el-select>
       </el-form-item>
+
+      <el-form-item class="form-item" label="采样时间(s)">
+        <el-input v-model="form.sampTime"></el-input>
+      </el-form-item>
     </title-box>
 
     <ToolCalConfig v-show="!showRunConfig" v-on="$listeners" />
@@ -97,7 +101,8 @@ export default class CalConfig extends Vue {
     channelId: [],
     standard: this.standardOpts[0],
     uRangeId: 0,
-    iRangeId: 0
+    iRangeId: 0,
+    sampTime: 5
   }
 
   toolIpLoading = false
@@ -191,7 +196,24 @@ export default class CalConfig extends Vue {
       &:last-of-type {
         margin: 0;
       }
+      ::v-deep .el-form-item__label {
+        font-size: 13px;
+      }
     }
   }
+}
+
+.card {
+  color: #1289fb;
+  font-family: PingFangSC, PingFangSC-Medium;
+  height: 20px;
+  text-align: right;
+  margin-left: 6px;
+  display: flex;
+  weight: 500px;
+  border-radius: 2px;
+  line-height: 20px;
+  font-size: 16px;
+  font-weight: 500;
 }
 </style>

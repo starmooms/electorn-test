@@ -26,7 +26,8 @@ const userConfigDefault: StoreT.UserConfg = {
       channelId: [],
       standard: 0.0005,
       uRangeId: 0,
-      iRangeId: 0
+      iRangeId: 0,
+      sampTime: 5
     },
     recheckForm: {
       IStep: null,

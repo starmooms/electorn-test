@@ -6,13 +6,13 @@
       :visible.sync="diolog"
       width="800px"
     >
-      <select-channel
+      <SelectChannel
         ref="SelectChannel"
         is-checkbox-master
         :master-id.sync="masterIdList"
         :slaver-id.sync="slaverId"
         :channel-id.sync="channelId"
-      ></select-channel>
+      ></SelectChannel>
 
       <div slot="footer">
         <el-button @click="diolog = false">取消</el-button>

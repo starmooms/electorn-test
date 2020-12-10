@@ -1,11 +1,11 @@
 <template>
   <div v-loading="loading" class="sorting-box">
     <div class="l-box">
-      <split-pane class="main-box" split="horizontal" :default-percent="76">
+      <SplitPane class="main-box" split="horizontal" :default-percent="76">
         <template slot="paneL">
           <div class="l-t-box">
             <div class="l-t-l">
-              <channel-info
+              <ChannelInfo
                 ref="channelInfo"
                 :master-id="actionMasterId"
                 :lamp-result="lampResult"
@@ -15,7 +15,7 @@
               <span>></span>
             </div>
             <div v-show="show.setting" class="l-t-r">
-              <sorting-setting
+              <SortingSetting
                 :action-master-id.sync="actionMasterId"
                 :loading.sync="loading"
                 @storingResult="storingResult"
@@ -25,16 +25,16 @@
         </template>
         <template slot="paneR">
           <div class="l-b-box">
-            <details-tabel ref="detailsTabel" />
+            <DetailsTabel ref="detailsTabel" />
           </div>
         </template>
-      </split-pane>
+      </SplitPane>
     </div>
     <div class="show-btn" @click="setShow('result')">
       <span>></span>
     </div>
     <div v-show="show.result" class="r-box">
-      <result ref="result" :level-result="levelResult" />
+      <Result ref="result" :level-result="levelResult" />
     </div>
   </div>
 </template>

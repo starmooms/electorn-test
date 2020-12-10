@@ -6,7 +6,7 @@
       <el-button type="primary" @click="handleExport">导出Excel</el-button>
     </div>
     <div class="samp-table virtual-table">
-      <dynamic-scroller
+      <DynamicScroller
         ref="virtualScroll"
         class="th-body spam-table"
         key-field="sIndex"
@@ -40,7 +40,7 @@
           </div>
         </template>
         <template v-slot="{ item, index, active }">
-          <dynamic-scroller-item
+          <DynamicScrollerItem
             :item="item"
             :active="active"
             :data-index="index"
@@ -54,11 +54,11 @@
             >
               <div class="th-td td-index"></div>
               <div class="th-td td-extend">
-                <svg-icon
+                <SvgIcon
                   class="icon"
                   :icon-class="item.show ? 'extend-hide' : 'extend-show'"
                   @click="stepSubSet(item, index)"
-                ></svg-icon>
+                ></SvgIcon>
               </div>
 
               <div class="th-td td-step-msg">
@@ -92,12 +92,12 @@
                 <span>{{ item.createTimeStr }}</span>
               </div>
             </div>
-          </dynamic-scroller-item>
+          </DynamicScrollerItem>
         </template>
-      </dynamic-scroller>
+      </DynamicScroller>
     </div>
 
-    <export-excel ref="exportExcel" />
+    <ExportExcel ref="exportExcel" />
   </div>
 </template>
 <script lang="ts">

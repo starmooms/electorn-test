@@ -5,29 +5,29 @@
     @mouseup="onMouseUp"
     @mousemove="onMouseMove"
   >
-    <pane
+    <Pane
       class="splitter-pane splitter-paneL"
       :split="split"
       :style="{ [type]: percent + '%' }"
     >
       <slot name="paneL"></slot>
-    </pane>
+    </Pane>
 
-    <resizer
+    <Resizer
       :class-name="className"
       :style="{ [resizeType]: percent + '%' }"
       :split="split"
       @mousedown.native="onMouseDown"
       @click.native="onClick"
-    ></resizer>
+    ></Resizer>
 
-    <pane
+    <Pane
       class="splitter-pane splitter-paneR"
       :split="split"
       :style="{ [type]: 100 - percent + '%' }"
     >
       <slot name="paneR"></slot>
-    </pane>
+    </Pane>
     <div v-if="active" class="vue-splitter-container-mask"></div>
   </div>
 </template>

@@ -28,11 +28,11 @@
             <el-button type="primary" @click="onSearch">查询</el-button>
           </el-form-item>
           <el-form-item>
-            <file-select open-type="file" @change="importHistory">
+            <FileSelect open-type="file" @change="importHistory">
               <el-button type="primary">
                 导入外部文件
               </el-button>
-            </file-select>
+            </FileSelect>
           </el-form-item>
 
           <!-- <el-button type="primary" @click="onSearch">导入外部文件</el-button> -->
@@ -64,7 +64,7 @@
             <!-- eslint-enable -->
         </el-table>
 
-        <pagination
+        <Pagination
           v-show="total > 0"
           ref="Pagination"
           class="history-page"

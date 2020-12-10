@@ -18,11 +18,11 @@
           查看系统日志
         </el-button>
         <div class="select-file-btn">
-          <file-select open-type="file" @change="importHistory">
+          <FileSelect open-type="file" @change="importHistory">
             <el-button type="primary">
               导入外部文件
             </el-button>
-          </file-select>
+          </FileSelect>
         </div>
       </el-form>
 
@@ -35,9 +35,9 @@
         </ul>
       </div>
 
-      <title-box name="通道列表">
-        <select-master v-model="activeMasterId"></select-master>
-        <transition name="el-fade-in">
+      <TitleBox name="通道列表">
+        <SelectMaster v-model="activeMasterId"></SelectMaster>
+        <Transition name="el-fade-in">
           <div v-if="activeMaster" class="channel-main-box">
             <el-card class="box-card" shadow="never">
               <div slot="header" class="box-card-header">
@@ -52,7 +52,7 @@
                   <div class="slaver-channel-box">
                     <div class="slaver-item-l">{{ slaver.name }}</div>
                     <div class="channel-list">
-                      <channel-item
+                      <ChannelItem
                         v-for="(channel, ckey) in slaver.list"
                         :key="`${activeMasterId}_${sKey}_${ckey}`"
                         :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
@@ -62,44 +62,44 @@
                         @stepEditOpen="stepsSetShow"
                         @start="channelStart"
                         @setChannelStatus="setChannelStatus"
-                      ></channel-item>
+                      ></ChannelItem>
                     </div>
                     <el-button @click="slaverDetails(slaver.id)">
                       查看
                     </el-button>
                   </div>
                   <el-collapse-transition name="el-fade-in">
-                    <slaver-details
+                    <SlaverDetails
                       v-if="showSlaverDetail === slaver.id"
                       :master-id="activeMasterId"
                       :slaver="slaver"
-                    ></slaver-details>
+                    ></SlaverDetails>
                   </el-collapse-transition>
                 </li>
               </ul>
             </el-card>
           </div>
-        </transition>
-      </title-box>
+        </Transition>
+      </TitleBox>
 
-      <step-set-modal
+      <StepSetModal
         :show.sync="stepsShow"
         :show-item="stepsShowItem"
         :is-batch="stepsBatch"
         @openSysLog="sysLogOpen"
-      ></step-set-modal>
+      ></StepSetModal>
 
-      <batch-modal
+      <BatchModal
         ref="batchModal"
         :show.sync="batchShow"
         @setChannelStatus="setChannelStatus"
-      ></batch-modal>
+      ></BatchModal>
 
-      <set-channel-status
+      <SetChannelStatus
         ref="setChannelStatus"
         @openSysLog="sysLogOpen"
-      ></set-channel-status>
-      <sys-log :show.sync="sysLogShow"></sys-log>
+      ></SetChannelStatus>
+      <SysLog :show.sync="sysLogShow"></SysLog>
     </div>
   </div>
 </template>

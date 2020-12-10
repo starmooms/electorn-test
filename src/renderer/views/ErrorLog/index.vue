@@ -37,7 +37,7 @@
       </el-table>
     </div>
 
-    <pagination
+    <Pagination
       v-show="total > 0"
       :total="total"
       :page.sync="listQuery.page"
@@ -45,7 +45,7 @@
       @pagination="getList"
     />
 
-    <delete-dialog :show.sync="deleteShow" @delete="deleteLog" />
+    <DeleteDialog :show.sync="deleteShow" @delete="deleteLog" />
   </div>
 </template>
 <script lang="ts">

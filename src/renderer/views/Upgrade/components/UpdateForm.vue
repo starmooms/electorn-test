@@ -25,12 +25,12 @@
       </el-form-item>
       <el-form-item class="limt-form-item" label="选择更新文件">
         <el-input v-model="form.filePath">
-          <file-select
+          <FileSelect
             slot="append"
             v-model="form.filePath"
             open-type="file"
             :file-type="fileType"
-          ></file-select>
+          ></FileSelect>
         </el-input>
       </el-form-item>
       <el-form-item>

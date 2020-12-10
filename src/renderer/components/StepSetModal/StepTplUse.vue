@@ -47,7 +47,7 @@
         <el-button @click="closeModal">取 消</el-button>
       </div>
     </el-dialog>
-    <step-tpl-edit-dialog
+    <StepTplEditDialog
       :show.sync="editShow"
       :edit-row="editRow"
       @saveTplSuccess="editTplSaveSuccess"

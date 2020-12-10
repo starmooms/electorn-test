@@ -8,13 +8,13 @@
           class="nav-item"
           :class="{ active: menu.name === activeMenu }"
         >
-          <router-link :to="menu.path">
-            <svg-icon
+          <RouterLink :to="menu.path">
+            <SvgIcon
               v-if="menu.meta.icon"
               :icon-class="menu.meta.icon"
-            ></svg-icon>
+            ></SvgIcon>
             {{ menu.meta.title }}
-          </router-link>
+          </RouterLink>
         </li>
       </ul>
     </nav>

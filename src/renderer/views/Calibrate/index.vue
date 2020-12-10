@@ -1,7 +1,7 @@
 <template>
   <div class="calibrate-container">
     <div class="calibrate-l">
-      <cal-config
+      <CalConfig
         ref="calConfig"
         :show-run-config="showRunConfig"
         @toolCalStart="toolCalStart"
@@ -19,20 +19,20 @@
 
       <div>
         <div v-show="activeTab === 'channelCal'" class="channel-cal">
-          <cal-run
+          <CalRun
             ref="calRun"
             :cal-result-list="calResultList"
             @start="calStart"
             @stop="calStop"
             @clean="clean(1)"
           />
-          <cal-re-check
+          <CalReCheck
             :recheck-result="recheckResult"
             @start="recheckStart"
             @stop="calStop"
             @clean="clean(5)"
           />
-          <cal-result
+          <CalResult
             :cal-type-list="calTypeList"
             :result-list="resultList"
             @clean="clean(5, true)"
@@ -40,7 +40,7 @@
         </div>
         <div v-show="activeTab === 'toolCal'" class="tool-cal">
           <!-- <tool-cal></tool-cal> -->
-          <tool-cal-tabel ref="toolCalTabel" />
+          <ToolCalTabel ref="toolCalTabel" />
         </div>
       </div>
     </div>

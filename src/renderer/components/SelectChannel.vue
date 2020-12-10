@@ -1,10 +1,10 @@
 <template>
   <div>
-    <title-box name="选择通道">
-      <select-master
+    <TitleBox name="选择通道">
+      <SelectMaster
         v-model="masterIdSync"
         :is-checkbox="isCheckboxMaster"
-      ></select-master>
+      ></SelectMaster>
       <el-divider content-position="left">从控</el-divider>
       <div class="slaver-select">
         <el-checkbox v-model="slaverAll">
@@ -30,7 +30,7 @@
           通道{{ item }}
         </el-checkbox>
       </el-checkbox-group>
-    </title-box>
+    </TitleBox>
   </div>
 </template>
 <script lang="ts">

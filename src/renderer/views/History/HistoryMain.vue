@@ -1,30 +1,30 @@
 <template>
   <div v-loading="loading">
     <div class="channel-select">
-      <channel-position
+      <ChannelPosition
         :position="position"
         @changeData="changeChannelPos"
-      ></channel-position>
+      ></ChannelPosition>
       <el-button type="primary" @click="refresh">刷新</el-button>
       <el-button type="primary" @click="startInfoOpen">查看启动信息</el-button>
     </div>
-    <split-pane class="main-box" split="vertical">
+    <SplitPane class="main-box" split="vertical">
       <template slot="paneL">
         <div class="left-container pane-container">
-          <samp-chart ref="sampChart" @locate="locate"></samp-chart>
+          <SampChart ref="sampChart" @locate="locate"></SampChart>
         </div>
       </template>
       <template slot="paneR">
         <div class="right-container pane-container">
-          <samp-list
+          <SampList
             ref="sampList"
             :samp-data="sampData"
             :step-list="sampTableList"
-          ></samp-list>
+          ></SampList>
         </div>
       </template>
-    </split-pane>
-    <start-info-dialog :show.sync="startInfoShow" :start-info="startInfo" />
+    </SplitPane>
+    <StartInfoDialog :show.sync="startInfoShow" :start-info="startInfo" />
   </div>
 </template>
 <script lang="ts">

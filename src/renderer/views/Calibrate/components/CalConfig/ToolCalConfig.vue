@@ -1,5 +1,5 @@
 <template>
-  <title-box size="mini" name="工装校准">
+  <TitleBox size="mini" name="工装校准">
     <el-form :model="form" class="demo-form-inline" label-width="80px">
       <el-form-item label="校准类型">
         <el-select v-model="form.calType" placeholder="请选择校准类型">
@@ -31,7 +31,7 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <channel-select
+      <ChannelSelect
         v-model="form.channel"
         ch-type="channel"
         :multiple="true"
@@ -40,7 +40,7 @@
     <div>
       <el-button type="primary" @click="start">开始校准</el-button>
     </div>
-  </title-box>
+  </TitleBox>
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'

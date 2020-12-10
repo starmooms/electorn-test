@@ -1,6 +1,6 @@
 <template>
   <div style="display: none;">
-    <file-select
+    <FileSelect
       ref="fileSelect"
       :is-save="true"
       :file-filter="fileFilter"
@@ -9,7 +9,7 @@
       <!-- <el-button type="primary">
         导出Excel
       </el-button> -->
-    </file-select>
+    </FileSelect>
   </div>
 </template>
 <script lang="ts">

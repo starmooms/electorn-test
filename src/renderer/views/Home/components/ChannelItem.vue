@@ -4,14 +4,14 @@
     :class="[sampData.workerStatus.status, { error: sampData.errorMsg }]"
     @click="showChannel"
   >
-    <context-menu @open="openMenu">
+    <ContextMenu @open="openMenu">
       <div
         class="channel-box"
         @mouseenter="tipShow = true"
         @mouseleave="tipShow = false"
       >
         <div v-if="sampData.errorMsg" class="sigh-box">
-          <svg-icon icon-class="sigh"></svg-icon>
+          <SvgIcon icon-class="sigh"></SvgIcon>
         </div>
         <div v-if="tipShow" class="tip-box">
           <div class="tip-box-wrap">
@@ -54,7 +54,7 @@
           {{ menu.name }}
         </a>
       </template>
-    </context-menu>
+    </ContextMenu>
   </div>
 </template>
 <script lang="ts">

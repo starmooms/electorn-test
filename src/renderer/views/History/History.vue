@@ -1,9 +1,5 @@
 <template>
-  <history-main
-    ref="historyMain"
-    @refresh="refresh"
-    @changePosition="refresh"
-  />
+  <HistoryMain ref="historyMain" @refresh="refresh" @changePosition="refresh" />
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'

@@ -10,9 +10,9 @@
       ></el-tab-pane>
     </el-tabs>
     <div class="setting-box">
-      <keep-alive>
-        <component :is="activeName"></component>
-      </keep-alive>
+      <KeepAlive>
+        <Component :is="activeName"></Component>
+      </KeepAlive>
     </div>
   </div>
 </template>

@@ -11,7 +11,7 @@
         <el-input v-model.trim="tplName"></el-input>
       </el-form-item>
     </el-form>
-    <step-tpl-edit ref="stepTplEdit" :show-start-id="false" />
+    <StepTplEdit ref="stepTplEdit" :show-start-id="false" />
     <div slot="footer">
       <el-button @click="closeModal">取 消</el-button>
       <el-button @click="saveEditTpl">保 存</el-button>

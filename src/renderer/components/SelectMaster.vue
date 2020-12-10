@@ -11,7 +11,7 @@
       v-model="activeId"
       class="master-group"
     >
-      <component
+      <Component
         :is="groupName.item"
         v-for="(master, mKey) in list"
         :key="mKey"
@@ -20,7 +20,7 @@
         :disabled="!master.isConnect"
       >
         {{ master.name }}
-      </component>
+      </Component>
     </div>
   </div>
 </template>

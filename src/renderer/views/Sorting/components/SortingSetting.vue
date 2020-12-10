@@ -132,14 +132,14 @@
         </div>
       </el-form>
     </div>
-    <level-dialog
+    <LevelDialog
       :show.sync="configShow"
       :level-attr="levelAttr"
       :level-list="levelList"
       @changeConfig="getSortingConfig"
     />
 
-    <history-dialog :show.sync="historyShow" @save="createDb" />
+    <HistoryDialog :show.sync="historyShow" @save="createDb" />
   </div>
 </template>
 

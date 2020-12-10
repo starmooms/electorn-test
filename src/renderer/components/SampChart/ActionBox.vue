@@ -4,7 +4,7 @@
       曲线设置
     </el-button>
     <div class="action-box">
-      <file-select
+      <FileSelect
         slot="append"
         :is-save="true"
         :file-filter="fileFilter"
@@ -13,7 +13,7 @@
         <el-button type="primary">
           导出曲线
         </el-button>
-      </file-select>
+      </FileSelect>
     </div>
 
     <el-dialog

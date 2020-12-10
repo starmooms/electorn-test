@@ -1,6 +1,6 @@
 <template>
   <el-form class="cal-config-box" label-width="80px">
-    <title-box class="config-item" size="mini" name="工装设置">
+    <TitleBox class="config-item" size="mini" name="工装设置">
       <el-form-item class="form-item" label="工装IP">
         <el-input v-model="form.toolIp"></el-input>
       </el-form-item>
@@ -13,17 +13,17 @@
           测试连接
         </el-button>
       </el-form-item>
-    </title-box>
+    </TitleBox>
 
-    <title-box
+    <TitleBox
       v-show="showRunConfig"
       class="config-item"
       size="mini"
       name="设备"
     >
-      <channel-select v-model="form.masterId" ch-type="master" />
-      <channel-select v-model="form.slaverId" ch-type="slaver" />
-      <channel-select v-model="form.channelId" ch-type="channel" multiple />
+      <ChannelSelect v-model="form.masterId" ch-type="master" />
+      <ChannelSelect v-model="form.slaverId" ch-type="slaver" />
+      <ChannelSelect v-model="form.channelId" ch-type="channel" multiple />
 
       <el-form-item class="form-item" label="误差标准">
         <el-select v-model="form.standard" placeholder="请选择">
@@ -61,9 +61,9 @@
       <el-form-item class="form-item" label="采样时间(s)">
         <el-input v-model="form.sampTime"></el-input>
       </el-form-item>
-    </title-box>
+    </TitleBox>
 
-    <tool-cal-config v-show="!showRunConfig" v-on="$listeners" />
+    <ToolCalConfig v-show="!showRunConfig" v-on="$listeners" />
   </el-form>
 </template>
 <script lang="ts">

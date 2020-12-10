@@ -1,9 +1,5 @@
 <template>
-  <history-main
-    ref="historyMain"
-    :position.sync="position"
-    @refresh="refresh"
-  />
+  <HistoryMain ref="historyMain" :position.sync="position" @refresh="refresh" />
 </template>
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator'

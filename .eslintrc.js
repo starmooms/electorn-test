@@ -20,11 +20,15 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    // 组件名在html中用`kebab-case`模式
-    "vue/component-name-in-template-casing": ["error",  "kebab-case", {
-      "registeredComponentsOnly": false,
-      "ignores": []
-    }]
+    // 组件名在html中用`PascalCase` `kebab-case`模式
+    "vue/component-name-in-template-casing": ["error",  "PascalCase", {
+      "registeredComponentsOnly": false, // 无法识别 ts 注册组件
+      "ignores": ["/^el/", "/^vxe/"] // 插件的组件用`kebab-case` 自定义组件用`PascalCase`
+    }],
+    // "vue/no-unsupported-features": ["error", {
+    //   "version": "^2.6.0",
+    //   "ignores": []
+    // }]
     // quotes: ['warn', 'single'],
     // semi: ['warn', 'never']
   }

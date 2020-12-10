@@ -2,25 +2,25 @@
   <el-form :inline="true" label-width="80px">
     <el-form-item label="机柜：">
       <el-input-number
+        v-model="masterId"
         :min="1"
         :max="20"
-        v-model="masterId"
         @change="changeData"
       ></el-input-number>
     </el-form-item>
     <el-form-item label="从控：">
       <el-input-number
+        v-model="slaverId"
         :min="1"
         :max="32"
-        v-model="slaverId"
         @change="changeData"
       ></el-input-number>
     </el-form-item>
     <el-form-item label="通道：">
       <el-input-number
+        v-model="channelId"
         :min="1"
         :max="8"
-        v-model="channelId"
         @change="changeData"
       ></el-input-number>
     </el-form-item>

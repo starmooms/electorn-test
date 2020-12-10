@@ -14,7 +14,7 @@
     </pane>
 
     <resizer
-      :className="className"
+      :class-name="className"
       :style="{ [resizeType]: percent + '%' }"
       :split="split"
       @mousedown.native="onMouseDown"
@@ -28,7 +28,7 @@
     >
       <slot name="paneR"></slot>
     </pane>
-    <div class="vue-splitter-container-mask" v-if="active"></div>
+    <div v-if="active" class="vue-splitter-container-mask"></div>
   </div>
 </template>
 

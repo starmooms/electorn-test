@@ -1,9 +1,9 @@
 <template>
   <el-checkbox-group
-    class="type-select"
     v-model="selectType"
-    @change="changeType"
+    class="type-select"
     size="mini"
+    @change="changeType"
   >
     <el-checkbox
       v-for="item in calTypeList"

@@ -14,7 +14,7 @@
 
     <div slot="footer">
       <el-button @click="closeModal">取 消</el-button>
-      <el-button type="primary" @click="stepsTplSave" :loading="this.loading">
+      <el-button type="primary" :loading="loading" @click="stepsTplSave">
         确 定
       </el-button>
     </div>

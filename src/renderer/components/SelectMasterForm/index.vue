@@ -4,10 +4,10 @@
       <el-col :span="20">
         <el-select
           :value="value"
-          @change="emitSelect"
           multiple
           collapse-tags
           placeholder="请选择机柜"
+          @change="emitSelect"
         >
           <el-option
             v-for="item in staticMaster"

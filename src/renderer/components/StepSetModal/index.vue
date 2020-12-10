@@ -10,10 +10,10 @@
       <template v-if="isBatch">
         <SelectChannel
           ref="SelectChannel"
-          isCheckboxMaster
-          :masterId.sync="batchMasterId"
-          :slaverId.sync="batchSlaverId"
-          :channelId.sync="batchChannelId"
+          is-checkbox-master
+          :master-id.sync="batchMasterId"
+          :slaver-id.sync="batchSlaverId"
+          :channel-id.sync="batchChannelId"
         ></SelectChannel>
       </template>
 
@@ -30,7 +30,7 @@
         <el-divider content-position="left">备注</el-divider>
         <el-form label-width="100px">
           <el-form-item label="历史文件路径">
-            <el-input placeholder="" v-model="filePath">
+            <el-input v-model="filePath" placeholder="">
               <file-select slot="append" v-model="filePath"></file-select>
             </el-input>
           </el-form-item>
@@ -44,7 +44,7 @@
         </el-button>
       </div>
     </el-dialog>
-    <StepTplSave :show.sync="tplSaveShow" :tplData="tplData"></StepTplSave>
+    <StepTplSave :show.sync="tplSaveShow" :tpl-data="tplData"></StepTplSave>
     <StepTplUse :show.sync="tplUseShow" @tplUse="tplUse"></StepTplUse>
   </div>
 </template>

@@ -10,10 +10,10 @@
         @mouseenter="tipShow = true"
         @mouseleave="tipShow = false"
       >
-        <div class="sigh-box" v-if="sampData.errorMsg">
+        <div v-if="sampData.errorMsg" class="sigh-box">
           <svg-icon icon-class="sigh"></svg-icon>
         </div>
-        <div class="tip-box" v-if="tipShow">
+        <div v-if="tipShow" class="tip-box">
           <div class="tip-box-wrap">
             状态：{{ sampData.workerStatus.name }}
             <br />
@@ -46,9 +46,9 @@
       <template v-slot:menu>
         <a href="javascript:;" @click="changeStatus('start')">启动</a>
         <a
-          href="javascript:;"
           v-for="menu in batteryCtxMenu"
           :key="menu.action"
+          href="javascript:;"
           @click="changeStatus(menu.action)"
         >
           {{ menu.name }}
@@ -224,7 +224,6 @@ $noConnect-cl: #ccc;
   position: relative;
 
   .tip-box {
-
     $tipIw: 6px;
 
     position: absolute;

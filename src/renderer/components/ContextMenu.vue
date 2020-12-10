@@ -2,12 +2,12 @@
   <div class="content-menu-box" @contextmenu="contextMenuHandler($event)">
     <slot></slot>
     <div
+      v-if="show"
       class="right-mouse-menu"
+      :style="style"
       @mouseup.stop
       @contextmenu.stop
       @click.stop="clickDocumentHandler"
-      :style="style"
-      v-if="show"
     >
       <slot name="menu"></slot>
     </div>

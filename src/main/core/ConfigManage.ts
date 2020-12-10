@@ -1,4 +1,4 @@
-import Store, { Options } from 'electron-store'
+import Store from 'electron-store'
 import ipcManage from './IpcManage'
 import uuid from 'node-uuid'
 

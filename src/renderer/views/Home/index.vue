@@ -18,7 +18,7 @@
           查看系统日志
         </el-button>
         <div class="select-file-btn">
-          <file-select openType="file" @change="importHistory">
+          <file-select open-type="file" @change="importHistory">
             <el-button type="primary">
               导入外部文件
             </el-button>
@@ -45,9 +45,9 @@
               </div>
               <ul class="slaver-list">
                 <li
-                  class="slaver-item"
                   v-for="(slaver, sKey) in activeMaster.slaverList"
                   :key="sKey"
+                  class="slaver-item"
                 >
                   <div class="slaver-channel-box">
                     <div class="slaver-item-l">{{ slaver.name }}</div>
@@ -55,10 +55,10 @@
                       <channel-item
                         v-for="(channel, ckey) in slaver.list"
                         :key="`${activeMasterId}_${sKey}_${ckey}`"
+                        :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
                         :master-id="activeMaster.id"
                         :slaver-id="slaver.id"
                         :channel-data="channel"
-                        :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
                         @stepEditOpen="stepsSetShow"
                         @start="channelStart"
                         @setChannelStatus="setChannelStatus"
@@ -84,8 +84,8 @@
 
       <StepSetModal
         :show.sync="stepsShow"
-        :showItem="stepsShowItem"
-        :isBatch="stepsBatch"
+        :show-item="stepsShowItem"
+        :is-batch="stepsBatch"
         @openSysLog="sysLogOpen"
       ></StepSetModal>
 
@@ -107,7 +107,6 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
-import CalModal from '@/renderer/components/CalModal.vue'
 import SelectMaster from '@/renderer/components/SelectMaster.vue'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'

@@ -1,11 +1,11 @@
 import cp from 'child_process'
-import OS from 'os'
+// import OS from 'os'
 import path from 'path'
 import logger from '../Logger'
 import { app } from 'electron'
 import is from 'electron-is'
 
-const numCPUs = OS.cpus().length
+// const numCPUs = OS.cpus().length
 
 if (is.dev()) {
   app.whenReady().then(() => {

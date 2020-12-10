@@ -2,8 +2,8 @@
   <div style="display: none;">
     <file-select
       ref="fileSelect"
-      :isSave="true"
-      :fileFilter="fileFilter"
+      :is-save="true"
+      :file-filter="fileFilter"
       @saveFile="exprotFile"
     >
       <!-- <el-button type="primary">

@@ -28,8 +28,8 @@
           <file-select
             slot="append"
             v-model="form.filePath"
-            openType="file"
-            :fileType="fileType"
+            open-type="file"
+            :file-type="fileType"
           ></file-select>
         </el-input>
       </el-form-item>

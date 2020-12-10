@@ -2,24 +2,24 @@
   <div class="channel-info">
     <div class="channel-slaver-box">
       <ul class="channel-row-box">
-        <li class="channel-row" v-for="item in 32" :key="item">
+        <li v-for="item in 32" :key="item" class="channel-row">
           <span>{{ item }}</span>
         </li>
       </ul>
     </div>
     <div class="channel-channel-box">
       <div
-        class="channel-id-item"
         v-for="(channelId, cIndex) in 8"
         :key="channelId"
+        class="channel-id-item"
       >
         <div class="channel-id">{{ channelId }}</div>
 
         <ul class="channel-row-box">
           <li
-            class="channel-row channel-status"
             v-for="(item, sindex) in 32"
             :key="item"
+            class="channel-row channel-status"
             :class="{
               action: actionList[sindex]
                 ? actionList[sindex].indexOf(cIndex) >= 0

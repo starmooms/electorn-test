@@ -9,8 +9,8 @@
       <el-form :inline="true">
         <el-form-item v-if="isSingle" label="选择开始工步">
           <el-select
-            class="step-select"
             v-model="startId"
+            class="step-select"
             placeholder="请选择工步"
             width="400"
           >

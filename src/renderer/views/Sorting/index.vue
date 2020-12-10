@@ -1,22 +1,22 @@
 <template>
-  <div class="sorting-box" v-loading="loading">
+  <div v-loading="loading" class="sorting-box">
     <div class="l-box">
-      <split-pane class="main-box" split="horizontal" :defaultPercent="76">
+      <split-pane class="main-box" split="horizontal" :default-percent="76">
         <template slot="paneL">
           <div class="l-t-box">
             <div class="l-t-l">
               <ChannelInfo
                 ref="channelInfo"
-                :masterId="actionMasterId"
-                :lampResult="lampResult"
+                :master-id="actionMasterId"
+                :lamp-result="lampResult"
               />
             </div>
             <div class="show-btn" @click="setShow('setting')">
               <span>></span>
             </div>
-            <div class="l-t-r" v-show="show.setting">
+            <div v-show="show.setting" class="l-t-r">
               <sorting-setting
-                :actionMasterId.sync="actionMasterId"
+                :action-master-id.sync="actionMasterId"
                 :loading.sync="loading"
                 @storingResult="storingResult"
               />
@@ -33,14 +33,14 @@
     <div class="show-btn" @click="setShow('result')">
       <span>></span>
     </div>
-    <div class="r-box" v-show="show.result">
-      <Result ref="result" :levelResult="levelResult" />
+    <div v-show="show.result" class="r-box">
+      <Result ref="result" :level-result="levelResult" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
+import { Component, Vue } from 'vue-property-decorator'
 import SplitPane from '@/renderer/components/SplitPane/index.vue'
 import ChannelInfo from './components/ChannelInfo.vue'
 import Result from './components/Result.vue'

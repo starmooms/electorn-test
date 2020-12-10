@@ -3,7 +3,7 @@
     <div class="calibrate-l">
       <cal-config
         ref="calConfig"
-        :showRunConfig="showRunConfig"
+        :show-run-config="showRunConfig"
         @toolCalStart="toolCalStart"
       />
     </div>
@@ -18,27 +18,27 @@
       </el-tabs>
 
       <div>
-        <div class="channel-cal" v-show="activeTab === 'channelCal'">
+        <div v-show="activeTab === 'channelCal'" class="channel-cal">
           <cal-run
             ref="calRun"
+            :cal-result-list="calResultList"
             @start="calStart"
             @stop="calStop"
             @clean="clean(1)"
-            :calResultList="calResultList"
           />
           <cal-re-check
+            :recheck-result="recheckResult"
             @start="recheckStart"
             @stop="calStop"
             @clean="clean(5)"
-            :recheckResult="recheckResult"
           />
           <cal-result
-            :calTypeList="calTypeList"
-            :resultList="resultList"
+            :cal-type-list="calTypeList"
+            :result-list="resultList"
             @clean="clean(5, true)"
           />
         </div>
-        <div class="tool-cal" v-show="activeTab === 'toolCal'">
+        <div v-show="activeTab === 'toolCal'" class="tool-cal">
           <!-- <tool-cal></tool-cal> -->
           <ToolCalTabel ref="toolCalTabel" />
         </div>

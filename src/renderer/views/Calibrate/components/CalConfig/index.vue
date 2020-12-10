@@ -16,14 +16,14 @@
     </title-box>
 
     <title-box
+      v-show="showRunConfig"
       class="config-item"
       size="mini"
       name="设备"
-      v-show="showRunConfig"
     >
-      <channel-select chType="master" v-model="form.masterId" />
-      <channel-select chType="slaver" v-model="form.slaverId" />
-      <channel-select chType="channel" multiple v-model="form.channelId" />
+      <channel-select v-model="form.masterId" ch-type="master" />
+      <channel-select v-model="form.slaverId" ch-type="slaver" />
+      <channel-select v-model="form.channelId" ch-type="channel" multiple />
 
       <el-form-item class="form-item" label="误差标准">
         <el-select v-model="form.standard" placeholder="请选择">

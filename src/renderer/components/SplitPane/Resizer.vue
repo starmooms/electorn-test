@@ -23,8 +23,6 @@ export default class Resizer extends Vue {
 </script>
 
 <style lang="scss" scoped>
-
-
 $pandw: 6px;
 $pand-icon-h: 32px;
 

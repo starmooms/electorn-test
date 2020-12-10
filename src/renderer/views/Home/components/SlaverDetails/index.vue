@@ -12,12 +12,12 @@
     </div>
 
     <el-row
+      v-loading="loading"
       class="channel-list"
       :gutter="20"
-      v-loading="loading"
       element-loading-background="rgba(255, 255, 255, 0.6)"
     >
-      <el-col :span="6" v-for="channel in list" :key="channel.channelId">
+      <el-col v-for="channel in list" :key="channel.channelId" :span="6">
         <div class="item" :class="channel.samp.workerStatus.status">
           <div class="item-box title-box">
             <p class="tit">通道{{ channel.channelId + 1 }}</p>
@@ -41,14 +41,14 @@
           </div>
 
           <div class="step-box clearfix">
-            <div class="step-no-list" v-if="channel.stepList.length === 0">
+            <div v-if="channel.stepList.length === 0" class="step-no-list">
               暂无数据
             </div>
             <ul class="step-list">
               <li
-                class="step-item"
                 v-for="(step, index) in channel.stepList"
                 :key="index"
+                class="step-item"
                 :class="{ active: step.id === channel.samp.stepId }"
               >
                 {{ `${step.id + 1}、${step.msg}` }}
@@ -130,7 +130,7 @@ export default class SlaverDetails extends Vue {
   }
 
   setList() {
-    this.list = Object.entries(this.slaver.list).map(([key, channel]) => {
+    this.list = Object.entries(this.slaver.list).map(([, channel]) => {
       const channelId = channel.id
       const samp = this.getSamp(channelId)
       return {
@@ -203,14 +203,12 @@ export default class SlaverDetails extends Vue {
     flex-flow: row wrap;
 
     .item {
-
       @include border-line;
 
       margin-top: 20px;
       background-color: #dcdcdc;
 
       .item-box {
-
         @include border-line(border-bottom);
 
         box-sizing: border-box;

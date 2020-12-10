@@ -5,8 +5,8 @@
         :position="position"
         @changeData="changeChannelPos"
       ></ChannelPosition>
-      <el-button @click="refresh" type="primary">刷新</el-button>
-      <el-button @click="startInfoOpen" type="primary">查看启动信息</el-button>
+      <el-button type="primary" @click="refresh">刷新</el-button>
+      <el-button type="primary" @click="startInfoOpen">查看启动信息</el-button>
     </div>
     <split-pane class="main-box" split="vertical">
       <template slot="paneL">
@@ -24,16 +24,15 @@
         </div>
       </template>
     </split-pane>
-    <start-info-dialog :show.sync="startInfoShow" :startInfo="startInfo" />
+    <start-info-dialog :show.sync="startInfoShow" :start-info="startInfo" />
   </div>
 </template>
 <script lang="ts">
-import { Vue, Component, Prop, PropSync } from 'vue-property-decorator'
+import { Vue, Component, Prop } from 'vue-property-decorator'
 import SplitPane from '@/renderer/components/SplitPane/index.vue'
 import SampChart from '@/renderer/components/SampChart/index.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
 import { computerAdd, startInfoFormat } from '@/renderer/utils/util'
-import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import { CHANNEL_STATUS, END_STATUS } from '@/shared/config/port'
 import SampList from './components/SampList.vue'
 import ChannelPosition from './components/ChannelPosition.vue'

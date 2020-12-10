@@ -6,16 +6,16 @@
       </el-checkbox>
     </div>
     <div
-      v-if="list"
       :is="groupName.group"
-      class="master-group"
+      v-if="list"
       v-model="activeId"
+      class="master-group"
     >
       <component
-        class="master-group-item"
         :is="groupName.item"
         v-for="(master, mKey) in list"
         :key="mKey"
+        class="master-group-item"
         :label="labelKey ? mKey : master.id"
         :disabled="!master.isConnect"
       >

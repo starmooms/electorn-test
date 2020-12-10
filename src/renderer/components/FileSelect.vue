@@ -10,7 +10,6 @@
 
 <script lang="ts">
 import { remote, OpenDialogOptions } from 'electron'
-import { app } from 'electron'
 import { Component, Vue, Model, Prop } from 'vue-property-decorator'
 
 @Component

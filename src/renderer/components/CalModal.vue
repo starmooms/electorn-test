@@ -8,9 +8,9 @@
   >
     <el-form :inline="true" class="cal-form">
       <el-form-item
-        class="form-item"
         v-for="(item, index) in list"
         :key="index"
+        class="form-item"
         :label="`${item.name}${item.key}`"
       >
         <el-input v-model.number="item.value"></el-input>

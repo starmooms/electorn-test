@@ -31,7 +31,7 @@
             <p class="title-line">
               <span class="title">保护参数：</span>
             </p>
-            <p class="line" v-for="(item, index) in protect" :key="index">
+            <p v-for="(item, index) in protect" :key="index" class="line">
               {{ item }}
             </p>
           </div>
@@ -39,7 +39,7 @@
             <p>
               <span class="title">工步列表：</span>
             </p>
-            <p class="line" v-for="item in startInfo.stepList" :key="item.id">
+            <p v-for="item in startInfo.stepList" :key="item.id" class="line">
               {{ item.showId }}、{{ item.msg }}
             </p>
           </div>

@@ -14,10 +14,10 @@
           </el-radio-group>
         </el-form-item> -->
         <el-form-item>
-          <el-input :disabled="false" v-model="historyFile">
+          <el-input v-model="historyFile" :disabled="false">
             <el-button
-              class="historySelect"
               slot="append"
+              class="historySelect"
               @click="historySelect"
             >
               选择
@@ -53,7 +53,7 @@
       <el-form class="box-item data-type">
         <div class="form-title">分选等级</div>
         <el-form-item class="form-flex-item">
-          <el-select multiple collapse-tags v-model="form.levelId">
+          <el-select v-model="form.levelId" multiple collapse-tags>
             <el-option
               v-for="item in levelList"
               :key="item.id"
@@ -80,7 +80,7 @@
           </div> -->
         </div>
         <div class="master-list">
-          <div class="master-item" v-for="(item, index) in 20" :key="item">
+          <div v-for="(item, index) in 20" :key="item" class="master-item">
             <div
               class="master-box"
               :class="{
@@ -105,27 +105,27 @@
         <div class="condutc">
           <div class="input-item">
             <input
-              type="checkbox"
               id="zeroU"
-              value="zeroU"
               v-model="form.stepsCondutc"
+              type="checkbox"
+              value="zeroU"
             />
             <label for="zeroU">零电压参加分选</label>
           </div>
 
           <div class="condutc-input">
-            <div class="input-item" v-for="item in condutcList" :key="item.key">
+            <div v-for="item in condutcList" :key="item.key" class="input-item">
               <input
-                type="checkbox"
                 :id="item.key"
-                :value="item.key"
                 v-model="form.stepsCondutc"
+                type="checkbox"
+                :value="item.key"
               />
               <label :for="item.key">{{ item.name }}</label>
               <input
+                v-model.number="form.condutc[item.key]"
                 class="input-val"
                 type="text"
-                v-model.number="form.condutc[item.key]"
               />
             </div>
           </div>
@@ -134,8 +134,8 @@
     </div>
     <level-dialog
       :show.sync="configShow"
-      :levelAttr="levelAttr"
-      :levelList="levelList"
+      :level-attr="levelAttr"
+      :level-list="levelList"
       @changeConfig="getSortingConfig"
     />
 
@@ -145,7 +145,7 @@
 
 <script lang="ts">
 import { getStoreConfig } from '@/renderer/ipc/storeConfig'
-import { Component, Vue, Watch, PropSync } from 'vue-property-decorator'
+import { Component, Vue, PropSync } from 'vue-property-decorator'
 import LevelDialog from './LevelDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'

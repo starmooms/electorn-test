@@ -1,16 +1,16 @@
 <template>
   <div>
     <el-dialog
-      :title="this.editMaster ? '编辑机柜' : '添加机柜'"
+      :title="editMaster ? '编辑机柜' : '添加机柜'"
       width="420px"
       :visible.sync="dialog"
       :close-on-click-modal="false"
     >
       <!-- 添加ip -->
       <el-form
-        v-if="!this.editMaster"
-        class="config-box"
+        v-if="!editMaster"
         ref="addIpForm"
+        class="config-box"
         label-width="80px"
         :model="addForm"
         :rules="rules"
@@ -26,8 +26,8 @@
       <!-- 编辑机柜 -->
       <el-form
         v-else
-        class="config-box"
         ref="editForm"
+        class="config-box"
         label-width="80px"
         :model="editForm"
         :rules="editRules"

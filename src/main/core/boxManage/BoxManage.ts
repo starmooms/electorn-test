@@ -1,4 +1,4 @@
-import logger, { sysLog } from '../Logger'
+import { sysLog } from '../Logger'
 import { channelList } from '@/shared/config/port'
 import mainDb from '../sqlite/MainDb'
 import is from 'electron-is'

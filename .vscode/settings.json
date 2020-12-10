@@ -18,7 +18,7 @@
     "vue"
   ],
   "stylelint.enable": true,
-  "stylelint.stylelintPath": "./node_modules/stylelint",
+  // "stylelint.stylelintPath": "./node_modules/stylelint",
   // "stylelint.configOverrides": {
   //   "rules": {
   //     "order/properties-alphabetical-order": [false, { "disableFix": false }],

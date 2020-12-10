@@ -13,8 +13,8 @@
       </el-tooltip>
 
       <el-switch
-        class="tool-switch"
         v-model="calFormAB"
+        class="tool-switch"
         inactive-text="根据AB值采样"
       ></el-switch>
       <div class="samp-btn-box">
@@ -29,12 +29,12 @@
       </div>
     </div>
     <vxe-grid
+      ref="xTabel"
       class="tool-cal-table"
       border
       auto-resize
       show-overflow
       resizable
-      ref="xTabel"
       size="mini"
       max-width="160px"
       height="600px"

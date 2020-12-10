@@ -3,9 +3,9 @@
     <nav>
       <ul class="nav-list">
         <li
-          class="nav-item"
           v-for="menu in menuList"
           :key="menu.name"
+          class="nav-item"
           :class="{ active: menu.name === activeMenu }"
         >
           <router-link :to="menu.path">

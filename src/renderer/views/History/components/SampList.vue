@@ -48,16 +48,16 @@
           >
             <!-- 工步数据项 -->
             <div
-              class="th-item spam-item spam-step"
               v-if="item.type === 'step'"
+              class="th-item spam-item spam-step"
               @click="setActiveItem(index)"
             >
               <div class="th-td td-index"></div>
               <div class="th-td td-extend">
                 <svg-icon
-                  @click="stepSubSet(item, index)"
                   class="icon"
                   :icon-class="item.show ? 'extend-hide' : 'extend-show'"
+                  @click="stepSubSet(item, index)"
                 ></svg-icon>
               </div>
 
@@ -67,8 +67,8 @@
             </div>
             <!-- 采样内容 -->
             <div
-              class="th-item spam-item"
               v-else
+              class="th-item spam-item"
               :class="{ even: item.sIndex % 2 }"
               @click="setActiveItem(index)"
             >
@@ -335,7 +335,9 @@ $td-h: 24px;
 
 .samp-table {
   .th-item,
-  ::v-deep .vue-recycle-scroller.direction-vertical .vue-recycle-scroller__item-wrapper {
+  ::v-deep
+    .vue-recycle-scroller.direction-vertical
+    .vue-recycle-scroller__item-wrapper {
     min-width: 742px;
   }
 

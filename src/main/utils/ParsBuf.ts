@@ -1,5 +1,3 @@
-import { toHex } from '.'
-
 interface SliceData {
   offset: number
   byte: number

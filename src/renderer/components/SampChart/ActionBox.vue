@@ -6,8 +6,8 @@
     <div class="action-box">
       <file-select
         slot="append"
-        :isSave="true"
-        :fileFilter="fileFilter"
+        :is-save="true"
+        :file-filter="fileFilter"
         @saveFile="exportEchart"
       >
         <el-button type="primary">
@@ -28,8 +28,8 @@
           <el-radio-group v-model="form.y1">
             <el-radio
               v-for="item in y1List"
-              :label="item.value"
               :key="item.label"
+              :label="item.value"
             >
               {{ item.label }}
             </el-radio>
@@ -39,8 +39,8 @@
           <el-radio-group v-model="form.y2">
             <el-radio
               v-for="item in y2List"
-              :label="item.value"
               :key="item.label"
+              :label="item.value"
             >
               {{ item.label }}
             </el-radio>

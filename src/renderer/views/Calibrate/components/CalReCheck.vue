@@ -2,7 +2,7 @@
   <div class="recheck">
     <div class="cal-action-box">
       <p class="title">复检</p>
-      <el-form class="step-leng" label-width="80px" ref="stepForm">
+      <el-form ref="stepForm" class="step-leng" label-width="80px">
         <div class="recheck-form-item">
           <el-form-item class="step-item" label="电流步长">
             <el-select v-model="reCheckForm.IStep" placeholder="请选择">
@@ -58,11 +58,11 @@
     </div>
 
     <vxe-grid
+      ref="xTabel"
       border
       auto-resize
       show-overflow
       resizable
-      ref="xTabel"
       :data="recheckResult"
       size="mini"
       max-width="160px"
@@ -209,7 +209,6 @@ export default class CalReCheck extends Vue {
   }
 
   .recheck-table {
-
   }
 }
 </style>

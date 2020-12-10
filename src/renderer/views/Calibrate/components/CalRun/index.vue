@@ -13,11 +13,11 @@
     </div>
 
     <vxe-grid
+      ref="xTabel"
       border
       auto-resize
       show-overflow
       resizable
-      ref="xTabel"
       :data="calResultList"
       size="mini"
       max-width="160px"

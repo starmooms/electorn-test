@@ -12,7 +12,7 @@
         type="info"
         :closable="false"
       ></el-alert>
-      <pre id="log-context" class="log-context" v-loading="loading">{{
+      <pre id="log-context" v-loading="loading" class="log-context">{{
         context
       }}</pre>
     </el-dialog>

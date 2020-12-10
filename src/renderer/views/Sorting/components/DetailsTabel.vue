@@ -1,10 +1,10 @@
 <template>
   <vxe-grid
+    ref="xTabel"
     border
     auto-resize
     show-overflow
     resizable
-    ref="xTabel"
     :data="tableData"
     size="mini"
     height="auto"

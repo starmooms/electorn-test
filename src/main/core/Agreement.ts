@@ -1,5 +1,4 @@
-import { toHex, FixZero } from '../utils'
-import logger from './Logger'
+import { toHex } from '../utils'
 
 export type ReadResult = ReturnType<Agreement['readData']>
 export type SetDataBack = ReturnType<Agreement['createData']>

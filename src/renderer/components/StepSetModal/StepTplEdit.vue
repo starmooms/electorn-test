@@ -2,11 +2,11 @@
   <div class="tpl-edit">
     <div class="data-save-box">
       <el-divider content-position="left">数据记录条件</el-divider>
-      <el-form class="data-save-form" :inline="true" v-if="dataSave">
+      <el-form v-if="dataSave" class="data-save-form" :inline="true">
         <el-form-item
-          class="data-save-item"
           v-for="item in dataSaveList"
           :key="item.index"
+          class="data-save-item"
         >
           <div
             v-if="dataSave[item.type]"
@@ -15,9 +15,9 @@
             <el-checkbox v-model="dataSave[item.type].enable"></el-checkbox>
             <span class="lable">{{ item.label }}：</span>
             <el-input
+              v-model.number="dataSave[item.type].value"
               class="data-save-input"
               :disabled="!dataSave[item.type].enable"
-              v-model.number="dataSave[item.type].value"
             ></el-input>
             <span>{{ item.unit }}</span>
           </div>
@@ -27,11 +27,11 @@
 
     <div class="data-feat-box">
       <el-divider content-position="left">特征电压参数</el-divider>
-      <el-form class="data-feat-form" :inline="true" v-if="features">
+      <el-form v-if="features" class="data-feat-form" :inline="true">
         <el-form-item
-          class="feat-form-item"
           v-for="item in featuresList"
           :key="item.type"
+          class="feat-form-item"
           :label="item.label"
         >
           <el-input v-model.number="features[item.type]"></el-input>
@@ -43,9 +43,9 @@
       <el-divider content-position="left">工步编辑</el-divider>
       <div class="step-edit-set-box">
         <el-button type="primary" @click="stepsAdd">添加工步</el-button>
-        <div class="set-start" v-if="showStartId">
+        <div v-if="showStartId" class="set-start">
           <span>设置第</span>
-          <el-input class="set-start-input" v-model.number="startId"></el-input>
+          <el-input v-model.number="startId" class="set-start-input"></el-input>
           <span>为起始工步</span>
         </div>
       </div>
@@ -74,7 +74,7 @@
             </template>
           </el-table-column>
           <el-table-column label="设置" min-width="400">
-            <template slot-scope="{ row }" v-if="row.input">
+            <template v-if="row.input" slot-scope="{ row }">
               <div class="input-box">
                 <div
                   v-for="(value, key) in row.input"
@@ -86,7 +86,7 @@
                       `${stepsInputMap[key].name}(${stepsInputMap[key].unit})`
                     }}：
                   </span>
-                  <el-input type="text" v-model.number="row.input[key]" />
+                  <el-input v-model.number="row.input[key]" type="text" />
                 </div>
               </div>
             </template>

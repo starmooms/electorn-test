@@ -31,7 +31,11 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <ChannelSelect chType="channel" :multiple="true" v-model="form.channel" />
+      <ChannelSelect
+        v-model="form.channel"
+        ch-type="channel"
+        :multiple="true"
+      />
     </el-form>
     <div>
       <el-button type="primary" @click="start">开始校准</el-button>

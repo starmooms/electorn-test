@@ -1,4 +1,3 @@
-import dayjs from 'dayjs'
 import { chartFullNull, getSampChartList } from './util'
 
 const webWorker: Worker | any = self

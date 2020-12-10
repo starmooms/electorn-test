@@ -31,7 +31,7 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <ChannelSelect
+      <channel-select
         v-model="form.channel"
         ch-type="channel"
         :multiple="true"

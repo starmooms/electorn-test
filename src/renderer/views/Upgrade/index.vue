@@ -1,10 +1,10 @@
 <template>
   <div>
     <el-divider content-position="left">机柜升级</el-divider>
-    <UpdateForm :upgrade-type="1" @submit="submit" />
+    <update-form :upgrade-type="1" @submit="submit" />
     <el-divider content-position="left">丛控升级</el-divider>
-    <UpdateForm :upgrade-type="2" @submit="submit" />
-    <UpdateDialog
+    <update-form :upgrade-type="2" @submit="submit" />
+    <update-dialog
       :show.sync="updateShow"
       :title="updateName"
       :master-info="updateMasterInfo"

@@ -1,10 +1,10 @@
 <template>
   <div>
     <title-box name="选择通道">
-      <SelectMaster
+      <select-master
         v-model="masterIdSync"
         :is-checkbox="isCheckboxMaster"
-      ></SelectMaster>
+      ></select-master>
       <el-divider content-position="left">从控</el-divider>
       <div class="slaver-select">
         <el-checkbox v-model="slaverAll">

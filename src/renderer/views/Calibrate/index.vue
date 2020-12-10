@@ -40,7 +40,7 @@
         </div>
         <div v-show="activeTab === 'toolCal'" class="tool-cal">
           <!-- <tool-cal></tool-cal> -->
-          <ToolCalTabel ref="toolCalTabel" />
+          <tool-cal-tabel ref="toolCalTabel" />
         </div>
       </div>
     </div>

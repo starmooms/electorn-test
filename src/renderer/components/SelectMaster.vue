@@ -64,11 +64,6 @@ export default class SelectMaster extends Vue {
   activeId: number | number[] | null = this.isCheckbox ? [] : null
   listId: number[] = []
 
-  @Watch('activeId')
-  changeActiveId() {
-    this.$emit('change', this.activeId)
-  }
-
   @Watch('value')
   changeValue() {
     this.activeId = this.value
@@ -76,6 +71,11 @@ export default class SelectMaster extends Vue {
 
   mounted() {
     this.changeValue()
+  }
+
+  @Watch('activeId')
+  changeActiveId() {
+    this.$emit('change', this.activeId)
   }
 }
 </script>

@@ -36,7 +36,7 @@
       </div>
 
       <title-box name="通道列表">
-        <SelectMaster v-model="activeMasterId"></SelectMaster>
+        <select-master v-model="activeMasterId"></select-master>
         <transition name="el-fade-in">
           <div v-if="activeMaster" class="channel-main-box">
             <el-card class="box-card" shadow="never">
@@ -82,23 +82,23 @@
         </transition>
       </title-box>
 
-      <StepSetModal
+      <step-set-modal
         :show.sync="stepsShow"
         :show-item="stepsShowItem"
         :is-batch="stepsBatch"
         @openSysLog="sysLogOpen"
-      ></StepSetModal>
+      ></step-set-modal>
 
-      <BatchModal
+      <batch-modal
         ref="batchModal"
         :show.sync="batchShow"
         @setChannelStatus="setChannelStatus"
-      ></BatchModal>
+      ></batch-modal>
 
-      <SetChannelStatus
+      <set-channel-status
         ref="setChannelStatus"
         @openSysLog="sysLogOpen"
-      ></SetChannelStatus>
+      ></set-channel-status>
       <sys-log :show.sync="sysLogShow"></sys-log>
     </div>
   </div>

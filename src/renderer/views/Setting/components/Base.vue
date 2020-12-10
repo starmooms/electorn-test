@@ -23,19 +23,19 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <SelectMasterForm v-model="form.portMaster" />
+        <select-master-form v-model="form.portMaster" />
       </template>
 
       <el-form-item v-else-if="form.requestType === 'Tcp'" label="IP设置">
         <el-button @click="showIpConfig = true">IP设置</el-button>
       </el-form-item>
     </el-form>
-    <FromAction
+    <from-action
       ref="FromAction"
       title="基础设置"
       :data.sync="form"
       @submit="submit"
-    ></FromAction>
+    ></from-action>
     <ip-config :show.sync="showIpConfig" :base-config="form" />
   </div>
 </template>

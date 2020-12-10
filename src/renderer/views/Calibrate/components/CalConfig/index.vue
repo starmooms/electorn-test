@@ -63,7 +63,7 @@
       </el-form-item>
     </title-box>
 
-    <ToolCalConfig v-show="!showRunConfig" v-on="$listeners" />
+    <tool-cal-config v-show="!showRunConfig" v-on="$listeners" />
   </el-form>
 </template>
 <script lang="ts">

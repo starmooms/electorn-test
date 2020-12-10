@@ -19,7 +19,12 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off'
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+    // 组件名在html中用`kebab-case`模式
+    "vue/component-name-in-template-casing": ["error",  "kebab-case", {
+      "registeredComponentsOnly": false,
+      "ignores": []
+    }]
     // quotes: ['warn', 'single'],
     // semi: ['warn', 'never']
   }

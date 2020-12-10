@@ -1,10 +1,10 @@
 <template>
   <div v-loading="loading">
     <div class="channel-select">
-      <ChannelPosition
+      <channel-position
         :position="position"
         @changeData="changeChannelPos"
-      ></ChannelPosition>
+      ></channel-position>
       <el-button type="primary" @click="refresh">刷新</el-button>
       <el-button type="primary" @click="startInfoOpen">查看启动信息</el-button>
     </div>

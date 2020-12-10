@@ -2,7 +2,7 @@
   <div class="cal-run">
     <div class="cal-action-box">
       <div>
-        <CalTypeSelect v-model="calType" />
+        <cal-type-select v-model="calType" />
       </div>
       <div class="action-btn-box">
         <el-button type="primary" @click="start">修调</el-button>

@@ -5,7 +5,7 @@
         <template slot="paneL">
           <div class="l-t-box">
             <div class="l-t-l">
-              <ChannelInfo
+              <channel-info
                 ref="channelInfo"
                 :master-id="actionMasterId"
                 :lamp-result="lampResult"
@@ -34,7 +34,7 @@
       <span>></span>
     </div>
     <div v-show="show.result" class="r-box">
-      <Result ref="result" :level-result="levelResult" />
+      <result ref="result" :level-result="levelResult" />
     </div>
   </div>
 </template>

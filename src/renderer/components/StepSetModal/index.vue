@@ -8,13 +8,13 @@
       :visible.sync="stepsDialog"
     >
       <template v-if="isBatch">
-        <SelectChannel
+        <select-channel
           ref="SelectChannel"
           is-checkbox-master
           :master-id.sync="batchMasterId"
           :slaver-id.sync="batchSlaverId"
           :channel-id.sync="batchChannelId"
-        ></SelectChannel>
+        ></select-channel>
       </template>
 
       <title-box name="通道工步编辑">
@@ -44,8 +44,8 @@
         </el-button>
       </div>
     </el-dialog>
-    <StepTplSave :show.sync="tplSaveShow" :tpl-data="tplData"></StepTplSave>
-    <StepTplUse :show.sync="tplUseShow" @tplUse="tplUse"></StepTplUse>
+    <step-tpl-save :show.sync="tplSaveShow" :tpl-data="tplData"></step-tpl-save>
+    <step-tpl-use :show.sync="tplUseShow" @tplUse="tplUse"></step-tpl-use>
   </div>
 </template>
 

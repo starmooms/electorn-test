@@ -45,7 +45,7 @@
       @pagination="getList"
     />
 
-    <DeleteDialog :show.sync="deleteShow" @delete="deleteLog" />
+    <delete-dialog :show.sync="deleteShow" @delete="deleteLog" />
   </div>
 </template>
 <script lang="ts">

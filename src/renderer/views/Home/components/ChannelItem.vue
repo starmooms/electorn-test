@@ -4,7 +4,7 @@
     :class="[sampData.workerStatus.status, { error: sampData.errorMsg }]"
     @click="showChannel"
   >
-    <ContextMenu @open="openMenu">
+    <context-menu @open="openMenu">
       <div
         class="channel-box"
         @mouseenter="tipShow = true"
@@ -54,7 +54,7 @@
           {{ menu.name }}
         </a>
       </template>
-    </ContextMenu>
+    </context-menu>
   </div>
 </template>
 <script lang="ts">

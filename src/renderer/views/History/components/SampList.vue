@@ -6,7 +6,7 @@
       <el-button type="primary" @click="handleExport">导出Excel</el-button>
     </div>
     <div class="samp-table virtual-table">
-      <DynamicScroller
+      <dynamic-scroller
         ref="virtualScroll"
         class="th-body spam-table"
         key-field="sIndex"
@@ -40,7 +40,7 @@
           </div>
         </template>
         <template v-slot="{ item, index, active }">
-          <DynamicScrollerItem
+          <dynamic-scroller-item
             :item="item"
             :active="active"
             :data-index="index"
@@ -92,12 +92,12 @@
                 <span>{{ item.createTimeStr }}</span>
               </div>
             </div>
-          </DynamicScrollerItem>
+          </dynamic-scroller-item>
         </template>
-      </DynamicScroller>
+      </dynamic-scroller>
     </div>
 
-    <ExportExcel ref="exportExcel" />
+    <export-excel ref="exportExcel" />
   </div>
 </template>
 <script lang="ts">

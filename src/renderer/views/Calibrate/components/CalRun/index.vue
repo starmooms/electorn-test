@@ -88,5 +88,3 @@ export default class CalRun extends Vue {
   }
 }
 </script>
-
-<style lang="scss" scoped></style>

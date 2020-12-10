@@ -215,7 +215,7 @@ export default class SlaverDetails extends Vue {
         padding: 6px;
 
         &:last-child {
-          border-bottom: none;
+          border-bottom: 0;
         }
       }
 
@@ -296,7 +296,6 @@ export default class SlaverDetails extends Vue {
           }
         }
       }
-
       @each $status, $val in $statusColor {
         &.#{$status} {
           .msg-box {

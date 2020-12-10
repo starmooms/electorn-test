@@ -21,14 +21,6 @@ export default class TitleBox extends Vue {
   margin-top: 30px;
   border: 1px solid $--border-color-base;
 
-  &.mini {
-    padding: 18px 10px 10px;
-
-    .title-box-txt {
-      padding: 4px;
-    }
-  }
-
   .title-box-txt {
     position: absolute;
     top: 0;
@@ -37,6 +29,14 @@ export default class TitleBox extends Vue {
     margin: 0;
     background-color: #fff;
     transform: translate(0, -50%);
+  }
+
+  &.mini {
+    padding: 18px 10px 10px;
+
+    .title-box-txt {
+      padding: 4px;
+    }
   }
 
   /* .title-box-txt {

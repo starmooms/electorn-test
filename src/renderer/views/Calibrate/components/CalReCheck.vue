@@ -207,8 +207,5 @@ export default class CalReCheck extends Vue {
       // }
     }
   }
-
-  .recheck-table {
-  }
 }
 </style>

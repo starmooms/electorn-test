@@ -486,7 +486,7 @@ export default class SortingSetting extends Vue {
       margin: 0;
       background-color: #fff;
       border: 1px solid #ccc;
-      border-bottom: none;
+      border-bottom: 0;
 
       &::after {
         position: absolute;
@@ -505,7 +505,7 @@ export default class SortingSetting extends Vue {
     flex: 1;
     overflow: auto;
     border: 1px solid #ccc;
-    border-top: none;
+    border-top: 0;
 
     .box-item {
       padding: 6px 12px;

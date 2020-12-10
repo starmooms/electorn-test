@@ -192,7 +192,6 @@ $noConnect-cl: #ccc;
     margin-right: -54px;
     color: $--color-error;
   }
-
   @each $status, $val in $statusColor {
     &.#{$status} {
       .channel-icon {

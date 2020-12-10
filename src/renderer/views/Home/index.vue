@@ -289,7 +289,6 @@ export default class Home extends Vue {
         background-color: #ccc;
         border-radius: 4px;
       }
-
       @each $status, $val in $statusColor {
         &.#{$status} .color-icon {
           background-color: $val;
@@ -323,7 +322,7 @@ export default class Home extends Vue {
   border-bottom: 1px solid #ccc;
 
   &:last-child {
-    border-bottom: none;
+    border-bottom: 0;
   }
 
   .slaver-channel-box {

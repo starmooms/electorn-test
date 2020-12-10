@@ -40,4 +40,3 @@ export default class DeleteDialog extends Vue {
   }
 }
 </script>
-<style lang="scss" scoped></style>

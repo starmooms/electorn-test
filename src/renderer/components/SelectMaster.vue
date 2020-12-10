@@ -90,6 +90,16 @@ export default class SelectMaster extends Vue {
   .master-group-item {
     flex: 10%;
 
+    .el-radio-button__inner,
+    .el-checkbox-button__inner {
+      box-sizing: border-box;
+      display: block;
+      border: 0;
+      border-right: 1px solid #ccc;
+      border-radius: 0;
+      transition: none;
+    }
+
     &:nth-of-type(10n + 1)::after {
       position: absolute;
       bottom: 0;
@@ -106,16 +116,6 @@ export default class SelectMaster extends Vue {
       .el-checkbox-button__inner {
         border: 0;
       }
-    }
-
-    .el-radio-button__inner,
-    .el-checkbox-button__inner {
-      box-sizing: border-box;
-      display: block;
-      border: 0;
-      border-right: 1px solid #ccc;
-      border-radius: 0;
-      transition: none;
     }
   }
 }

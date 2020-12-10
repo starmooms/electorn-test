@@ -57,5 +57,3 @@ export default class CalResult extends Vue {
   }
 }
 </script>
-
-<style lang="scss" scoped></style>

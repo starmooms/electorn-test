@@ -87,4 +87,3 @@ export default class ChannelCur extends Vue {
   }
 }
 </script>
-<style lang="scss" scoped></style>

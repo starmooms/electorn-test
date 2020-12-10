@@ -113,4 +113,3 @@ export default class DetailsTabel extends Vue {
   }
 }
 </script>
-<style lang="scss" scoped></style>

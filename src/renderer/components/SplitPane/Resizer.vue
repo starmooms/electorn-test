@@ -32,10 +32,7 @@ $pand-icon-h: 32px;
   /* opacity: 0.2; */
   z-index: 6;
   box-sizing: border-box;
-  box-sizing: border-box;
-  box-sizing: border-box;
   background-color: #f8f8f9;
-  background-clip: padding;
   background-clip: padding;
   background-clip: padding-box;
   border-color: #dcdee2;

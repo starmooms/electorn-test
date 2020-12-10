@@ -99,7 +99,7 @@ export default class ChannelInfo extends Vue {
         border: 1px solid #333;
 
         &.action {
-          background-color: red;
+          background-color: #f00;
         }
       }
     }

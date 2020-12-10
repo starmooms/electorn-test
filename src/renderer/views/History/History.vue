@@ -47,4 +47,3 @@ export default class History extends Vue {
   }
 }
 </script>
-<style lang="scss" scoped></style>

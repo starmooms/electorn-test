@@ -80,4 +80,3 @@ export default class StepTplUse extends Vue {
   }
 }
 </script>
-<style lang="scss" scoped></style>

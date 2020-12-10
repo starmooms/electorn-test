@@ -404,16 +404,16 @@ export default class StepTplEdit extends Vue {
     background-color: #f5f7fa;
 
     ::v-deep {
+      .el-table td,
+      .el-table th {
+        vertical-align: top;
+      }
+
       .el-table,
       .el-table tr,
       .el-table th,
       .el-table--enable-row-transition .el-table__body td {
         background-color: transparent;
-      }
-
-      .el-table td,
-      .el-table th {
-        vertical-align: top;
       }
     }
 

@@ -8,7 +8,7 @@
           start-placeholder="大于等于"
           end-placeholder="小于"
           value-format="yyyy-MM-dd HH:mm:ss"
-        ></el-date-picker>
+        />
       </el-form-item>
 
       <el-form-item>

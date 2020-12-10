@@ -14,7 +14,7 @@
           :key="item.name"
           :label="item.label"
           :name="item.name"
-        ></el-tab-pane>
+        />
       </el-tabs>
 
       <div>

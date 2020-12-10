@@ -15,7 +15,7 @@
         :text-inside="true"
         :stroke-width="20"
         :percentage="percent"
-      ></el-progress>
+      />
     </el-dialog>
   </div>
 </template>

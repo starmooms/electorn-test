@@ -14,7 +14,7 @@
           :label="item.name"
           :value="item.id"
           :disabled="!item.isConnect"
-        ></el-option>
+        />
       </el-select>
       <el-button
         v-if="multiple"

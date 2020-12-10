@@ -11,7 +11,7 @@
         @mouseleave="tipShow = false"
       >
         <div v-if="sampData.errorMsg" class="sigh-box">
-          <SvgIcon icon-class="sigh"></SvgIcon>
+          <SvgIcon icon-class="sigh" />
         </div>
         <div v-if="tipShow" class="tip-box">
           <div class="tip-box-wrap">

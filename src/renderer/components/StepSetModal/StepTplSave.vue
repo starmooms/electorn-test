@@ -8,7 +8,7 @@
   >
     <el-form>
       <el-form-item label="工步模板名称">
-        <el-input v-model.trim="stepTplName" autocomplete="off"></el-input>
+        <el-input v-model.trim="stepTplName" autocomplete="off" />
       </el-form-item>
     </el-form>
 

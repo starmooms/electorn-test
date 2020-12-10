@@ -16,7 +16,7 @@
         v-model="calFormAB"
         class="tool-switch"
         inactive-text="根据AB值采样"
-      ></el-switch>
+      />
       <div class="samp-btn-box">
         <el-button
           v-for="item in rangeList"

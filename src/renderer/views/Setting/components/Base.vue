@@ -8,7 +8,7 @@
             :key="item.type"
             :label="item.name"
             :value="item.type"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
 
@@ -20,7 +20,7 @@
               :key="item.path"
               :label="item.path"
               :value="item.path"
-            ></el-option>
+            />
           </el-select>
         </el-form-item>
         <SelectMasterForm v-model="form.portMaster" />
@@ -35,7 +35,7 @@
       title="基础设置"
       :data.sync="form"
       @submit="submit"
-    ></FromAction>
+    />
     <IpConfig :show.sync="showIpConfig" :base-config="form" />
   </div>
 </template>

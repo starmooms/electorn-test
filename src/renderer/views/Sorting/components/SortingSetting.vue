@@ -45,7 +45,7 @@
               :key="index"
               :label="`${item.id + 1}(${item.loopId})：${item.msg}`"
               :value="item"
-            ></el-option>
+            />
           </el-select>
         </el-form-item>
       </el-form>
@@ -59,7 +59,7 @@
               :key="item.id"
               :label="`${item.id}（${item.desc}）`"
               :value="item.id"
-            ></el-option>
+            />
           </el-select>
           <el-button @click="configShowSet">条件设置</el-button>
         </el-form-item>

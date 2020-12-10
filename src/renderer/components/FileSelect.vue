@@ -2,7 +2,7 @@
   <div class="select-file" @click.stop="action">
     <slot>
       <el-button class="select-directory">
-        <SvgIcon class="directory-icon" icon-class="filedir"></SvgIcon>
+        <SvgIcon class="directory-icon" icon-class="filedir" />
       </el-button>
     </slot>
   </div>

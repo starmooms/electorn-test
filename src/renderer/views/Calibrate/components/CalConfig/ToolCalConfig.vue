@@ -8,7 +8,7 @@
             :key="item.type"
             :value="item.type"
             :label="item.label"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="电流范围">
@@ -18,7 +18,7 @@
             :key="item.id"
             :value="item.id"
             :label="item.label"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="电压范围">
@@ -28,7 +28,7 @@
             :key="item.id"
             :value="item.id"
             :label="item.label"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
       <ChannelSelect

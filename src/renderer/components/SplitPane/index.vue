@@ -19,7 +19,7 @@
       :split="split"
       @mousedown.native="onMouseDown"
       @click.native="onClick"
-    ></Resizer>
+    />
 
     <Pane
       class="splitter-pane splitter-paneR"

@@ -14,7 +14,7 @@
           :master-id.sync="batchMasterId"
           :slaver-id.sync="batchSlaverId"
           :channel-id.sync="batchChannelId"
-        ></SelectChannel>
+        />
       </template>
 
       <TitleBox name="通道工步编辑">
@@ -31,7 +31,7 @@
         <el-form label-width="100px">
           <el-form-item label="历史文件路径">
             <el-input v-model="filePath" placeholder="">
-              <FileSelect slot="append" v-model="filePath"></FileSelect>
+              <FileSelect slot="append" v-model="filePath" />
             </el-input>
           </el-form-item>
         </el-form>
@@ -44,8 +44,8 @@
         </el-button>
       </div>
     </el-dialog>
-    <StepTplSave :show.sync="tplSaveShow" :tpl-data="tplData"></StepTplSave>
-    <StepTplUse :show.sync="tplUseShow" @tplUse="tplUse"></StepTplUse>
+    <StepTplSave :show.sync="tplSaveShow" :tpl-data="tplData" />
+    <StepTplUse :show.sync="tplUseShow" @tplUse="tplUse" />
   </div>
 </template>
 

@@ -15,7 +15,7 @@
                 :key="item.id"
                 :label="item.name"
                 :value="item.id"
-              ></el-option>
+              />
             </el-select>
           </el-col>
           <el-col :span="4">
@@ -30,7 +30,7 @@
             v-model="form.filePath"
             open-type="file"
             :file-type="fileType"
-          ></FileSelect>
+          />
         </el-input>
       </el-form-item>
       <el-form-item>

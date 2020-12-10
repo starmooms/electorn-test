@@ -14,7 +14,7 @@
             :key="item.id"
             :label="item.name"
             :value="item.id"
-          ></el-option>
+          />
         </el-select>
       </el-col>
       <el-col :span="4">

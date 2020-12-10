@@ -7,11 +7,11 @@
         :key="item.name"
         :label="item.label"
         :name="item.name"
-      ></el-tab-pane>
+      />
     </el-tabs>
     <div class="setting-box">
       <KeepAlive>
-        <Component :is="activeName"></Component>
+        <Component :is="activeName" />
       </KeepAlive>
     </div>
   </div>

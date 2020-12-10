@@ -3,6 +3,7 @@
     <el-button type="primary" @click="chartConfingShow">
       曲线设置
     </el-button>
+
     <div class="action-box">
       <FileSelect
         slot="append"
@@ -35,6 +36,7 @@
             </el-radio>
           </el-radio-group>
         </el-form-item>
+
         <el-form-item class="form-confg-item" label="Y轴2">
           <el-radio-group v-model="form.y2">
             <el-radio
@@ -50,10 +52,10 @@
         <el-form-item class="form-confg-item" label="Y轴1显示范围">
           <div class="limt-box">
             <el-form-item label="下限">
-              <el-input v-model.number="form.y1Limt.min"></el-input>
+              <el-input v-model.number="form.y1Limt.min" />
             </el-form-item>
             <el-form-item label="上限">
-              <el-input v-model.number="form.y1Limt.max"></el-input>
+              <el-input v-model.number="form.y1Limt.max" />
             </el-form-item>
           </div>
         </el-form-item>
@@ -61,10 +63,10 @@
         <el-form-item class="form-confg-item" label="Y轴2显示范围">
           <div class="limt-box">
             <el-form-item label="下限">
-              <el-input v-model.number="form.y2Limt.min"></el-input>
+              <el-input v-model.number="form.y2Limt.min" />
             </el-form-item>
             <el-form-item label="上限">
-              <el-input v-model.number="form.y2Limt.max"></el-input>
+              <el-input v-model.number="form.y2Limt.max" />
             </el-form-item>
           </div>
         </el-form-item>
@@ -168,6 +170,7 @@ export default class Pane extends Vue {
   }
 }
 </script>
+
 <style lang="scss" scoped>
 .action-box {
   display: inline-block;

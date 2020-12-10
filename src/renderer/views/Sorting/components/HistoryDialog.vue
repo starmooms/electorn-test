@@ -15,14 +15,14 @@
               type="daterange"
               start-placeholder="大于等于"
               end-placeholder="小于"
-            ></el-date-picker>
+            />
           </el-form-item>
           <el-form-item label="启动ID">
             <el-input
               v-model="filterFileId"
               placeholder="启动ID输入"
               @keyup.enter.native="onSearch"
-            ></el-input>
+            />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="onSearch">查询</el-button>

@@ -1,12 +1,12 @@
 <template>
   <div class="echart-box">
-    <ActionBox v-if="showAction"></ActionBox>
+    <ActionBox v-if="showAction" />
     <VChart
       ref="echart"
       manual-update
       :autoresize="true"
       @zr:click="handleClick"
-    ></VChart>
+    />
   </div>
 </template>
 

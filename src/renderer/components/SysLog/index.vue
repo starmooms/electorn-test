@@ -11,7 +11,7 @@
         :title="`系统启动时间 ${start}`"
         type="info"
         :closable="false"
-      ></el-alert>
+      />
       <pre id="log-context" v-loading="loading" class="log-context">{{
         context
       }}</pre>

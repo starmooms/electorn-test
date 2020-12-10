@@ -8,7 +8,7 @@
   >
     <el-form :inline="true">
       <el-form-item label="模板名称">
-        <el-input v-model.trim="tplName"></el-input>
+        <el-input v-model.trim="tplName" />
       </el-form-item>
     </el-form>
     <StepTplEdit ref="stepTplEdit" :show-start-id="false" />

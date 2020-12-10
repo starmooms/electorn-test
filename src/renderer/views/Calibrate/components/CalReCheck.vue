@@ -11,15 +11,15 @@
                 :key="item"
                 :label="item"
                 :value="item"
-              ></el-option>
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="复检范围">
             <div class="range-item">
-              <el-input v-model="reCheckForm.IStart"></el-input>
+              <el-input v-model="reCheckForm.IStart" />
               <span class="unit">A</span>
               <span class="line">——</span>
-              <el-input v-model="reCheckForm.IEnd"></el-input>
+              <el-input v-model="reCheckForm.IEnd" />
               <span class="unit">A</span>
             </div>
           </el-form-item>
@@ -33,15 +33,15 @@
                 :key="item"
                 :label="item"
                 :value="item"
-              ></el-option>
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="复检范围">
             <div class="range-item">
-              <el-input v-model="reCheckForm.UStart"></el-input>
+              <el-input v-model="reCheckForm.UStart" />
               <span class="unit">V</span>
               <span class="line">——</span>
-              <el-input v-model="reCheckForm.UEnd"></el-input>
+              <el-input v-model="reCheckForm.UEnd" />
               <span class="unit">V</span>
             </div>
           </el-form-item>

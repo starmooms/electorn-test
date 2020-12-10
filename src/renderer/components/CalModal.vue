@@ -13,7 +13,7 @@
         class="form-item"
         :label="`${item.name}${item.key}`"
       >
-        <el-input v-model.number="item.value"></el-input>
+        <el-input v-model.number="item.value" />
       </el-form-item>
     </el-form>
 

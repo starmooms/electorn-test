@@ -9,10 +9,7 @@
           :class="{ active: menu.name === activeMenu }"
         >
           <RouterLink :to="menu.path">
-            <SvgIcon
-              v-if="menu.meta.icon"
-              :icon-class="menu.meta.icon"
-            ></SvgIcon>
+            <SvgIcon v-if="menu.meta.icon" :icon-class="menu.meta.icon" />
             {{ menu.meta.title }}
           </RouterLink>
         </li>

@@ -6,7 +6,7 @@
         :min="1"
         :max="20"
         @change="changeData"
-      ></el-input-number>
+      />
     </el-form-item>
     <el-form-item label="从控：">
       <el-input-number
@@ -14,7 +14,7 @@
         :min="1"
         :max="32"
         @change="changeData"
-      ></el-input-number>
+      />
     </el-form-item>
     <el-form-item label="通道：">
       <el-input-number
@@ -22,7 +22,7 @@
         :min="1"
         :max="8"
         @change="changeData"
-      ></el-input-number>
+      />
     </el-form-item>
   </el-form>
 </template>

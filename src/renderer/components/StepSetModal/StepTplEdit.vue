@@ -12,13 +12,13 @@
             v-if="dataSave[item.type]"
             :class="{ disable: !dataSave[item.type].enable }"
           >
-            <el-checkbox v-model="dataSave[item.type].enable"></el-checkbox>
+            <el-checkbox v-model="dataSave[item.type].enable" />
             <span class="lable">{{ item.label }}：</span>
             <el-input
               v-model.number="dataSave[item.type].value"
               class="data-save-input"
               :disabled="!dataSave[item.type].enable"
-            ></el-input>
+            />
             <span>{{ item.unit }}</span>
           </div>
         </el-form-item>
@@ -34,7 +34,7 @@
           class="feat-form-item"
           :label="item.label"
         >
-          <el-input v-model.number="features[item.type]"></el-input>
+          <el-input v-model.number="features[item.type]" />
         </el-form-item>
       </el-form>
     </div>
@@ -45,17 +45,13 @@
         <el-button type="primary" @click="stepsAdd">添加工步</el-button>
         <div v-if="showStartId" class="set-start">
           <span>设置第</span>
-          <el-input v-model.number="startId" class="set-start-input"></el-input>
+          <el-input v-model.number="startId" class="set-start-input" />
           <span>为起始工步</span>
         </div>
       </div>
       <div class="step-list-tabel">
         <el-table :data="stepsList">
-          <el-table-column
-            type="index"
-            label="步次"
-            width="50"
-          ></el-table-column>
+          <el-table-column type="index" label="步次" width="50" />
           <el-table-column label="工步类型" width="150">
             <template slot-scope="{ row, $index }">
               <el-select
@@ -69,7 +65,7 @@
                   :key="item.label"
                   :label="item.label"
                   :value="item.value"
-                ></el-option>
+                />
               </el-select>
             </template>
           </el-table-column>
@@ -115,7 +111,7 @@
           :key="item.index"
           :label="item.name"
         >
-          <el-input v-model.number="protect[item.type]"></el-input>
+          <el-input v-model.number="protect[item.type]" />
         </el-form-item>
       </el-form>
     </div>

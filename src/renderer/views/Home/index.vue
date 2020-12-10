@@ -36,7 +36,7 @@
       </div>
 
       <TitleBox name="通道列表">
-        <SelectMaster v-model="activeMasterId"></SelectMaster>
+        <SelectMaster v-model="activeMasterId" />
         <Transition name="el-fade-in">
           <div v-if="activeMaster" class="channel-main-box">
             <el-card class="box-card" shadow="never">
@@ -62,7 +62,7 @@
                         @stepEditOpen="stepsSetShow"
                         @start="channelStart"
                         @setChannelStatus="setChannelStatus"
-                      ></ChannelItem>
+                      />
                     </div>
                     <el-button @click="slaverDetails(slaver.id)">
                       查看
@@ -73,7 +73,7 @@
                       v-if="showSlaverDetail === slaver.id"
                       :master-id="activeMasterId"
                       :slaver="slaver"
-                    ></SlaverDetails>
+                    />
                   </el-collapse-transition>
                 </li>
               </ul>
@@ -87,19 +87,16 @@
         :show-item="stepsShowItem"
         :is-batch="stepsBatch"
         @openSysLog="sysLogOpen"
-      ></StepSetModal>
+      />
 
       <BatchModal
         ref="batchModal"
         :show.sync="batchShow"
         @setChannelStatus="setChannelStatus"
-      ></BatchModal>
+      />
 
-      <SetChannelStatus
-        ref="setChannelStatus"
-        @openSysLog="sysLogOpen"
-      ></SetChannelStatus>
-      <SysLog :show.sync="sysLogShow"></SysLog>
+      <SetChannelStatus ref="setChannelStatus" @openSysLog="sysLogOpen" />
+      <SysLog :show.sync="sysLogShow" />
     </div>
   </div>
 </template>

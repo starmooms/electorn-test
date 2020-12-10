@@ -1,17 +1,14 @@
 <template>
   <div v-loading="loading">
     <div class="channel-select">
-      <ChannelPosition
-        :position="position"
-        @changeData="changeChannelPos"
-      ></ChannelPosition>
+      <ChannelPosition :position="position" @changeData="changeChannelPos" />
       <el-button type="primary" @click="refresh">刷新</el-button>
       <el-button type="primary" @click="startInfoOpen">查看启动信息</el-button>
     </div>
     <SplitPane class="main-box" split="vertical">
       <template slot="paneL">
         <div class="left-container pane-container">
-          <SampChart ref="sampChart" @locate="locate"></SampChart>
+          <SampChart ref="sampChart" @locate="locate" />
         </div>
       </template>
       <template slot="paneR">
@@ -20,7 +17,7 @@
             ref="sampList"
             :samp-data="sampData"
             :step-list="sampTableList"
-          ></SampList>
+          />
         </div>
       </template>
     </SplitPane>

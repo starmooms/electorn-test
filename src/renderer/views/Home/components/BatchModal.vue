@@ -12,7 +12,7 @@
         :master-id.sync="masterIdList"
         :slaver-id.sync="slaverId"
         :channel-id.sync="channelId"
-      ></SelectChannel>
+      />
 
       <div slot="footer">
         <el-button @click="diolog = false">取消</el-button>

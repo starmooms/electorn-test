@@ -20,11 +20,24 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+
     // 组件名在html中用`PascalCase` `kebab-case`模式
     "vue/component-name-in-template-casing": ["error",  "PascalCase", {
       "registeredComponentsOnly": false, // 无法识别 ts 注册组件
       "ignores": ["/^el/", "/^vxe/"] // 插件的组件用`kebab-case` 自定义组件用`PascalCase`
     }],
+
+
+    // 空标签闭合方式   // 选项 never any always // 这里除组件外交,由eslint-plugin-prettier控制避免冲突
+    "vue/html-self-closing": ["error", {
+      "html": {
+        "void": "any",   // img imput 等一般空标签 always
+        "normal": "never", // <div></div> 普通空标签 never
+        "component": "always"
+      },
+      "svg": "always",
+      "math": "always"
+    }]
     // "vue/no-unsupported-features": ["error", {
     //   "version": "^2.6.0",
     //   "ignores": []

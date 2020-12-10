@@ -16,10 +16,10 @@
         :rules="rules"
       >
         <el-form-item label="机柜号" prop="masterId">
-          <el-input v-model.number="addForm.masterId"></el-input>
+          <el-input v-model.number="addForm.masterId" />
         </el-form-item>
         <el-form-item label="IP" prop="ip">
-          <el-input v-model.trim="addForm.ip"></el-input>
+          <el-input v-model.trim="addForm.ip" />
         </el-form-item>
       </el-form>
 
@@ -33,13 +33,13 @@
         :rules="editRules"
       >
         <el-form-item label="IP" prop="ip">
-          <el-input v-model.trim="editForm.ip"></el-input>
+          <el-input v-model.trim="editForm.ip" />
         </el-form-item>
         <el-form-item label="掩码" prop="mask">
-          <el-input v-model.trim="editForm.mask"></el-input>
+          <el-input v-model.trim="editForm.mask" />
         </el-form-item>
         <el-form-item label="网关" prop="gateway">
-          <el-input v-model.trim="editForm.gateway"></el-input>
+          <el-input v-model.trim="editForm.gateway" />
         </el-form-item>
       </el-form>
 

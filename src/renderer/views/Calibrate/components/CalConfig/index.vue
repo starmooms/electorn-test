@@ -2,7 +2,7 @@
   <el-form class="cal-config-box" label-width="80px">
     <TitleBox class="config-item" size="mini" name="工装设置">
       <el-form-item class="form-item" label="工装IP">
-        <el-input v-model="form.toolIp"></el-input>
+        <el-input v-model="form.toolIp" />
       </el-form-item>
       <el-form-item class="form-item">
         <el-button
@@ -32,7 +32,7 @@
             :key="item"
             :label="item"
             :value="item"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
 
@@ -44,7 +44,7 @@
             :key="item.label"
             :label="item.label"
             :value="item.id"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
       <el-form-item class="form-item" label="电压量程">
@@ -54,12 +54,12 @@
             :key="item.label"
             :label="item.label"
             :value="item.id"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
 
       <el-form-item class="form-item" label="采样时间(s)">
-        <el-input v-model="form.sampTime"></el-input>
+        <el-input v-model="form.sampTime" />
       </el-form-item>
     </TitleBox>
 

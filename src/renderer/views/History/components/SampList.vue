@@ -58,7 +58,7 @@
                   class="icon"
                   :icon-class="item.show ? 'extend-hide' : 'extend-show'"
                   @click="stepSubSet(item, index)"
-                ></SvgIcon>
+                />
               </div>
 
               <div class="th-td td-step-msg">

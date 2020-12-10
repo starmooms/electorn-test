@@ -28,7 +28,7 @@ module.exports = {
     }],
 
 
-    // 空标签闭合方式   // 选项 never any always // 这里除组件外交,由eslint-plugin-prettier控制避免冲突
+    // 空标签闭合方式   // 选项 never any always // 这里除组件外, 交由eslint-plugin-prettier控制避免冲突
     "vue/html-self-closing": ["error", {
       "html": {
         "void": "any",   // img imput 等一般空标签 always
@@ -38,6 +38,8 @@ module.exports = {
       "svg": "always",
       "math": "always"
     }]
+
+
     // "vue/no-unsupported-features": ["error", {
     //   "version": "^2.6.0",
     //   "ignores": []

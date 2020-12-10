@@ -22,7 +22,7 @@ const init = () => {
   Vue.config.productionTip = false
 
   Vue.use(command)
-  Vue.component('title-box', TitleBox)
+  Vue.component('TitleBox', TitleBox)
   Vue.use(ElConfirm)
 
   new Vue({

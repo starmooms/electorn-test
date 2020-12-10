@@ -53,17 +53,17 @@
 </template>
 
 <script lang="ts">
-import { deepClone } from '@/shared/utils'
-import { Form } from 'element-ui'
 import { Component, Vue, PropSync, Prop, Watch } from 'vue-property-decorator'
+import { Form } from 'element-ui'
+import { deepClone } from '@/shared/utils'
+import { checkIp } from '@/renderer/utils/validator'
 
 const getIpRule = (name = 'IP') => {
   return [
     { required: true, type: 'string', message: `${name}不能为空` },
     {
       validator: (rule: any, value: string, callback: any) => {
-        const reg = /^((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}$/
-        if (!reg.test(value)) {
+        if (!checkIp(value)) {
           callback(new Error(`${name}格式错误`))
           return
         }
@@ -105,7 +105,6 @@ export default class IpEdit extends Vue {
       {
         validator: (rule: any, value: number, callback: any) => {
           const masterId = value - 1
-          console.log(this.editMaster)
           if (masterId < 0 || Math.floor(masterId) !== masterId) {
             callback(new Error('该机柜号应该为大于1的整数'))
             return

@@ -110,10 +110,10 @@ export function computedCalAB(
 export function createRange(start: number, end: number, step: number) {
   const list: number[] = []
   let i = start
-  const stepM = NP.divide(step, 1000)
+  // const stepM = NP.divide(step, 1000)
   while (i <= end) {
     list.push(i)
-    i = NP.plus(i, stepM)
+    i = NP.plus(i, step)
   }
   return list
 }

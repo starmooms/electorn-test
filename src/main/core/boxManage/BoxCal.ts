@@ -263,8 +263,8 @@ export default class BoxCal {
       )
     }
 
-    this.saveConfig(opts.config)
-    await this.connectToolIp(opts.config.toolIp)
+    this.saveConfig(config)
+    await this.connectToolIp(config.toolIp)
 
     const queue = this.createCalTypeList({
       masterId,
@@ -278,11 +278,11 @@ export default class BoxCal {
       boxCal: this,
       runType: 1,
       typeList: queue,
-      standard: opts.config.standard,
+      standard: config.standard,
       masterId,
       slaverId,
       channelIds: channelId,
-      sampTime: opts.config.sampTime
+      sampTime: config.sampTime
     })
     this.setCalRunStatus(runQueue)
     return true
@@ -311,7 +311,7 @@ export default class BoxCal {
       masterId,
       slaverId,
       channelIds: channelId,
-      sampTime: opts.config.sampTime
+      sampTime: config.sampTime
     })
     this.setCalRunStatus(runQueue)
     return true

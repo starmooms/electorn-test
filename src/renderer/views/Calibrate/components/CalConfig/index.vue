@@ -1,8 +1,16 @@
 <template>
-  <el-form class="cal-config-box" label-width="80px">
+  <el-form
+    ref="elForm"
+    class="cal-config-box"
+    label-width="100px"
+    :show-message="false"
+    :hide-required-asterisk="true"
+    :model="form"
+    :rules="rules"
+  >
     <TitleBox class="config-item" size="mini" name="工装设置">
-      <el-form-item class="form-item" label="工装IP">
-        <el-input v-model="form.toolIp" />
+      <el-form-item class="form-item" label="工装IP" prop="toolIp">
+        <el-input v-model.trim="form.toolIp" />
       </el-form-item>
       <el-form-item class="form-item">
         <el-button
@@ -21,23 +29,21 @@
       size="mini"
       name="设备"
     >
-      <ChannelSelect v-model="form.masterId" ch-type="master" />
-      <ChannelSelect v-model="form.slaverId" ch-type="slaver" />
-      <ChannelSelect v-model="form.channelId" ch-type="channel" multiple />
+      <ChannelSelect v-model="form.masterId" ch-type="master" prop="masterId" />
+      <ChannelSelect v-model="form.slaverId" ch-type="slaver" prop="slaverId" />
+      <ChannelSelect
+        v-model="form.channelId"
+        ch-type="channel"
+        multiple
+        prop="channelId"
+      />
 
-      <el-form-item class="form-item" label="误差标准">
-        <el-select v-model="form.standard" placeholder="请选择">
-          <el-option
-            v-for="item in standardOpts"
-            :key="item"
-            :label="item"
-            :value="item"
-          />
-        </el-select>
+      <el-form-item class="form-item" label="误差标准(A/V)" prop="standard">
+        <el-input-number v-model.number="form.standard" :controls="false" />
       </el-form-item>
 
       <el-divider content-position="left">辅助设备</el-divider>
-      <el-form-item class="form-item" label="电流量程">
+      <el-form-item class="form-item" label="电流量程" prop="iRangeId">
         <el-select v-model="form.iRangeId" placeholder="请选择">
           <el-option
             v-for="item in iRangeOpts"
@@ -47,7 +53,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item class="form-item" label="电压量程">
+      <el-form-item class="form-item" label="电压量程" prop="uRangeId">
         <el-select v-model="form.uRangeId" placeholder="请选择">
           <el-option
             v-for="item in uRangeOpts"
@@ -58,8 +64,8 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item class="form-item" label="采样时间(s)">
-        <el-input v-model="form.sampTime" />
+      <el-form-item class="form-item" label="采样时间(s)" prop="sampTime">
+        <el-input-number v-model.number="form.sampTime" :controls="false" />
       </el-form-item>
     </TitleBox>
 
@@ -68,6 +74,7 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator'
+import { Form } from 'element-ui'
 import { getStaticChList } from '@/shared/config/channel'
 import {
   I_RANGE_OPTS,
@@ -79,6 +86,7 @@ import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { calCheckToolIp } from '@/renderer/ipc/channel'
 import ToolCalConfig from './ToolCalConfig.vue'
 import ChannelSelect from '../ChannelSelect.vue'
+import { checkIp } from '@/renderer/utils/validator'
 
 @Component({
   components: {
@@ -88,6 +96,10 @@ import ChannelSelect from '../ChannelSelect.vue'
 })
 export default class CalConfig extends Vue {
   @Prop({ type: Boolean, default: true }) showRunConfig!: boolean
+
+  $refs!: {
+    elForm: Form
+  }
 
   channelList = getStaticChList()
   standardOpts = deepClone(STANDARD_OPTS)
@@ -105,36 +117,63 @@ export default class CalConfig extends Vue {
     sampTime: 5
   }
 
+  rules = {
+    toolIp: [
+      { required: true, type: 'string', message: `工装IP不能未空` },
+      {
+        validator: (rule: any, value: string, callback: any) => {
+          if (!checkIp(value)) {
+            callback(new Error(`工装IP格式错误`))
+            return
+          }
+          callback()
+        }
+      }
+    ],
+    masterId: [{ required: true, type: 'number', message: '请选择机柜' }],
+    slaverId: [{ required: true, type: 'number', message: '请选择丛控' }],
+    channelId: [
+      {
+        validator: (rule: any, value: number[], callback: any) => {
+          if (value.length === 0) {
+            callback(new Error(`请选择通道`))
+            return
+          }
+          callback()
+        }
+      }
+    ],
+    uRangeId: [{ required: true, type: 'number', message: '请填写电压量程' }],
+    iRangeId: [{ required: true, type: 'number', message: '请填写电流量程' }],
+    standard: [{ required: true, type: 'number', message: '请填写标准误差' }],
+    sampTime: [{ required: true, type: 'number', message: '请填写采样时间' }]
+  }
+
   toolIpLoading = false
 
   get config() {
     return SettingStatus.userConfig?.calibrateConfig?.config
   }
 
-  getForm() {
+  validate() {
+    return new Promise((resolve, reject) => {
+      this.$refs.elForm.validate((valid, data) => {
+        if (valid) {
+          resolve(true)
+        } else {
+          const key1 = Object.keys(data)[0]
+          const err = data[key1][0]?.message
+          this.$message.info(err || '表单验证错误')
+          resolve(false)
+        }
+      })
+    })
+  }
+
+  async getForm() {
+    const status = await this.validate()
+    if (!status) return false
     const form = this.form
-    const setError = (msg: string) => {
-      this.$message.info(msg)
-      return {
-        status: false as false,
-        form: form as CalibrateT.CalConfForm
-      }
-    }
-    if (!form.toolIp) {
-      return setError('请填写工装IP')
-    } else if (form.masterId == null) {
-      return setError('请选择机柜')
-    } else if (form.slaverId == null) {
-      return setError('请选择从控')
-    } else if (form.channelId.length <= 0) {
-      return setError('请选择通道')
-    } else if (form.standard == null) {
-      return setError('请选择标准误差')
-    } else if (form.uRangeId == null) {
-      return setError('请选择电压量程')
-    } else if (form.uRangeId == null) {
-      return setError('请选择电流量程')
-    }
     form.channelId = form.channelId.sort((a, b) => a - b)
     return {
       status: true as true,
@@ -147,11 +186,15 @@ export default class CalConfig extends Vue {
   }
 
   getToolIp() {
-    if (!this.form.toolIp) {
+    const toolIp = this.form.toolIp
+    if (!toolIp) {
       this.$message.info('请先填写工装IP')
       return false
+    } else if (!checkIp(toolIp)) {
+      this.$message.info('工装IP格式错误')
+      return false
     }
-    return this.form.toolIp
+    return toolIp
   }
 
   /** 测试工装ip连接 */
@@ -199,8 +242,14 @@ export default class CalConfig extends Vue {
         margin: 0;
       }
 
-      ::v-deep .el-form-item__label {
-        font-size: 13px;
+      ::v-deep {
+        .el-form-item__label {
+          font-size: 13px;
+        }
+
+        .el-input-number .el-input__inner {
+          text-align: left;
+        }
       }
     }
   }

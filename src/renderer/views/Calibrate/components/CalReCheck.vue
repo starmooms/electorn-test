@@ -5,14 +5,13 @@
       <el-form ref="stepForm" class="step-leng" label-width="80px">
         <div class="recheck-form-item">
           <el-form-item class="step-item" label="电流步长">
-            <el-select v-model="reCheckForm.IStep" placeholder="请选择">
-              <el-option
-                v-for="item in IStepOpts"
-                :key="item"
-                :label="item"
-                :value="item"
+            <div class="range-item">
+              <el-input-number
+                v-model.number="reCheckForm.IStep"
+                :controls="false"
               />
-            </el-select>
+              <span class="unit">A</span>
+            </div>
           </el-form-item>
           <el-form-item label="复检范围">
             <div class="range-item">
@@ -27,14 +26,13 @@
 
         <div class="recheck-form-item">
           <el-form-item class="step-item" label="电压步长">
-            <el-select v-model="reCheckForm.UStep" placeholder="请选择">
-              <el-option
-                v-for="item in UStepOpts"
-                :key="item"
-                :label="item"
-                :value="item"
+            <div class="range-item">
+              <el-input-number
+                v-model.number="reCheckForm.UStep"
+                :controls="false"
               />
-            </el-select>
+              <span class="unit">V</span>
+            </div>
           </el-form-item>
           <el-form-item label="复检范围">
             <div class="range-item">
@@ -111,8 +109,6 @@ export default class CalReCheck extends Vue {
     UStart: null,
     UEnd: null
   }
-  IStepOpts = [200]
-  UStepOpts = [500]
 
   get config() {
     return SettingStatus.userConfig?.calibrateConfig?.recheckForm
@@ -124,7 +120,7 @@ export default class CalReCheck extends Vue {
       this.reCheckForm[key] = isNaN(num) ? null : num
     })
     const form = this.reCheckForm
-    if (form.IStep === null) {
+    if (!form.IStep) {
       return this.$message.error('请选择电流歩长')
     } else if (form.IStart === null) {
       return this.$message.error('请填写电流复检范围起始')
@@ -132,7 +128,7 @@ export default class CalReCheck extends Vue {
       return this.$message.error('请填写电流复检范围结束')
     } else if (form.IStart >= form.IEnd) {
       return this.$message.error('请填写电流复检范围起始应小于结束')
-    } else if (form.UStep === null) {
+    } else if (!form.UStep) {
       return this.$message.error('请选择电压歩长')
     } else if (form.UStart === null) {
       return this.$message.error('请填写电压复检范围起始')
@@ -181,6 +177,16 @@ export default class CalReCheck extends Vue {
 
       .step-item {
         margin-right: 16px;
+
+        .el-input-number--mini {
+          width: 46px;
+        }
+
+        ::v-deep {
+          .el-input-number .el-input__inner {
+            text-align: left;
+          }
+        }
       }
 
       .range-item {

@@ -1,5 +1,5 @@
 <template>
-  <el-form-item class="form-item" :label="selectName">
+  <el-form-item class="form-item" :label="selectName" :prop="prop">
     <div class="select-container">
       <el-select
         :multiple="multiple"
@@ -33,11 +33,14 @@ import { ChannelStatus } from '@/renderer/store/modules/Channel'
 import { CHANNEL_NUM } from '@/shared/config/channel'
 type Val = null | number | number[]
 
-@Component
+@Component({
+  inheritAttrs: false
+})
 export default class ChannelSelect extends Vue {
   @Model('change', { type: [Number, Array], required: false })
   private value!: Val
 
+  @Prop({ required: false, type: String }) prop
   @Prop({
     validator(value) {
       return ['master', 'slaver', 'channel'].indexOf(value) >= 0
@@ -94,6 +97,12 @@ export default class ChannelSelect extends Vue {
 <style lang="scss" scoped>
 .select-container {
   display: flex;
+
+  ::v-deep {
+    .el-select__tags {
+      flex-flow: nowrap;
+    }
+  }
 
   .select-all {
     margin-left: 12px;

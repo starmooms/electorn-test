@@ -73,15 +73,17 @@ class IpcManage {
           data: data || null
         }
       } catch (err) {
-        let msg = ''
-        switch (err.name) {
-          case ErrorEnum.TipsError:
-            msg = err.message
-            break
-          default:
-            logger.error('handle 未知错误', err)
-            msg = err.message // 未知错误
-            break
+        let msg = typeof err === 'string' ? err : ''
+        if (!msg) {
+          switch (err.name) {
+            case ErrorEnum.TipsError:
+              msg = err.message
+              break
+            default:
+              logger.error('handle 未知错误', err)
+              msg = err.message // 未知错误
+              break
+          }
         }
         return {
           status: false,

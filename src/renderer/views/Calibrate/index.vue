@@ -99,8 +99,8 @@ export default class Calibrate extends Vue {
 
   /** 开始校准修调 */
   async calStart(startData: CalibrateTR.StartData) {
-    const config = this.$refs.calConfig.getForm()
-    if (config.status) {
+    const config = await this.$refs.calConfig.getForm()
+    if (config) {
       const data = await calStart({
         config: config.form,
         calType: startData.calType
@@ -120,8 +120,8 @@ export default class Calibrate extends Vue {
 
   /** 复检开始 */
   async recheckStart(recheckForm: CalibrateTR.RecheckSumbitForm) {
-    const config = this.$refs.calConfig.getForm()
-    if (config.status) {
+    const config = await this.$refs.calConfig.getForm()
+    if (config) {
       const calType = this.$refs.calRun.getCalType()
       if (calType === false) return
 

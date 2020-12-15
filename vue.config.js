@@ -30,6 +30,8 @@ module.exports = {
   },
   chainWebpack: config => {
     // config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
+
+    // svg-sprite-loader
     config.module
       .rule('svg')
       .exclude.add(resolve('src/renderer/icons'))
@@ -45,6 +47,7 @@ module.exports = {
         symbolId: 'icon-[name]'
       })
       .end()
+
     config
       .entry('app')
       .clear()

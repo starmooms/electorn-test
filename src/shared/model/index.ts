@@ -323,7 +323,8 @@ export const CAL_READ_POST_MODEL: Model[] = [
   { name: 'slaverId', bytLen: 1 },
   { name: 'channelBit', bytLen: 1 },
   { name: 'readType', bytLen: 1 },
-  { name: 'calType', bytLen: 1 }
+  { name: 'calType', bytLen: 1 },
+  { name: 'pointer', bytLen: 4 }
 ]
 
 /** 读校准返回 */

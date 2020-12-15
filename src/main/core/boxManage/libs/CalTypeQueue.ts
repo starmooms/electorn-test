@@ -4,6 +4,7 @@ import BoxCal from '../BoxCal'
 import Bluebird from 'bluebird'
 import dayjs from 'dayjs'
 import logger from '../../Logger'
+import { readTypeEnum, SetRunType } from '@/shared/config/calibrate'
 
 /** 根据修调类型生成修调点队列 */
 interface PointQueueItem {
@@ -52,8 +53,8 @@ export default class RunPointQueue {
   masterId: number
   slaverId: number
   channelIds: number[] = []
-  runType: 1 | 5
-  readType: 1 | 3
+  runType: SetRunType.chCal | SetRunType.recheckCal
+  readType: readTypeEnum.samp | readTypeEnum.trueSamp
   runTypeName = ''
   standard: number
   sampTime: number
@@ -85,8 +86,13 @@ export default class RunPointQueue {
     this.boxCal = boxCal
     this.standard = standard
     this.sampTime = sampTime
-    this.runTypeName = this.runType === 1 ? '修调' : '复检'
-    this.readType = this.runType === 1 ? 3 : 1
+    if (this.runType === SetRunType.chCal) {
+      this.runTypeName = '修调'
+      this.readType = readTypeEnum.trueSamp
+    } else {
+      this.runTypeName = '复检'
+      this.readType = readTypeEnum.samp
+    }
   }
 
   /** 开始 */
@@ -235,12 +241,13 @@ export default class RunPointQueue {
 
   /** 读修调点,缓存结果 */
   async pointRead() {
-    const { channelIds, pointIndex } = this.getPointNow()
+    const { channelIds, pointIndex, point } = this.getPointNow()
     const params = {
       masterId: this.typeNow.masterId,
       slaverId: this.typeNow.slaverId,
       channelIds: channelIds,
-      calType: this.typeNow.calType
+      calType: this.typeNow.calType,
+      pointer: point
     }
     const [sampResult, actualResult] = await Promise.all([
       this.boxCal.readCalSamp({
@@ -250,7 +257,7 @@ export default class RunPointQueue {
       this.boxCal.readCalSamp(
         {
           ...params,
-          type: 1
+          type: readTypeEnum.calToolRead
         },
         true
       )
@@ -272,10 +279,13 @@ export default class RunPointQueue {
 
   /** 检查是否需要发送ab值和结果列表 */
   pointSendCheck() {
-    if (this.runType === 1) {
-      this.sendCalRunResult()
-    } else if (this.runType === 5) {
-      this.sendRecheckResult()
+    switch (this.runType) {
+      case SetRunType.chCal:
+        this.sendCalRunResult()
+        break
+      case SetRunType.recheckCal:
+        this.sendRecheckResult()
+        break
     }
   }
 

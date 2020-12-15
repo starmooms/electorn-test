@@ -46,26 +46,26 @@ export default class BoxCal {
       reqType = 'calTool'
     }
 
-    const writerModel = new BufModel({
+    const writeModel = new BufModel({
       model: CAL_SET_MODEL,
       listLen: {
         abList: abListLen
       }
     })
-    writerModel.writer('type', opts.type) // 1：通道校准 2：设置AB值 3：工装校准 4：清除校准值
-    writerModel.writer('masterId', masterId)
-    writerModel.writer('slaverId', opts.slaverId)
-    writerModel.writerBit('channelBit', opts.channelIds)
+    writeModel.writer('type', opts.type) // 1：通道校准 2：设置AB值 3：工装校准 4：清除校准值
+    writeModel.writer('masterId', masterId)
+    writeModel.writer('slaverId', opts.slaverId)
+    writeModel.writerBit('channelBit', opts.channelIds)
     if (calType) {
-      writerModel.writerHex('calType', calType)
+      writeModel.writerHex('calType', calType)
     }
     if (pointer) {
-      writerModel.writer('pointer', NP.times(pointer, 1000))
+      writeModel.writer('pointer', Math.floor(NP.times(pointer, 1000)))
     }
     if (pointIndex) {
-      writerModel.writer('pointIndex', pointIndex)
+      writeModel.writer('pointIndex', pointIndex)
     }
-    writerModel.ecahList('abList', (writeItem, index) => {
+    writeModel.ecahList('abList', (writeItem, index) => {
       const abItem = abList[index]
       writeItem.writer('channelId', abItem.channelId)
       writeItem.writerHex('calType', abItem.calType)
@@ -74,12 +74,12 @@ export default class BoxCal {
       writeItem.writer('b', abItem.b)
     })
 
-    // writerModel.showAll()
-    logger.debug('设置校准发送', writerModel.buf.toString('hex'))
+    // writeModel.showAll()
+    logger.debug('设置校准发送', writeModel.buf.toString('hex'))
 
     await communi.post({
       control: CONTROL_CODE.calibrateSet,
-      data: writerModel.buf,
+      data: writeModel.buf,
       masterId,
       requestType: reqType
     })
@@ -96,6 +96,7 @@ export default class BoxCal {
       model: CAL_READ_POST_MODEL
     })
     let masterId = opts.masterId
+    const { pointer } = opts
     let reqType: undefined | 'calTool' = undefined
     if (isCalTool) {
       masterId = CALTOOL_ID
@@ -107,6 +108,10 @@ export default class BoxCal {
     writeModel.writerBit('channelBit', opts.channelIds)
     writeModel.writer('readType', opts.type)
     writeModel.writerHex('calType', opts.calType)
+
+    if (pointer) {
+      writeModel.writer('pointer', Math.floor(NP.times(pointer, 1000)))
+    }
 
     logger.debug('读校准发送', writeModel.buf.toString('hex'))
 

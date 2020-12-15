@@ -194,9 +194,10 @@ declare namespace ipcReq {
     masterId: number
     slaverId: number
     channelIds: number[]
-    /** 1：读采样 2：读AB 3：复检读采样 */
+    /** 1：读采样(带ab计算) 2：读AB 3：裸采样(不带ab值计算) 4:工装读功率板通道 */
     type: number
     calType: string
+    pointer?: number
   }
 
   interface CalToolReadSamp {

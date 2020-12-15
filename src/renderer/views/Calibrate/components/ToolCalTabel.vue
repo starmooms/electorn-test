@@ -77,6 +77,7 @@
 <script lang="ts">
 import { calToolRead, calToolSet } from '@/renderer/ipc/channel'
 import { getVmParent } from '@/renderer/utils/util'
+import { readTypeEnum } from '@/shared/config/calibrate'
 import { computedCalAB } from '@/shared/utils'
 import { Vue, Component } from 'vue-property-decorator'
 import Calibrate from '../index.vue'
@@ -393,7 +394,7 @@ export default class ToolCalTabel extends Vue {
       const parent = getVmParent<Calibrate>(this, 'Calibrate')
       const ip = parent.getToolIp()
       if (ip === false) return
-      const type = this.calFormAB ? 1 : 3
+      const type = this.calFormAB ? readTypeEnum.samp : readTypeEnum.trueSamp
       const result = await calToolRead({
         config: {
           ip

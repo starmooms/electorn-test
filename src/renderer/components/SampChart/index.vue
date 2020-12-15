@@ -35,7 +35,7 @@ interface UpdateOpts {
 
 @Component({
   components: {
-    'v-chart': ECharts,
+    VChart: ECharts,
     ActionBox
   }
 })

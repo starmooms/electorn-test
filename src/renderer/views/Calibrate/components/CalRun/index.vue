@@ -57,7 +57,8 @@ import CalTypeSelect from './CalTypeSelect.vue'
   }
 })
 export default class CalRun extends Vue {
-  @Prop({ type: Array, required: true }) calResultList!: any[]
+  @Prop({ type: Array, required: true })
+  calResultList!: CalibrateT.CalRunResultItem[]
 
   calType: string[] = []
 

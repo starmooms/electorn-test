@@ -374,7 +374,7 @@ export default class RunPointQueue {
         actual,
         diff,
         status: diff <= this.standard
-      }
+      } as CalibrateT.CalRecheckItem
     })
     this.boxCal.sendCalResult('calRecheckResult', list)
   }
@@ -384,7 +384,7 @@ export default class RunPointQueue {
     if (this.runType !== 1) return
     try {
       await this.boxCal.setCal({
-        type: 2,
+        type: SetRunType.setAB,
         masterId: this.masterId,
         slaverId: this.slaverId,
         channelIds: this.channelIds,
@@ -401,7 +401,7 @@ export default class RunPointQueue {
   async closeCal() {
     try {
       await this.boxCal.setCal({
-        type: 6,
+        type: SetRunType.closeCal,
         masterId: this.masterId,
         slaverId: this.slaverId,
         channelIds: this.channelIds

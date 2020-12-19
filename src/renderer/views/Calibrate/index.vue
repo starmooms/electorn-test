@@ -39,7 +39,6 @@
           />
         </div>
         <div v-show="activeTab === 'toolCal'" class="tool-cal">
-          <!-- <tool-cal></tool-cal> -->
           <ToolCalTabel ref="toolCalTabel" />
         </div>
       </div>
@@ -81,10 +80,11 @@ export default class Calibrate extends Vue {
   /** 当前运行信息 */
   info: CalibrateT.CalRunInfo | null = null
 
-  calResultList: any[] = []
-  recheckResult: any[] = []
-  resultList: any[] = []
-  resultMap: any = {}
+  calResultList: CalibrateT.CalRunResultItem[] = []
+  recheckResult: CalibrateT.CalRecheckItem[] = []
+  /** 复检结果统计 */
+  resultList: CalibrateTR.ReCheckChResult[] = []
+  resultMap: CalibrateTR.ReCheckResult = {}
 
   tabList = [
     { name: 'channelCal', label: '通道校准' },
@@ -164,16 +164,20 @@ export default class Calibrate extends Vue {
     uRange: number[]
   ) {
     const { masterId, slaverId, channelId } = config
-    const resultList: any[] = []
-    const resultMap: any = {}
+    const resultList: CalibrateTR.ReCheckChResult[] = []
+    const resultMap: CalibrateTR.ReCheckResult = {}
     const calTypeItem = {}
+
     CALIBRATE_TYPE.forEach(item => {
-      calTypeItem[`calType_${item.type}`] = null
+      calTypeItem[
+        `calType_${item.type}`
+      ] = null as CalibrateTR.RestulRecheckStatus
       calTypeItem[`calType_result_${item.type}`] = {
         result: [],
         rangeKey: item.rangeType === 'A' ? 'iRange' : 'uRange'
-      }
+      } as CalibrateTR.RestulRecheckResult
     })
+
     channelId.forEach(chId => {
       const item = {
         masterId,
@@ -192,13 +196,15 @@ export default class Calibrate extends Vue {
   }
 
   /** 复检结果统计 */
-  handleResult(list: any[]) {
+  handleResult(list: CalibrateT.CalRecheckItem[]) {
     list.forEach(item => {
       const { masterId, slaverId, channelId, calType, pointName } = item
       const chResult = this.resultMap[`${masterId}_${slaverId}_${channelId}`]
       if (chResult) {
         const status = item.status
-        const chTypeResult = chResult[`calType_result_${calType}`]
+        const chTypeResult: CalibrateTR.RestulRecheckResult =
+          chResult[`calType_result_${calType}`]
+
         chTypeResult.result.push({
           point: pointName,
           status
@@ -252,31 +258,31 @@ export default class Calibrate extends Vue {
       eventName: '/calibrate/pointResult',
       onEmit: data => {
         this.info = data.info
-        if (data.type === 'calRunResult') {
-          this.calResultList = this.calResultList.concat(data.data)
-        } else if (data.type === 'calRecheckResult') {
-          const list = data.data
-          this.handleResult(list)
-          this.recheckResult = this.recheckResult.concat(list)
-        } else if (data.type === 'error') {
-          this.$notify.error({
-            title: '错误',
-            message: data.data,
-            duration: 0
-          })
-        } else if (data.type === 'msg') {
-          this.$notify.success({
-            title: '提示',
-            message: data.data,
-            duration: 3000
-          })
+        switch (data.type) {
+          case 'calRunResult':
+            this.calResultList = this.calResultList.concat(data.data)
+            break
+          case 'calRecheckResult': {
+            const list = data.data
+            this.handleResult(list)
+            this.recheckResult = this.recheckResult.concat(list)
+            break
+          }
+          case 'error':
+            this.$notify.error({
+              title: '错误',
+              message: data.data,
+              duration: 0
+            })
+            break
+          case 'msg':
+            this.$notify.success({
+              title: '提示',
+              message: data.data,
+              duration: 3000
+            })
+            break
         }
-        // this.portList = data.list.map(item => {
-        //   return {
-        //     readTranslate: false,
-        //     ...item
-        //   }
-        // })
       },
       vm: this
     })
@@ -298,7 +304,7 @@ export default class Calibrate extends Vue {
     next()
   }
 
-  async beforeRouteLeave(to, form, next) {
+  beforeRouteLeave(to, form, next) {
     this.isRunLeave(next)
   }
 }

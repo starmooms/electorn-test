@@ -77,7 +77,7 @@
 <script lang="ts">
 import { calToolRead, calToolSet } from '@/renderer/ipc/channel'
 import { getVmParent } from '@/renderer/utils/util'
-import { readTypeEnum } from '@/shared/config/calibrate'
+import { readTypeEnum, SetRunType } from '@/shared/config/calibrate'
 import { computedCalAB } from '@/shared/utils'
 import { Vue, Component } from 'vue-property-decorator'
 import Calibrate from '../index.vue'
@@ -164,7 +164,7 @@ export default class ToolCalTabel extends Vue {
       }
 
       const data = await this.calToolSet({
-        type: 4,
+        type: SetRunType.clearAB,
         channelIds: [channelId],
         calType: this.calType,
         pointIndex
@@ -359,7 +359,7 @@ export default class ToolCalTabel extends Vue {
       }
 
       const data = await this.calToolSet({
-        type: 2,
+        type: SetRunType.setAB,
         calType: this.calType,
         abList
       })

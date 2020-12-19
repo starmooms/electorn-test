@@ -75,9 +75,13 @@ class IpcManage {
       } catch (err) {
         let msg = typeof err === 'string' ? err : ''
         if (!msg) {
-          switch (err.name) {
+          switch (err.nameInfo) {
             case ErrorEnum.TipsError:
               msg = err.message
+              break
+            case ErrorEnum.TcpError:
+              msg = err.message
+              logger.error(err)
               break
             default:
               logger.error('handle 未知错误', err)

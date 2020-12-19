@@ -12,6 +12,7 @@ import { BoxManage } from './BoxManage'
 import configManage from '../ConfigManage'
 import { getMasterInfoObj } from '@/shared/utils'
 import { promise as ping } from 'ping'
+import handleError from '@/shared/config/handleError'
 
 /** 机柜主控控制 */
 export default class BoxMasterInfo {
@@ -97,7 +98,9 @@ export default class BoxMasterInfo {
     })
     const ipItem = list[index]
     if (!ipItem) {
-      throw new Error(`IP列表中查找不到对应项 masterId:${masterId} Ip:${ip}`)
+      throw new handleError.TipsError(
+        `IP列表中查找不到对应项 masterId:${masterId} Ip:${ip}`
+      )
     }
     return {
       index,
@@ -129,7 +132,7 @@ export default class BoxMasterInfo {
     if (changeIp) {
       const ipResult = await ping.probe(ip)
       if (ipResult.alive) {
-        throw new Error(`IP ${ip} 被占用`)
+        throw new handleError.TipsError(`IP ${ip} 被占用`)
       }
     }
 

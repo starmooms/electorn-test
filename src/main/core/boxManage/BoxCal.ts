@@ -189,7 +189,9 @@ export default class BoxCal {
     if (item && item.samp !== null) {
       return item.samp
     }
-    throw new Error(`${type}读通道:${channelId + 1} 没有返回采样`)
+    throw new handleError.TipsError(
+      `${type}读通道:${channelId + 1} 没有返回采样`
+    )
   }
 
   /** 开始校准队列 */
@@ -251,7 +253,7 @@ export default class BoxCal {
   /** 连接工装ip */
   async connectToolIp(ip: string) {
     if (this.nowRunQueue && this.nowRunQueue.isRun) {
-      throw new Error(`${this.nowRunQueue.runTypeName} 运行中`)
+      throw new handleError.TipsError(`${this.nowRunQueue.runTypeName} 运行中`)
     }
     await communi.tpcRequest.createCalTool(ip)
   }
@@ -263,7 +265,7 @@ export default class BoxCal {
     const iRange = I_RANGE_OPTS.find(item => item.id === config.iRangeId)
     const uRange = U_RANGE_OPTS.find(item => item.id === config.uRangeId)
     if (!iRange || !uRange) {
-      throw new Error(
+      throw new handleError.TipsError(
         `uRangeId:${config.uRangeId} or iRangeId:${config.iRangeId} Range undefined`
       )
     }

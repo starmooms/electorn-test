@@ -3,6 +3,7 @@ import net from 'net'
 import { TransfromModel } from '@/main/utils/transfromParser'
 import { EventEmitter } from 'events'
 import { RequestStatus } from './Communi'
+import handleError from '@/shared/config/handleError'
 
 declare type TcpClientParams = Pick<TcpClient, 'ip' | 'port' | 'masterId'>
 
@@ -13,7 +14,7 @@ export default class TcpClient extends EventEmitter {
   tcpClient!: net.Socket
   isConnect = false
   masterInfo: any
-  transfromModel = new TransfromModel(this.onData.bind(this))
+  transfromModel!: TransfromModel
   timer: NodeJS.Timeout | null = null
   clientId = 0
 
@@ -22,6 +23,11 @@ export default class TcpClient extends EventEmitter {
     this.masterId = masterId
     this.ip = ip
     this.port = port
+    this.init()
+  }
+
+  init() {
+    this.transfromModel = new TransfromModel(this.onData.bind(this))
     this.createTcpClient()
   }
 
@@ -81,24 +87,13 @@ export default class TcpClient extends EventEmitter {
     return tcpClient
   }
 
-  // /** 发送信息 */
-  // async write(buf: Buffer, cb?: (err?: Error | undefined) => void) {
-  //   if (!this.isConnect) {
-  //     if (!this.tcpClient.connecting) {
-  //       this.createTcpClient()
-  //     }
-  //     await this.waitConnect()
-  //   }
-  //   this.tcpClient.write(buf, cb)
-  // }
-
   /** 如果未连接，连接后发送 */
   async waitWrite(
     buf: Buffer,
     setError: (msg: string) => any,
     status: RequestStatus
   ) {
-    const handleError = (msg: string) => {
+    const onError = (msg: string) => {
       if (status.isWait) {
         setError(msg)
       }
@@ -114,11 +109,11 @@ export default class TcpClient extends EventEmitter {
       if (!status.isWait) return
       this.tcpClient.write(buf, err => {
         if (err) {
-          handleError(err.message)
+          onError(err.message)
         }
       })
     } catch (err) {
-      handleError(err.message || err)
+      onError(err.message || err)
     }
 
     return
@@ -131,24 +126,24 @@ export default class TcpClient extends EventEmitter {
         return resolve(null)
       }
       let timeOut: any = null
-      let handleSuccess: any = null
-      const handleError = (err: Error) => {
-        this.tcpClient.removeListener('connect', handleSuccess)
+      let onSuccess: any = null
+      const onError = (err: Error) => {
+        this.tcpClient.removeListener('connect', onSuccess)
         clearTimeout(timeOut)
         reject(err)
       }
-      handleSuccess = () => {
-        this.tcpClient.removeListener('error', handleError)
+      onSuccess = () => {
+        this.tcpClient.removeListener('error', onError)
         clearTimeout(timeOut)
         resolve(null)
       }
 
-      this.tcpClient.once('connect', handleSuccess)
-      this.tcpClient.once('error', handleError)
+      this.tcpClient.once('connect', onSuccess)
+      this.tcpClient.once('error', onError)
       timeOut = setTimeout(() => {
-        this.tcpClient.removeListener('connect', handleSuccess)
-        this.tcpClient.removeListener('error', handleError)
-        reject(`${this.ip} connect Time Out`)
+        this.tcpClient.removeListener('connect', onSuccess)
+        this.tcpClient.removeListener('error', onError)
+        reject(new handleError.TcpError(`${this.ip} connect Time Out`))
       }, 3000)
     })
   }
@@ -156,7 +151,7 @@ export default class TcpClient extends EventEmitter {
   /** 关闭连接 */
   close() {
     return new Promise<null>((resolve, reject) => {
-      logger.debug(`${this.ip} is destoryed`, this.tcpClient.destroyed)
+      logger.debug(`${this.ip} is emit close`)
       this.clientId += 1
       this.timeClear()
       if (!this.tcpClient.destroyed) {
@@ -168,7 +163,11 @@ export default class TcpClient extends EventEmitter {
       }
       this.tcpClient.once('close', hasError => {
         if (hasError) {
-          reject(`TcpClient close has Error ${this.ip} ${hasError}`)
+          reject(
+            new handleError.TcpError(
+              `TcpClient close has Error ${this.ip} ${hasError}`
+            )
+          )
         }
         resolve(null)
       })

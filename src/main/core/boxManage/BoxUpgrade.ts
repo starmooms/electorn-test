@@ -10,6 +10,7 @@ import { CONTROL_CODE, ERROR_STATUS } from '@/shared/config/port'
 import UpgradeDevice from './libs/UpgradeDevice'
 import logger from '../Logger'
 import ipcManage from '../IpcManage'
+import handleError from '@/shared/config/handleError'
 
 /** 机柜升级控制 */
 export default class BoxUpgrade {
@@ -26,7 +27,7 @@ export default class BoxUpgrade {
 
   async upgradeStart(opts: ipcReq.UpgradeForm) {
     if (this.upgradeTask && this.upgradeTask.isRun) {
-      throw new Error(`${this.upgradeTask.upgradeName} 升级中`)
+      throw new handleError.TipsError(`${this.upgradeTask.upgradeName} 升级中`)
     }
 
     this.upgradeTask = new UpgradeDevice({
@@ -74,7 +75,7 @@ export default class BoxUpgrade {
     })
     const errCode = readModel.readHex('errCode')
     if (errCode !== '00') {
-      throw new Error(`ErrorCode ${ERROR_STATUS[errCode]}`)
+      throw new Error(`Upgrade ErrorCode ${ERROR_STATUS[errCode]} no '00'`)
     }
     return true
   }

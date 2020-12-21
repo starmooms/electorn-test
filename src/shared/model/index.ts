@@ -341,7 +341,7 @@ export const CAL_READ_MODEL: Model[] = [
     len: 'sampLen',
     model: [
       { name: 'channelId', bytLen: 1 },
-      { name: 'samp', bytLen: 4 }
+      { name: 'samp', bytLen: 4, type: 'int' }
     ]
   },
   {

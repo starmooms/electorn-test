@@ -180,7 +180,9 @@ export class BufWriteModel {
   /** 直接写数值 */
   writer(name: string, value: number | string) {
     const target = this.getTarget(name)
-    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+    if (target.bytLen === void 0) {
+      throw new Error(`${name} bytLen undefined`)
+    }
     const data = (value as unknown) as number
     const offset = this.start + target.offset
     if (target.type === 'float') {
@@ -198,7 +200,9 @@ export class BufWriteModel {
   /** 按位写 */
   writerBit(name: string, data: number[], fillNum = 0) {
     const target = this.getTarget(name)
-    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+    if (target.bytLen === void 0) {
+      throw new Error(`${name} bytLen undefined`)
+    }
     const bitArr = Array(target.bytLen * 8).fill(fillNum)
     data.forEach(item => {
       bitArr[item] = 1
@@ -220,7 +224,9 @@ export class BufWriteModel {
 
   getOffset(name: string) {
     const target = this.getTarget(name)
-    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+    if (target.bytLen === void 0) {
+      throw new Error(`${name} bytLen undefined`)
+    }
     const offset = this.start + target.offset
     return {
       offset,

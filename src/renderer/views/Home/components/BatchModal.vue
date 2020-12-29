@@ -8,19 +8,19 @@
     >
       <SelectChannel
         ref="SelectChannel"
-        isCheckboxMaster
-        :masterId.sync="masterIdList"
-        :slaverId.sync="slaverId"
-        :channelId.sync="channelId"
-      ></SelectChannel>
+        is-checkbox-master
+        :master-id.sync="masterIdList"
+        :slaver-id.sync="slaverId"
+        :channel-id.sync="channelId"
+      />
 
       <div slot="footer">
         <el-button @click="diolog = false">取消</el-button>
         <el-button
           v-for="item in statusList"
           :key="item.action"
-          @click="setStatus(item.action)"
           type="primary"
+          @click="setStatus(item.action)"
         >
           {{ item.name }}
         </el-button>
@@ -31,7 +31,6 @@
 <script lang="ts">
 import { Vue, Component, PropSync, Watch } from 'vue-property-decorator'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
-import { SettingStatus } from '@/renderer/store/modules/Setting'
 import SelectChannel from '@/renderer/components/SelectChannel.vue'
 
 @Component({
@@ -95,11 +94,13 @@ export default class BatchModal extends Vue {
 .batch-dialog {
   .batch-transfer {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+
     .right-footer {
       padding: 0 10px;
     }
+
     ::v-deep {
       .el-transfer-panel__footer {
         display: flex;

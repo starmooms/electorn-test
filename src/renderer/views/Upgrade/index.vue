@@ -1,13 +1,13 @@
 <template>
   <div>
     <el-divider content-position="left">机柜升级</el-divider>
-    <UpdateForm @submit="submit" :upgradeType="1" />
+    <UpdateForm :upgrade-type="1" @submit="submit" />
     <el-divider content-position="left">丛控升级</el-divider>
-    <UpdateForm @submit="submit" :upgradeType="2" />
+    <UpdateForm :upgrade-type="2" @submit="submit" />
     <UpdateDialog
       :show.sync="updateShow"
       :title="updateName"
-      :masterInfo="updateMasterInfo"
+      :master-info="updateMasterInfo"
       :percent="updatePercent"
     />
   </div>
@@ -108,6 +108,7 @@ export default class Upgrade extends Vue {
 .limt-form-item {
   width: 420px;
 }
+
 .select-master {
   width: 246px;
 }

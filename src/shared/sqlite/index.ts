@@ -18,7 +18,7 @@ export default class Sqlite {
   connect() {
     return new Promise<null>((resolve, reject) => {
       if (this.isConnect) return
-      logger.info('sql connect', this.fileName)
+      // logger.info('sql connect', this.fileName)
       if (!this.fileName) {
         reject(`connect fileName undefined`)
         return
@@ -122,9 +122,17 @@ export default class Sqlite {
     })
   }
 
+  // /** 并行执行 */
+  // parallelize(fun: any) {
+  //   return new Promise((resolve, reject)=>{
+
+  //   })
+  // }
+
   /** 关闭连接 */
   close() {
     return new Promise<null>((resolve, reject) => {
+      console.log('执行关闭？？')
       this.db.close(err => {
         if (err) {
           reject(err)
@@ -169,14 +177,21 @@ export default class Sqlite {
     const whereSql = where ? ` WHERE ${where}` : ''
     const orderSql = order ? ` ORDER BY ${order}` : ''
 
-    const list = await this.all<T[]>(
-      `SELECT * FROM ${tableName}${whereSql}${orderSql} LIMIT ${limit} OFFSET ${limit *
-        (page - 1)};`
-    )
     const countKey = `COUNT(*)`
     const count = await this.get(
       `SELECT ${countKey} FROM ${tableName}${whereSql};`
     )
+    const total = count[countKey]
+    const pageCount = Math.ceil(total / limit)
+    if (page > pageCount) {
+      page = pageCount
+    }
+
+    const list = await this.all<T[]>(
+      `SELECT * FROM ${tableName}${whereSql}${orderSql} LIMIT ${limit} OFFSET ${limit *
+        (page - 1)};`
+    )
+
     return {
       limit,
       page,

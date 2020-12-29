@@ -1,4 +1,4 @@
-import Store, { Options } from 'electron-store'
+import Store from 'electron-store'
 import ipcManage from './IpcManage'
 import uuid from 'node-uuid'
 
@@ -25,8 +25,9 @@ const userConfigDefault: StoreT.UserConfg = {
       slaverId: null,
       channelId: [],
       standard: 0.0005,
-      uRangeId: 0,  
-      iRangeId: 0
+      uRangeId: 0,
+      iRangeId: 0,
+      sampTime: 5
     },
     recheckForm: {
       IStep: null,
@@ -41,7 +42,8 @@ const userConfigDefault: StoreT.UserConfg = {
   ipList: [],
   base: {
     requestType: 'Port',
-    portPath: ''
+    portPath: '',
+    portMaster: []
   }
 }
 

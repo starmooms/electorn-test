@@ -3,8 +3,8 @@
 module.exports = {
   singleQuote: true,
   semi: false,
-  htmlWhitespaceSensitivity: 'ignore'
-  // printWidth: 100, //每行到多少长度开始折行
+  htmlWhitespaceSensitivity: 'ignore',
+  // printWidth: 200, //每行到多少长度开始折行
   // tabWidth: 2,
   // singleQuote: true, //单引号
   // trailingComma: "none", //数组、对象最后一个元素的尾逗号

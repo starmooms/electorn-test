@@ -39,5 +39,3 @@ export default class DetailsInfo extends Vue {
   @Prop({ type: Object, required: false }) masterInfo!: IpConfigT.MasterInfo
 }
 </script>
-
-<style lang="scss" scoped></style>

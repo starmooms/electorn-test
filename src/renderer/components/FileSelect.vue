@@ -2,7 +2,7 @@
   <div class="select-file" @click.stop="action">
     <slot>
       <el-button class="select-directory">
-        <svg-icon class="directory-icon" icon-class="filedir"></svg-icon>
+        <SvgIcon class="directory-icon" icon-class="filedir" />
       </el-button>
     </slot>
   </div>
@@ -10,7 +10,6 @@
 
 <script lang="ts">
 import { remote, OpenDialogOptions } from 'electron'
-import { app } from 'electron'
 import { Component, Vue, Model, Prop } from 'vue-property-decorator'
 
 @Component

@@ -29,7 +29,7 @@ declare namespace ipcReq {
   /** 读采样数据返回 */
   interface SampReadDB {
     [key: string]: {
-      [key: string]: Port.SampItem[]
+      [key: string]: SampTB.SampItem[]
     }
   }
 
@@ -194,9 +194,10 @@ declare namespace ipcReq {
     masterId: number
     slaverId: number
     channelIds: number[]
-    /** 1：读采样 2：读AB */
+    /** 1：读采样(带ab计算) 2：读AB 3：裸采样(不带ab值计算) 4:工装读功率板通道 */
     type: number
     calType: string
+    pointer?: number
   }
 
   interface CalToolReadSamp {
@@ -217,6 +218,8 @@ declare namespace ipcReq {
     calType?: string
     /** 电压/电流(修调点) */
     pointer?: number
+    /** 修调范围 */
+    pointIndex?: number
     abList?: CalibrateTB.AbListItem[]
   }
 

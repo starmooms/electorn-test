@@ -10,6 +10,7 @@ import store from '@/renderer/store'
 import { getChannelList } from '@/renderer/ipc/channel'
 import Vue from 'vue'
 import { getStaticChList } from '@/shared/config/channel'
+import { BoxManageT } from '@/types/BoxManageT'
 
 config.rawError = true
 
@@ -19,12 +20,12 @@ interface ChannelMap {
   [key: string]: Port.ChannelItem
 }
 interface SampMap {
-  [key: string]: Port.SampItem
+  [key: string]: SampTB.SampItem
 }
 
 interface SetSamp {
   masterId: number
-  samp: Port.SampItem
+  samp: SampTB.SampItem
 }
 
 @Module({ dynamic: true, store, name: 'channel' })
@@ -42,6 +43,11 @@ export default class ChannelImpl extends VuexModule {
   public sampMap: SampMap = {}
   public staticChList = getStaticChList()
 
+  /** 机柜静态总列表 */
+  masterChList = this.staticChList.master
+  /** 机柜连接列表 */
+  masterConnectList: BoxManageT.MasterCnnect[] = []
+
   public workerStatus = {
     vacant: '空置',
     pause: '暂停',
@@ -52,13 +58,23 @@ export default class ChannelImpl extends VuexModule {
     error: '异常'
   }
 
+  /** 机柜列表，带连接状态 */
+  get masterChStatusList() {
+    return this.masterChList.map(item => {
+      return {
+        ...item,
+        isConnect: this.masterConnectList.some(c => c.masterId === item.id)
+      }
+    })
+  }
+
   @Mutation
   UPDATE_CHANNELLIST(list: Port.ChannelChangeItem[]) {
     if (this.channelMap) {
       list.forEach(item => {
         const channel = this.channelMap![`${item.masterId}_${item.slaverId}_${item.channelId}`] // eslint-disable-line
         if (channel) {
-          channel.nowStatus = item.status
+          channel.status = item.status
           channel.filePath = item.filePath
         }
       })
@@ -85,6 +101,11 @@ export default class ChannelImpl extends VuexModule {
   SET_SAMPMAP({ masterId, samp }: SetSamp) {
     const key = `${masterId}_${samp.slaverId}_${samp.channelId}`
     Vue.set(this.sampMap, key, samp)
+  }
+
+  @Mutation
+  SET_MASTERCONNECT(list: BoxManageT.MasterCnnect[]) {
+    this.masterConnectList = list
   }
 
   @Action

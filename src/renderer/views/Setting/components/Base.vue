@@ -8,26 +8,25 @@
             :key="item.type"
             :label="item.name"
             :value="item.type"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
 
-      <el-form-item
-        label="串口"
-        class="port-select"
-        v-if="form.requestType === 'Port'"
-      >
-        <el-select v-model="form.portPath" placeholder="选择串口">
-          <el-option
-            v-for="item in portList"
-            :key="item.path"
-            :label="item.path"
-            :value="item.path"
-          ></el-option>
-        </el-select>
-      </el-form-item>
+      <template v-if="form.requestType === 'Port'">
+        <el-form-item label="串口" class="port-select">
+          <el-select v-model="form.portPath" placeholder="选择串口">
+            <el-option
+              v-for="item in portList"
+              :key="item.path"
+              :label="item.path"
+              :value="item.path"
+            />
+          </el-select>
+        </el-form-item>
+        <SelectMasterForm v-model="form.portMaster" />
+      </template>
 
-      <el-form-item label="IP设置" v-else-if="form.requestType === 'Tcp'">
+      <el-form-item v-else-if="form.requestType === 'Tcp'" label="IP设置">
         <el-button @click="showIpConfig = true">IP设置</el-button>
       </el-form-item>
     </el-form>
@@ -36,8 +35,8 @@
       title="基础设置"
       :data.sync="form"
       @submit="submit"
-    ></FromAction>
-    <ip-config :show.sync="showIpConfig" />
+    />
+    <IpConfig :show.sync="showIpConfig" :base-config="form" />
   </div>
 </template>
 <script lang="ts">
@@ -47,11 +46,13 @@ import { setStoreConfig } from '@/renderer/ipc/storeConfig'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { deepClone } from '@/shared/utils'
 import IpConfig from './ipConfig/index.vue'
+import SelectMasterForm from '@/renderer/components/SelectMasterForm/index.vue'
 
 @Component({
   components: {
     FromAction,
-    IpConfig
+    IpConfig,
+    SelectMasterForm
   }
 })
 export default class Base extends Vue {
@@ -61,11 +62,6 @@ export default class Base extends Vue {
 
   form = deepClone(SettingStatus.base)
   portList: any[] = []
-
-  storeData = {
-    type: 'userConfig',
-    key: 'base'
-  }
 
   requestList = [
     { type: 'Port', name: '串口' },
@@ -92,11 +88,17 @@ export default class Base extends Vue {
     this.$refs.FromAction.update()
   }
 
+  /** 子组件ipConfig调用，更改连接类型 */
+  updateRequestType() {
+    this.form = this.$refs.FromAction.rollBack()
+    this.form.requestType = 'Tcp'
+    return this.submit()
+  }
+
   getPortList() {
     this.$command.on({
       eventName: '/port/sendList',
       onEmit: data => {
-        console.log(data)
         this.portList = data.list.map(item => {
           return {
             readTranslate: false,

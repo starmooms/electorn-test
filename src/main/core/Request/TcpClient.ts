@@ -2,17 +2,10 @@ import logger from '../Logger'
 import net from 'net'
 import { TransfromModel } from '@/main/utils/transfromParser'
 import { EventEmitter } from 'events'
+import { RequestStatus } from './Communi'
+import handleError from '@/shared/config/handleError'
 
-// interface TcpClientParams {
-//   ip: string
-//   port: number
-//   onData: (buf: Buffer) => any
-//   onEnd?: () => any
-//   onError?: (err: Error) => any
-// }
-
-// declare type TcpClientParamsP = Partial<Pick<TcpClient>>
-declare type TcpClientParams = Pick<TcpClient, 'ip' | 'port' | 'masterId'> // & TcpClientParamsP
+declare type TcpClientParams = Pick<TcpClient, 'ip' | 'port' | 'masterId'>
 
 export default class TcpClient extends EventEmitter {
   ip: string
@@ -21,7 +14,7 @@ export default class TcpClient extends EventEmitter {
   tcpClient!: net.Socket
   isConnect = false
   masterInfo: any
-  transfromModel = new TransfromModel(this.onData.bind(this))
+  transfromModel!: TransfromModel
   timer: NodeJS.Timeout | null = null
   clientId = 0
 
@@ -30,6 +23,11 @@ export default class TcpClient extends EventEmitter {
     this.masterId = masterId
     this.ip = ip
     this.port = port
+    this.init()
+  }
+
+  init() {
+    this.transfromModel = new TransfromModel(this.onData.bind(this))
     this.createTcpClient()
   }
 
@@ -75,6 +73,7 @@ export default class TcpClient extends EventEmitter {
     })
     tcpClient.on('connect', () => {
       this.isConnect = true
+      // tcpClient.setKeepAlive(true, 2000)
       logger.debug(`${info} 链接成功`)
     })
     tcpClient.on('close', () => {
@@ -88,19 +87,63 @@ export default class TcpClient extends EventEmitter {
     return tcpClient
   }
 
+  /** 如果未连接，连接后发送 */
+  async waitWrite(
+    buf: Buffer,
+    setError: (msg: string) => any,
+    status: RequestStatus
+  ) {
+    const onError = (msg: string) => {
+      if (status.isWait) {
+        setError(msg)
+      }
+    }
+    try {
+      if (!this.isConnect) {
+        if (!this.tcpClient.connecting) {
+          await this.createTcpClient()
+        }
+        await this.waitConnect()
+      }
+
+      if (!status.isWait) return
+      this.tcpClient.write(buf, err => {
+        if (err) {
+          onError(err.message)
+        }
+      })
+    } catch (err) {
+      onError(err.message || err)
+    }
+
+    return
+  }
+
   /** 链接成功返回Promsie */
   waitConnect() {
     return new Promise<null>((resolve, reject) => {
       if (this.isConnect) {
-        resolve(null)
-        return
+        return resolve(null)
       }
-      this.tcpClient.once('connect', resolve)
-      this.tcpClient.once('error', reject)
-      setTimeout(() => {
-        this.tcpClient.removeListener('connect', resolve)
-        this.tcpClient.removeListener('connect', reject)
-        reject(`${this.ip} connect Time Out`)
+      let timeOut: any = null
+      let onSuccess: any = null
+      const onError = (err: Error) => {
+        this.tcpClient.removeListener('connect', onSuccess)
+        clearTimeout(timeOut)
+        reject(err)
+      }
+      onSuccess = () => {
+        this.tcpClient.removeListener('error', onError)
+        clearTimeout(timeOut)
+        resolve(null)
+      }
+
+      this.tcpClient.once('connect', onSuccess)
+      this.tcpClient.once('error', onError)
+      timeOut = setTimeout(() => {
+        this.tcpClient.removeListener('connect', onSuccess)
+        this.tcpClient.removeListener('error', onError)
+        reject(new handleError.TcpError(`${this.ip} connect Time Out`))
       }, 3000)
     })
   }
@@ -108,7 +151,7 @@ export default class TcpClient extends EventEmitter {
   /** 关闭连接 */
   close() {
     return new Promise<null>((resolve, reject) => {
-      logger.debug(`${this.ip} is destoryed`, this.tcpClient.destroyed)
+      logger.debug(`${this.ip} is emit close`)
       this.clientId += 1
       this.timeClear()
       if (!this.tcpClient.destroyed) {
@@ -120,7 +163,11 @@ export default class TcpClient extends EventEmitter {
       }
       this.tcpClient.once('close', hasError => {
         if (hasError) {
-          reject(`TcpClient close has Error ${this.ip} ${hasError}`)
+          reject(
+            new handleError.TcpError(
+              `TcpClient close has Error ${this.ip} ${hasError}`
+            )
+          )
         }
         resolve(null)
       })

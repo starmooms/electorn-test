@@ -1,45 +1,45 @@
 <template>
   <div>
     <el-dialog
-      :title="this.editMaster ? '编辑机柜' : '添加机柜'"
+      :title="editMaster ? '编辑机柜' : '添加机柜'"
       width="420px"
       :visible.sync="dialog"
       :close-on-click-modal="false"
     >
       <!-- 添加ip -->
       <el-form
-        v-if="!this.editMaster"
-        class="config-box"
+        v-if="!editMaster"
         ref="addIpForm"
+        class="config-box"
         label-width="80px"
         :model="addForm"
         :rules="rules"
       >
         <el-form-item label="机柜号" prop="masterId">
-          <el-input v-model.number="addForm.masterId"></el-input>
+          <el-input v-model.number="addForm.masterId" />
         </el-form-item>
         <el-form-item label="IP" prop="ip">
-          <el-input v-model.trim="addForm.ip"></el-input>
+          <el-input v-model.trim="addForm.ip" />
         </el-form-item>
       </el-form>
 
       <!-- 编辑机柜 -->
       <el-form
         v-else
-        class="config-box"
         ref="editForm"
+        class="config-box"
         label-width="80px"
         :model="editForm"
         :rules="editRules"
       >
         <el-form-item label="IP" prop="ip">
-          <el-input v-model.trim="editForm.ip"></el-input>
+          <el-input v-model.trim="editForm.ip" />
         </el-form-item>
         <el-form-item label="掩码" prop="mask">
-          <el-input v-model.trim="editForm.mask"></el-input>
+          <el-input v-model.trim="editForm.mask" />
         </el-form-item>
         <el-form-item label="网关" prop="gateway">
-          <el-input v-model.trim="editForm.gateway"></el-input>
+          <el-input v-model.trim="editForm.gateway" />
         </el-form-item>
       </el-form>
 
@@ -53,17 +53,17 @@
 </template>
 
 <script lang="ts">
-import { deepClone } from '@/shared/utils'
-import { Form } from 'element-ui'
 import { Component, Vue, PropSync, Prop, Watch } from 'vue-property-decorator'
+import { Form } from 'element-ui'
+import { deepClone } from '@/shared/utils'
+import { checkIp } from '@/renderer/utils/validator'
 
 const getIpRule = (name = 'IP') => {
   return [
     { required: true, type: 'string', message: `${name}不能为空` },
     {
       validator: (rule: any, value: string, callback: any) => {
-        const reg = /^((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}$/
-        if (!reg.test(value)) {
+        if (!checkIp(value)) {
           callback(new Error(`${name}格式错误`))
           return
         }
@@ -105,7 +105,6 @@ export default class IpEdit extends Vue {
       {
         validator: (rule: any, value: number, callback: any) => {
           const masterId = value - 1
-          console.log(this.editMaster)
           if (masterId < 0 || Math.floor(masterId) !== masterId) {
             callback(new Error('该机柜号应该为大于1的整数'))
             return

@@ -1,5 +1,4 @@
 import { BoxManage } from './BoxManage'
-import { promises as fs } from 'fs'
 import {
   UPGRADE_MODEL,
   UPGRADE_BACK_MODEL,
@@ -11,6 +10,7 @@ import { CONTROL_CODE, ERROR_STATUS } from '@/shared/config/port'
 import UpgradeDevice from './libs/UpgradeDevice'
 import logger from '../Logger'
 import ipcManage from '../IpcManage'
+import handleError from '@/shared/config/handleError'
 
 /** 机柜升级控制 */
 export default class BoxUpgrade {
@@ -27,7 +27,7 @@ export default class BoxUpgrade {
 
   async upgradeStart(opts: ipcReq.UpgradeForm) {
     if (this.upgradeTask && this.upgradeTask.isRun) {
-      throw new Error(`${this.upgradeTask.upgradeName} 升级中`)
+      throw new handleError.TipsError(`${this.upgradeTask.upgradeName} 升级中`)
     }
 
     this.upgradeTask = new UpgradeDevice({
@@ -59,11 +59,15 @@ export default class BoxUpgrade {
     writeModel.writer('totalCheck', opts.totalCheck)
     writeModel.concat(opts.buf)
 
+    logger.debug('升级发送', writeModel.buf.toString('hex'))
+
     const resultBuf = await communi.post({
       control: CONTROL_CODE.upgradeSend,
       data: writeModel.buf,
       masterId
     })
+
+    logger.debug('升级返回', resultBuf.toString('hex'))
 
     const readModel = new BufModel({
       model: UPGRADE_BACK_MODEL,
@@ -71,7 +75,7 @@ export default class BoxUpgrade {
     })
     const errCode = readModel.readHex('errCode')
     if (errCode !== '00') {
-      throw new Error(`ErrorCode ${ERROR_STATUS[errCode]}`)
+      throw new Error(`Upgrade ErrorCode ${ERROR_STATUS[errCode]} no '00'`)
     }
     return true
   }
@@ -106,9 +110,7 @@ export default class BoxUpgrade {
           }
         : null
     }
-    ipcManage.send('/boxUpdate/updateInfo', () => {
-      return result
-    })
+    ipcManage.send('/boxUpdate/updateInfo', result)
   }
 }
 

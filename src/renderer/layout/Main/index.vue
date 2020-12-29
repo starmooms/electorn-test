@@ -1,8 +1,8 @@
 <template>
   <div id="main">
-    <nav-bar></nav-bar>
+    <NavBar />
     <div id="main-left" class="nav-left">
-      <router-view />
+      <RouterView />
     </div>
   </div>
 </template>
@@ -21,12 +21,13 @@ export default class Main extends Vue {}
 
 <style lang="scss">
 #main {
-  height: 100%;
   display: flex;
+  height: 100%;
 }
+
 .nav-left {
   flex: 1;
+  padding: 16px 20px;
   overflow: auto;
-  padding: 46px 20px;
 }
 </style>

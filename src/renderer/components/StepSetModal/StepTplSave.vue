@@ -8,13 +8,13 @@
   >
     <el-form>
       <el-form-item label="工步模板名称">
-        <el-input v-model.trim="stepTplName" autocomplete="off"></el-input>
+        <el-input v-model.trim="stepTplName" autocomplete="off" />
       </el-form-item>
     </el-form>
 
     <div slot="footer">
       <el-button @click="closeModal">取 消</el-button>
-      <el-button type="primary" @click="stepsTplSave" :loading="this.loading">
+      <el-button type="primary" :loading="loading" @click="stepsTplSave">
         确 定
       </el-button>
     </div>

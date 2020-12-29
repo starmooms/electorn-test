@@ -1,5 +1,5 @@
 import TcpClient from './TcpClient'
-import { CommuniClass } from './Communi'
+import { CommuniClass, RequestStatus } from './Communi'
 import logger from '../Logger'
 import configManage from '../ConfigManage'
 import { CALTOOL_ID } from '@/shared/config/calibrate'
@@ -87,17 +87,14 @@ export default class TcpRequest {
   }
 
   /** 中位机通讯 */
-  post(buf: Buffer, setError: any, masterId: number) {
+  post(buf: Buffer, setError: any, status: RequestStatus) {
+    const masterId = status.masterId
     const tcpItem = this.tcpMap.get(masterId)
-    if (tcpItem) {
-      tcpItem.tcpClient.write(buf, err => {
-        if (err) {
-          setError(err)
-        }
-      })
-    } else {
-      setError(new Error(`机柜${masterId} 未初始化链接`))
+    if (!tcpItem) {
+      setError(`机柜${masterId} 未初始化链接`)
+      return
     }
+    tcpItem.waitWrite(buf, setError, status)
   }
 
   /** 获取连接状态 */
@@ -126,17 +123,12 @@ export default class TcpRequest {
   }
 
   /** 校准工装通讯 */
-  calToolPost(buf: Buffer, setError: any) {
+  calToolPost(buf: Buffer, setError: any, status: RequestStatus) {
     const tcpItem = this.calToolClient
-    if (tcpItem) {
-      tcpItem.tcpClient.write(buf, err => {
-        if (err) {
-          setError(err)
-        }
-      })
-    } else {
-      setError(new Error(`工装 未初始化链接`))
+    if (!tcpItem) {
+      return setError('工装 未初始化链接')
     }
+    tcpItem.waitWrite(buf, setError, status)
   }
 
   /** 校准工装关闭链接 */

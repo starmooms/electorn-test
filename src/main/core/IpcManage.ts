@@ -7,6 +7,7 @@ import {
   BrowserWindow
 } from 'electron'
 import logger from './Logger'
+import { ErrorEnum } from '@/shared/config/handleError'
 
 declare type SendCb = () => any
 declare type onListener = (event: IpcMainEvent, ...args: any[]) => void
@@ -17,8 +18,6 @@ declare type handListener = (
 
 class IpcManage {
   emitList: any = {}
-
-  // constructor() {}
 
   ipcError(err: any, win?: BrowserWindow) {
     if (!win) {
@@ -74,10 +73,25 @@ class IpcManage {
           data: data || null
         }
       } catch (err) {
-        logger.warn('handle错误', err)
+        let msg = typeof err === 'string' ? err : ''
+        if (!msg) {
+          switch (err.nameInfo) {
+            case ErrorEnum.TipsError:
+              msg = err.message
+              break
+            case ErrorEnum.TcpError:
+              msg = err.message
+              logger.error(err)
+              break
+            default:
+              logger.error('handle 未知错误', err)
+              msg = err.message // 未知错误
+              break
+          }
+        }
         return {
           status: false,
-          error: err
+          error: msg
         }
       }
     })
@@ -87,9 +101,8 @@ class IpcManage {
     ipcMain.removeHandler(channel)
   }
 
-  async send(channel: string, cb: SendCb, win?: BrowserWindow) {
+  send(channel: string, data: any, win?: BrowserWindow) {
     try {
-      const data = await cb()
       if (!win) {
         const mainWin = winManager.getWin('mainWin')
         if (!mainWin) {
@@ -104,8 +117,8 @@ class IpcManage {
   }
 
   commonMsg(channel: string, ...args: any[]) {
-    winManager.winList.forEach(win => {
-      win.webContents.send('commomMsg', channel, ...args)
+    winManager.winList.forEach(winItem => {
+      winItem.win.webContents.send('commomMsg', channel, ...args)
     })
   }
 }

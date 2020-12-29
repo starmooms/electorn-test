@@ -1,12 +1,11 @@
 <template>
   <div id="app">
-    <div v-if="titleBar">ddd</div>
-    <router-view />
+    <RouterView />
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'vue-property-decorator'
+import { Component, Vue } from 'vue-property-decorator'
 import { ipcRenderer } from 'electron'
 import { SettingStatus } from './store/modules/Setting'
 import { ChannelStatus } from './store/modules/Channel'
@@ -17,15 +16,10 @@ export default class App extends Vue {
   tips = ''
   downloadPercent = 0
 
-  get portPath() {
-    return SettingStatus.portPath
-  }
-
   get titleBar() {
     return SettingStatus.titleBar
   }
 
-  @Watch('portPath')
   checkPortPath() {
     ChannelStatus.getList()
   }
@@ -35,8 +29,13 @@ export default class App extends Vue {
     ipcRenderer.on('commomMsg', (event, channel, data) => {
       switch (channel) {
         case 'updateChannelList':
-          // 更新通道列表
-          ChannelStatus.UPDATE_CHANNELLIST(data)
+          ChannelStatus.UPDATE_CHANNELLIST(data) // 更新通道列表
+          break
+        case 'userConfig':
+          SettingStatus.UPDATE_USERCONFIG(data) // 更新用户设置
+          break
+        case 'updateConnect':
+          ChannelStatus.SET_MASTERCONNECT(data) // 更新机柜连接
           break
         default:
           console.error(`${channel} undefined`)

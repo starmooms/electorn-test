@@ -1,9 +1,9 @@
 <template>
   <el-checkbox-group
-    class="type-select"
     v-model="selectType"
-    @change="changeType"
+    class="type-select"
     size="mini"
+    @change="changeType"
   >
     <el-checkbox
       v-for="item in calTypeList"
@@ -39,14 +39,16 @@ export default class CalTypeSelect extends Vue {
 </script>
 <style lang="scss" scoped>
 .type-select {
-  width: 200px;
   display: flex;
   flex-flow: row wrap;
+  width: 200px;
   margin-right: 20px;
+
   .el-checkbox {
     flex: 0 0 50%;
     margin-right: 0;
     margin-bottom: 10px;
+
     &:nth-of-type(2n) {
       margin-right: 0;
     }

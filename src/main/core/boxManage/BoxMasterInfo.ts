@@ -12,12 +12,24 @@ import { BoxManage } from './BoxManage'
 import configManage from '../ConfigManage'
 import { getMasterInfoObj } from '@/shared/utils'
 import { promise as ping } from 'ping'
+import handleError from '@/shared/config/handleError'
 
 /** 机柜主控控制 */
 export default class BoxMasterInfo {
   parent: BoxManage
   constructor(parent: BoxManage) {
     this.parent = parent
+  }
+
+  /** 删除ip连接 */
+  async closeIpItem(masterId: number) {
+    await communi.tpcRequest.closeTcpItem(masterId)
+    this.updateConnect()
+  }
+
+  /** 刷新boxMange 当前连接机柜 */
+  updateConnect() {
+    this.parent.updateConnectMaster()
   }
 
   async getMasterInfo(masterId: number) {
@@ -63,17 +75,6 @@ export default class BoxMasterInfo {
       }
     }
     return info
-
-    // if (!communi.tpcRequest) {
-    //   throw new Error('未生成Tcp管理对象')
-    // }
-    // list.map(ip => {
-    //   try {
-    //     communi.tpcRequest!.getMasterInfo(ip)
-    //   } catch (err) {
-    //     logger.error(err)
-    //   }
-    // })
   }
 
   /** 获取ip列表 */
@@ -97,7 +98,9 @@ export default class BoxMasterInfo {
     })
     const ipItem = list[index]
     if (!ipItem) {
-      throw new Error('查找不到对应项')
+      throw new handleError.TipsError(
+        `IP列表中查找不到对应项 masterId:${masterId} Ip:${ip}`
+      )
     }
     return {
       index,
@@ -111,13 +114,14 @@ export default class BoxMasterInfo {
     const { list, ipItem, index } = this.findIpItem(opts.masterId, opts.ip)
     list.splice(index, 1)
     configManage.userConfig.set('ipList', list)
-    await communi.tpcRequest.closeTcpItem(ipItem.masterId)
+    await this.closeIpItem(ipItem.masterId)
     return true
   }
 
   /** 刷新连接 */
   async refreshConnect() {
     await communi.tpcRequest.createdConnect()
+    this.updateConnect()
     return await this.getIpList()
   }
 
@@ -128,7 +132,7 @@ export default class BoxMasterInfo {
     if (changeIp) {
       const ipResult = await ping.probe(ip)
       if (ipResult.alive) {
-        throw new Error(`IP ${ip} 被占用`)
+        throw new handleError.TipsError(`IP ${ip} 被占用`)
       }
     }
 
@@ -153,7 +157,7 @@ export default class BoxMasterInfo {
       const { list, index } = this.findIpItem(opts.masterId, opts.ipOld)
       list[index].ip = ip
       configManage.userConfig.set('ipList', list)
-      await communi.tpcRequest.closeTcpItem(opts.masterId)
+      await this.closeIpItem(opts.masterId)
       status = 1
     }
     return {

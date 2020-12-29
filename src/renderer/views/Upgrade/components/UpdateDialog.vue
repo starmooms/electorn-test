@@ -15,7 +15,7 @@
         :text-inside="true"
         :stroke-width="20"
         :percentage="percent"
-      ></el-progress>
+      />
     </el-dialog>
   </div>
 </template>
@@ -39,6 +39,7 @@ export default class UpdateDialog extends Vue {
   ::v-deep .el-dialog__body {
     padding: 16px 20px;
   }
+
   .info {
     margin: 6px 0;
   }

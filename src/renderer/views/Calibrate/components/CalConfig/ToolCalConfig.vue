@@ -1,5 +1,5 @@
 <template>
-  <title-box size="mini" name="工装校准">
+  <TitleBox size="mini" name="工装校准">
     <el-form :model="form" class="demo-form-inline" label-width="80px">
       <el-form-item label="校准类型">
         <el-select v-model="form.calType" placeholder="请选择校准类型">
@@ -8,7 +8,7 @@
             :key="item.type"
             :value="item.type"
             :label="item.label"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="电流范围">
@@ -18,7 +18,7 @@
             :key="item.id"
             :value="item.id"
             :label="item.label"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="电压范围">
@@ -28,14 +28,19 @@
             :key="item.id"
             :value="item.id"
             :label="item.label"
-          ></el-option>
+          />
         </el-select>
       </el-form-item>
+      <ChannelSelect
+        v-model="form.channel"
+        ch-type="channel"
+        :multiple="true"
+      />
     </el-form>
     <div>
       <el-button type="primary" @click="start">开始校准</el-button>
     </div>
-  </title-box>
+  </TitleBox>
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
@@ -45,13 +50,20 @@ import {
   U_TOOL_RANGE_OPTS
 } from '@/shared/config/calibrate'
 import { deepClone } from '@/shared/utils'
+import { sortForNumber } from '@/renderer/utils/util'
+import ChannelSelect from '../ChannelSelect.vue'
 
-@Component
-export default class ToolCal extends Vue {
+@Component({
+  components: {
+    ChannelSelect
+  }
+})
+export default class ToolCalConfig extends Vue {
   form = {
     calType: null as null | string,
     iRange: null,
-    uRange: null
+    uRange: null,
+    channel: []
   }
   claType = []
   calTypeList = deepClone(CALIBRATE_TYPE)
@@ -71,6 +83,8 @@ export default class ToolCal extends Vue {
   start() {
     if (!this.selectType || !this.selectRangeType) {
       return this.$message.error('请选选择校准类型')
+    } else if (this.form.channel.length === 0) {
+      return this.$message.error('请选选择校准通道')
     }
 
     const rangeType = this.selectRangeType
@@ -84,9 +98,10 @@ export default class ToolCal extends Vue {
     if (!rangeItem) {
       return this.$message.error(`rangeId ${rangeId} undefined`)
     }
-    this.$emit('start', {
+    this.$emit('toolCalStart', {
       selectType: this.selectType,
-      selectRange: rangeItem
+      selectRange: rangeItem,
+      channelIds: sortForNumber(this.form.channel).slice()
     })
   }
 }

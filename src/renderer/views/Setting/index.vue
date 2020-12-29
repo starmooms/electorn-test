@@ -7,12 +7,12 @@
         :key="item.name"
         :label="item.label"
         :name="item.name"
-      ></el-tab-pane>
+      />
     </el-tabs>
     <div class="setting-box">
-      <keep-alive>
-        <component :is="activeName"></component>
-      </keep-alive>
+      <KeepAlive>
+        <Component :is="activeName" />
+      </KeepAlive>
     </div>
   </div>
 </template>
@@ -48,18 +48,23 @@ export default class Setting extends Vue {
 .setting-container {
   margin-top: 0;
 }
+
 .setting-box {
   padding: 16px 7% 64px 0;
+
   ::v-deep {
     .small-input {
       max-width: 120px;
     }
+
     .from-sub-item {
-      color: $--color-text-regular;
       margin-bottom: 10px;
+      color: $--color-text-regular;
+
       &:last-of-type {
         margin-bottom: 0;
       }
+
       .from-sub-name {
         margin-right: 10px;
       }

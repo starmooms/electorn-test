@@ -18,6 +18,7 @@ import {
 import ipcManage from '../IpcManage'
 import configManage from '../ConfigManage'
 import RunPointQueue, { TypeQueueItem } from './libs/CalTypeQueue'
+import handleError from '@/shared/config/handleError'
 
 /** 机柜校准控制 */
 export default class BoxCal {
@@ -34,7 +35,7 @@ export default class BoxCal {
    *  @isCalTool 是否工装通讯
    *  */
   async setCal(opts: ipcReq.SetCalOpts, isCalTool = false) {
-    const { calType, pointer } = opts
+    const { calType, pointer, pointIndex } = opts
     let masterId = opts.masterId
     const abList = opts.abList || []
     const abListLen = abList.length
@@ -45,24 +46,26 @@ export default class BoxCal {
       reqType = 'calTool'
     }
 
-    const writerModel = new BufModel({
+    const writeModel = new BufModel({
       model: CAL_SET_MODEL,
       listLen: {
         abList: abListLen
       }
     })
-    writerModel.writer('type', opts.type) // 1：通道校准 2：设置AB值 3：工装校准 4：清除校准值
-    writerModel.writer('abLen', abListLen)
-    writerModel.writer('masterId', masterId)
-    writerModel.writer('slaverId', opts.slaverId)
-    writerModel.writerBit('channelBit', opts.channelIds)
+    writeModel.writer('type', opts.type) // 1：通道校准 2：设置AB值 3：工装校准 4：清除校准值
+    writeModel.writer('masterId', masterId)
+    writeModel.writer('slaverId', opts.slaverId)
+    writeModel.writerBit('channelBit', opts.channelIds)
     if (calType) {
-      writerModel.writerHex('calType', calType)
+      writeModel.writerHex('calType', calType)
     }
     if (pointer) {
-      writerModel.writer('pointer', NP.times(pointer, 1000))
+      writeModel.writer('pointer', Math.floor(NP.times(pointer, 1000)))
     }
-    writerModel.ecahList('abList', (writeItem, index) => {
+    if (pointIndex) {
+      writeModel.writer('pointIndex', pointIndex)
+    }
+    writeModel.ecahList('abList', (writeItem, index) => {
       const abItem = abList[index]
       writeItem.writer('channelId', abItem.channelId)
       writeItem.writerHex('calType', abItem.calType)
@@ -71,14 +74,17 @@ export default class BoxCal {
       writeItem.writer('b', abItem.b)
     })
 
-    // writerModel.showAll()
+    // writeModel.showAll()
+    logger.debug('设置校准发送', writeModel.buf.toString('hex'))
 
     await communi.post({
       control: CONTROL_CODE.calibrateSet,
-      data: writerModel.buf,
+      data: writeModel.buf,
       masterId,
       requestType: reqType
     })
+    // return true
+    return
   }
 
   /**
@@ -90,6 +96,7 @@ export default class BoxCal {
       model: CAL_READ_POST_MODEL
     })
     let masterId = opts.masterId
+    const { pointer } = opts
     let reqType: undefined | 'calTool' = undefined
     if (isCalTool) {
       masterId = CALTOOL_ID
@@ -102,12 +109,25 @@ export default class BoxCal {
     writeModel.writer('readType', opts.type)
     writeModel.writerHex('calType', opts.calType)
 
+    if (pointer) {
+      writeModel.writer('pointer', Math.floor(NP.times(pointer, 1000)))
+    }
+
+    logger.debug('读校准发送', writeModel.buf.toString('hex'))
+
     const resultBuf = await communi.post({
       control: CONTROL_CODE.calibrateRead,
       data: writeModel.buf,
       masterId,
       requestType: reqType
     })
+
+    // const resultBuf = Buffer.from(
+    //   '00000102080000000000000100000000020000000003000000000400000000050000000006000000000700001a69',
+    //   'hex'
+    // )
+
+    logger.debug('读校准返回', resultBuf.toString('hex'))
 
     const readModel = new BufModel({
       model: CAL_READ_MODEL,
@@ -160,18 +180,24 @@ export default class BoxCal {
   }
 
   /** 获取读校准返回, 验证参数为空报错 */
-  getCalResultSamp(result: CalibrateTB.CalResult, channelId: number) {
+  getCalResultSamp(
+    result: CalibrateTB.CalResult,
+    channelId: number,
+    type: string
+  ) {
     const item = result[channelId]
     if (item && item.samp !== null) {
       return item.samp
     }
-    throw new Error(`read cal result channel:${channelId} Error`)
+    throw new handleError.TipsError(
+      `${type}读通道:${channelId + 1} 没有返回采样`
+    )
   }
 
   /** 开始校准队列 */
   setCalRunStatus(queue: RunPointQueue) {
     if (this.isCalRun === true) {
-      throw new Error('Cal is Run now')
+      throw new handleError.TipsError(`修调正在运行中`)
     }
     this.isCalRun = true
     this.nowRunQueue = queue
@@ -224,10 +250,10 @@ export default class BoxCal {
     return list
   }
 
-  /** 校准开始前 */
-  async beforCalStart(ip: string) {
+  /** 连接工装ip */
+  async connectToolIp(ip: string) {
     if (this.nowRunQueue && this.nowRunQueue.isRun) {
-      throw new Error(`${this.nowRunQueue.runTypeName} 运行中`)
+      throw new handleError.TipsError(`${this.nowRunQueue.runTypeName} 运行中`)
     }
     await communi.tpcRequest.createCalTool(ip)
   }
@@ -239,13 +265,13 @@ export default class BoxCal {
     const iRange = I_RANGE_OPTS.find(item => item.id === config.iRangeId)
     const uRange = U_RANGE_OPTS.find(item => item.id === config.uRangeId)
     if (!iRange || !uRange) {
-      throw new Error(
+      throw new handleError.TipsError(
         `uRangeId:${config.uRangeId} or iRangeId:${config.iRangeId} Range undefined`
       )
     }
 
-    this.saveConfig(opts.config)
-    await this.beforCalStart(opts.config.toolIp)
+    this.saveConfig(config)
+    await this.connectToolIp(config.toolIp)
 
     const queue = this.createCalTypeList({
       masterId,
@@ -255,15 +281,15 @@ export default class BoxCal {
       uRange: uRange.value
     })
 
-    // queue, channelId, this
     const runQueue = new RunPointQueue({
       boxCal: this,
       runType: 1,
       typeList: queue,
-      standard: opts.config.standard,
+      standard: config.standard,
       masterId,
       slaverId,
-      channelIds: channelId
+      channelIds: channelId,
+      sampTime: config.sampTime
     })
     this.setCalRunStatus(runQueue)
     return true
@@ -275,7 +301,7 @@ export default class BoxCal {
     const { masterId, slaverId, channelId, toolIp } = config
 
     this.saveConfig(config, recheckForm)
-    await this.beforCalStart(toolIp)
+    await this.connectToolIp(toolIp)
 
     const queue = this.createCalTypeList({
       masterId,
@@ -291,7 +317,8 @@ export default class BoxCal {
       standard: config.standard,
       masterId,
       slaverId,
-      channelIds: channelId
+      channelIds: channelId,
+      sampTime: config.sampTime
     })
     this.setCalRunStatus(runQueue)
     return true
@@ -310,9 +337,7 @@ export default class BoxCal {
           }
         : null
     }
-    ipcManage.send('/calibrate/pointResult', () => {
-      return result
-    })
+    return ipcManage.send('/calibrate/pointResult', result)
   }
 
   /** 离开页面时关闭工装 */

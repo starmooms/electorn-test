@@ -12,8 +12,11 @@ function resolve(dir) {
 module.exports = {
   lintOnSave: isDev,
   configureWebpack: {
-    devtool: isDev ? 'source-map' : 'none',
+    devtool: 'source-map', // isDev ? 'source-map' : 'none',
     plugins: [new WorkerPlugin()]
+    // optimization: {
+    //   minimize: false
+    // }
   },
   css: {
     loaderOptions: {
@@ -26,6 +29,9 @@ module.exports = {
     }
   },
   chainWebpack: config => {
+    // config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
+
+    // svg-sprite-loader
     config.module
       .rule('svg')
       .exclude.add(resolve('src/renderer/icons'))
@@ -41,6 +47,7 @@ module.exports = {
         symbolId: 'icon-[name]'
       })
       .end()
+
     config
       .entry('app')
       .clear()
@@ -48,6 +55,10 @@ module.exports = {
   },
   pluginOptions: {
     electronBuilder: {
+      chainWebpackMainProcess(config) {
+        config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
+        // config.plugins.delete('uglify')
+      },
       nodeIntegration: true,
       mainProcessFile: 'src/main/background.ts',
       mainProcessWatch: ['src/main'],
@@ -55,10 +66,12 @@ module.exports = {
       // preload: 'src/main/preload.ts',
       builderOptions: {
         // productName: '中文名',
+        // asar: false,
         electronDownload: {
           mirror: 'https://npm.taobao.org/mirrors/electron/'
         },
         appId: 'com.xxx.app',
+        npmRebuild: false, // 不自动构建重构原生模块
         // compression: 'maximum',
         // compression: 'store',
         mac: {

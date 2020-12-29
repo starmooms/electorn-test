@@ -8,10 +8,10 @@
   >
     <el-form :inline="true">
       <el-form-item label="模板名称">
-        <el-input v-model.trim="tplName"></el-input>
+        <el-input v-model.trim="tplName" />
       </el-form-item>
     </el-form>
-    <step-tpl-edit ref="stepTplEdit" :showStartId="false" />
+    <StepTplEdit ref="stepTplEdit" :show-start-id="false" />
     <div slot="footer">
       <el-button @click="closeModal">取 消</el-button>
       <el-button @click="saveEditTpl">保 存</el-button>
@@ -44,7 +44,6 @@ export default class StepTplUse extends Vue {
   changeDialog(v: boolean) {
     if (v === true) {
       this.$nextTick(() => {
-        console.log(this.editRow)
         this.tplName = this.editRow.name
         this.id = this.editRow.id
         this.$refs.stepTplEdit.useTplData(this.editRow.tplData)
@@ -81,4 +80,3 @@ export default class StepTplUse extends Vue {
   }
 }
 </script>
-<style lang="scss" scoped></style>

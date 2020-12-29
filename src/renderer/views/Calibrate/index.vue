@@ -1,9 +1,9 @@
 <template>
   <div class="calibrate-container">
     <div class="calibrate-l">
-      <cal-config
+      <CalConfig
         ref="calConfig"
-        :showRunConfig="showRunConfig"
+        :show-run-config="showRunConfig"
         @toolCalStart="toolCalStart"
       />
     </div>
@@ -14,32 +14,31 @@
           :key="item.name"
           :label="item.label"
           :name="item.name"
-        ></el-tab-pane>
+        />
       </el-tabs>
 
       <div>
-        <div class="channel-cal" v-show="activeTab === 'channelCal'">
-          <cal-run
+        <div v-show="activeTab === 'channelCal'" class="channel-cal">
+          <CalRun
             ref="calRun"
+            :cal-result-list="calResultList"
             @start="calStart"
             @stop="calStop"
             @clean="clean(1)"
-            :calResultList="calResultList"
           />
-          <cal-re-check
+          <CalReCheck
+            :recheck-result="recheckResult"
             @start="recheckStart"
             @stop="calStop"
             @clean="clean(5)"
-            :recheckResult="recheckResult"
           />
-          <cal-result
-            :calTypeList="calTypeList"
-            :resultList="resultList"
+          <CalResult
+            :cal-type-list="calTypeList"
+            :result-list="resultList"
             @clean="clean(5, true)"
           />
         </div>
-        <div class="tool-cal" v-show="activeTab === 'toolCal'">
-          <!-- <tool-cal></tool-cal> -->
+        <div v-show="activeTab === 'toolCal'" class="tool-cal">
           <ToolCalTabel ref="toolCalTabel" />
         </div>
       </div>
@@ -48,17 +47,16 @@
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
-import CalConfig from './CalConfig.vue'
-import CalRun from './CalRun.vue'
-import CalReCheck from './CalReCheck.vue'
-import CalResult from './CalResult.vue'
-// import ToolCal from './ToolCal.vue'
+import dayjs from 'dayjs'
 import { calLeave, calStart, calStop, recheck } from '@/renderer/ipc/channel'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
-import ToolCalTabel from './components/ToolCalTabel.vue'
 import { CALIBRATE_TYPE } from '@/shared/config/calibrate'
-import dayjs from 'dayjs'
 import { createRange, deepClone, TIME_FORMAT } from '@/shared/utils'
+import CalConfig from './components/CalConfig/index.vue'
+import CalRun from './components/CalRun/index.vue'
+import CalReCheck from './components/CalReCheck.vue'
+import CalResult from './components/CalResult.vue'
+import ToolCalTabel from './components/ToolCalTabel.vue'
 
 @Component({
   name: 'Calibrate',
@@ -68,7 +66,6 @@ import { createRange, deepClone, TIME_FORMAT } from '@/shared/utils'
     CalReCheck,
     CalResult,
     ToolCalTabel
-    // ToolCal
   }
 })
 export default class Calibrate extends Vue {
@@ -83,10 +80,11 @@ export default class Calibrate extends Vue {
   /** 当前运行信息 */
   info: CalibrateT.CalRunInfo | null = null
 
-  calResultList: any[] = []
-  recheckResult: any[] = []
-  resultList: any[] = []
-  resultMap: any = {}
+  calResultList: CalibrateT.CalRunResultItem[] = []
+  recheckResult: CalibrateT.CalRecheckItem[] = []
+  /** 复检结果统计 */
+  resultList: CalibrateTR.ReCheckChResult[] = []
+  resultMap: CalibrateTR.ReCheckResult = {}
 
   tabList = [
     { name: 'channelCal', label: '通道校准' },
@@ -101,8 +99,8 @@ export default class Calibrate extends Vue {
 
   /** 开始校准修调 */
   async calStart(startData: CalibrateTR.StartData) {
-    const config = this.$refs.calConfig.getForm()
-    if (config.status) {
+    const config = await this.$refs.calConfig.getForm()
+    if (config) {
       const data = await calStart({
         config: config.form,
         calType: startData.calType
@@ -122,8 +120,8 @@ export default class Calibrate extends Vue {
 
   /** 复检开始 */
   async recheckStart(recheckForm: CalibrateTR.RecheckSumbitForm) {
-    const config = this.$refs.calConfig.getForm()
-    if (config.status) {
+    const config = await this.$refs.calConfig.getForm()
+    if (config) {
       const calType = this.$refs.calRun.getCalType()
       if (calType === false) return
 
@@ -138,9 +136,9 @@ export default class Calibrate extends Vue {
         recheckForm.UStep
       )
       if (iRange.length === 0) {
-        return this.$message.error('电流范围修0')
+        return this.$message.error('电流范围为0')
       } else if (uRange.length === 0) {
-        return this.$message.error('电压范围修0')
+        return this.$message.error('电压范围为0')
       }
 
       const result = await recheck({
@@ -166,16 +164,20 @@ export default class Calibrate extends Vue {
     uRange: number[]
   ) {
     const { masterId, slaverId, channelId } = config
-    const resultList: any[] = []
-    const resultMap: any = {}
+    const resultList: CalibrateTR.ReCheckChResult[] = []
+    const resultMap: CalibrateTR.ReCheckResult = {}
     const calTypeItem = {}
+
     CALIBRATE_TYPE.forEach(item => {
-      calTypeItem[`calType_${item.type}`] = null
+      calTypeItem[
+        `calType_${item.type}`
+      ] = null as CalibrateTR.RestulRecheckStatus
       calTypeItem[`calType_result_${item.type}`] = {
         result: [],
         rangeKey: item.rangeType === 'A' ? 'iRange' : 'uRange'
-      }
+      } as CalibrateTR.RestulRecheckResult
     })
+
     channelId.forEach(chId => {
       const item = {
         masterId,
@@ -194,13 +196,15 @@ export default class Calibrate extends Vue {
   }
 
   /** 复检结果统计 */
-  handleResult(list: any[]) {
+  handleResult(list: CalibrateT.CalRecheckItem[]) {
     list.forEach(item => {
       const { masterId, slaverId, channelId, calType, pointName } = item
       const chResult = this.resultMap[`${masterId}_${slaverId}_${channelId}`]
       if (chResult) {
         const status = item.status
-        const chTypeResult = chResult[`calType_result_${calType}`]
+        const chTypeResult: CalibrateTR.RestulRecheckResult =
+          chResult[`calType_result_${calType}`]
+
         chTypeResult.result.push({
           point: pointName,
           status
@@ -245,7 +249,7 @@ export default class Calibrate extends Vue {
     return this.$refs.calConfig.getToolIp()
   }
 
-  toolCalStart(data: any) {
+  toolCalStart(data: CalibrateTR.ToolCalCreateCal) {
     this.$refs.toolCalTabel.createCal(data)
   }
 
@@ -254,54 +258,35 @@ export default class Calibrate extends Vue {
       eventName: '/calibrate/pointResult',
       onEmit: data => {
         this.info = data.info
-        if (data.type === 'calRunResult') {
-          this.calResultList = this.calResultList.concat(data.data)
-        } else if (data.type === 'calRecheckResult') {
-          const list = data.data
-          this.handleResult(list)
-          this.recheckResult = this.recheckResult.concat(list)
-        } else if (data.type === 'error') {
-          this.$notify.error({
-            title: '错误',
-            message: data.data,
-            duration: 0
-          })
-        } else if (data.type === 'msg') {
-          this.$notify.success({
-            title: '提示',
-            message: data.data,
-            duration: 3000
-          })
+        switch (data.type) {
+          case 'calRunResult':
+            this.calResultList = this.calResultList.concat(data.data)
+            break
+          case 'calRecheckResult': {
+            const list = data.data
+            this.handleResult(list)
+            this.recheckResult = this.recheckResult.concat(list)
+            break
+          }
+          case 'error':
+            this.$notify.error({
+              title: '错误',
+              message: data.data,
+              duration: 0
+            })
+            break
+          case 'msg':
+            this.$notify.success({
+              title: '提示',
+              message: data.data,
+              duration: 3000
+            })
+            break
         }
-        // this.portList = data.list.map(item => {
-        //   return {
-        //     readTranslate: false,
-        //     ...item
-        //   }
-        // })
       },
       vm: this
     })
   }
-
-  // /** 离开页面前 */
-  // async beforeLeave(next: any) {
-  //   try {
-  //     const result = await calLeave()
-  //     if(result.status){
-  //       const data = result.data
-  //       if(data.isCalRun) {
-  //         const confirm = await this.$elConfirm('校准正在运行中,')
-  //         if(confirm){
-
-  //         }
-  //       }
-  //     }
-  //   } catch (err) {
-  //     console.error(err)
-  //     next()
-  //   }
-  // }
 
   /** 离开页面前如果还在运行 */
   async isRunLeave(next: any) {
@@ -319,7 +304,7 @@ export default class Calibrate extends Vue {
     next()
   }
 
-  async beforeRouteLeave(to, form, next) {
+  beforeRouteLeave(to, form, next) {
     this.isRunLeave(next)
   }
 }
@@ -328,19 +313,17 @@ export default class Calibrate extends Vue {
 <style lang="scss" scoped>
 .calibrate-container {
   display: flex;
-  .calibrate-l {
-    // width: 400px;
-    // background-color: red;
-  }
+
   .calibrate-r {
     flex: 1 1 auto;
     margin-left: 40px;
     overflow: hidden;
   }
+
   .cal-action-box {
     display: flex;
-    margin-bottom: 8px;
     margin-top: 14px;
+    margin-bottom: 8px;
   }
 }
 </style>
@@ -348,8 +331,8 @@ export default class Calibrate extends Vue {
 .calibrate-container {
   .cal-action-box {
     display: flex;
-    margin-bottom: 8px;
     margin-top: 14px;
+    margin-bottom: 8px;
 
     .title {
       margin: 0;
@@ -360,12 +343,15 @@ export default class Calibrate extends Vue {
       display: flex;
       flex-flow: row wrap;
       width: 150px;
+
       .el-button {
         margin: 0;
         margin-bottom: 10px;
+
         &:nth-of-type(2n + 1) {
           margin-right: 20px;
         }
+
         &:last-child,
         &:nth-last-of-type(2) {
           margin-bottom: 0;
@@ -376,9 +362,11 @@ export default class Calibrate extends Vue {
 
   .status-icon {
     font-size: 18px;
+
     &.success {
       color: #67c23a;
     }
+
     &.error {
       color: #f56c6c;
     }

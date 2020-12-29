@@ -15,34 +15,34 @@
               type="daterange"
               start-placeholder="大于等于"
               end-placeholder="小于"
-            ></el-date-picker>
+            />
           </el-form-item>
           <el-form-item label="启动ID">
             <el-input
+              v-model="filterFileId"
               placeholder="启动ID输入"
               @keyup.enter.native="onSearch"
-              v-model="filterFileId"
-            ></el-input>
+            />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="onSearch">查询</el-button>
           </el-form-item>
           <el-form-item>
-            <file-select openType="file" @change="importHistory">
+            <FileSelect open-type="file" @change="importHistory">
               <el-button type="primary">
                 导入外部文件
               </el-button>
-            </file-select>
+            </FileSelect>
           </el-form-item>
 
           <!-- <el-button type="primary" @click="onSearch">导入外部文件</el-button> -->
         </el-form>
         <el-table
-          v-loading="loading"
           ref="historyTabel"
+          v-loading="loading"
           :data="list"
           stripe
-          style="width: 100%"
+          style="width: 100%;"
           height="52vh"
           border
         >
@@ -64,17 +64,17 @@
             <!-- eslint-enable -->
         </el-table>
 
-        <pagination
-          class="history-page"
-          ref="Pagination"
+        <Pagination
           v-show="total > 0"
+          ref="Pagination"
+          class="history-page"
           :total="total"
           :page.sync="listQuery.page"
           :limit.sync="listQuery.limit"
           @pagination="getList"
         />
       </div>
-      <div class="foot" slot="footer">
+      <div slot="footer" class="foot">
         <!-- <div class="foot-l">
           <el-button type="primary" @click="onSearch">导入外部文件</el-button>
         </div> -->
@@ -254,6 +254,7 @@ export default class HistoryDialog extends Vue {
 .filter-box {
   margin-bottom: 20px;
 }
+
 .history-page {
   padding: 0;
   margin-top: 20px;

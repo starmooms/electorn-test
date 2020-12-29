@@ -1,6 +1,6 @@
 <template>
   <div id="defalut">
-    <router-view />
+    <RouterView />
   </div>
 </template>
 

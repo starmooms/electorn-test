@@ -10,14 +10,14 @@
       <template v-if="isBatch">
         <SelectChannel
           ref="SelectChannel"
-          isCheckboxMaster
-          :masterId.sync="batchMasterId"
-          :slaverId.sync="batchSlaverId"
-          :channelId.sync="batchChannelId"
-        ></SelectChannel>
+          is-checkbox-master
+          :master-id.sync="batchMasterId"
+          :slaver-id.sync="batchSlaverId"
+          :channel-id.sync="batchChannelId"
+        />
       </template>
 
-      <title-box name="通道工步编辑">
+      <TitleBox name="通道工步编辑">
         <div>
           <el-button type="primary" @click="tplSaveOpen">
             保存工步模板
@@ -25,17 +25,17 @@
           <el-button type="primary" @click="tplUseOpen">应用工步模板</el-button>
         </div>
 
-        <step-tpl-edit ref="stepTplEdit" />
+        <StepTplEdit ref="stepTplEdit" />
 
         <el-divider content-position="left">备注</el-divider>
         <el-form label-width="100px">
           <el-form-item label="历史文件路径">
-            <el-input placeholder="" v-model="filePath">
-              <file-select slot="append" v-model="filePath"></file-select>
+            <el-input v-model="filePath" placeholder="">
+              <FileSelect slot="append" v-model="filePath" />
             </el-input>
           </el-form-item>
         </el-form>
-      </title-box>
+      </TitleBox>
 
       <div slot="footer">
         <el-button @click="stepsDialog = false">取 消</el-button>
@@ -44,8 +44,8 @@
         </el-button>
       </div>
     </el-dialog>
-    <StepTplSave :show.sync="tplSaveShow" :tplData="tplData"></StepTplSave>
-    <StepTplUse :show.sync="tplUseShow" @tplUse="tplUse"></StepTplUse>
+    <StepTplSave :show.sync="tplSaveShow" :tpl-data="tplData" />
+    <StepTplUse :show.sync="tplUseShow" @tplUse="tplUse" />
   </div>
 </template>
 

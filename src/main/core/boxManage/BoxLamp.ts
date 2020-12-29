@@ -26,7 +26,6 @@ export default class BoxLamp {
             lampList: 32
           }
         })
-        writeModel.writer('lampLen', 32)
         writeModel.writer('masterId', masterId)
         writeModel.ecahList('lampList', (writeItem, sindex) => {
           const slaverId = sindex

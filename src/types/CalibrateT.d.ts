@@ -9,6 +9,7 @@ declare namespace CalibrateT {
     standard: number
     uRangeId: number
     iRangeId: number
+    sampTime: number
   }
 
   /** 校准设置表单 */
@@ -47,6 +48,21 @@ declare namespace CalibrateT {
     point2Result: CalRunResultPoint
     a: number
     b: number
+    time: string
+  }
+
+  /** 校准复检结果列表 */
+  interface CalRecheckItem {
+    channelId: number
+    samp: number
+    actual: number
+    diff: number
+    status: boolean
+    pointName: string
+    calTypeName: string
+    calType: string
+    masterId: number
+    slaverId: number
     time: string
   }
 
@@ -95,10 +111,15 @@ declare namespace CalibrateTR {
       label: string
       value: number[]
     }
+    channelIds: number[]
   }
 
   interface ToolCalSampResultItem {
-    [point: string]: number | null
+    [point: string]: {
+      /** 1：根据AB读采样 3：忽略AB读采样 */
+      type: 1 | 3
+      value: number | null
+    }
   }
   /** 工装校准采样结果 */
   interface ToolCalSampResult {
@@ -129,6 +150,28 @@ declare namespace CalibrateTR {
     point2Name: string
     sampResult: ToolCalSampResultItem
     abResult: ToolCalAbResultItem
+  }
+
+  type RestulRecheckStatus = null | boolean
+  type RestulRecheckResult = {
+    result: { point: string; status: boolean }[]
+    rangeKey: string
+  }
+
+  /** 复检结果统计 通道列表 */
+  interface ReCheckChResult {
+    time: string
+    iRange: number[]
+    uRange: number[]
+    masterId: number
+    slaverId: number
+    channelId: number
+    [key: string]: RestulRecheckStatus | RestulRecheckResult | any
+  }
+
+  /** 复检结果统计 Map */
+  interface ReCheckResult {
+    [fullId: string]: ReCheckChResult
   }
 }
 

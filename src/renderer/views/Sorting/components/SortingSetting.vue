@@ -14,10 +14,10 @@
           </el-radio-group>
         </el-form-item> -->
         <el-form-item>
-          <el-input readonly v-model="historyFile">
+          <el-input v-model="historyFile" :disabled="false">
             <el-button
-              class="historySelect"
               slot="append"
+              class="historySelect"
               @click="historySelect"
             >
               选择
@@ -45,7 +45,7 @@
               :key="index"
               :label="`${item.id + 1}(${item.loopId})：${item.msg}`"
               :value="item"
-            ></el-option>
+            />
           </el-select>
         </el-form-item>
       </el-form>
@@ -53,13 +53,13 @@
       <el-form class="box-item data-type">
         <div class="form-title">分选等级</div>
         <el-form-item class="form-flex-item">
-          <el-select multiple collapse-tags v-model="form.levelId">
+          <el-select v-model="form.levelId" multiple collapse-tags>
             <el-option
               v-for="item in levelList"
               :key="item.id"
               :label="`${item.id}（${item.desc}）`"
               :value="item.id"
-            ></el-option>
+            />
           </el-select>
           <el-button @click="configShowSet">条件设置</el-button>
         </el-form-item>
@@ -80,7 +80,7 @@
           </div> -->
         </div>
         <div class="master-list">
-          <div class="master-item" v-for="(item, index) in 20" :key="item">
+          <div v-for="(item, index) in 20" :key="item" class="master-item">
             <div
               class="master-box"
               :class="{
@@ -105,47 +105,47 @@
         <div class="condutc">
           <div class="input-item">
             <input
-              type="checkbox"
               id="zeroU"
-              value="zeroU"
               v-model="form.stepsCondutc"
+              type="checkbox"
+              value="zeroU"
             />
             <label for="zeroU">零电压参加分选</label>
           </div>
 
           <div class="condutc-input">
-            <div class="input-item" v-for="item in condutcList" :key="item.key">
+            <div v-for="item in condutcList" :key="item.key" class="input-item">
               <input
-                type="checkbox"
                 :id="item.key"
-                :value="item.key"
                 v-model="form.stepsCondutc"
+                type="checkbox"
+                :value="item.key"
               />
               <label :for="item.key">{{ item.name }}</label>
               <input
+                v-model.number="form.condutc[item.key]"
                 class="input-val"
                 type="text"
-                v-model.number="form.condutc[item.key]"
               />
             </div>
           </div>
         </div>
       </el-form>
     </div>
-    <level-dialog
+    <LevelDialog
       :show.sync="configShow"
-      :levelAttr="levelAttr"
-      :levelList="levelList"
+      :level-attr="levelAttr"
+      :level-list="levelList"
       @changeConfig="getSortingConfig"
     />
 
-    <history-dialog :show.sync="historyShow" @save="createDb" />
+    <HistoryDialog :show.sync="historyShow" @save="createDb" />
   </div>
 </template>
 
 <script lang="ts">
 import { getStoreConfig } from '@/renderer/ipc/storeConfig'
-import { Component, Vue, Watch, PropSync } from 'vue-property-decorator'
+import { Component, Vue, PropSync } from 'vue-property-decorator'
 import LevelDialog from './LevelDialog.vue'
 import HistoryDialog from './HistoryDialog.vue'
 import HistoryDb from '@/renderer/Db/HistoryDb'
@@ -182,6 +182,8 @@ export default class SortingSetting extends Vue {
   }
   configShow = false
   historyShow = false
+
+  sampLoading = false
 
   // @Watch('form', { deep: true })
   // c(v) {
@@ -237,6 +239,11 @@ export default class SortingSetting extends Vue {
     return this.historyItem
       ? this.historyItem.masterIdArr.length * this.masterChTotal
       : 0
+  }
+
+  /** 当前连接中的机柜 */
+  get connectMaster() {
+    return ChannelStatus.masterConnectList
   }
 
   /** 创建数据库连接 */
@@ -298,18 +305,27 @@ export default class SortingSetting extends Vue {
   }
 
   /** 发送点灯 */
-  async lampSbmit(list: ipcReq.LampSetOpts['list']) {
-    await lampSet({
-      list
-    })
+  async lampSbmit(list: ipcReq.LampSetOpts['list'], showTips = true) {
+    if (this.sampLoading) return
+    try {
+      this.sampLoading = true
+      const result = await lampSet({
+        list
+      })
+      if (result.status && showTips) {
+        this.$message.success('点灯成功')
+      }
+    } finally {
+      this.sampLoading = false
+    }
   }
 
   /** 一键关闭所有灯 */
   async lampCloseAll() {
     const masterTotal = {}
-    for (let i = 0; i < this.masterListLen; i++) {
-      masterTotal[i] = {}
-    }
+    this.connectMaster.forEach(item => {
+      masterTotal[item.masterId] = {}
+    })
     await this.lampSbmit(masterTotal)
   }
 
@@ -456,42 +472,45 @@ export default class SortingSetting extends Vue {
 </script>
 <style lang="scss" scoped>
 .sorting-setting {
-  height: 100%;
   box-sizing: border-box;
   display: flex;
   flex-flow: column;
+  height: 100%;
+
   .box-title {
     position: relative;
+
     .title {
-      border: 1px solid #ccc;
-      border-bottom: none;
-      margin: 0;
       display: inline-block;
       padding: 2px 10px;
+      margin: 0;
       background-color: #fff;
+      border: 1px solid #ccc;
+      border-bottom: 0;
 
-      &:after {
-        content: '';
+      &::after {
         position: absolute;
-        left: 0;
         right: 0;
         bottom: 0;
-        height: 1px;
-        background-color: #ccc;
+        left: 0;
         z-index: -1;
+        height: 1px;
+        content: '';
+        background-color: #ccc;
       }
     }
   }
 
   .box-content {
     flex: 1;
-    border: 1px solid #ccc;
-    border-top: none;
     overflow: auto;
+    border: 1px solid #ccc;
+    border-top: 0;
+
     .box-item {
+      padding: 6px 12px;
       margin: 2px;
       margin-bottom: 10px;
-      padding: 6px 12px;
       border: 1px solid #b3b3b3;
     }
   }
@@ -501,15 +520,19 @@ export default class SortingSetting extends Vue {
   .historySelect {
     cursor: pointer;
   }
+
   .el-form-item {
     margin-bottom: 6px;
   }
+
   .form-title {
     margin-bottom: 6px;
   }
+
   .form-flex-item {
     ::v-deep .el-form-item__content {
       display: flex;
+
       .el-select {
         flex: 1;
         margin-right: 6px;
@@ -529,23 +552,24 @@ export default class SortingSetting extends Vue {
     margin-left: -10px;
 
     .master-item {
+      box-sizing: border-box;
       flex: 0 0 14.28%;
       padding-left: 10px;
-      box-sizing: border-box;
       margin-bottom: 10px;
 
       .master-box {
-        background-color: #a5a5a5;
-        font-weight: bold;
+        box-sizing: border-box;
+        padding: 2px 0;
         font-style: oblique;
+        font-weight: bold;
         text-align: center;
         cursor: pointer;
-        padding: 2px 0;
+        background-color: #a5a5a5;
         border: 2px solid #969696;
-        box-sizing: border-box;
 
         &.active {
           background-color: #fff;
+
           &.select {
             background-color: #0db2f9;
           }
@@ -558,13 +582,15 @@ export default class SortingSetting extends Vue {
     margin-top: -8px;
 
     .input-item {
-      font-size: 12px;
       display: flex;
       align-items: center;
       margin-bottom: 6px;
+      font-size: 12px;
+
       label {
         margin-left: 4px;
       }
+
       .input-val {
         width: 36%;
       }
@@ -573,8 +599,10 @@ export default class SortingSetting extends Vue {
     .condutc-input {
       display: flex;
       flex-flow: row wrap;
+
       .input-item {
         flex-basis: 50%;
+
         label {
           flex-basis: 64px;
         }

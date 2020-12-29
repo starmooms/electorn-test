@@ -2,29 +2,16 @@
   <div id="nav-bar">
     <nav>
       <ul class="nav-list">
-        <li class="nav-item">
-          <router-link to="/">端口调试</router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/errorLog">
-            错误日志
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/calibrate">
-            通道校准
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/upgrade">
-            设备升级
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/setting">
-            <svg-icon icon-class="setting"></svg-icon>
-            设置
-          </router-link>
+        <li
+          v-for="menu in menuList"
+          :key="menu.name"
+          class="nav-item"
+          :class="{ active: menu.name === activeMenu }"
+        >
+          <RouterLink :to="menu.path">
+            <SvgIcon v-if="menu.meta.icon" :icon-class="menu.meta.icon" />
+            {{ menu.meta.title }}
+          </RouterLink>
         </li>
       </ul>
     </nav>
@@ -32,11 +19,18 @@
 </template>
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
+import { HomeRouter } from '@/renderer/router/index'
 
 @Component({
   name: 'NavBar'
 })
-export default class NavBar extends Vue {}
+export default class NavBar extends Vue {
+  menuList = HomeRouter
+
+  get activeMenu() {
+    return this.$route.name
+  }
+}
 </script>
 
 <style lang="scss">
@@ -45,18 +39,29 @@ $subnav-borderCl: #6b6b6b;
 $subnav-fontCl: #fff;
 
 #nav-bar {
-  background: $subnav-bgCl;
-  color: $subnav-fontCl;
   width: 200px;
   overflow: auto;
+  color: $subnav-fontCl;
+  background: $subnav-bgCl;
 
   .nav-item {
     line-height: 40px;
+    color: #ccc;
     border-bottom: 1px solid #797979;
-    color: #fff;
+    transition: all 0.3s;
+
     a {
       display: block;
       padding-left: 10px;
+    }
+
+    &.active {
+      color: #fff;
+      background-color: #606266;
+    }
+
+    &:hover {
+      color: #fff;
     }
   }
 }

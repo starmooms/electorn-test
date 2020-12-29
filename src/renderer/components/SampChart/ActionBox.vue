@@ -3,17 +3,18 @@
     <el-button type="primary" @click="chartConfingShow">
       曲线设置
     </el-button>
+
     <div class="action-box">
-      <file-select
+      <FileSelect
         slot="append"
-        :isSave="true"
-        :fileFilter="fileFilter"
+        :is-save="true"
+        :file-filter="fileFilter"
         @saveFile="exportEchart"
       >
         <el-button type="primary">
           导出曲线
         </el-button>
-      </file-select>
+      </FileSelect>
     </div>
 
     <el-dialog
@@ -28,19 +29,20 @@
           <el-radio-group v-model="form.y1">
             <el-radio
               v-for="item in y1List"
-              :label="item.value"
               :key="item.label"
+              :label="item.value"
             >
               {{ item.label }}
             </el-radio>
           </el-radio-group>
         </el-form-item>
+
         <el-form-item class="form-confg-item" label="Y轴2">
           <el-radio-group v-model="form.y2">
             <el-radio
               v-for="item in y2List"
-              :label="item.value"
               :key="item.label"
+              :label="item.value"
             >
               {{ item.label }}
             </el-radio>
@@ -50,10 +52,10 @@
         <el-form-item class="form-confg-item" label="Y轴1显示范围">
           <div class="limt-box">
             <el-form-item label="下限">
-              <el-input v-model.number="form.y1Limt.min"></el-input>
+              <el-input v-model.number="form.y1Limt.min" />
             </el-form-item>
             <el-form-item label="上限">
-              <el-input v-model.number="form.y1Limt.max"></el-input>
+              <el-input v-model.number="form.y1Limt.max" />
             </el-form-item>
           </div>
         </el-form-item>
@@ -61,10 +63,10 @@
         <el-form-item class="form-confg-item" label="Y轴2显示范围">
           <div class="limt-box">
             <el-form-item label="下限">
-              <el-input v-model.number="form.y2Limt.min"></el-input>
+              <el-input v-model.number="form.y2Limt.min" />
             </el-form-item>
             <el-form-item label="上限">
-              <el-input v-model.number="form.y2Limt.max"></el-input>
+              <el-input v-model.number="form.y2Limt.max" />
             </el-form-item>
           </div>
         </el-form-item>
@@ -85,7 +87,7 @@ import SampChart from './index.vue'
 import FileSelect from '@/renderer/components/FileSelect.vue'
 import fs from 'fs'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
-import { getStoreConfig, setStoreConfig } from '@/renderer/ipc/storeConfig'
+import { setStoreConfig } from '@/renderer/ipc/storeConfig'
 import { deepClone } from '@/shared/utils'
 import { SAMPCHART_Y_MAP } from '@/renderer/utils/util'
 
@@ -168,6 +170,7 @@ export default class Pane extends Vue {
   }
 }
 </script>
+
 <style lang="scss" scoped>
 .action-box {
   display: inline-block;
@@ -176,6 +179,7 @@ export default class Pane extends Vue {
   //   display: inline-block;
   // }
 }
+
 .chart-config-dialog {
   .form-confg-item {
     > ::v-deep .el-form-item__label {
@@ -185,12 +189,15 @@ export default class Pane extends Vue {
 
   .limt-box {
     display: flex;
+
     ::v-deep .el-form-item {
       display: flex;
       justify-content: flex-start;
+
       .el-form-item__label {
         width: 60px;
       }
+
       .el-form-item__content {
         width: 100px;
       }

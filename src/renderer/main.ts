@@ -15,12 +15,14 @@ import TitleBox from '@/renderer/components/TitleBox.vue'
 import '@/renderer/icons'
 import { SettingStatus } from './store/modules/Setting'
 import { beforeRender } from './ipc/storeConfig'
+import '@/renderer/utils/BeforClose'
+import { ChannelStatus } from './store/modules/Channel'
 
 const init = () => {
   Vue.config.productionTip = false
 
   Vue.use(command)
-  Vue.component('title-box', TitleBox)
+  Vue.component('TitleBox', TitleBox)
   Vue.use(ElConfirm)
 
   new Vue({
@@ -36,6 +38,7 @@ beforeRender()
     const data = result.data
     SettingStatus.UPDATE_USERCONFIG(data.userConfig)
     SettingStatus.UPDATE_MAINDBPATH(data.mainData)
+    ChannelStatus.SET_MASTERCONNECT(data.connectMasterList)
     init()
   })
   .catch(err => {

@@ -84,6 +84,11 @@ export function calToolSet(data: ipcReq.CalToolSet) {
   return $command.invoke(`/port/cal/calToolSet`, data)
 }
 
+/** 检查工装ip */
+export function calCheckToolIp(ip: string) {
+  return $command.invoke(`/port/cal/connectToolIp`, ip)
+}
+
 /** 设置工装校准 */
 export function upgradeStart(data: ipcReq.UpgradeForm) {
   return $command.invoke(`/port/upgrade/start`, data)

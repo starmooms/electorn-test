@@ -18,11 +18,11 @@
           查看系统日志
         </el-button>
         <div class="select-file-btn">
-          <file-select openType="file" @change="importHistory">
+          <FileSelect open-type="file" @change="importHistory">
             <el-button type="primary">
               导入外部文件
             </el-button>
-          </file-select>
+          </FileSelect>
         </div>
       </el-form>
 
@@ -35,86 +35,68 @@
         </ul>
       </div>
 
-      <title-box name="通道列表">
-        <SelectMaster v-model="activeMasterId"></SelectMaster>
-        <transition name="el-fade-in">
+      <TitleBox name="通道列表">
+        <SelectMaster v-model="activeMasterId" />
+        <Transition name="el-fade-in">
           <div v-if="activeMaster" class="channel-main-box">
-            <!-- <el-divider content-position="left">
-              机柜{{ activeMaster.id + 1 }}
-            </el-divider> -->
             <el-card class="box-card" shadow="never">
               <div slot="header" class="box-card-header">
                 <span>{{ activeMaster.name }}</span>
-                <!-- <el-dropdown>
-                  <el-button type="text">
-                    操作
-                    <i class="el-icon-arrow-down el-icon--right"></i>
-                  </el-button>
-                  <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item>批量操作从控</el-dropdown-item>
-                  </el-dropdown-menu>
-                </el-dropdown> -->
               </div>
               <ul class="slaver-list">
                 <li
-                  class="slaver-item"
                   v-for="(slaver, sKey) in activeMaster.slaverList"
                   :key="sKey"
+                  class="slaver-item"
                 >
                   <div class="slaver-channel-box">
                     <div class="slaver-item-l">{{ slaver.name }}</div>
                     <div class="channel-list">
-                      <channel-item
+                      <ChannelItem
                         v-for="(channel, ckey) in slaver.list"
                         :key="`${activeMasterId}_${sKey}_${ckey}`"
+                        :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
                         :master-id="activeMaster.id"
                         :slaver-id="slaver.id"
                         :channel-data="channel"
-                        :ref="`${activeMasterId}_${slaver.id}_${channel.id}`"
                         @stepEditOpen="stepsSetShow"
                         @start="channelStart"
-                        @calEditOpen="calOpen"
                         @setChannelStatus="setChannelStatus"
-                      ></channel-item>
+                      />
                     </div>
                     <el-button @click="slaverDetails(slaver.id)">
                       查看
                     </el-button>
                   </div>
                   <el-collapse-transition name="el-fade-in">
-                    <slaver-details
+                    <SlaverDetails
                       v-if="showSlaverDetail === slaver.id"
                       :master-id="activeMasterId"
                       :slaver="slaver"
-                    ></slaver-details>
+                    />
                   </el-collapse-transition>
                 </li>
               </ul>
             </el-card>
           </div>
-        </transition>
-      </title-box>
+        </Transition>
+      </TitleBox>
 
       <StepSetModal
         :show.sync="stepsShow"
-        :showItem="stepsShowItem"
-        :isBatch="stepsBatch"
+        :show-item="stepsShowItem"
+        :is-batch="stepsBatch"
         @openSysLog="sysLogOpen"
-      ></StepSetModal>
-
-      <CalModal :show.sync="calShow" :showItem="calShowItem"></CalModal>
+      />
 
       <BatchModal
         ref="batchModal"
         :show.sync="batchShow"
         @setChannelStatus="setChannelStatus"
-      ></BatchModal>
+      />
 
-      <SetChannelStatus
-        ref="setChannelStatus"
-        @openSysLog="sysLogOpen"
-      ></SetChannelStatus>
-      <sys-log :show.sync="sysLogShow"></sys-log>
+      <SetChannelStatus ref="setChannelStatus" @openSysLog="sysLogOpen" />
+      <SysLog :show.sync="sysLogShow" />
     </div>
   </div>
 </template>
@@ -122,7 +104,6 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import StepSetModal from '@/renderer/components/StepSetModal/index.vue'
-import CalModal from '@/renderer/components/CalModal.vue'
 import SelectMaster from '@/renderer/components/SelectMaster.vue'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
 import { ChannelStatus } from '@/renderer/store/modules/Channel'
@@ -138,7 +119,6 @@ import SysLog from '@/renderer/components/SysLog/index.vue'
   components: {
     StepSetModal,
     FileSelect,
-    CalModal,
     BatchModal,
     SlaverDetails,
     SelectMaster,
@@ -164,9 +144,6 @@ export default class Home extends Vue {
     slaverId: null,
     channelId: null
   }
-
-  calShow = false
-  calShowItem: ipcReq.CalOpts | null = null
 
   batchShow = false
 
@@ -221,11 +198,6 @@ export default class Home extends Vue {
   stepsBatchOpen() {
     this.stepsBatch = true
     this.stepsShow = true
-  }
-
-  calOpen(channelMsg: ipcReq.CalOpts) {
-    this.calShowItem = channelMsg
-    this.calShow = true
   }
 
   openBatch() {
@@ -296,22 +268,27 @@ export default class Home extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.home {
+  padding-bottom: 40px;
+}
+
 .color-box {
   .color-box-list {
     display: flex;
     align-items: center;
+
     li {
-      margin-right: 20px;
       display: inline-flex;
       align-items: center;
+      margin-right: 20px;
+
       .color-icon {
         width: 14px;
         height: 14px;
+        margin-right: 4px;
         background-color: #ccc;
         border-radius: 4px;
-        margin-right: 4px;
       }
-
       @each $status, $val in $statusColor {
         &.#{$status} .color-icon {
           background-color: $val;
@@ -325,24 +302,29 @@ export default class Home extends Vue {
   max-width: 860px;
   cursor: pointer;
   border-bottom: 1px solid #ccc;
+
   .master-box {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    line-height: 40px;
+    justify-content: space-between;
     padding: 0 20px;
+    line-height: 40px;
   }
 }
+
 .slaver-list {
   margin: 0;
 }
+
 .slaver-item {
-  border-bottom: 1px solid #ccc;
   padding: 14px 10px;
   background-color: #eff0f1;
+  border-bottom: 1px solid #ccc;
+
   &:last-child {
-    border-bottom: none;
+    border-bottom: 0;
   }
+
   .slaver-channel-box {
     display: flex;
     align-items: center;
@@ -356,28 +338,34 @@ export default class Home extends Vue {
   // }
 
   .channel-list {
-    flex: 1 0 auto;
     display: flex;
+    flex: 1 0 auto;
+
     .channel-item {
       flex: 1 0 auto;
     }
   }
 }
+
 .channel-main-box {
   padding-bottom: 40px;
 }
+
 .box-card {
   margin-top: 40px;
   overflow: initial;
+
   .box-card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
   }
+
   ::v-deep {
     .el-card__header {
       padding: 8px 20px;
     }
+
     .el-card__body {
       padding: 0;
     }

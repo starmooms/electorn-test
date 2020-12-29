@@ -300,6 +300,7 @@ export const CAL_SET_MODEL: Model[] = [
   { name: 'channelBit', bytLen: 1 },
   { name: 'calType', bytLen: 1 },
   { name: 'pointer', bytLen: 4 },
+  { name: 'pointIndex', bytLen: 1 },
   { name: 'abLen', bytLen: 1 },
   {
     name: 'abList',
@@ -322,7 +323,8 @@ export const CAL_READ_POST_MODEL: Model[] = [
   { name: 'slaverId', bytLen: 1 },
   { name: 'channelBit', bytLen: 1 },
   { name: 'readType', bytLen: 1 },
-  { name: 'calType', bytLen: 1 }
+  { name: 'calType', bytLen: 1 },
+  { name: 'pointer', bytLen: 4 }
 ]
 
 /** 读校准返回 */
@@ -339,7 +341,7 @@ export const CAL_READ_MODEL: Model[] = [
     len: 'sampLen',
     model: [
       { name: 'channelId', bytLen: 1 },
-      { name: 'samp', bytLen: 4 }
+      { name: 'samp', bytLen: 4, type: 'int' }
     ]
   },
   {

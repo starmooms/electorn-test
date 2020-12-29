@@ -11,8 +11,8 @@
         :title="`系统启动时间 ${start}`"
         type="info"
         :closable="false"
-      ></el-alert>
-      <pre id="log-context" class="log-context" v-loading="loading">{{
+      />
+      <pre id="log-context" v-loading="loading" class="log-context">{{
         context
       }}</pre>
     </el-dialog>
@@ -150,6 +150,7 @@ export default class SysLog extends Vue {
 .syslog-dialog {
   ::v-deep & {
     min-width: 800px;
+
     .el-dialog__body {
       padding: 10px 20px;
     }

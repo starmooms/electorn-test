@@ -1,12 +1,10 @@
 import { ERROR_STATUS } from '@/shared/config/port'
 import agreement, { ReadResult } from '@/main/core/Agreement'
 import SerialPortRequest from '@/main/core/Request/SerialPortRequest'
-import configManage from '../ConfigManage'
-import mainDb from '../sqlite/MainDb'
-import TcpRequest from './TcpRequest'
-import logger from '../Logger'
-import is from 'electron-is'
-const isDev = is.dev()
+import configManage from '@/main/core/ConfigManage'
+import mainDb from '@/main/core/sqlite/MainDb'
+import TcpRequest from '@/main/core/Request/TcpRequest'
+import logger from '@/main/core/Logger'
 
 interface PostOpts {
   timeout?: number
@@ -19,22 +17,24 @@ interface PostOpts {
   requestType?: Communi['requestType'] | 'calTool' | null
 }
 
+export interface RequestStatus {
+  masterId: number
+  isWait: boolean
+}
+
+export type RequestType = 'Port' | 'Tcp'
+export type SetError = (msg: string) => void
+
 export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
 
 /** 通讯方式 */
 class Communi {
   emitList: CommuniEmitList = new Map()
-  requestType: 'Port' | 'Tcp' = 'Tcp'
+  requestType: RequestType = 'Tcp'
   tpcRequest = new TcpRequest(this)
 
   portPath!: string
   serialPort: SerialPortRequest | null = null
-
-  constructor() {
-    this.changeConfig()
-    this.createSerialPort()
-    this.createTcpRequest(true)
-  }
 
   createSerialPort() {
     if (this.requestType !== 'Port') {
@@ -62,24 +62,26 @@ class Communi {
    * tcp 打开关闭
    * @param connectIp 是否创建连接
    */
-  createTcpRequest(connectIp: boolean) {
+  async createTcpRequest(connectIp: boolean) {
     if (this.requestType === 'Tcp') {
       if (connectIp) {
-        this.tpcRequest.createdConnect()
+        await this.tpcRequest.createdConnect()
       }
     } else {
       this.tpcRequest.close()
     }
   }
 
-  changeConfig() {
+  /**
+   * 根据设置生成连接
+   * @connectIp 是否主动连接ip
+   */
+  async updateConfig(connectIp = false) {
+    const lastType = this.requestType
     this.requestType = configManage.userConfig.get('base.requestType')
-    configManage.userConfig.onDidChange('base', () => {
-      const lastType = this.requestType
-      this.requestType = configManage.userConfig.get('base.requestType')
-      this.createSerialPort()
-      this.createTcpRequest(lastType !== this.requestType) // 如果通讯类型没变化，不需要主动重连tcp
-    })
+    this.createSerialPort()
+    await this.createTcpRequest(connectIp || lastType !== this.requestType) // 如果通讯类型没变化，不需要主动重连tcp
+    return
   }
 
   post({
@@ -102,9 +104,15 @@ class Communi {
       })
       let timer: NodeJS.Timeout // eslint-disable-line
 
+      const status: RequestStatus = {
+        isWait: true,
+        masterId
+      }
       const sId = agrData.sId
-      const setError = (msg: string) => {
+      const setError: SetError = (msg: string) => {
         this.emitList.delete(sId)
+        status.isWait = false
+
         let headMsg = ''
         if (requestType === 'Port') {
           headMsg += this.serialPort!.path
@@ -114,18 +122,17 @@ class Communi {
         } else if (requestType === 'Tcp') {
           const tcpClient = this.tpcRequest.getClient(masterId)
           if (tcpClient) {
-            tcpClient.ip
             headMsg += tcpClient.ip
           }
         }
-        reject(new Error(`${headMsg} POST Error：${msg}`))
+        reject(new Error(`${headMsg} POST_ERROR ${msg}`))
         clearTimeout(timer)
       }
 
-      this.emitList.set(sId, ({ masterId, errCode, buf, originBuf }) => {
-        if (isDev) {
-          // logger.debug(control.name, '返回', buf.toString('hex'))
-          // logger.debug(control.name, '返回数据域', buf.toString('hex'))
+      this.emitList.set(sId, ({ masterId, errCode, buf, originBuf, check }) => {
+        if (!check) {
+          logger.error('checkCrc Error', originBuf.toString('hex'))
+          return setError('通讯校验码错误')
         }
         if (errCode !== '00') {
           const errMsg = ERROR_STATUS[errCode] || errCode
@@ -139,36 +146,28 @@ class Communi {
               errCode: errCode
             }
           ])
-
-          setError(`Error_Code ${errMsg}`)
-          return
+          return setError(`Error_Code ${errMsg}`)
         }
         resolve(buf)
         clearTimeout(timer)
       })
 
-      if (isDev) {
-        // logger.debug(control.name, '发送', agrData.buf.toString('hex'))
-        // logger.debug(control.name, '发送数据域', data.toString('hex'))
-      }
-
-      if (requestType === 'Port') {
-        if (!this.serialPort) {
-          setError('串口未初始化')
-          return
-        }
-        this.serialPort.post(agrData.buf, setError)
-      } else if (requestType === 'Tcp') {
-        this.tpcRequest.post(agrData.buf, setError, masterId)
-      } else if (requestType === 'calTool') {
-        this.tpcRequest.calToolPost(agrData.buf, setError)
-      } else {
-        setError(`requestType ${requestType} No Found`)
-      }
-
       timer = setTimeout(() => {
         setError(`${requestType} Time Out`)
       }, timeout || 5000)
+
+      if (requestType === 'Port') {
+        if (!this.serialPort) {
+          return setError('串口未初始化')
+        }
+        this.serialPort.post(agrData.buf, setError)
+      } else if (requestType === 'Tcp') {
+        this.tpcRequest.post(agrData.buf, setError, status)
+      } else if (requestType === 'calTool') {
+        this.tpcRequest.calToolPost(agrData.buf, setError, status)
+      } else {
+        setError(`requestType ${requestType} No Found`)
+      }
     })
   }
 

@@ -2,12 +2,12 @@
   <div class="content-menu-box" @contextmenu="contextMenuHandler($event)">
     <slot></slot>
     <div
+      v-if="show"
       class="right-mouse-menu"
+      :style="style"
       @mouseup.stop
       @contextmenu.stop
       @click.stop="clickDocumentHandler"
-      :style="style"
-      v-if="show"
     >
       <slot name="menu"></slot>
     </div>
@@ -123,20 +123,22 @@ $bcl: hsla(0, 0%, 100%, 0.12);
 
 .right-mouse-menu {
   position: fixed;
+  z-index: 999;
+  color: #fff;
   background: #fff;
+  background-color: $--color-bg-reversal;
   border: solid 1px rgba(0, 0, 0, 0.2);
   border-radius: 3px;
-  z-index: 999;
-  background-color: $--color-bg-reversal;
-  color: #fff;
+
   a {
-    min-width: 40px;
     display: block;
+    min-width: 40px;
     padding: 4px 12px;
-    line-height: 24px;
     font-size: 12px;
+    line-height: 24px;
     text-align: left;
     border-bottom: 1px solid $bcl;
+
     &:hover {
       background-color: $bcl;
     }

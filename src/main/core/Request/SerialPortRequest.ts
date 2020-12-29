@@ -1,7 +1,7 @@
 import SerialPort from 'serialport'
 import is from 'electron-is'
 
-import agreement, { ReadResult } from '@/main/core/Agreement'
+import agreement from '@/main/core/Agreement'
 import logger, { sysLog } from '@/main/core/Logger'
 import TransfromParser from '@/main/utils/transfromParser'
 import NotifyUtil from '@/main/utils/notifyUtil'
@@ -38,7 +38,7 @@ export default class SerialPortRequest {
     })
     port.pipe(parser)
     parser.on('data', buf => {
-      logger.info('串口返回数据', buf.toString('hex'))
+      // logger.info('串口返回数据', buf.toString('hex'))
       this.errorNotify.notify()
 
       const result = agreement.readData(buf)

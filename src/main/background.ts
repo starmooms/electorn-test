@@ -1,17 +1,9 @@
 'use strict'
-import {
-  app,
-  protocol,
-  BrowserWindow,
-  powerMonitor,
-  powerSaveBlocker
-} from 'electron'
+import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
-// import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Launcher from './Launcher'
+// import './core/connect/childTcp'
 import logger from './core/Logger'
-import debug from 'debug'
-import tcpServe from './core/connect/TcpServe'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 app.allowRendererProcessReuse = false
@@ -20,12 +12,16 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
-let beforeMainWin: any = () => {
+let beforeMainWin: (() => void) | undefined = () => {
   createProtocol('app')
 }
+
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   // tcpServe()
+
+  logger.info(process.versions)
+
   if (process.platform === 'win32') {
     process.on('message', data => {
       if (data === 'graceful-exit') {
@@ -38,7 +34,7 @@ if (isDevelopment) {
     })
   }
 
-  beforeMainWin = null
+  beforeMainWin = void 0
   app.whenReady().then(async () => {
     if (isDevelopment && !process.env.IS_TEST) {
       // 下载Vue调试工具

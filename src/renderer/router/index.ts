@@ -5,37 +5,55 @@ import Default from '@/renderer/layout/Default.vue'
 
 Vue.use(VueRouter)
 
+const HomeRouter: RouteConfig[] = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/renderer/views/Home/index.vue'),
+    meta: {
+      title: '机柜信息'
+    }
+  },
+  {
+    path: '/calibrate',
+    name: 'calibrate',
+    component: () => import('@/renderer/views/Calibrate/index.vue'),
+    meta: {
+      title: '通道校准'
+    }
+  },
+  {
+    path: '/upgrade',
+    name: 'upgrade',
+    component: () => import('@/renderer/views/Upgrade/index.vue'),
+    meta: {
+      title: '设备升级'
+    }
+  },
+  {
+    path: '/errorLog',
+    name: 'errorLog',
+    component: () => import('@/renderer/views/ErrorLog/index.vue'),
+    meta: {
+      title: '错误日志'
+    }
+  },
+  {
+    path: '/setting',
+    name: 'setting',
+    component: () => import('@/renderer/views/Setting/index.vue'),
+    meta: {
+      title: '设置',
+      icon: 'setting'
+    }
+  }
+]
+
 const routes: Array<RouteConfig> = [
   {
     path: '/',
     component: Main,
-    children: [
-      {
-        path: '',
-        name: 'Home',
-        component: () => import('@/renderer/views/Home/index.vue')
-      },
-      {
-        path: '/setting',
-        name: 'setting',
-        component: () => import('@/renderer/views/Setting/index.vue')
-      },
-      {
-        path: '/errorLog',
-        name: 'errorLog',
-        component: () => import('@/renderer/views/ErrorLog/index.vue')
-      },
-      {
-        path: '/calibrate',
-        name: 'calibrate',
-        component: () => import('@/renderer/views/Calibrate/index.vue')
-      },
-      {
-        path: '/upgrade',
-        name: 'upgrade',
-        component: () => import('@/renderer/views/Upgrade/index.vue')
-      }
-    ]
+    children: HomeRouter
   },
   {
     path: '/',
@@ -55,23 +73,26 @@ const routes: Array<RouteConfig> = [
       {
         path: '/history/:filePath',
         name: 'History',
-        props: {
-          isHistory: true
-        },
-        component: () => import('@/renderer/views/History/index.vue')
+        component: () => import('@/renderer/views/History/History.vue'),
+        meta: {
+          title: '查看历史'
+        }
       },
       {
         path: '/nowChannel/:masterId/:slaverId/:channelId',
         name: 'nowChannel',
-        props: {
-          isHistory: false
-        },
-        component: () => import('@/renderer/views/History/index.vue')
+        component: () => import('@/renderer/views/History/channelCur.vue'),
+        meta: {
+          title: '查看通道'
+        }
       },
       {
         path: '/sorting',
         name: 'Sorting',
-        component: () => import('@/renderer/views/Sorting/index.vue')
+        component: () => import('@/renderer/views/Sorting/index.vue'),
+        meta: {
+          title: '容量分选'
+        }
       }
     ]
   }
@@ -82,12 +103,14 @@ const router = new VueRouter({
   routes
 })
 
+const getRouteTitle = (pageTitle: string) => {
+  return `${pageTitle} - upper-computer`
+}
+
 router.beforeEach(async (to, from, next) => {
-  // console.log(to, from, next)
-  // if (to.meta.titleBar) {
-  //   SettingStatus.UPDATE_TITLEBAR(true)
-  // }
+  document.title = getRouteTitle(to.meta.title || '')
   next()
 })
 
 export default router
+export { HomeRouter }

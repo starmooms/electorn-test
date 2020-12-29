@@ -27,6 +27,7 @@ export default class FromAction extends Vue {
 
   rollBack() {
     this.dataSync = deepClone(this.backup)
+    return this.dataSync
   }
 
   submit() {

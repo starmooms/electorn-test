@@ -200,25 +200,26 @@ class MainDb extends MainDbCom {
     const runStatus: string[] = []
     const endStatus: string[] = []
     list.forEach(item => {
-      const sql = `(masterId=${item.masterId} AND slaverId=${item.slaverId} AND channelId=${item.channelId})`
+      const { masterId, slaverId, channelId } = item
+      const fullId = `'${masterId}_${slaverId}_${channelId}'`
       if (item.status === 'RUN') {
-        runStatus.push(sql)
+        runStatus.push(fullId)
       } else if (item.status === 'END') {
-        endStatus.push(sql)
+        endStatus.push(fullId)
       }
     })
 
     let updateSql = ''
     const { channelStatus } = this.tables
     if (runStatus.length > 0) {
-      updateSql += `UPDATE ${channelStatus} SET status='RUN' WHERE ${runStatus.join(
-        'OR'
-      )};`
+      updateSql += `UPDATE ${channelStatus} SET status='RUN' WHERE fullId IN (${runStatus.join(
+        ','
+      )});`
     }
     if (endStatus.length > 0) {
-      updateSql += `UPDATE ${channelStatus} SET status='END' WHERE ${endStatus.join(
-        'OR'
-      )};`
+      updateSql += `UPDATE ${channelStatus} SET status='END' WHERE fullId IN (${endStatus.join(
+        ','
+      )});`
     }
     if (updateSql) {
       await this.sqlite.exec(updateSql)

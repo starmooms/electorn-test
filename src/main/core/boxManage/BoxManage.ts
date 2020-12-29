@@ -9,6 +9,10 @@ import BoxLamp from './BoxLamp'
 import BoxMasterInfo from './BoxMasterInfo'
 import communi from '../Request/Communi'
 import BoxUpgrade from './BoxUpgrade'
+import { getStaticChList } from '@/shared/config/channel'
+import configManage from '../ConfigManage'
+import { BoxManageT } from '@/types/BoxManageT'
+import ipcManage from '../IpcManage'
 
 interface PostOpts {
   timeout?: number
@@ -17,6 +21,10 @@ interface PostOpts {
     code: number
     name: string
   }
+  masterId: number
+}
+
+interface ConnectMaster {
   masterId: number
 }
 
@@ -36,6 +44,11 @@ export class BoxManage {
   }
   initChannelResolve!: Promise<any>
   useDev = is.dev() && communi.requestType === 'Port'
+  /** 静态通道列表 */
+  staticChList = getStaticChList()
+  /** 当前连接的机柜 */
+  connectMaster: BoxManageT.MasterCnnect[] = []
+
   boxSamp = new BoxSamp(this)
   boxCal = new BoxCal(this)
   boxStatus = new BoxStatus(this)
@@ -44,7 +57,10 @@ export class BoxManage {
   boxUpgrade = new BoxUpgrade(this)
 
   create() {
-    this.initChannelResolve = this.initChannelStatusList()
+    this.initChannelResolve = Promise.all([
+      this.initChannelStatusList(),
+      this.initCommuni()
+    ])
     return this.initChannelResolve
   }
 
@@ -83,7 +99,7 @@ export class BoxManage {
     channelStatus.forEach((item: any) => {
       const channel = this.channelMap.get(item.fullId)
       if (channel) {
-        channel.nowStatus = item.status
+        channel.status = item.status
       }
     })
     return this.channelList
@@ -93,6 +109,47 @@ export class BoxManage {
   async getChannelList() {
     await this.initChannelResolve
     return this.channelList
+  }
+
+  /** 创建初始化Communi */
+  async initCommuni() {
+    await this.updateConfig(true)
+    // 监听串口改变或模式改变时
+    configManage.userConfig.onDidChange('base', () => {
+      this.updateConfig()
+    })
+    return
+  }
+
+  /** 更新当前连接机柜 */
+  async updateConfig(connentIp = false) {
+    // 先更新 ip连接
+    await communi.updateConfig(connentIp)
+    this.updateConnectMaster()
+  }
+
+  /** 更新机柜连接列表 */
+  updateConnectMaster() {
+    const requestType = configManage.userConfig.get('base.requestType')
+    this.connectMaster = []
+
+    if (requestType === 'Tcp') {
+      communi.tpcRequest.tcpMap.forEach(item => {
+        this.connectMaster.push({
+          masterId: item.masterId
+        })
+      })
+    } else if (requestType === 'Port') {
+      const portMaster: number[] = configManage.userConfig.get(
+        'base.portMaster'
+      )
+      portMaster.forEach(masterId => {
+        this.connectMaster.push({
+          masterId: masterId
+        })
+      })
+    }
+    ipcManage.commonMsg('updateConnect', this.connectMaster)
   }
 }
 

@@ -3,6 +3,7 @@
     <div class="action-box">
       <el-button type="primary" @click="showDetails">详细数据</el-button>
       <el-button type="primary" @click="showSteps">过程数据</el-button>
+      <el-button type="primary" @click="handleExport">导出Excel</el-button>
     </div>
     <div class="samp-table virtual-table">
       <DynamicScroller
@@ -31,7 +32,8 @@
             </div>
             <div
               v-if="sampData.length === 0"
-              style="text-align: center;padding:10px;"
+              style="padding: 10px;
+  text-align: center;"
             >
               暂无数据
             </div>
@@ -46,17 +48,17 @@
           >
             <!-- 工步数据项 -->
             <div
-              class="th-item spam-item spam-step"
               v-if="item.type === 'step'"
+              class="th-item spam-item spam-step"
               @click="setActiveItem(index)"
             >
               <div class="th-td td-index"></div>
               <div class="th-td td-extend">
-                <svg-icon
-                  @click="stepSubSet(item, index)"
+                <SvgIcon
                   class="icon"
                   :icon-class="item.show ? 'extend-hide' : 'extend-show'"
-                ></svg-icon>
+                  @click="stepSubSet(item, index)"
+                />
               </div>
 
               <div class="th-td td-step-msg">
@@ -65,8 +67,8 @@
             </div>
             <!-- 采样内容 -->
             <div
-              class="th-item spam-item"
               v-else
+              class="th-item spam-item"
               :class="{ even: item.sIndex % 2 }"
               @click="setActiveItem(index)"
             >
@@ -94,16 +96,20 @@
         </template>
       </DynamicScroller>
     </div>
+
+    <ExportExcel ref="exportExcel" />
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+import ExportExcel from '@/renderer/components/ExportExcel/index.vue'
 
 @Component({
   components: {
     DynamicScroller,
-    DynamicScrollerItem
+    DynamicScrollerItem,
+    ExportExcel
   }
 })
 export default class SampList extends Vue {
@@ -112,6 +118,7 @@ export default class SampList extends Vue {
 
   $refs!: {
     virtualScroll: DynamicScroller
+    exportExcel: ExportExcel
   }
 
   stepShow: boolean[] = []
@@ -243,6 +250,28 @@ export default class SampList extends Vue {
       }
     })
   }
+
+  /** 导出 */
+  handleExport() {
+    if (this.stepList.length === 0 || this.sampData.length === 0) {
+      return this.$message.error('暂无数据')
+    }
+    this.$refs.exportExcel.exportHandle(() => {
+      return {
+        columns: [
+          { header: '工序', key: 'msg', width: 25 },
+          { header: '电压mV', key: 'U', width: 25 },
+          { header: '电流mA', key: 'I', width: 25 },
+          { header: '容量mAh', key: 'vol', width: 25 },
+          { header: '电量mWh', key: 'epower', width: 25 },
+          { header: '结束标志', key: 'endStatus', width: 25 },
+          { header: '时间s', key: 'stepTime', width: 25 },
+          { header: '日期', key: 'createTime', width: 25 }
+        ],
+        rows: this.sampData
+      }
+    })
+  }
 }
 </script>
 
@@ -252,22 +281,26 @@ $td-h: 24px;
 
 .virtual-table {
   border: 1px solid #dcdfe6;
+
   .th-item {
     display: flex;
     align-items: center;
+
     &.even {
       background-color: #f5f7fa;
     }
+
     .th-td {
-      flex: none;
+      position: relative;
       box-sizing: border-box;
+      flex: none;
+      height: $td-h;
       padding-left: 10px;
+      font-size: 12px;
+      line-height: $td-h;
       border-right: 1px solid #dcdfe6;
       border-bottom: 1px solid #dcdfe6;
-      font-size: 12px;
-      position: relative;
-      height: $td-h;
-      line-height: $td-h;
+
       /* &:after {
         content: '';
         position: absolute;
@@ -278,14 +311,14 @@ $td-h: 24px;
         background: #dcdfe6;
       } */
       &:last-child {
-        border-right: none;
+        border-right: 0;
       }
 
       .td-text {
-        line-height: 1.2;
         width: 100%;
-        word-wrap: break-word;
+        line-height: 1.2;
         word-break: break-all;
+        word-wrap: break-word;
       }
     }
   }
@@ -301,6 +334,47 @@ $td-h: 24px;
 }
 
 .samp-table {
+  .th-item {
+    padding-right: 0;
+
+    .td-date {
+      flex-grow: 1;
+      min-width: 80px;
+    }
+
+    .td-index {
+      width: 36px;
+      padding-left: 0;
+      text-align: center;
+    }
+
+    .td-u,
+    .td-i,
+    .td-vol,
+    .td-epower,
+    .td-work-id,
+    .td-step-time {
+      width: 60px;
+    }
+
+    .td-work,
+    .td-endStatus {
+      width: 100px;
+    }
+
+    .td-extend {
+      width: 24px;
+      min-width: 24px;
+      padding-left: 0;
+      text-align: center;
+      background-color: $oBackground;
+    }
+
+    .td-step-msg {
+      flex-grow: 1;
+    }
+  }
+
   .th-item,
   ::v-deep
     .vue-recycle-scroller.direction-vertical
@@ -313,59 +387,20 @@ $td-h: 24px;
     top: 0;
     z-index: 99;
   }
+
   .th-head {
     .th-item {
       background-color: #fff;
+
       .td-extend {
         background-color: transparent;
       }
     }
   }
 
-  .th-item {
-    padding-right: 0;
-    .th-td {
-      // flex: 1 0;
-      // flex-grow: 1;
-      // box-sizing: border-box;
-    }
-    .td-date {
-      flex-grow: 1;
-      min-width: 80px;
-    }
-    .td-index {
-      width: 36px;
-      text-align: center;
-      padding-left: 0;
-    }
-    .td-u,
-    .td-i,
-    .td-vol,
-    .td-epower,
-    .td-work-id,
-    .td-step-time {
-      width: 60px;
-    }
-    .td-work,
-    .td-endStatus {
-      width: 100px;
-    }
-
-    .td-extend {
-      width: 24px;
-      min-width: 24px;
-      background-color: $oBackground;
-      text-align: center;
-      padding-left: 0;
-    }
-    .td-step-msg {
-      flex-grow: 1;
-    }
-  }
-
   .th-item.spam-step {
-    background-color: $oBackground;
     display: flex;
+    background-color: $oBackground;
 
     .th-td {
       height: 26px;
@@ -382,11 +417,12 @@ $td-h: 24px;
   .active {
     .th-item,
     .th-item .td-extend {
-      background-color: #409eff;
       color: #fff;
+      background-color: #409eff;
     }
   }
 }
+
 .table-box {
   min-width: 400px;
 }

@@ -10,21 +10,27 @@ export default class MainDb extends MainDbCom {
 
   async getErrorList({ limit, page }: Db.ListQuery) {
     const { errorData } = this.tables
-    if (!page || page < 1) {
-      page = 1
-    }
-    const list = await this.sqlite.all<Db.ErrorItem[]>(
-      `SELECT * FROM ${errorData} ORDER BY createdTime DESC LIMIT ${limit} OFFSET ${limit *
-        (page - 1)};`
-    )
-    const countKey = `COUNT(*)`
-    const count = await this.sqlite.get(`SELECT ${countKey} FROM ${errorData};`)
-    return {
+    return this.sqlite.getPageSql({
+      order: 'createdTime DESC',
+      tableName: errorData,
       limit,
-      page,
-      total: count[countKey],
-      list
+      page
+    })
+  }
+
+  async deleteErrorLog({ startTime, endTime, id }: DbErrorT.DeleteParams) {
+    let whereSql = ''
+    if (startTime && endTime) {
+      whereSql += `createdTime >= '${startTime}' AND createdTime < '${endTime}'`
+    } else if (id !== void 0) {
+      whereSql += `id=${id}`
     }
+    if (!whereSql) {
+      throw new Error(`DeleteParams Error`)
+    }
+    const { errorData } = this.tables
+    await this.sqlite.run(`DELETE FROM ${errorData} WHERE ${whereSql}`)
+    return
   }
 
   async getHistoryList({

@@ -1,12 +1,12 @@
 <template>
   <div class="echart-box">
-    <action-box v-if="showAction"></action-box>
-    <v-chart
+    <ActionBox v-if="showAction" />
+    <VChart
       ref="echart"
       manual-update
       :autoresize="true"
       @zr:click="handleClick"
-    ></v-chart>
+    />
   </div>
 </template>
 
@@ -21,12 +21,9 @@ import 'echarts/lib/component/dataZoom'
 import 'echarts/lib/component/legend'
 import 'echarts/lib/component/visualMap'
 import 'echarts/lib/component/graphic'
-// import { merge } from '@/shared/utils'
 import _merge from 'lodash/merge'
 import { SettingStatus } from '@/renderer/store/modules/Setting'
-import { formatTimeStr, SAMPCHART_Y_MAP } from '@/renderer/utils/util'
-// import getSampWorker from '@/renderer/utils/getSampWorker'
-import dayjs from 'dayjs'
+import { SAMPCHART_Y_MAP } from '@/renderer/utils/util'
 import ActionBox from './ActionBox.vue'
 
 interface UpdateOpts {
@@ -38,7 +35,7 @@ interface UpdateOpts {
 
 @Component({
   components: {
-    'v-chart': ECharts,
+    VChart: ECharts,
     ActionBox
   }
 })
@@ -52,12 +49,11 @@ export default class SampChart extends Vue {
     echart: ECharts
   }
 
-  xData!: string[]
-  sampData: Port.SampItem[] = []
+  sampData: SampTB.SampItem[] = []
 
   chartSamp!: string | null
   polar!: any
-  selectSamp!: Port.SampItem | null
+  selectSamp!: SampTB.SampItem | null
 
   get sampChartConfig() {
     return SettingStatus.sampChartConfig
@@ -71,15 +67,6 @@ export default class SampChart extends Vue {
   @Watch('sampChartConfig', { deep: true })
   changeConfig() {
     this.refreshConfig()
-  }
-
-  checkList(list: Port.SampItem[]) {
-    return list.map(item => {
-      if (!item.createTimeStr) {
-        item.createTimeStr = dayjs.unix(item.createTime).format(formatTimeStr)
-      }
-      return item
-    })
   }
 
   setCharts(data: any[] = []) {
@@ -219,9 +206,9 @@ export default class SampChart extends Vue {
     this.$refs.echart.mergeOptions(polar)
   }
 
-  async update(data?: Port.SampItem[]) {
+  async update(data?: SampTB.SampItem[]) {
     if (data && data.length > 0) {
-      this.sampData = [...this.sampData, ...this.checkList(data)]
+      this.sampData = [...this.sampData, ...data]
       this.$refs.echart.mergeOptions({
         dataset: {
           source: this.sampData
@@ -231,8 +218,8 @@ export default class SampChart extends Vue {
   }
 
   /** 采样数据整理 */
-  async setBaseList(list: Port.SampItem[]) {
-    this.setCharts(this.checkList(list))
+  async setBaseList(list: SampTB.SampItem[]) {
+    this.setCharts(list)
   }
 
   /** 获取Y轴配置，添加默认和show属性 */

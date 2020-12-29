@@ -18,11 +18,11 @@ declare namespace Port {
   interface ChannelItem {
     id: number
     name: string
-    samp: null | SampItem
+    samp: null | SampTB.SampItem
     fullId: string
     workerStart: number | null
     workerEnd: number | null
-    nowStatus: null | 'RUN' | 'END'
+    status: null | 'RUN' | 'END'
     lastSaveTime: number | null
     filePath: string | null
   }
@@ -46,45 +46,46 @@ declare namespace Port {
     }
   }
 
-  /** 采样通用工步数据 */
-  interface SampStepData {
-    workerCode: string
-    stepId: number
-    U: number
-    I: number
-    vol: number
-    epower: number
-  }
+  // /** 采样通用工步数据 */
+  // interface SampStepData {
+  //   workerCode: string
+  //   stepId: number
+  //   U: number
+  //   I: number
+  //   vol: number
+  //   epower: number
+  // }
 
-  /** 采样通用状态数据 */
-  interface SampStatusData {
-    loopNum: number
-    stepTime: number
-    errorCode: string
-    endCode: string
-  }
+  // /** 采样通用状态数据 */
+  // interface SampStatusData {
+  //   loopNum: number
+  //   stepTime: number
+  //   createTime: string
+  //   errorCode: string
+  //   endCode: string
+  // }
 
-  /** 采样 */
-  interface SampItem extends SampStepData, SampStatusData {
-    masterId: number
-    slaverId: number
-    channelId: number
-    workerCode: string
-    stepId: number
-    U: number
-    I: number
-    vol: number
-    epower: number
-    stepTime: number
-    loopNum: number
-    errorCode: string
-    errorMsg: string
-    workerStatus: { name: string; status: string }
-    createTime: number
-    projectId: number
-    /**  */
-    createTimeStr?: string
-  }
+  // /** 采样 */
+  // interface SampItem extends SampStepData, SampStatusData {
+  //   masterId: number
+  //   slaverId: number
+  //   channelId: number
+  //   workerCode: string
+  //   stepId: number
+  //   U: number
+  //   I: number
+  //   vol: number
+  //   epower: number
+  //   stepTime: number
+  //   loopNum: number
+  //   errorCode: string
+  //   errorMsg: string
+  //   workerStatus: { name: string; status: string }
+  //   createTime: string
+  //   projectId: number
+  //   /**  */
+  //   createTimeStr?: string
+  // }
 
   /** 通道状态改变时触发 */
   interface ChannelChangeItem {
@@ -94,6 +95,7 @@ declare namespace Port {
     time: string
     status: 'RUN' | 'END'
     filePath: string
+    isUpdateFile: boolean // 触发文件路径更新，但不改变status
   }
 
   interface ChannelChangeFilePath {
@@ -199,46 +201,46 @@ declare namespace Port {
     }
   }
 
-  /** 采样 电压特征 */
-  interface SampFeature extends SampStepData, SampStatusData {
-    masterId: number
-    slaverId: number
-    channelId: number
-    featureType: number
-  }
+  // /** 采样 电压特征 */
+  // interface SampFeature extends SampStepData, SampStatusData {
+  //   masterId: number
+  //   slaverId: number
+  //   channelId: number
+  //   featureType: number
+  // }
 
-  /** 采样启动列表 */
-  interface SampStart extends SampStepData, SampStatusData {
-    masterId: number
-    slaverId: number
-    channelId: number
-    stepId: number
-    workerCode: string
-    U: number
-  }
+  // /** 采样启动列表 */
+  // interface SampStart extends SampStepData, SampStatusData {
+  //   masterId: number
+  //   slaverId: number
+  //   channelId: number
+  //   stepId: number
+  //   workerCode: string
+  //   U: number
+  // }
 
-  /** 采样结束列表 */
-  interface SampEnd extends SampStepData, SampStatusData {
-    masterId: number
-    slaverId: number
-    channelId: number
-    endCode: string
-  }
+  // /** 采样结束列表 */
+  // interface SampEnd extends SampStepData, SampStatusData {
+  //   masterId: number
+  //   slaverId: number
+  //   channelId: number
+  //   endCode: string
+  // }
 
-  interface SaveSampItem {
-    projectId: number
-    sampList: SampItem[]
-    changeStatusList: ChannelChangeItem[]
-    startList: SampStart[]
-    endList: SampEnd[]
-    featureList: SampFeature[]
-    /** 非工步结束的特殊的结束列表 */
-    specialList: SampEnd[]
-  }
+  // interface SaveSampItem {
+  //   projectId: number
+  //   sampList: SampItem[]
+  //   changeStatusList: ChannelChangeItem[]
+  //   startList: SampStart[]
+  //   endList: SampEnd[]
+  //   featureList: SampFeature[]
+  //   /** 非工步结束的特殊的结束列表 */
+  //   specialList: SampEnd[]
+  // }
 
-  interface SaveSampData {
-    [projectId: string]: SaveSampItem
-  }
+  // interface SaveSampData {
+  //   [projectId: string]: SaveSampItem
+  // }
 
   /** 校准参数 */
   interface CalItem {
@@ -258,9 +260,9 @@ declare namespace Port {
     channelIds?: number[]
   }
 
-  type GetProjectSampKey = keyof SaveSampItem
-  type GetProjectSamp = <T extends GetProjectSampKey>(
-    porjectId: number,
-    key: T
-  ) => SaveSampItem[T]
+  // type GetProjectSampKey = keyof SaveSampItem
+  // type GetProjectSamp = <T extends GetProjectSampKey>(
+  //   porjectId: number,
+  //   key: T
+  // ) => SaveSampItem[T]
 }

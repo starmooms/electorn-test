@@ -3,20 +3,24 @@ export const STANDARD_OPTS = [0.0005, 0.0002, 0.0001]
 
 /** 校准---电压量程 */
 export const U_RANGE_OPTS = [
-  { id: 0, label: '0/1/2/3/4/5 V', value: [0, 1, 2, 3, 4, 5] }
+  { id: 0, label: '0/0.5/1/2/3/4/5 V', value: [0, 0.5, 1, 2, 3, 4, 5] }
 ]
 
 /** 校准---电流量程 */
 export const I_RANGE_OPTS = [
-  { id: 0, label: '0/0.1/0.5/1/2/3 A', value: [0, 0.1, 0.5, 1, 2, 3] }
+  {
+    id: 0,
+    label: '0/0.05/0.1/0.5/1/2/3 A',
+    value: [0, 0.05, 0.1, 0.5, 1, 2, 3]
+  }
 ]
 
 /** 工装校准--电压量程 */
 export const U_TOOL_RANGE_OPTS = [
   {
     id: 0,
-    label: '0.1-0.5/0.5-1/1-2/2-3/3-4/4-5 V',
-    value: [0.1, 0.5, 2, 3, 4, 5]
+    label: '0/0.5/1/2/3/4/5 V',
+    value: [0, 0.5, 1, 2, 3, 4, 5]
   }
 ]
 
@@ -24,8 +28,8 @@ export const U_TOOL_RANGE_OPTS = [
 export const I_TOOL_RANGE_OPTS = [
   {
     id: 0,
-    label: '0-0.05/0.05-0.1/0.1-0.5/0.5-1/1-2/2-3 A',
-    value: [0.05, 0.1, 0.5, 1, 2, 3]
+    label: '0/0.05/0.1/0.5/1/2/3 A',
+    value: [0, 0.05, 0.1, 0.5, 1, 2, 3]
   }
 ]
 
@@ -38,3 +42,42 @@ export const CALIBRATE_TYPE = [
 
 /** 校准工具 工装机柜号 */
 export const CALTOOL_ID = 204 // 0xcc
+
+/** 读校准发送类型 */
+export enum readTypeEnum {
+  /** 读采样（带ab计算） */
+  samp = 1,
+  /** 读AB */
+  ab = 2,
+  /** 读裸采样(不带AB) */
+  trueSamp = 3,
+  /** 工装读功率板通道 */
+  calToolRead = 4 // 工装读功率板通道
+}
+
+/** 设置通道发送类型 */
+export enum SetRunType {
+  /**1：通道校准 */
+  chCal = 1,
+  /** 2：设置AB值 */
+  setAB = 2,
+  /** 3：工装校准 */
+  toolCal = 3,
+  /** 4：清除校准值 */
+  clearAB = 4,
+  /** 5:复检 */
+  recheckCal = 5,
+  /** 6:关闭输出 */
+  closeCal = 6
+}
+
+// export const CALTYPE = {
+//   /** 读采样（带ab计算） */
+//   SAMP: 1,
+//   /** 读AB */
+//   AB: 2,
+//   /** 读裸采样(不带AB) */
+//   CLEARSAMP: 3,
+//   /** 工装读功率板通道 */
+//   CALTOOLREAD: 4
+// }

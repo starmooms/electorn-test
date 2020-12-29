@@ -1,6 +1,6 @@
 /** 数据库相关 */
 declare namespace Db {
-  type SaveSampList = Port.SaveSampItem
+  type SaveSampList = SampTB.SaveSampItem
   type sampList = SaveSampList['sampList']
   type startList = SaveSampList['startList']
   type endList = SaveSampList['endList']
@@ -139,5 +139,13 @@ declare namespace Db {
       endCode: string
     }
     avgU: null | number
+  }
+}
+
+declare namespace DbErrorT {
+  interface DeleteParams {
+    startTime?: string
+    endTime?: string
+    id?: number
   }
 }

@@ -91,3 +91,24 @@ https://www.cnblogs.com/XT-xutao/p/9912264.html
 
 ### 精度计算
 https://www.cnblogs.com/stella1024/p/11905773.html?utm_source=tuicool
+
+
+### sqlite 提高写入速度
+https://libaineu2004.blog.csdn.net/article/details/108815466
+https://blog.csdn.net/qq_18059143/article/details/103323840
+https://blog.csdn.net/lijinqi1987/article/details/5185  2721
+https://www.cnblogs.com/dongweiq/p/5486433.html
+
+
+### electron 总是重新构建
+https://github.com/electron-userland/electron-builder/issues/3329
+https://www.cnblogs.com/qirui/p/8328015.html  // 打包速度
+https://blog.csdn.net/weixin_30335575/article/details/95836259
+https://npm.taobao.org/mirrors
+https://www.jianshu.com/p/6615ff3cb0c1
+https://blog.yasking.org/a/zh-install-electron-development-2020.html
+
+
+### 子进程
+https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/898
+yarn electron:build --mode development  // 打包时使用开发模式

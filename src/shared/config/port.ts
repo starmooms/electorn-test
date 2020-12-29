@@ -1,15 +1,3 @@
-// /** 工步 */
-// export const workSteps = {
-//   ICi: { name: '恒流充电', value: 'A1', input: ['U', 'I'], limt: {} },
-//   UCi: { name: '恒压充电', value: 'A2', input: ['U', 'I'] },
-//   IUCi: { name: '恒流恒压充电', value: 'A3', input: ['U', 'I', 'IEnd'] },
-//   IDisCi: { name: '恒流放电', value: 'B0', input: ['U', 'I'] },
-//   shelve: { name: '搁置', value: '90', input: ['time'] },
-//   loop: { name: '循环', value: '70', input: ['loopStart', 'loopNum'] }
-//   // IPerCi: { name: '恒流预充', value: 'A0', input: null },
-//   // WCi: { name: '恒功率充电', value: 'A4', input: null }
-// }
-
 /** 工步 */
 export const WORKSTEPS = [
   {
@@ -72,19 +60,6 @@ WORKSTEPS.forEach(item => {
   WORKSTEPS_TYPE_MAP[item.type] = item
 })
 
-/** 工步输入参数对应信息 */
-// export const WORKSTEPSINPUT = {
-//   time: { unit: 's', name: '时间' },
-//   U: { unit: 'mV', name: '电压' },
-//   I: { unit: 'mA', name: '电流' },
-//   W: { unit: 'W', name: '功率' },
-//   R: { unit: 'mΩ', name: '电阻' },
-//   loopNum: { unit: '', name: '循环次数' },
-//   loopStart: { unit: '', name: '循环起始' },
-//   loopNow: { unit: '', name: '当前循环次数' },
-//   IEnd: { unit: 'mA', name: '截止电流' }
-// }
-
 export const WORKSTEPSINPUT = {
   time: { unit: 'min', name: '时间' },
   limtTime: { unit: 'min', name: '时间限制', type: 'time' },
@@ -101,16 +76,6 @@ export const WORKSTEPSINPUT = {
   UStart: { unit: 'mV', name: '起始电压', type: 'U' },
   UEnd: { unit: 'mV', name: '截止电压', type: 'U' }
 }
-
-// /** 读工步数据 */
-// export const workStepsRead = {
-//   U: { len: 2, serial: 6, name: '电压(mV)' },
-//   I: { len: 4, serial: 7, name: '电流(mA)' },
-//   temp: { len: 1, serial: 8, name: '温度(℃)' },
-//   time: { len: 4, serial: 9, name: '工步时间(秒)' },
-//   Ah: { len: 4, serial: 10, name: '容量(mAh)' },
-//   Wh: { len: 4, serial: 11, name: '电量(mWh)' }
-// }
 
 /* eslint-disable quote-props */
 
@@ -166,8 +131,8 @@ export const END_STATUS = {
   '0a': '无电池或电池接触不良',
   '0b': '不良电池',
   '0c': '补充电容量到结束',
-  '0d': '电压超过最大电压',
-  '0e': '电压低于最低电压',
+  '0d': '电压低于最低电压',
+  '0e': '电压超过最大电压',
   '0f': '恒流转恒压',
   'ff': '未知结束'
 }
@@ -277,13 +242,13 @@ export function getCalList() {
 
 // 保护参数
 export const PROTECT = [
-  { name: '恒压充保护电压偏差(mV)', type: 'UCi', index: 0 },
-  { name: '恒流充保护电流偏差(mA)', type: 'ICi', index: 1 },
-  { name: '恒流放保护电流偏差(mA)', type: 'IDisCi', index: 2 },
-  { name: '报警上限电压(mV)', type: 'UMax', index: 3 },
-  { name: '报警下限电压(mV)', type: 'UMin', index: 4 },
-  { name: '报警下限起效时间(min)', type: 'TimeMin', index: 5 },
-  { name: '报警容量(mAh)', type: 'warnVal', index: 6 }
+  { name: '恒压充保护电压偏差(mV)', type: 'UCi' },
+  { name: '恒流充保护电流偏差(mA)', type: 'ICi' },
+  { name: '恒流放保护电流偏差(mA)', type: 'IDisCi' },
+  { name: '报警上限电压(mV)', type: 'UMax' },
+  { name: '报警下限电压(mV)', type: 'UMin' },
+  { name: '报警下限起效时间(min)', type: 'TimeMin' },
+  { name: '报警容量(mAh)', type: 'warnVal' }
 ]
 export const GET_PROTECT_FORM = () => {
   const form: any = {}
@@ -294,35 +259,6 @@ export const GET_PROTECT_FORM = () => {
 }
 
 /** 控制码 */
-export const controlCode = {
-  writeWorkSteps: 0xe3, // 写从控工步参数
-  readWorkSteps: 0xc3, // 读从控工步参数
-  slaver: {
-    start: 0xeb,
-    pause: 0xec,
-    continued: 0xed,
-    close: 0xee,
-    stepsRead: 0xc3,
-    calRead: 0xc8,
-    calSet: 0xe8,
-    translateRead: 0xc5
-  },
-  master: {
-    stepsSet: 0xa9,
-    stepsRead: 0x89,
-    translateRead: 0x85,
-    status: {
-      start: 0xa5,
-      pause: 0xa6,
-      continued: 0xa7,
-      close: 0xa8,
-      reset: 0xa4
-    },
-    calSet: 0xaa,
-    calRead: 0x8a
-  }
-}
-
 export const CONTROL_CODE = {
   stepsSet: {
     code: 0xa9,

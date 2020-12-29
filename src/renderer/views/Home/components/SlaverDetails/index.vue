@@ -12,12 +12,12 @@
     </div>
 
     <el-row
+      v-loading="loading"
       class="channel-list"
       :gutter="20"
-      v-loading="loading"
       element-loading-background="rgba(255, 255, 255, 0.6)"
     >
-      <el-col :span="6" v-for="channel in list" :key="channel.channelId">
+      <el-col v-for="channel in list" :key="channel.channelId" :span="6">
         <div class="item" :class="channel.samp.workerStatus.status">
           <div class="item-box title-box">
             <p class="tit">通道{{ channel.channelId + 1 }}</p>
@@ -41,14 +41,14 @@
           </div>
 
           <div class="step-box clearfix">
-            <div class="step-no-list" v-if="channel.stepList.length === 0">
+            <div v-if="channel.stepList.length === 0" class="step-no-list">
               暂无数据
             </div>
             <ul class="step-list">
               <li
-                class="step-item"
                 v-for="(step, index) in channel.stepList"
                 :key="index"
+                class="step-item"
                 :class="{ active: step.id === channel.samp.stepId }"
               >
                 {{ `${step.id + 1}、${step.msg}` }}
@@ -130,7 +130,7 @@ export default class SlaverDetails extends Vue {
   }
 
   setList() {
-    this.list = Object.entries(this.slaver.list).map(([key, channel]) => {
+    this.list = Object.entries(this.slaver.list).map(([, channel]) => {
       const channelId = channel.id
       const samp = this.getSamp(channelId)
       return {
@@ -193,32 +193,36 @@ export default class SlaverDetails extends Vue {
   margin-bottom: 20px;
 
   .action-box {
-    margin-top: 20px;
     display: flex;
     justify-content: flex-end;
+    margin-top: 20px;
   }
 
   .channel-list {
     display: flex;
     flex-flow: row wrap;
+
     .item {
       @include border-line;
-      background-color: #dcdcdc;
+
       margin-top: 20px;
+      background-color: #dcdcdc;
 
       .item-box {
-        padding: 6px;
-        box-sizing: border-box;
         @include border-line(border-bottom);
+
+        box-sizing: border-box;
+        padding: 6px;
+
         &:last-child {
-          border-bottom: none;
+          border-bottom: 0;
         }
       }
 
       .title-box {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
 
         .tit {
           margin: 0;
@@ -227,31 +231,34 @@ export default class SlaverDetails extends Vue {
 
       .msg-box {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        font-size: 12px;
-        font-weight: bold;
+        justify-content: space-between;
         height: 76px;
         overflow: auto;
+        font-size: 12px;
+        font-weight: bold;
+
         p {
           margin: 0;
         }
+
         .msg-l {
           span {
             margin-right: 10px;
             line-height: 1.4;
           }
         }
+
         .msg-r {
           .now-txt {
-            color: #fff;
-            font-size: 14px;
             display: inline-block;
-            padding: 0 5px;
-            border-radius: 4px;
             height: 20px;
+            padding: 0 5px;
+            font-size: 14px;
             line-height: 19px;
+            color: #fff;
             letter-spacing: 2px;
+            border-radius: 4px;
           }
         }
 
@@ -263,30 +270,32 @@ export default class SlaverDetails extends Vue {
 
       .step-box {
         height: 200px;
-        overflow: auto;
         padding: 6px 0;
+        overflow: auto;
+
         .step-no-list {
           text-align: center;
         }
 
         .step-list {
-          float: left;
           box-sizing: border-box;
+          float: left;
+
           .step-item {
-            white-space: nowrap;
-            line-height: 24px;
+            box-sizing: border-box;
             display: inline-block;
             min-width: 100%;
             padding: 0 6px;
-            box-sizing: border-box;
+            line-height: 24px;
+            white-space: nowrap;
+
             &.active {
-              background-color: #67c23a;
               color: #fff;
+              background-color: #67c23a;
             }
           }
         }
       }
-
       @each $status, $val in $statusColor {
         &.#{$status} {
           .msg-box {
@@ -298,8 +307,8 @@ export default class SlaverDetails extends Vue {
           }
 
           .step-box .step-list .step-item.active {
-            background-color: $val;
             color: #fff;
+            background-color: $val;
           }
         }
       }

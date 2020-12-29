@@ -7,11 +7,11 @@
       </div>
     </div>
     <vxe-grid
+      ref="xTabel"
       border
       auto-resize
       show-overflow
       resizable
-      ref="xTabel"
       :data="resultList"
       size="mini"
       max-width="160px"
@@ -57,5 +57,3 @@ export default class CalResult extends Vue {
   }
 }
 </script>
-
-<style lang="scss" scoped></style>

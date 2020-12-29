@@ -2,23 +2,23 @@
   <div class="tpl-edit">
     <div class="data-save-box">
       <el-divider content-position="left">数据记录条件</el-divider>
-      <el-form class="data-save-form" :inline="true" v-if="dataSave">
+      <el-form v-if="dataSave" class="data-save-form" :inline="true">
         <el-form-item
-          class="data-save-item"
           v-for="item in dataSaveList"
           :key="item.index"
+          class="data-save-item"
         >
           <div
             v-if="dataSave[item.type]"
             :class="{ disable: !dataSave[item.type].enable }"
           >
-            <el-checkbox v-model="dataSave[item.type].enable"></el-checkbox>
+            <el-checkbox v-model="dataSave[item.type].enable" />
             <span class="lable">{{ item.label }}：</span>
             <el-input
+              v-model.number="dataSave[item.type].value"
               class="data-save-input"
               :disabled="!dataSave[item.type].enable"
-              v-model.number="dataSave[item.type].value"
-            ></el-input>
+            />
             <span>{{ item.unit }}</span>
           </div>
         </el-form-item>
@@ -27,14 +27,14 @@
 
     <div class="data-feat-box">
       <el-divider content-position="left">特征电压参数</el-divider>
-      <el-form class="data-feat-form" :inline="true" v-if="features">
+      <el-form v-if="features" class="data-feat-form" :inline="true">
         <el-form-item
-          class="feat-form-item"
           v-for="item in featuresList"
           :key="item.type"
+          class="feat-form-item"
           :label="item.label"
         >
-          <el-input v-model.number="features[item.type]"></el-input>
+          <el-input v-model.number="features[item.type]" />
         </el-form-item>
       </el-form>
     </div>
@@ -43,19 +43,15 @@
       <el-divider content-position="left">工步编辑</el-divider>
       <div class="step-edit-set-box">
         <el-button type="primary" @click="stepsAdd">添加工步</el-button>
-        <div class="set-start" v-if="showStartId">
+        <div v-if="showStartId" class="set-start">
           <span>设置第</span>
-          <el-input class="set-start-input" v-model.number="startId"></el-input>
+          <el-input v-model.number="startId" class="set-start-input" />
           <span>为起始工步</span>
         </div>
       </div>
       <div class="step-list-tabel">
         <el-table :data="stepsList">
-          <el-table-column
-            type="index"
-            label="步次"
-            width="50"
-          ></el-table-column>
+          <el-table-column type="index" label="步次" width="50" />
           <el-table-column label="工步类型" width="150">
             <template slot-scope="{ row, $index }">
               <el-select
@@ -69,12 +65,12 @@
                   :key="item.label"
                   :label="item.label"
                   :value="item.value"
-                ></el-option>
+                />
               </el-select>
             </template>
           </el-table-column>
           <el-table-column label="设置" min-width="400">
-            <template slot-scope="{ row }" v-if="row.input">
+            <template v-if="row.input" slot-scope="{ row }">
               <div class="input-box">
                 <div
                   v-for="(value, key) in row.input"
@@ -86,7 +82,7 @@
                       `${stepsInputMap[key].name}(${stepsInputMap[key].unit})`
                     }}：
                   </span>
-                  <el-input type="text" v-model.number="row.input[key]" />
+                  <el-input v-model.number="row.input[key]" type="text" />
                 </div>
               </div>
             </template>
@@ -115,7 +111,7 @@
           :key="item.index"
           :label="item.name"
         >
-          <el-input v-model.number="protect[item.type]"></el-input>
+          <el-input v-model.number="protect[item.type]" />
         </el-form-item>
       </el-form>
     </div>
@@ -350,12 +346,15 @@ export default class StepTplEdit extends Vue {
   .data-save-box {
     .data-save-item {
       margin-right: 32px;
+
       .disable {
         color: #adadad;
       }
+
       .lable {
         margin-left: 10px;
       }
+
       .data-save-input {
         width: 80px;
         margin-right: 4px;
@@ -366,13 +365,16 @@ export default class StepTplEdit extends Vue {
   .steps-edit-box {
     // margin: 20px 0;
     .step-edit-set-box {
-      margin: 10px 0;
       display: flex;
+      margin: 10px 0;
+
       .set-start {
         margin-left: 10px;
+
         .set-start-input {
           display: inline;
           margin: 0 6px;
+
           ::v-deep .el-input__inner {
             width: 36px;
             padding: 0 4px;
@@ -385,9 +387,11 @@ export default class StepTplEdit extends Vue {
   .data-feat-box {
     .data-feat-form {
       display: flex;
+
       .feat-form-item {
         margin-right: 14px;
       }
+
       ::v-deep {
         .el-form-item__content {
           width: 80px;
@@ -398,16 +402,18 @@ export default class StepTplEdit extends Vue {
 
   .step-list-tabel {
     background-color: #f5f7fa;
+
     ::v-deep {
+      .el-table td,
+      .el-table th {
+        vertical-align: top;
+      }
+
       .el-table,
       .el-table tr,
       .el-table th,
       .el-table--enable-row-transition .el-table__body td {
         background-color: transparent;
-      }
-      .el-table td,
-      .el-table th {
-        vertical-align: top;
       }
     }
 
@@ -416,9 +422,11 @@ export default class StepTplEdit extends Vue {
       flex-flow: row wrap;
       align-items: center;
       margin-bottom: -10px;
+
       .input-item {
         flex: 0 0 33.33%;
         margin-bottom: 10px;
+
         .input-name {
           display: inline-block;
           width: 90px;

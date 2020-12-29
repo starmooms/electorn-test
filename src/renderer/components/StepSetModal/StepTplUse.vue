@@ -11,7 +11,7 @@
           <template slot-scope="{ row }">
             <div class="name-box">
               <template v-if="row.edit">
-                <el-input class="edit-input" v-model.trim="row.name" />
+                <el-input v-model.trim="row.name" class="edit-input" />
                 <el-button
                   class="cancel-btn"
                   type="warning"
@@ -49,7 +49,7 @@
     </el-dialog>
     <StepTplEditDialog
       :show.sync="editShow"
-      :editRow="editRow"
+      :edit-row="editRow"
       @saveTplSuccess="editTplSaveSuccess"
     />
   </div>
@@ -164,6 +164,7 @@ export default class StepTplUse extends Vue {
 <style lang="scss" scoped>
 .name-box {
   display: flex;
+
   .edit-input {
     margin-right: 14px;
   }

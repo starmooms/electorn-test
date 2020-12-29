@@ -6,20 +6,21 @@
       </el-checkbox>
     </div>
     <div
-      v-if="list"
       :is="groupName.group"
-      class="master-group"
+      v-if="list"
       v-model="activeId"
+      class="master-group"
     >
-      <component
-        class="master-group-item"
+      <Component
         :is="groupName.item"
         v-for="(master, mKey) in list"
         :key="mKey"
+        class="master-group-item"
         :label="labelKey ? mKey : master.id"
+        :disabled="!master.isConnect"
       >
         {{ master.name }}
-      </component>
+      </Component>
     </div>
   </div>
 </template>
@@ -38,16 +39,20 @@ export default class SelectMaster extends Vue {
 
   get masterAll() {
     return this.isCheckbox
-      ? (this.value as number[]).length === this.listId.length
+      ? (this.value as number[]).length === this.connectList.length
       : false
   }
 
   set masterAll(v: boolean) {
-    this.activeId = v ? this.listId : []
+    this.activeId = v ? this.connectList.map(item => item.id) : []
   }
 
   get list() {
-    return ChannelStatus.list
+    return ChannelStatus.masterChStatusList
+  }
+
+  get connectList() {
+    return this.list.filter(item => item.isConnect)
   }
 
   get groupName() {
@@ -59,28 +64,18 @@ export default class SelectMaster extends Vue {
   activeId: number | number[] | null = this.isCheckbox ? [] : null
   listId: number[] = []
 
-  @Watch('activeId')
-  changeActiveId() {
-    this.$emit('change', this.activeId)
-  }
-
   @Watch('value')
   changeValue() {
     this.activeId = this.value
   }
 
-  @Watch('list')
-  changeList() {
-    if (this.listId.length === 0 && this.list) {
-      this.listId = Object.keys(this.list).map(key => {
-        return this.list![key].id
-      })
-    }
-  }
-
   mounted() {
     this.changeValue()
-    this.changeList()
+  }
+
+  @Watch('activeId')
+  changeActiveId() {
+    this.$emit('change', this.activeId)
   }
 }
 </script>
@@ -90,36 +85,37 @@ export default class SelectMaster extends Vue {
   display: flex;
   flex-flow: row wrap;
   border: 1px solid #ccc;
-  border-bottom: none;
+  border-bottom: 0;
 
   .master-group-item {
     flex: 10%;
 
-    &:nth-of-type(10n + 1):after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      width: 1000%;
-      height: 1px;
-      background: #ccc;
-      z-index: 99;
-      pointer-events: none;
-    }
-    &:nth-of-type(10n) {
-      .el-radio-button__inner,
-      .el-checkbox-button__inner {
-        border: none;
-      }
-    }
-
     .el-radio-button__inner,
     .el-checkbox-button__inner {
-      display: block;
       box-sizing: border-box;
-      border: none;
+      display: block;
+      border: 0;
       border-right: 1px solid #ccc;
       border-radius: 0;
       transition: none;
+    }
+
+    &:nth-of-type(10n + 1)::after {
+      position: absolute;
+      bottom: 0;
+      z-index: 99;
+      width: 1000%;
+      height: 1px;
+      pointer-events: none;
+      content: '';
+      background: #ccc;
+    }
+
+    &:nth-of-type(10n) {
+      .el-radio-button__inner,
+      .el-checkbox-button__inner {
+        border: 0;
+      }
     }
   }
 }

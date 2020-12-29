@@ -2,24 +2,23 @@
   <div class="recheck">
     <div class="cal-action-box">
       <p class="title">复检</p>
-      <el-form class="step-leng" label-width="80px" ref="stepForm">
+      <el-form ref="stepForm" class="step-leng" label-width="80px">
         <div class="recheck-form-item">
           <el-form-item class="step-item" label="电流步长">
-            <el-select v-model="reCheckForm.IStep" placeholder="请选择">
-              <el-option
-                v-for="item in IStepOpts"
-                :key="item"
-                :label="item"
-                :value="item"
-              ></el-option>
-            </el-select>
+            <div class="range-item">
+              <el-input-number
+                v-model.number="reCheckForm.IStep"
+                :controls="false"
+              />
+              <span class="unit">A</span>
+            </div>
           </el-form-item>
           <el-form-item label="复检范围">
             <div class="range-item">
-              <el-input v-model="reCheckForm.IStart"></el-input>
+              <el-input v-model="reCheckForm.IStart" />
               <span class="unit">A</span>
               <span class="line">——</span>
-              <el-input v-model="reCheckForm.IEnd"></el-input>
+              <el-input v-model="reCheckForm.IEnd" />
               <span class="unit">A</span>
             </div>
           </el-form-item>
@@ -27,21 +26,20 @@
 
         <div class="recheck-form-item">
           <el-form-item class="step-item" label="电压步长">
-            <el-select v-model="reCheckForm.UStep" placeholder="请选择">
-              <el-option
-                v-for="item in UStepOpts"
-                :key="item"
-                :label="item"
-                :value="item"
-              ></el-option>
-            </el-select>
+            <div class="range-item">
+              <el-input-number
+                v-model.number="reCheckForm.UStep"
+                :controls="false"
+              />
+              <span class="unit">V</span>
+            </div>
           </el-form-item>
           <el-form-item label="复检范围">
             <div class="range-item">
-              <el-input v-model="reCheckForm.UStart"></el-input>
+              <el-input v-model="reCheckForm.UStart" />
               <span class="unit">V</span>
               <span class="line">——</span>
-              <el-input v-model="reCheckForm.UEnd"></el-input>
+              <el-input v-model="reCheckForm.UEnd" />
               <span class="unit">V</span>
             </div>
           </el-form-item>
@@ -58,11 +56,11 @@
     </div>
 
     <vxe-grid
+      ref="xTabel"
       border
       auto-resize
       show-overflow
       resizable
-      ref="xTabel"
       :data="recheckResult"
       size="mini"
       max-width="160px"
@@ -111,8 +109,6 @@ export default class CalReCheck extends Vue {
     UStart: null,
     UEnd: null
   }
-  IStepOpts = [200]
-  UStepOpts = [500]
 
   get config() {
     return SettingStatus.userConfig?.calibrateConfig?.recheckForm
@@ -124,7 +120,7 @@ export default class CalReCheck extends Vue {
       this.reCheckForm[key] = isNaN(num) ? null : num
     })
     const form = this.reCheckForm
-    if (form.IStep === null) {
+    if (!form.IStep) {
       return this.$message.error('请选择电流歩长')
     } else if (form.IStart === null) {
       return this.$message.error('请填写电流复检范围起始')
@@ -132,7 +128,7 @@ export default class CalReCheck extends Vue {
       return this.$message.error('请填写电流复检范围结束')
     } else if (form.IStart >= form.IEnd) {
       return this.$message.error('请填写电流复检范围起始应小于结束')
-    } else if (form.UStep === null) {
+    } else if (!form.UStep) {
       return this.$message.error('请选择电压歩长')
     } else if (form.UStart === null) {
       return this.$message.error('请填写电压复检范围起始')
@@ -169,39 +165,53 @@ export default class CalReCheck extends Vue {
 .recheck {
   .step-leng {
     margin: 0 20px;
+
     .recheck-form-item {
-      width: 450px;
       display: flex;
+      width: 450px;
       margin-bottom: 10px;
+
       ::v-deep .el-input__inner {
         padding: 0 6px;
       }
+
       .step-item {
         margin-right: 16px;
+
+        .el-input-number--mini {
+          width: 46px;
+        }
+
+        ::v-deep {
+          .el-input-number .el-input__inner {
+            text-align: left;
+          }
+        }
       }
+
       .range-item {
         display: flex;
+
         .el-input {
           width: 52px;
         }
+
         .unit {
           margin: 0 4px;
         }
+
         .line {
-          margin: 0px 10px;
+          margin: 0 10px;
         }
       }
     }
+
     .el-form-item {
       margin-bottom: 0;
       // &:nth-last-child(1) {
       //   margin-bottom: 0;
       // }
     }
-  }
-
-  .recheck-table {
-
   }
 }
 </style>

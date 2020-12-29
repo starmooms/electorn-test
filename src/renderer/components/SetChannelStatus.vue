@@ -9,8 +9,8 @@
       <el-form :inline="true">
         <el-form-item v-if="isSingle" label="选择开始工步">
           <el-select
-            class="step-select"
             v-model="startId"
+            class="step-select"
             placeholder="请选择工步"
             width="400"
           >
@@ -19,16 +19,13 @@
               :key="item.id"
               :label="item.msg"
               :value="item.id"
-            ></el-option>
+            />
           </el-select>
         </el-form-item>
 
         <el-form-item v-else>
           <el-form-item label="请填写开始工步id">
-            <el-input
-              v-model.number="startId"
-              placeholder="开始工步id"
-            ></el-input>
+            <el-input v-model.number="startId" placeholder="开始工步id" />
           </el-form-item>
         </el-form-item>
       </el-form>

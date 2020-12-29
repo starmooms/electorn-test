@@ -1,21 +1,18 @@
 <template>
   <div>
-    <title-box name="选择通道">
-      <SelectMaster
-        :isCheckbox="isCheckboxMaster"
-        v-model="masterIdSync"
-      ></SelectMaster>
+    <TitleBox name="选择通道">
+      <SelectMaster v-model="masterIdSync" :is-checkbox="isCheckboxMaster" />
       <el-divider content-position="left">从控</el-divider>
       <div class="slaver-select">
         <el-checkbox v-model="slaverAll">
           全选
         </el-checkbox>
-        <el-checkbox-group class="slaver-select-list" v-model="slaverIdSync">
+        <el-checkbox-group v-model="slaverIdSync" class="slaver-select-list">
           <el-checkbox
-            class="slaver-select-item"
             v-for="(item, index) in 32"
-            :label="index"
             :key="item"
+            class="slaver-select-item"
+            :label="index"
           >
             从控{{ item }}
           </el-checkbox>
@@ -26,11 +23,11 @@
         全选
       </el-checkbox>
       <el-checkbox-group v-model="channelIdSync">
-        <el-checkbox v-for="(item, index) in 8" :label="index" :key="item">
+        <el-checkbox v-for="(item, index) in 8" :key="item" :label="index">
           通道{{ item }}
         </el-checkbox>
       </el-checkbox-group>
-    </title-box>
+    </TitleBox>
   </div>
 </template>
 <script lang="ts">
@@ -102,6 +99,7 @@ export default class SelectChannel extends Vue {
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
+
   .slaver-select-item {
     flex: 0 0 12.5%;
     margin-right: 0;

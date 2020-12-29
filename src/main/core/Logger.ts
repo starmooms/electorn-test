@@ -5,7 +5,8 @@ import * as path from 'path'
 import * as fs from 'fs'
 
 export const logPath = logger.transports.file.getFile().path
-logger.transports.file.level = is.production() ? 'silly' : 'silly'
+logger.transports.file.level = is.production() ? 'silly' : 'silly' // error, warn, info, verbose, debug, silly
+logger.transports.console.level = logger.transports.file.level
 logger.transports.file.maxSize = 2 * 1024 * 1024
 logger.transports.file.archiveLog = (file: any) => {
   const oldPath = file.toString()

@@ -82,23 +82,38 @@ export function getMasterInfoObj(): IpConfigT.MasterInfo {
   }
 }
 
-export function computedCalAB(x1: number, y1: number, x2: number, y2: number) {
+export function computedCalAB(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  getError = false
+) {
   const a = NP.round(NP.divide(NP.minus(y2, y1), NP.minus(x2, x1)), 6)
-  if (isNaN(a)) {
-    throw new Error('computedAB a is NaN')
+  let err: null | Error = null
+  try {
+    if (isNaN(a)) {
+      throw new Error('computedAB A is NaN')
+    } else if (a === Infinity) {
+      throw new Error('computedAB A is Infinity')
+    }
+  } catch (e) {
+    if (!getError) throw e
+    err = e
   }
+
   const b = NP.round(NP.minus(y1, NP.times(a, x1)), 6)
-  return { a, b }
+  return { a, b, err }
 }
 
 /** 计算量程 */
 export function createRange(start: number, end: number, step: number) {
   const list: number[] = []
   let i = start
-  const stepM = NP.divide(step, 1000)
+  // const stepM = NP.divide(step, 1000)
   while (i <= end) {
     list.push(i)
-    i = NP.plus(i, stepM)
+    i = NP.plus(i, step)
   }
   return list
 }

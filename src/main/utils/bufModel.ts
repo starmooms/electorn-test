@@ -1,7 +1,6 @@
 import { deepClone } from '@/shared/utils'
-import logger from '../core/Logger'
 import { BufModelT } from '@/types/BufModel'
-import { toHex, replaceAscii } from '.'
+import { replaceAscii } from '.'
 
 // export interface Model {
 //   name: string
@@ -99,14 +98,8 @@ class BufModel<T = any> {
         listTarget.listAction = []
         listTarget.bytLen = listBufModel.bufLength
         this.listModel.push(listTarget)
-        // logger.log(
-        //   '列表添加++++++++',
-        //   target.name,
-        //   listBufModel.bufLength * len
-        // )
         this.bufLength += listBufModel.bufLength * len
       } else {
-        // logger.debug('单项添加', target.name, target.bytLen)
         this.bufLength += target.bytLen as number
       }
     })
@@ -123,13 +116,6 @@ export class BufWriteModel {
       this.buf = opts.parent.buf
       this.start = opts.parent.start
       this.bufModel = opts.parent.bufModel
-      // logger.info(
-      //   this.start,
-      //   this.bufModel.bufLength,
-      //   this.buf
-      //     .slice(this.start, this.start + this.bufModel.bufLength)
-      //     .toString('hex')
-      // )
     } else {
       if (!opts.model) {
         throw new Error(`BufWriteModel model undefined`)
@@ -142,13 +128,31 @@ export class BufWriteModel {
       this.buf = opts.readBuf
         ? opts.readBuf
         : Buffer.alloc(this.bufModel.bufLength)
+
+      if (!opts.readBuf) {
+        this.writeListLen(opts.listLen)
+      }
     }
     this.createListModel()
   }
 
+  /** 写入列表帧长度 */
+  writeListLen(listLen: BufWriteModelOpts['listLen']) {
+    if (listLen) {
+      Object.entries(listLen).forEach(([key, len]) => {
+        const model = this.getTarget(key)
+        if (model.type === 'list') {
+          this.writer(model.len, len)
+        }
+      })
+    }
+  }
+
   createListModel() {
-    if (this.bufModel.listModel.length > 0) {
-      this.bufModel.listModel.forEach(item => {
+    const listModel = this.bufModel.listModel
+
+    if (listModel.length > 0) {
+      listModel.forEach(item => {
         item.listAction = []
         for (let i = 0; i < item.listLength; i++) {
           const action = new BufWriteModel({
@@ -164,6 +168,7 @@ export class BufWriteModel {
     }
   }
 
+  /** 根据属性名获取target内容 */
   getTarget(name: string) {
     const target = this.bufModel.modelTarget[name]
     if (!target) {
@@ -175,7 +180,9 @@ export class BufWriteModel {
   /** 直接写数值 */
   writer(name: string, value: number | string) {
     const target = this.getTarget(name)
-    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+    if (target.bytLen === void 0) {
+      throw new Error(`${name} bytLen undefined`)
+    }
     const data = (value as unknown) as number
     const offset = this.start + target.offset
     if (target.type === 'float') {
@@ -193,7 +200,9 @@ export class BufWriteModel {
   /** 按位写 */
   writerBit(name: string, data: number[], fillNum = 0) {
     const target = this.getTarget(name)
-    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+    if (target.bytLen === void 0) {
+      throw new Error(`${name} bytLen undefined`)
+    }
     const bitArr = Array(target.bytLen * 8).fill(fillNum)
     data.forEach(item => {
       bitArr[item] = 1
@@ -215,7 +224,9 @@ export class BufWriteModel {
 
   getOffset(name: string) {
     const target = this.getTarget(name)
-    if (target.bytLen === void 0) throw new Error(`${name} bytLen undefined`)
+    if (target.bytLen === void 0) {
+      throw new Error(`${name} bytLen undefined`)
+    }
     const offset = this.start + target.offset
     return {
       offset,
@@ -271,6 +282,7 @@ export class BufWriteModel {
     this.buf = Buffer.concat([this.buf, buf])
   }
 
+  /** 循环列表项 */
   ecahList(
     name: string,
     cb: (BufWriteModel: BufWriteModel, index: number) => any
@@ -302,11 +314,11 @@ export class BufWriteModel {
         }
       })
     } catch (err) {
-      logger.error('SHOW ALL ERROR', err)
+      console.error('SHOW ALL ERROR', err)
       throw err
     } finally {
       if (log) {
-        logger.info(JSON.stringify(result, null, 2))
+        console.log(JSON.stringify(result, null, 2))
       }
     }
   }

@@ -10,9 +10,9 @@
       <div class="main-l">
         <el-checkbox-group v-model="attrList">
           <el-checkbox
-            class="level-check"
             v-for="item in attrAllList"
             :key="item.value"
+            class="level-check"
             :label="item.value"
             :class="{ feature: item.style === 't' }"
           >
@@ -22,7 +22,7 @@
       </div>
       <div class="main-r">
         <div class="action-box">
-          <el-button @click="addLevel" type="primary">添加等级</el-button>
+          <el-button type="primary" @click="addLevel">添加等级</el-button>
         </div>
         <div class="tabel-box">
           <vxe-grid
@@ -59,7 +59,7 @@
       </div>
     </div>
 
-    <div class="dialog-footer" slot="footer">
+    <div slot="footer" class="dialog-footer">
       <div class="f-l">
         <!-- <el-button @click="dialogClose" type="primary">载入代码</el-button>
         <el-button type="primary">
@@ -286,16 +286,20 @@ export default class LevelDialog extends Vue {
 
   .main-l {
     flex: 0 0 150px;
+
     .level-check {
       display: block;
+
       &.feature {
         display: inline-block;
       }
     }
   }
+
   .main-r {
     flex: 1 1 auto;
     overflow: auto;
+
     .action-box {
       margin-bottom: 10px;
     }

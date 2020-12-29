@@ -15,7 +15,7 @@
                 :key="item.id"
                 :label="item.name"
                 :value="item.id"
-              ></el-option>
+              />
             </el-select>
           </el-col>
           <el-col :span="4">
@@ -25,12 +25,12 @@
       </el-form-item>
       <el-form-item class="limt-form-item" label="选择更新文件">
         <el-input v-model="form.filePath">
-          <file-select
+          <FileSelect
             slot="append"
             v-model="form.filePath"
-            openType="file"
-            :fileType="fileType"
-          ></file-select>
+            open-type="file"
+            :file-type="fileType"
+          />
         </el-input>
       </el-form-item>
       <el-form-item>
@@ -93,6 +93,7 @@ export default class UpdateForm extends Vue {
 .limt-form-item {
   width: 420px;
 }
+
 .select-master {
   width: 246px;
 }

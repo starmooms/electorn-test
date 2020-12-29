@@ -31,7 +31,7 @@
             <p class="title-line">
               <span class="title">保护参数：</span>
             </p>
-            <p class="line" v-for="(item, index) in protect" :key="index">
+            <p v-for="(item, index) in protect" :key="index" class="line">
               {{ item }}
             </p>
           </div>
@@ -39,7 +39,7 @@
             <p>
               <span class="title">工步列表：</span>
             </p>
-            <p class="line" v-for="item in startInfo.stepList" :key="item.id">
+            <p v-for="item in startInfo.stepList" :key="item.id" class="line">
               {{ item.showId }}、{{ item.msg }}
             </p>
           </div>
@@ -139,19 +139,23 @@ export default class StartInfoDialog extends Vue {
 </script>
 <style lang="scss" scoped>
 .no-data {
-  text-align: center;
   padding: 20px;
+  text-align: center;
 }
+
 .start-info-context {
   p {
     margin: 4px 0;
   }
+
   .title {
     font-weight: bold;
     color: #333;
   }
+
   .cxt-item {
     margin-top: 16px;
+
     &:first-child {
       margin: 4px 0;
     }

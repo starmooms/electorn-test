@@ -22,9 +22,7 @@ export default class USBManager {
 
   init() {
     this.start()
-    this.setSlaverStatus()
     this.writeSteps()
-    this.readSteps()
     this.getPortList()
     this.setTranslate()
     this.setCal()
@@ -75,20 +73,17 @@ export default class USBManager {
 
   /** 写工步 */
   writeSteps() {
+    // 写工步
     ipcManage.handle('/port/writeWorkSteps', (event, data) => {
       return boxManage.boxStatus.writeSteps(data)
     })
-  }
 
-  /** 读工步 */
-  readSteps() {
+    // 读工步
     ipcManage.handle('/port/readWorkSteps', (event, data) => {
       return boxManage.boxStatus.readSteps(data)
     })
-  }
 
-  /** 设置从控状态 */
-  setSlaverStatus() {
+    // 设置从控状态
     ipcManage.handle('/port/slaver/setStatus', (event, data) => {
       return boxManage.boxStatus.setStatus(data)
     })

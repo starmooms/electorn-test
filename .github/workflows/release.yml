@@ -2,9 +2,9 @@ name: Build/release
 
 on:
   push:
-    branches: [ ts-develop ]
+    branches: [ ts-develop-stop ]
   pull_request:
-    branches: [ ts-develop ]
+    branches: [ ts-develop-stop ]
 
 jobs:
   release:

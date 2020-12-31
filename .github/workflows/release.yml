@@ -30,15 +30,15 @@ jobs:
         run: echo "::set-output name=dir::$(yarn cache dir)"
 
       - name: Cache yarn / electron / electron-builder
-          uses: actions/cache@v2
-          with:
-            path: |
-              ${{ steps.yarn-cache.outputs.dir }}
-              ~\AppData\Local\electron
-              ~\AppData\Local\electron-builder
-            key: ${{ runner.os }}-yarn-electron-${{ hashFiles(format('{0}{1}', github.workspace, '/yarn.lock')) }}
-            restore-keys: |
-              ${{ runner.os }}-yarn-electron-
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ steps.yarn-cache.outputs.dir }}
+            ~\AppData\Local\electron
+            ~\AppData\Local\electron-builder
+          key: ${{ runner.os }}-yarn-electron-${{ hashFiles(format('{0}{1}', github.workspace, '/yarn.lock')) }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-electron-
 
       # - name: Cache Node.js modules
       #   uses: actions/cache@v2

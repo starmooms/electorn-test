@@ -24,6 +24,34 @@ jobs:
         with:
           node-version: 12.18.2
 
+      - name: Get yarn cache
+        id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Cache Node.js modules
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles(format('{0}{1}', github.workspace, '/yarn.lock')) }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Cache Electron
+        uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/.cache/electron
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles(format('{0}{1}', github.workspace, '/yarn.lock')) }}
+          restore-keys: |
+            ${{ runner.os }}-electron-cache-
+
+      - name: Cache Electron-Builder
+        uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/.cache/electron-builder
+          key: ${{ runner.os }}-electron-builder-cache-${{ hashFiles(format('{0}{1}', github.workspace, '/yarn.lock')) }}
+          restore-keys: |
+            ${{ runner.os }}-electron-builder-cache-
+
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1
         with:
@@ -40,3 +68,19 @@ jobs:
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
         env:
           IS_WORKFLOWS: 'true'
+
+      # - name: release remote
+      #   uses: easingthemes/ssh-deploy@v2.1.1
+      #   env:
+      #     # 私钥
+      #     SSH_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      #     # rsync参数
+      #     ARGS: "-avzr --exclude={win-unpacked/*,bundled/*,.icon-ico/*}"
+      #     # 源目录
+      #     SOURCE: "dist"
+      #     # 服务器ip：换成你的服务器IP
+      #     REMOTE_HOST: "47.98.252.43"
+      #     # 用户
+      #     REMOTE_USER: "root"
+      #     # 目标地址
+      #     TARGET: "/root/vue-in-action"

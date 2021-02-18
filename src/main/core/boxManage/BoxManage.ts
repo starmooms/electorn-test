@@ -14,24 +14,8 @@ import configManage from '../ConfigManage'
 import { BoxManageT } from '@/types/BoxManageT'
 import ipcManage from '../IpcManage'
 
-interface PostOpts {
-  timeout?: number
-  data: Buffer
-  control: {
-    code: number
-    name: string
-  }
-  masterId: number
-}
-
-interface ConnectMaster {
-  masterId: number
-}
-
 /** 机柜管理 */
 export class BoxManage {
-  /** 是否读取采样 */
-  sampIsRead = false
   channelList!: Port.MasterList
   noWorkerStatus = { name: '未知状态', status: 'error' }
   channelMap = new Map<string, Port.ChannelItem>()
@@ -135,18 +119,14 @@ export class BoxManage {
 
     if (requestType === 'Tcp') {
       communi.tpcRequest.tcpMap.forEach(item => {
-        this.connectMaster.push({
-          masterId: item.masterId
-        })
+        this.connectMaster.push({ masterId: item.masterId })
       })
     } else if (requestType === 'Port') {
       const portMaster: number[] = configManage.userConfig.get(
         'base.portMaster'
       )
       portMaster.forEach(masterId => {
-        this.connectMaster.push({
-          masterId: masterId
-        })
+        this.connectMaster.push({ masterId: masterId })
       })
     }
     ipcManage.commonMsg('updateConnect', this.connectMaster)

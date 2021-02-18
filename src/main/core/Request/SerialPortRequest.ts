@@ -29,7 +29,8 @@ export default class SerialPortRequest {
   }
 
   created(path: string) {
-    logger.info('创建串口', path)
+    logger.debug('创建串口', path)
+
     const port = new SerialPort(path, {
       baudRate: is.dev() ? 115200 : 921600
     })
@@ -48,7 +49,7 @@ export default class SerialPortRequest {
         this.emitList.delete(result.sId)
         return
       }
-      logger.warn(`流水号回调${result.sId} 不存在`)
+      logger.warn(`流水号回调 ${result.sId} 不存在`)
     })
 
     port.on('open', data => {

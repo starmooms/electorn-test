@@ -156,7 +156,7 @@ export default class CalConfig extends Vue {
   }
 
   validate() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.$refs.elForm.validate((valid, data) => {
         if (valid) {
           resolve(true)

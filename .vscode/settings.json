@@ -2,15 +2,15 @@
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 20000,
   "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.fixAll.stylelint": true
+  },
   "path-intellisense.mappings": {
     "@": "${workspaceRoot}/src"
   },
   "eslint.enable": true,
   "eslint.quiet": false, // 安静模式忽略警告
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true,
-    "source.fixAll.stylelint": true
-  },
   "eslint.validate": [
     "javascript",
     "typescript",
@@ -35,6 +35,6 @@
   //   "/c",
   //   "chcp 65001"
   // ],
-  //  #让prettier使用eslint的代码格式进行校验
+  // 让prettier使用eslint的代码格式进行校验
   "prettier.eslintIntegration": true
 }

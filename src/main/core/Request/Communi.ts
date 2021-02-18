@@ -1,10 +1,12 @@
 import { ERROR_STATUS } from '@/shared/config/port'
-import agreement, { ReadResult } from '@/main/core/Agreement'
+import agreement, { ReadResult, SendRestul } from '@/main/core/Agreement'
 import SerialPortRequest from '@/main/core/Request/SerialPortRequest'
 import configManage from '@/main/core/ConfigManage'
 import mainDb from '@/main/core/sqlite/MainDb'
 import TcpRequest from '@/main/core/Request/TcpRequest'
 import logger from '@/main/core/Logger'
+import Middleware from './middleware'
+import logMiddle from './middleware/logMiddle'
 
 interface PostOpts {
   timeout?: number
@@ -36,6 +38,8 @@ class Communi {
   portPath!: string
   serialPort: SerialPortRequest | null = null
 
+  middleware!: Middleware<[PostOpts, SendRestul], () => Promise<Buffer>>
+
   createSerialPort() {
     if (this.requestType !== 'Port') {
       this.serialPortClose()
@@ -46,7 +50,7 @@ class Communi {
     if (lastPortPath !== this.portPath || !this.serialPort) {
       this.serialPortClose()
       if (this.portPath && this.requestType === 'Port') {
-        this.serialPort = new SerialPortRequest(this.portPath, this.emitList)
+        this.serialPort = new SerialPortRequest(this.portPath, this)
       }
     }
   }
@@ -84,31 +88,35 @@ class Communi {
     return
   }
 
-  post({
-    timeout,
-    data,
-    masterId,
-    control,
-    requestType
-  }: PostOpts): Promise<Buffer> {
-    if (!requestType) {
-      requestType = this.requestType
+  post(opts: PostOpts) {
+    opts = {
+      ...{
+        requestType: this.requestType,
+        timeout: 5000
+      },
+      ...opts
     }
-    return new Promise((resolve, reject) => {
-      const agrData = agreement.createData({
-        slaverId: 0xff,
-        type: 0x02,
-        masterId,
-        code: control.code,
-        data
-      })
-      let timer: NodeJS.Timeout // eslint-disable-line
+    const send = agreement.createData({
+      slaverId: 0xff,
+      type: 0x02,
+      masterId: opts.masterId,
+      code: opts.control.code,
+      data: opts.data
+    })
 
+    return this.middleware.start(() => this.setPost(opts, send), opts, send)
+  }
+
+  private setPost(opts: PostOpts, send: SendRestul) {
+    return new Promise<Buffer>((resolve, reject) => {
+      const { control, requestType, timeout, masterId } = opts
+      let timer: NodeJS.Timeout // eslint-disable-line
+      const { sId, buf: sendBuf } = send
       const status: RequestStatus = {
         isWait: true,
         masterId
       }
-      const sId = agrData.sId
+
       const setError: SetError = (msg: string) => {
         this.emitList.delete(sId)
         status.isWait = false
@@ -160,11 +168,11 @@ class Communi {
         if (!this.serialPort) {
           return setError('串口未初始化')
         }
-        this.serialPort.post(agrData.buf, setError)
+        this.serialPort.post(sendBuf, setError)
       } else if (requestType === 'Tcp') {
-        this.tpcRequest.post(agrData.buf, setError, status)
+        this.tpcRequest.post(sendBuf, setError, status)
       } else if (requestType === 'calTool') {
-        this.tpcRequest.calToolPost(agrData.buf, setError, status)
+        this.tpcRequest.calToolPost(sendBuf, setError, status)
       } else {
         setError(`requestType ${requestType} No Found`)
       }
@@ -174,13 +182,17 @@ class Communi {
   /** 数据返回 */
   onEmit(buf: Buffer) {
     const result = agreement.readData(buf)
-    if (this.emitList.has(result.sId)) {
-      const fun = this.emitList.get(result.sId)
-      if (fun) fun(result)
+    const fun = this.emitList.get(result.sId)
+    if (fun) {
+      fun(result)
       this.emitList.delete(result.sId)
       return
     }
     logger.warn(`流水号回调${result.sId} 不存在`)
+  }
+
+  addMiddle() {
+    logMiddle(this)
   }
 }
 

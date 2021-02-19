@@ -88,14 +88,10 @@ export default class TcpClient extends EventEmitter {
   }
 
   /** 如果未连接，连接后发送 */
-  async waitWrite(
-    buf: Buffer,
-    setError: (msg: string) => any,
-    status: RequestStatus
-  ) {
+  async waitWrite(buf: Buffer, status: RequestStatus) {
     const onError = (msg: string) => {
       if (status.isWait) {
-        setError(msg)
+        throw new Error(msg)
       }
     }
     try {
@@ -115,7 +111,6 @@ export default class TcpClient extends EventEmitter {
     } catch (err) {
       onError(err.message || err)
     }
-
     return
   }
 

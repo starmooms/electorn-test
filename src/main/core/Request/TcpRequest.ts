@@ -87,14 +87,13 @@ export default class TcpRequest {
   }
 
   /** 中位机通讯 */
-  post(buf: Buffer, setError: any, status: RequestStatus) {
+  post(buf: Buffer, status: RequestStatus) {
     const masterId = status.masterId
     const tcpItem = this.tcpMap.get(masterId)
     if (!tcpItem) {
-      setError(`机柜${masterId} 未初始化链接`)
-      return
+      throw new Error(`机柜 ${masterId} 未初始化链接`)
     }
-    tcpItem.waitWrite(buf, setError, status)
+    return tcpItem.waitWrite(buf, status)
   }
 
   /** 获取连接状态 */
@@ -123,12 +122,12 @@ export default class TcpRequest {
   }
 
   /** 校准工装通讯 */
-  calToolPost(buf: Buffer, setError: any, status: RequestStatus) {
+  calToolPost(buf: Buffer, status: RequestStatus) {
     const tcpItem = this.calToolClient
     if (!tcpItem) {
-      return setError('工装 未初始化链接')
+      throw new Error('工装 未初始化链接')
     }
-    tcpItem.waitWrite(buf, setError, status)
+    return tcpItem.waitWrite(buf, status)
   }
 
   /** 校准工装关闭链接 */

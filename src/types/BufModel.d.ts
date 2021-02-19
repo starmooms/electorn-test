@@ -6,14 +6,22 @@ export declare namespace BufModelT {
     bytLen: number
     type?: 'int' | 'float'
   }
+
   interface ModelOList {
     name: string
     type: 'list'
     model: OrginModel[]
     len: string
   }
+
+  interface ModelOByte {
+    name: string
+    type: 'byte'
+    len: string
+  }
+
   /** Model 源 */
-  type OrginModel = ModelOItem | ModelOList
+  type OrginModel = ModelOItem | ModelOList | ModelOByte
 
   /** bufModel参数 */
   interface BufModelOpts {

@@ -25,7 +25,6 @@ export interface RequestStatus {
 }
 
 export type RequestType = 'Port' | 'Tcp'
-export type SetError = (msg: string) => void
 
 export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
 
@@ -38,7 +37,11 @@ class Communi {
   portPath!: string
   serialPort: SerialPortRequest | null = null
 
-  middleware!: Middleware<[PostOpts, SendRestul], () => Promise<Buffer>>
+  middleware = new Middleware<[PostOpts, SendRestul], () => Promise<Buffer>>()
+
+  constructor() {
+    this.addMiddle()
+  }
 
   createSerialPort() {
     if (this.requestType !== 'Port') {
@@ -117,7 +120,7 @@ class Communi {
         masterId
       }
 
-      const setError: SetError = (msg: string) => {
+      const setError = (err: string | Error) => {
         this.emitList.delete(sId)
         status.isWait = false
 
@@ -133,7 +136,14 @@ class Communi {
             headMsg += tcpClient.ip
           }
         }
-        reject(new Error(`${headMsg} POST_ERROR ${msg}`))
+
+        const getMsg = s => `${headMsg} POST_ERROR ${s}`
+        if (err instanceof Error) {
+          err.message = getMsg(err.message)
+        } else {
+          err = new Error(getMsg(err))
+        }
+        reject(err)
         clearTimeout(timer)
       }
 
@@ -160,22 +170,28 @@ class Communi {
         clearTimeout(timer)
       })
 
-      timer = setTimeout(() => {
-        setError(`${requestType} Time Out`)
-      }, timeout || 5000)
-
-      if (requestType === 'Port') {
-        if (!this.serialPort) {
-          return setError('串口未初始化')
+      // 发送
+      ;(async () => {
+        try {
+          timer = setTimeout(() => {
+            setError(`${requestType} Time Out`)
+          }, timeout || 5000)
+          if (requestType === 'Port') {
+            if (!this.serialPort) {
+              return setError('串口未初始化')
+            }
+            await this.serialPort.post(sendBuf)
+          } else if (requestType === 'Tcp') {
+            await this.tpcRequest.post(sendBuf, status)
+          } else if (requestType === 'calTool') {
+            await this.tpcRequest.calToolPost(sendBuf, status)
+          } else {
+            setError(`requestType ${requestType} No Found`)
+          }
+        } catch (err) {
+          setError(err)
         }
-        this.serialPort.post(sendBuf, setError)
-      } else if (requestType === 'Tcp') {
-        this.tpcRequest.post(sendBuf, setError, status)
-      } else if (requestType === 'calTool') {
-        this.tpcRequest.calToolPost(sendBuf, setError, status)
-      } else {
-        setError(`requestType ${requestType} No Found`)
-      }
+      })()
     })
   }
 

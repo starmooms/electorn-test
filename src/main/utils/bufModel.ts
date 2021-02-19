@@ -63,32 +63,19 @@ class BufModel<T = any> {
       }
       this.modelTarget[item.name] = target
       if (target.type === 'list') {
+        // 列表
         if (!target.model) {
           throw new Error(`${target.name} list model undefined`)
         }
 
         let len = 0
         if (readBuf) {
-          if (!target.len) {
-            throw new Error(`${target.name} read listlen undefined`)
-          }
-
-          const lenTarget = this.modelTarget[target.len]
-          if (!lenTarget) {
-            throw new Error(
-              `ReadBuf ${target.name} listlen read ${target.len} undefined before`
-            )
-          }
-
-          if (readBuf.length > 0) {
-            len = readBuf.readUIntBE(lenTarget.offset, lenTarget.bytLen)
-          }
+          len = this.getBufLen(target.name, target.len, readBuf)
         } else if (!listLen || listLen[target.name] === void 0) {
           throw new Error(`${target.name} listlen undefined`)
         } else {
           len = listLen[target.name]
         }
-
         const listBufModel = new BufModel({
           model: target.model
         })
@@ -99,10 +86,28 @@ class BufModel<T = any> {
         listTarget.bytLen = listBufModel.bufLength
         this.listModel.push(listTarget)
         this.bufLength += listBufModel.bufLength * len
+      } else if (target.type === 'byte') {
+        // 根据 target.len 确定字节长度
+        target.bytLen = this.getBufLen(target.name, target.len, readBuf)
+        this.bufLength += target.bytLen
       } else {
-        this.bufLength += target.bytLen as number
+        this.bufLength += target.bytLen
       }
     })
+  }
+
+  getBufLen(name?: string, lenName?: string, buf?: Buffer) {
+    if (!lenName) {
+      throw new Error(`${name} read len undefined`)
+    }
+    if (!buf) {
+      throw new Error(`readBuf undefined`)
+    }
+    const target = this.modelTarget[lenName]
+    if (!target) {
+      throw new Error(`ReadBuf ${name} bufLen read ${lenName} undefined before`)
+    }
+    return buf.readUIntBE(target.offset, target.bytLen)
   }
 }
 

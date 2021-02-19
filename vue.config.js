@@ -53,6 +53,8 @@ const conf = {
   pluginOptions: {
     electronBuilder: {
       chainWebpackMainProcess(config) {
+        config.devtool('source-map')
+        console.log(config.get('devtool'), '==')
         config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
       },
       nodeIntegration: true,

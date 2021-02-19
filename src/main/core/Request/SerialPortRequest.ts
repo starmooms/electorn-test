@@ -89,12 +89,14 @@ export default class SerialPortRequest {
   }
 
   /** 串口通讯 */
-  post(buf: Buffer, setError: any) {
-    this.port.write(buf, err => {
-      if (err) {
-        logger.error(err)
-        setError(`Writer_Error ${err.message}`)
-      }
+  post(buf: Buffer) {
+    return new Promise((resolve, reject) => {
+      this.port.write(buf, err => {
+        if (err) {
+          return reject(err)
+        }
+        resolve()
+      })
     })
   }
 

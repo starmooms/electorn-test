@@ -1,8 +1,7 @@
-import { CommuniClass } from '@/main/core/Request/Communi'
+import { Communi } from '@/main/core/Request/Communi'
 
-// export default function(communi: CommuniClass) {
-//   communi.middleware.add(async (next, opts, send) => {
-//    const { result, setError } = await next()
-
+// export default function(communi: Communi) {
+//   communi.middleware.add(async (next, { opts, send }) => {
+//     const { result } = await next()
 //   })
 // }

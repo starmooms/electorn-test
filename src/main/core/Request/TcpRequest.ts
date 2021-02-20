@@ -1,5 +1,5 @@
 import TcpClient from './TcpClient'
-import { CommuniClass, RequestStatus } from './Communi'
+import { Communi, RequestStatus } from './Communi'
 import logger from '../Logger'
 import configManage from '../ConfigManage'
 import { CALTOOL_ID } from '@/shared/config/calibrate'
@@ -9,10 +9,10 @@ export default class TcpRequest {
   ipList: TcpRequestT.IpItem[] = []
   tcpMap = new Map<number, TcpClient>()
   tcpIpMap = new Map<string, TcpClient>()
-  parent: CommuniClass
+  parent: Communi
   calToolClient: TcpClient | null = null
 
-  constructor(comuni: CommuniClass) {
+  constructor(comuni: Communi) {
     this.parent = comuni
   }
 

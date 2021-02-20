@@ -18,18 +18,23 @@ interface PostOpts {
   masterId: number
   requestType?: Communi['requestType'] | 'calTool' | null
 }
-
 export interface RequestStatus {
   masterId: number
   isWait: boolean
 }
-
 export type RequestType = 'Port' | 'Tcp'
-
 export declare type CommuniEmitList = Map<string, (result: ReadResult) => any>
+export type Request = {
+  opts: PostOpts
+  send: SendRestul
+}
+export type Response = {
+  sId: string
+  data: ReadResult
+}
 
 /** 通讯方式 */
-class Communi {
+export class Communi {
   emitList: CommuniEmitList = new Map()
   requestType: RequestType = 'Tcp'
   tpcRequest = new TcpRequest(this)
@@ -37,7 +42,7 @@ class Communi {
   portPath!: string
   serialPort: SerialPortRequest | null = null
 
-  middleware = new Middleware<[PostOpts, SendRestul], () => Promise<Buffer>>()
+  middleware = new Middleware<[Request], Response>()
 
   constructor() {
     this.addMiddle()
@@ -91,7 +96,7 @@ class Communi {
     return
   }
 
-  post(opts: PostOpts) {
+  async post(opts: PostOpts) {
     opts = {
       ...{
         requestType: this.requestType,
@@ -107,11 +112,15 @@ class Communi {
       data: opts.data
     })
 
-    return this.middleware.start(() => this.setPost(opts, send), opts, send)
+    const response = await this.middleware.run(this.setPost.bind(this), {
+      opts,
+      send
+    })
+    return response.data.buf
   }
 
-  private setPost(opts: PostOpts, send: SendRestul) {
-    return new Promise<Buffer>((resolve, reject) => {
+  private setPost({ opts, send }: Request) {
+    return new Promise<Response>((resolve, reject) => {
       const { control, requestType, timeout, masterId } = opts
       let timer: NodeJS.Timeout // eslint-disable-line
       const { sId, buf: sendBuf } = send
@@ -147,7 +156,8 @@ class Communi {
         clearTimeout(timer)
       }
 
-      this.emitList.set(sId, ({ masterId, errCode, buf, originBuf, check }) => {
+      this.emitList.set(sId, data => {
+        const { masterId, errCode, originBuf, check } = data
         if (!check) {
           logger.error('checkCrc Error', originBuf.toString('hex'))
           return setError('通讯校验码错误')
@@ -166,7 +176,7 @@ class Communi {
           ])
           return setError(`Error_Code ${errMsg}`)
         }
-        resolve(buf)
+        resolve({ sId, data })
         clearTimeout(timer)
       })
 
@@ -178,7 +188,7 @@ class Communi {
           }, timeout || 5000)
           if (requestType === 'Port') {
             if (!this.serialPort) {
-              return setError('串口未初始化')
+              throw new Error('串口未初始化')
             }
             await this.serialPort.post(sendBuf)
           } else if (requestType === 'Tcp') {
@@ -214,5 +224,4 @@ class Communi {
 
 const communi = new Communi()
 
-export declare type CommuniClass = typeof communi
 export default communi

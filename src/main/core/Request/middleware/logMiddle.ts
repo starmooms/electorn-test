@@ -1,5 +1,5 @@
 import logger from '@/main/core/Logger'
-import { CommuniClass } from '@/main/core/Request/Communi'
+import { Communi } from '@/main/core/Request/Communi'
 import { BufWriteModel } from '@/main/utils/bufModel'
 import { AGREEMENT } from '@/shared/model'
 
@@ -18,8 +18,8 @@ function showAll(buf: Buffer) {
   bufModel.showAll()
 }
 
-export default function(communi: CommuniClass) {
-  communi.middleware.add(async (next, opts, send) => {
+export default function(communi: Communi) {
+  communi.middleware.add(async (next, { opts, send }) => {
     showAll(send.buf)
     logger.debug(opts.control.name, bufToString(send.buf))
     const result = await next()

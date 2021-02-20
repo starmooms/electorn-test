@@ -1,32 +1,30 @@
-declare type NextFun = () => Promise<any>
-declare type middleFun<T extends any[], N extends NextFun> = (
-  next: N,
+declare type NextFun<T> = () => Promise<T>
+declare type RunFun<T extends any[], N> = (...args: T) => Promise<N>
+declare type middleFun<T extends any[], N> = (
+  next: NextFun<N>,
   ...args: T
-) => ReturnType<N>
+) => Promise<N>
+// declare type PromiseResolve<T> = T extends Promise<infer R> ? R : never
 
-declare type AB = () => Promise<Buffer>
-declare type PromiseResolve<T> = T extends Promise<infer R> ? R : never
-
-class Middleware<T extends any[], N extends NextFun = AB> {
+class Middleware<T extends any[], N> {
   list: middleFun<T, N>[] = []
 
   add(fun: middleFun<T, N>) {
     this.list.push(fun)
   }
 
-  async start(action: N, ...args: T) {
+  async run(action: RunFun<T, N>, ...args: T) {
     let useAction = false
-    let result!: PromiseResolve<ReturnType<N>>
-    let next: NextFun = async () => {
+    let result!: N
+    let next = () => {
       useAction = true
-      result = await action()
-      return result
+      return action(...args)
     }
 
     for (let i = this.list.length - 1; i >= 0; i--) {
       const lastNext = next
       const item = this.list[i]
-      next = () => Promise.resolve(item(lastNext as N, ...args))
+      next = () => Promise.resolve(item(lastNext, ...args))
     }
 
     await next()

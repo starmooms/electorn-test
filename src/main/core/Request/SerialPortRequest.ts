@@ -5,7 +5,7 @@ import agreement from '@/main/core/Agreement'
 import logger, { sysLog } from '@/main/core/Logger'
 import TransfromParser from '@/main/utils/transfromParser'
 import NotifyUtil from '@/main/utils/notifyUtil'
-import { CommuniClass } from '@/main/core/Request/Communi'
+import { Communi } from '@/main/core/Request/Communi'
 
 /** 串口通讯 */
 export default class SerialPortRequest {
@@ -13,14 +13,14 @@ export default class SerialPortRequest {
   port!: SerialPort
   parser!: TransfromParser
 
-  communi!: CommuniClass
+  communi!: Communi
 
   // 消息通知控制
   closeNotify = new NotifyUtil()
   errorNotify = new NotifyUtil()
   openErrNotify = new NotifyUtil()
 
-  constructor(path: string, communi: CommuniClass) {
+  constructor(path: string, communi: Communi) {
     this.path = path
     this.communi = communi
     this.created(this.path)

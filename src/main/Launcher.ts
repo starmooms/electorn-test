@@ -56,21 +56,24 @@ export default class Launcher {
 
   /** 程序锁定，避免开启多个程序 */
   makeSingleInstance(callback: () => void) {
+    // mac 不支持requestSingleInstanceLock
     if (is.mas()) {
       callback && callback()
       return
     }
+
     const canLock = app.requestSingleInstanceLock()
+
     if (!canLock) {
       app.quit()
     } else {
       app.on('second-instance', () => {
-        if (this.win) {
-          if (this.win.isMinimized()) {
-            this.win.restore()
-          }
-          this.win.focus()
+        const mainWin = this.win
+        if (!mainWin) return
+        if (mainWin.isMinimized()) {
+          mainWin.restore()
         }
+        mainWin.focus()
       })
 
       callback && callback()
@@ -82,6 +85,7 @@ export default class Launcher {
     if (this.beforeMainWin) {
       this.beforeMainWin()
     }
+
     winManager.init()
     this.win = winManager.createdWin({
       name: 'mainWin',

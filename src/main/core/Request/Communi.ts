@@ -7,6 +7,7 @@ import TcpRequest from '@/main/core/Request/TcpRequest'
 import logger from '@/main/core/Logger'
 import Middleware from './middleware'
 import logMiddle from './middleware/logMiddle'
+import errMiddle from '@/main/core/Request/middleware/errMiddle'
 
 interface PostOpts {
   timeout?: number
@@ -121,7 +122,7 @@ export class Communi {
 
   private setPost({ opts, send }: Request) {
     return new Promise<Response>((resolve, reject) => {
-      const { control, requestType, timeout, masterId } = opts
+      const { requestType, timeout, masterId } = opts
       let timer: NodeJS.Timeout // eslint-disable-line
       const { sId, buf: sendBuf } = send
       const status: RequestStatus = {
@@ -129,77 +130,50 @@ export class Communi {
         masterId
       }
 
-      const setError = (err: string | Error) => {
-        this.emitList.delete(sId)
+      const clearStatus = () => {
         status.isWait = false
-
-        let headMsg = ''
-        if (requestType === 'Port') {
-          headMsg += this.serialPort!.path
-          if (this.serialPort) {
-            this.serialPort.handleError()
-          }
-        } else if (requestType === 'Tcp') {
-          const tcpClient = this.tpcRequest.getClient(masterId)
-          if (tcpClient) {
-            headMsg += tcpClient.ip
-          }
-        }
-
-        const getMsg = s => `${headMsg} POST_ERROR ${s}`
-        if (err instanceof Error) {
-          err.message = getMsg(err.message)
-        } else {
-          err = new Error(getMsg(err))
-        }
-        reject(err)
         clearTimeout(timer)
+        this.emitList.delete(sId)
+      }
+
+      const setError = (err: Error) => {
+        clearStatus()
+        reject(err)
       }
 
       this.emitList.set(sId, data => {
-        const { masterId, errCode, originBuf, check } = data
-        if (!check) {
-          logger.error('checkCrc Error', originBuf.toString('hex'))
-          return setError('通讯校验码错误')
-        }
-        if (errCode !== '00') {
-          const errMsg = ERROR_STATUS[errCode] || errCode
-          mainDb.saveErrorList([
-            {
-              masterId: masterId,
-              slaverIds: '',
-              channelIds: '',
-              type: 1,
-              action: control.name,
-              errCode: errCode
-            }
-          ])
-          return setError(`Error_Code ${errMsg}`)
-        }
+        clearStatus()
         resolve({ sId, data })
-        clearTimeout(timer)
       })
+
+      timer = setTimeout(() => {
+        setError(new Error(`${requestType} Time Out`))
+      }, timeout || 5000)
 
       // 发送
       ;(async () => {
         try {
-          timer = setTimeout(() => {
-            setError(`${requestType} Time Out`)
-          }, timeout || 5000)
-          if (requestType === 'Port') {
-            if (!this.serialPort) {
-              throw new Error('串口未初始化')
-            }
-            await this.serialPort.post(sendBuf)
-          } else if (requestType === 'Tcp') {
-            await this.tpcRequest.post(sendBuf, status)
-          } else if (requestType === 'calTool') {
-            await this.tpcRequest.calToolPost(sendBuf, status)
-          } else {
-            setError(`requestType ${requestType} No Found`)
+          switch (requestType) {
+            case 'Port':
+              if (!this.serialPort) throw new Error('串口未初始化')
+              await this.serialPort.post(sendBuf)
+              break
+            case 'Tcp':
+              await this.tpcRequest.post(sendBuf, status)
+              break
+            case 'calTool':
+              await this.tpcRequest.calToolPost(sendBuf, status)
+              break
+            default:
+              throw new Error(`requestType ${requestType} No Found`)
           }
         } catch (err) {
-          setError(err)
+          if (status.isWait) {
+            setError(err)
+          } else {
+            err.message = `WAIT_OUT_ERR ${err.message}`
+            logger.error(err)
+          }
         }
       })()
     })
@@ -211,13 +185,13 @@ export class Communi {
     const fun = this.emitList.get(result.sId)
     if (fun) {
       fun(result)
-      this.emitList.delete(result.sId)
       return
     }
     logger.warn(`流水号回调${result.sId} 不存在`)
   }
 
   addMiddle() {
+    errMiddle(this)
     logMiddle(this)
   }
 }

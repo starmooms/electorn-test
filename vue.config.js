@@ -53,12 +53,16 @@ const conf = {
   pluginOptions: {
     electronBuilder: {
       chainWebpackMainProcess(config) {
-        config.devtool('source-map')
-        console.log(config.get('devtool'), '==')
-        config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
+        if (isDev) {
+          config.devtool('source-map')
+          config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
+          console.log(config.toConfig())
+        }
       },
       nodeIntegration: true,
-      mainProcessFile: 'src/main/background.ts',
+      mainProcessFile: `src/main/${
+        isDev ? 'background.dev.ts' : 'background.ts'
+      }`,
       mainProcessWatch: ['src/main'],
       externals: ['serialport', 'usb-detection', 'sqlite3'],
       // preload: 'src/main/preload.ts',

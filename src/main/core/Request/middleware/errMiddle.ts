@@ -1,15 +1,20 @@
 import { Communi } from '@/main/core/Request/Communi'
 import { ERROR_STATUS } from '@/shared/config/port'
 import mainDb from '@/main/core/sqlite/MainDb'
+export declare type FilterNodeMethodFunction = (value: any, data: any, child: Node) => boolean
 
 export default function(communi: Communi) {
   communi.middleware.add(async (next, { opts }) => {
     const { requestType, masterId } = opts
     try {
       const result = await next()
-      // 判断是否有错误信息
       const { check, errCode } = result.data
-      if (!check) throw new Error('通讯校验码错误')
+
+      // 判断是否有错误信息
+      if (!check) {
+        throw new Error('通讯校验码错误')
+      }
+
       if (errCode !== '00') {
         const errMsg = ERROR_STATUS[errCode] || errCode
         mainDb.saveErrorList([
@@ -28,16 +33,20 @@ export default function(communi: Communi) {
       return result
     } catch (err) {
       // 错误处理
-      let info = ''
+      let info = 'unkown device'
       if (requestType === 'Port') {
-        info += communi.serialPort!.path
-        if (communi.serialPort) communi.serialPort.handleError()
+        const serialPort = communi.serialPort
+        if (serialPort) {
+          info += serialPort.path
+          serialPort.handleError()
+        }
       } else if (requestType === 'Tcp') {
         const tcpClient = communi.tpcRequest.getClient(masterId)
         if (tcpClient) {
           info += tcpClient.ip
         }
       }
+
       err.message = `${info} POST_ERROR ${err.message}`
       throw err
     }

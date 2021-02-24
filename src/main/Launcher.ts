@@ -20,32 +20,26 @@ import boxManage from './core/boxManage/BoxManage'
 import createSorting from './window/Sorting'
 import historyDbCache from './core/sqlite/HistoryDBCache'
 import createNowChannelWin from './window/NowChannel'
+import { EventEmitter } from 'events'
 
-/** mainWin生成后执行 */
-declare type beforeMainWin = () => void
-
-export default class Launcher {
+export default class Launcher extends EventEmitter {
   win: BrowserWindow | null = null
   usbManager!: USBManager
-  beforeMainWin: beforeMainWin | null = null
   updateManager = this.initUpdaterManager()
 
-  constructor(beforeMainWin?: beforeMainWin) {
-    if (beforeMainWin) {
-      this.beforeMainWin = beforeMainWin
-    }
-    this.makeSingleInstance(() => {
-      this.beforeWin()
-      this.init()
-    })
+  constructor() {
+    super()
   }
 
   init() {
-    protocol.registerSchemesAsPrivileged([
-      { scheme: 'app', privileges: { secure: true, standard: true } }
-    ])
-    this.handleAppEvents()
-    this.handleUpdaterEvents()
+    this.makeSingleInstance(() => {
+      protocol.registerSchemesAsPrivileged([
+        { scheme: 'app', privileges: { secure: true, standard: true } }
+      ])
+      this.beforeWin()
+      this.handleAppEvents()
+      this.handleUpdaterEvents()
+    })
   }
 
   /** 绑定app的回调 */
@@ -82,10 +76,6 @@ export default class Launcher {
 
   /** 创建窗口 */
   createWindow() {
-    if (this.beforeMainWin) {
-      this.beforeMainWin()
-    }
-
     winManager.init()
     this.win = winManager.createdWin({
       name: 'mainWin',
@@ -111,13 +101,14 @@ export default class Launcher {
   /** 设置app开启相关回调并创建窗口 */
   handelAppReady() {
     app.on('ready', () => {
+      this.emit('beforeMainWin')
       this.createWindow()
       this.afterWin()
     })
 
     app.on('activate', () => {
       // mac 关闭重新打开
-      if (this.win === null) {
+      if (!this.win) {
         this.createWindow()
       }
     })

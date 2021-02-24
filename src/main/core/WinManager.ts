@@ -133,9 +133,11 @@ class WinManager {
       const winItem = this.winList.get(name)
       if (winItem && winItem.isSendClose === false) {
         event.preventDefault()
+
         const next = (opts: DestoryOpts = {}) => {
           return this.closeWin({ name, ...opts })
         }
+
         if (winItem.beforeClose) {
           winItem.beforeClose(next)
         } else {
@@ -201,9 +203,9 @@ class WinManager {
     let protocolPath = `app://./`
     if (devUrl) {
       protocolPath = devUrl
-      if (!process.env.IS_TEST) {
-        win.webContents.openDevTools()
-      }
+      // if (!process.env.IS_TEST) {
+      //   win.webContents.openDevTools()
+      // }
     }
 
     if (setMenu !== true) {

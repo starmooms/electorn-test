@@ -59,21 +59,18 @@ export default class UpdateManager extends EventEmitter {
     this.emit('checking')
   }
 
-  updateAvailable(event: Event, info: UpdateInfo) {
+  async updateAvailable(event: Event, info: UpdateInfo) {
     this.emit('update-available', info)
-    dialog
-      .showMessageBox({
-        type: 'info',
-        title: '检查更新',
-        message: '发现新版本，是否现在更新？',
-        buttons: ['是', '否'],
-        cancelId: 1
-      })
-      .then(({ response }) => {
-        if (response === 0) {
-          this.updater.downloadUpdate()
-        }
-      })
+    const { response } = await dialog.showMessageBox({
+      type: 'info',
+      title: '检查更新',
+      message: '发现新版本，是否现在更新？',
+      buttons: ['是', '否'],
+      cancelId: 1
+    })
+    if (response === 0) {
+      this.updater.downloadUpdate()
+    }
   }
 
   updateNotAvailable(event: Event, info: UpdateInfo) {
@@ -90,23 +87,22 @@ export default class UpdateManager extends EventEmitter {
     this.emit('download-progress', event)
   }
 
-  updateDownloaded(event, info) {
+  async updateDownloaded(event, info) {
     this.emit('update-downloaded', info)
     this.updater.logger!.info(`Update Downloaded: ${info}`)
-    dialog
-      .showMessageBox({
-        title: '检查更新',
-        message: '更新下载完成，应用程序将退出并开始更新'
-      })
-      .then(() => {
-        this.emit('will-updated')
-        setImmediate(async () => {
-          if (this.beforeQuit) {
-            await this.beforeQuit()
-          }
-          this.updater.quitAndInstall()
-        })
-      })
+
+    await dialog.showMessageBox({
+      title: '检查更新',
+      message: '更新下载完成，应用程序将退出并开始更新'
+    })
+
+    this.emit('will-updated')
+    setImmediate(async () => {
+      if (this.beforeQuit) {
+        await this.beforeQuit()
+      }
+      this.updater.quitAndInstall()
+    })
   }
 
   updateError(event, error) {

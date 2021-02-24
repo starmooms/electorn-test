@@ -37,7 +37,7 @@ export default function(communi: Communi) {
       return result
     } catch (err) {
       // 错误处理
-      let info = 'unkown device'
+      let info = ''
       if (requestType === 'Port') {
         const serialPort = communi.serialPort
         if (serialPort) {
@@ -49,6 +49,8 @@ export default function(communi: Communi) {
         if (tcpClient) {
           info += tcpClient.ip
         }
+      } else {
+        info += 'unkown device'
       }
 
       err.message = `${info} POST_ERROR ${err.message}`

@@ -1,4 +1,3 @@
-'use strict'
 import { app, protocol } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import Launcher from './Launcher'
@@ -10,8 +9,12 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
-const beforeMainWin: (() => void) | undefined = isDevelopment
-  ? () => createProtocol('app')
-  : undefined
+const launch = new Launcher()
 
-new Launcher(beforeMainWin)
+if (!isDevelopment) {
+  launch.on('beforeMainWin', () => {
+    createProtocol('app')
+  })
+}
+
+launch.init()

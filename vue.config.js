@@ -56,7 +56,6 @@ const conf = {
         if (isDev) {
           config.devtool('source-map')
           config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
-          console.log(config.toConfig())
         }
       },
       nodeIntegration: true,

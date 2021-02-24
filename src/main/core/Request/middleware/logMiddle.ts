@@ -10,7 +10,7 @@ function bufToString(buf: Buffer) {
     .trim()
 }
 
-function showAll(buf: Buffer) {
+export function showAll(buf: Buffer) {
   const bufModel = new BufWriteModel({
     model: AGREEMENT,
     readBuf: buf
@@ -20,9 +20,16 @@ function showAll(buf: Buffer) {
 
 export default function(communi: Communi) {
   communi.middleware.add(async (next, { opts, send }) => {
-    showAll(send.buf)
-    logger.debug(opts.control.name, bufToString(send.buf))
-    const result = await next()
-    return result
+    // showAll(send.buf)
+    const name = `${opts.control.name}[${send.sId}]`
+    logger.debug(name, bufToString(send.buf))
+    try {
+      const result = await next()
+      logger.debug(`${name} back`, bufToString(result.data.originBuf))
+      return result
+    } catch (err) {
+      logger.debug(`${name} err`, err.message)
+      throw err
+    }
   })
 }

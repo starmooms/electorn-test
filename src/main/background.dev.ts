@@ -1,9 +1,11 @@
 import './core/connect/childTcp'
+import debug from 'electron-debug'
 import { app, BrowserWindow } from 'electron'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 console.log(process.versions)
 if (isDevelopment) {
+  debug()
   if (process.platform === 'win32') {
     process.on('message', data => {
       if (data === 'graceful-exit') {

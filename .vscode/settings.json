@@ -27,7 +27,7 @@
   //   }
   // },
   // "stylelint.syntax": [""],
-  "stylelint.autoFix": true,
+  // "stylelint.autoFix": true,
   // "vetur.format.defaultFormatter.scss": "prettier",
   // "vetur.format.defaultFormatter.css": "prettier",
 
@@ -37,7 +37,7 @@
   //   "chcp 65001"
   // ],
   // 让prettier使用eslint的代码格式进行校验
-  "prettier.eslintIntegration": true,
+  // "prettier.eslintIntegration": true,
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "javascript.preferences.importModuleSpecifier": "non-relative"
 }

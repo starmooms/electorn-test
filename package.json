@@ -8,11 +8,9 @@
     "node": ">=12.18.2"
   },
   "scripts": {
-    "lint": "vue-cli-service lint",
+    "lint": "stylelint src/**/*.{css,scss,vue} --fix && vue-cli-service lint",
     "build": "vue-cli-service electron:build",
     "dev": "vue-cli-service electron:serve",
-    "stylelint": "stylelint src/**/*.scss --fix",
-    "lint:style": "stylelint src/**/*.{css,scss,vue} --fix",
     "postinstall---": "electron-builder install-app-deps",
     "postuninstall---": "electron-builder install-app-deps"
   },

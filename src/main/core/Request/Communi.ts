@@ -1,8 +1,6 @@
-import { ERROR_STATUS } from '@/shared/config/port'
 import agreement, { ReadResult, SendRestul } from '@/main/core/Agreement'
 import SerialPortRequest from '@/main/core/Request/SerialPortRequest'
 import configManage from '@/main/core/ConfigManage'
-import mainDb from '@/main/core/sqlite/MainDb'
 import TcpRequest from '@/main/core/Request/TcpRequest'
 import logger from '@/main/core/Logger'
 import Middleware from './middleware'

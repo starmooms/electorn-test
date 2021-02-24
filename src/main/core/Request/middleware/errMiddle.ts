@@ -1,7 +1,11 @@
 import { Communi } from '@/main/core/Request/Communi'
 import { ERROR_STATUS } from '@/shared/config/port'
 import mainDb from '@/main/core/sqlite/MainDb'
-export declare type FilterNodeMethodFunction = (value: any, data: any, child: Node) => boolean
+export declare type FilterNodeMethodFunction = (
+  value: any,
+  data: any,
+  child: Node
+) => boolean
 
 export default function(communi: Communi) {
   communi.middleware.add(async (next, { opts }) => {

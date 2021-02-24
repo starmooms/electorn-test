@@ -37,7 +37,16 @@ module.exports = {
       },
       "svg": "always",
       "math": "always"
-    }]
+    }],
+
+    // 'vue/max-attributes-per-line': ['error', {
+    //   singleline: 3,
+    //   multiline: 1,
+    // }],
+
+    // "prettier/prettier": ["error", {}, {
+    //   "usePrettierrc": true
+    // }]
 
 
     // "vue/no-unsupported-features": ["error", {

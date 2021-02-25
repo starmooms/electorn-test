@@ -44,10 +44,6 @@ class WinManager {
   closeId = 0
   closeMap = new Map<string, CloseMapItem>()
 
-  constructor() {
-    logger.info('init windManager')
-  }
-
   init() {
     this.handleDestory()
   }
@@ -61,23 +57,11 @@ class WinManager {
     return win
   }
 
-  /** 关闭所有串口 */
+  /** 关闭除主窗口外所有窗口 */
   closeOtherWin() {
     this.winList.forEach((value, key) => {
       if (key !== 'mainWin') {
         value.win.close()
-      }
-    })
-  }
-
-  /** 监听页面发送过来的销毁事件 */
-  handleDestory() {
-    ipcManage.on('/win/closed', (event, { winName }) => {
-      const hasClose = this.closeMap.get(winName)
-      if (hasClose) {
-        const { cb, closeOpts } = hasClose
-        this.handleCloseWin(closeOpts)
-        cb()
       }
     })
   }
@@ -94,14 +78,26 @@ class WinManager {
     this.closeMap.delete(name)
   }
 
+  /** 监听页面发送过来的销毁事件 */
+  handleDestory() {
+    ipcManage.on('/win/closed', (event, { winName }) => {
+      const hasClose = this.closeMap.get(winName)
+      if (hasClose) {
+        const { cb, closeOpts } = hasClose
+        this.handleCloseWin(closeOpts)
+        cb()
+      }
+    })
+  }
+
   /** 关闭窗口，等待窗口关闭后返回 */
   closeWin(closeOpts: CloseOpts) {
     const winName = closeOpts.name
     const win = this.getWin(winName)
     return new Promise(resolve => {
-      if (!win) {
-        throw new Error(`window name '${winName}' undefined`)
-      }
+      // if (!win) {
+      //   throw new Error(`window name '${winName}' undefined`)
+      // }
 
       if (win) {
         const hasClose = this.closeMap.get(winName)

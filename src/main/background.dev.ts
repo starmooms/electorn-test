@@ -4,8 +4,10 @@ import { app, BrowserWindow } from 'electron'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 console.log(process.versions)
+
 if (isDevelopment) {
   debug()
+
   if (process.platform === 'win32') {
     process.on('message', data => {
       if (data === 'graceful-exit') {
@@ -17,7 +19,9 @@ if (isDevelopment) {
       app.quit()
     })
   }
-  app.whenReady().then(async () => {
+
+  ;(async () => {
+    await app.whenReady()
     if (isDevelopment && !process.env.IS_TEST) {
       try {
         if (process.env.VUE_DEV_TOOL) {
@@ -28,7 +32,7 @@ if (isDevelopment) {
         console.error('Vue Devtools failed to install:', e.toString())
       }
     }
-  })
+  })()
 }
 
 require('./background')

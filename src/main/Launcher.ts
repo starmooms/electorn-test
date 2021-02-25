@@ -21,11 +21,12 @@ import createSorting from './window/Sorting'
 import historyDbCache from './core/sqlite/HistoryDBCache'
 import createNowChannelWin from './window/NowChannel'
 import { EventEmitter } from 'events'
+import { dialogWin } from '@/main/utils'
 
 export default class Launcher extends EventEmitter {
   win: BrowserWindow | null = null
   usbManager!: USBManager
-  updateManager = this.initUpdaterManager()
+  updateManager!: UpdateManager
 
   constructor() {
     super()
@@ -33,12 +34,9 @@ export default class Launcher extends EventEmitter {
 
   init() {
     this.makeSingleInstance(() => {
-      protocol.registerSchemesAsPrivileged([
-        { scheme: 'app', privileges: { secure: true, standard: true } }
-      ])
+      this.emit('instance')
       this.beforeWin()
       this.handleAppEvents()
-      this.handleUpdaterEvents()
     })
   }
 
@@ -76,13 +74,12 @@ export default class Launcher extends EventEmitter {
 
   /** 创建窗口 */
   createWindow() {
-    winManager.init()
     this.win = winManager.createdWin({
       name: 'mainWin',
       pageUrl: '',
       setMenu: true,
       beforeClose: async next => {
-        const { response } = await dialog.showMessageBox({
+        const { response } = await dialogWin.showMessageBox({
           type: 'info',
           title: '关闭程序',
           message: '确定关闭程序',
@@ -124,6 +121,10 @@ export default class Launcher extends EventEmitter {
   }
 
   async beforeWin() {
+    winManager.init()
+
+    this.initUpdaterManager()
+
     const menu = new MenuManager()
     menu.on('updateCheck', () => {
       if (this.updateManager) {
@@ -134,6 +135,7 @@ export default class Launcher extends EventEmitter {
     powerSaveBlocker.start('prevent-app-suspension')
 
     createSysLog()
+
     ipcManage.handle('/sysLog/sysLogInfo', () => {
       return {
         start: sysLognow,
@@ -169,7 +171,7 @@ export default class Launcher extends EventEmitter {
 
   async beforeWinRender() {
     try {
-      const mainDbFilePath = (await mainDb.connect()) as string
+      const mainDbFilePath = await mainDb.connect()
       await boxManage.create()
       this.usbManager = new USBManager()
       return mainDbFilePath
@@ -194,7 +196,9 @@ export default class Launcher extends EventEmitter {
 
   async destoryWin() {
     try {
-      this.win!.hide()
+      if (this.win) {
+        this.win.hide()
+      }
       if (this.usbManager) {
         this.usbManager.destory()
       }
@@ -209,33 +213,32 @@ export default class Launcher extends EventEmitter {
   }
 
   initUpdaterManager() {
-    if (is.mas()) {
-      return
-    }
-    const updateManager = new UpdateManager({
+    if (is.mas()) return
+    this.updateManager = new UpdateManager({
       autoCheck: false,
       beforeQuit: async () => {
+        // 关闭主窗口，但不触发beforeClose中的 是否关闭的选择框
         await this.destoryWin()
         await winManager.closeWin({
           name: 'mainWin',
-          destory: false
+          destory: false // 确保由 updateManager 触发 app.quit
         })
         return
       }
     })
     this.handleUpdaterEvents()
-    return updateManager
   }
 
   handleUpdaterEvents() {
-    if (!this.updateManager) return
+    const update = this.updateManager
+    if (!update) return
 
-    this.updateManager.on('download-progress', (event: any) => {
+    update.on('download-progress', (event: any) => {
       if (!this.win) return
       this.win.setProgressBar(event.percent / 100)
     })
 
-    this.updateManager.on('update-downloaded', () => {
+    update.on('update-downloaded', () => {
       if (!this.win) return
       this.win.setProgressBar(0)
     })

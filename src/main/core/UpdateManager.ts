@@ -1,9 +1,9 @@
 import { resolve } from 'path'
 import { EventEmitter } from 'events'
-import { dialog } from 'electron'
 import is from 'electron-is'
 import { autoUpdater, UpdateInfo } from 'electron-updater'
 import logger from './Logger'
+import { dialogWin } from '@/main/utils'
 
 if (is.dev()) {
   autoUpdater.updateConfigPath = resolve(__dirname, 'latest.yml')
@@ -61,7 +61,7 @@ export default class UpdateManager extends EventEmitter {
 
   async updateAvailable(event: Event, info: UpdateInfo) {
     this.emit('update-available', info)
-    const { response } = await dialog.showMessageBox({
+    const { response } = await dialogWin.showMessageBox({
       type: 'info',
       title: '检查更新',
       message: '发现新版本，是否现在更新？',
@@ -76,7 +76,7 @@ export default class UpdateManager extends EventEmitter {
   updateNotAvailable(event: Event, info: UpdateInfo) {
     this.emit('update-not-available', info)
     if (this.autoCheckData.userCheck) {
-      dialog.showMessageBox({
+      dialogWin.showMessageBox({
         title: '检查更新',
         message: '已是最新版'
       })
@@ -91,7 +91,7 @@ export default class UpdateManager extends EventEmitter {
     this.emit('update-downloaded', info)
     this.updater.logger!.info(`Update Downloaded: ${info}`)
 
-    await dialog.showMessageBox({
+    await dialogWin.showMessageBox({
       title: '检查更新',
       message: '更新下载完成，应用程序将退出并开始更新'
     })
@@ -110,6 +110,6 @@ export default class UpdateManager extends EventEmitter {
     const msg =
       error == null ? '检查更新失败' : (error.stack || error).toString()
     this.updater.logger!.warn(`update-error: ${msg}`)
-    dialog.showErrorBox('检查更新错误', msg)
+    dialogWin.showErrorBox('检查更新错误', msg)
   }
 }

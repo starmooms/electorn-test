@@ -28,7 +28,7 @@ export default function(communi: Communi) {
       logger.debug(`${name} back`, bufToString(result.data.originBuf))
       return result
     } catch (err) {
-      logger.debug(`${name} err`, err.message)
+      logger.error(`${name} err`, err.message)
       throw err
     }
   })

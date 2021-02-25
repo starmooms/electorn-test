@@ -47,24 +47,24 @@ logger.transports.file.archiveLog = (file: any) => {
 logger.transports.console.level = logger.transports.file.level
 if (is.dev()) {
   logger.transports.console.useStyles = true
-  // logger.hooks.push((message, transport) => {
-  //   if (transport === logger.transports.console) {
-  //     const level = message.level
-  //     const color = styles[level]
-  //     if (color) {
-  //       const data = message.data
-  //       const colorData: string[] = []
-  //       data.forEach(s =>
-  //         typeof s === 'string'
-  //           ? colorData.push(`%c${s}`, `color:${color}`)
-  //           : colorData.push(s)
-  //       )
-  //       message.data = colorData
-  //     }
-  //     return message
-  //   }
-  //   return message
-  // })
+  logger.hooks.push((message, transport) => {
+    if (transport === logger.transports.console) {
+      const level = message.level
+      const color = styles[level]
+      if (color) {
+        const data = message.data
+        const colorData: string[] = []
+        data.forEach(s =>
+          typeof s === 'string'
+            ? colorData.push(`%c${s}`, `color:${color}`)
+            : colorData.push(s)
+        )
+        message.data = colorData
+      }
+      return message
+    }
+    return message
+  })
 }
 
 let sysLog = (logger as unknown) as logger.ElectronLog

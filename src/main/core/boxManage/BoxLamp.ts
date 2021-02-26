@@ -35,18 +35,14 @@ export default class BoxLamp {
             writeItem.writerBit('channelBit', channelList)
           }
         })
-        logger.debug(
-          `点灯发送`,
-          `box ${masterId}`,
-          writeModel.buf.toString('hex')
-        )
+
         await communi.post({
           control: CONTROL_CODE.lampSet,
           data: writeModel.buf,
           masterId
         })
       } catch (err) {
-        logger.error('点灯失败', err)
+        logger.error('SetLamp_Err', err)
         errorMsg += `机柜${masterId + 1} 点灯失败 ${err.message}</br>`
       }
     })

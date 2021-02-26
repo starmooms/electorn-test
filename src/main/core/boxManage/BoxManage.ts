@@ -63,7 +63,7 @@ export class BoxManage {
         }
       })
     }
-    sysLog.log(`${message} ${channelMsg}`)
+    sysLog.log(`${message} ${channelMsg.replace(/、$/, '')}`)
   }
 
   /** 创建通道列表 */

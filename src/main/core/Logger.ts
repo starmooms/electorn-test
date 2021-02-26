@@ -4,23 +4,6 @@ import dayjs from 'dayjs'
 import * as path from 'path'
 import * as fs from 'fs'
 
-// const COLORS = {
-//   unset: '\x1b[0m',
-//   black: '\x1b[30m',
-//   red: '\x1b[31m',
-//   green: '\x1b[32m',
-//   yellow: '\x1b[33m',
-//   blue: '\x1b[34m',
-//   magenta: '\x1b[35m',
-//   cyan: '\x1b[36m'
-// }
-
-// const styles = {
-//   error: COLORS.red,
-//   wran: COLORS.yellow,
-//   info: COLORS.cyan,
-//   debug: COLORS.green
-// }
 const styles = {
   error: 'red',
   wran: 'yellow',
@@ -90,7 +73,6 @@ const createSysLog = () => {
 
 logger.info('Logger init')
 logger.warn('Logger init')
-logger.info('Logger init', 'ssseee')
 
 export default logger
 export { sysLog, now as sysLognow, sysFilePath, createSysLog }

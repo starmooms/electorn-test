@@ -15,7 +15,7 @@ interface PostOpts {
     name: string
   }
   masterId: number
-  requestType?: Communi['requestType'] | 'calTool' | null
+  requestType?: Communi['requestType'] | 'calTool'
 }
 export interface RequestStatus {
   masterId: number
@@ -98,11 +98,15 @@ export class Communi {
   async post(opts: PostOpts) {
     opts = {
       ...{
-        requestType: this.requestType,
         timeout: 5000
       },
       ...opts
     }
+
+    if (!opts.requestType) {
+      opts.requestType = this.requestType
+    }
+
     const send = agreement.createData({
       slaverId: 0xff,
       type: 0x02,

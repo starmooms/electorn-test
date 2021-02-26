@@ -39,7 +39,7 @@ export default class BoxCal {
     let masterId = opts.masterId
     const abList = opts.abList || []
     const abListLen = abList.length
-    let reqType: 'calTool' | null = null
+    let reqType: 'calTool' | undefined = undefined
 
     if (isCalTool) {
       masterId = CALTOOL_ID
@@ -74,16 +74,13 @@ export default class BoxCal {
       writeItem.writer('b', abItem.b)
     })
 
-    // writeModel.showAll()
-    logger.debug('设置校准发送', writeModel.buf.toString('hex'))
-
     await communi.post({
       control: CONTROL_CODE.calibrateSet,
       data: writeModel.buf,
       masterId,
       requestType: reqType
     })
-    // return true
+
     return
   }
 
@@ -113,8 +110,6 @@ export default class BoxCal {
       writeModel.writer('pointer', Math.floor(NP.times(pointer, 1000)))
     }
 
-    logger.debug('读校准发送', writeModel.buf.toString('hex'))
-
     const resultBuf = await communi.post({
       control: CONTROL_CODE.calibrateRead,
       data: writeModel.buf,
@@ -126,8 +121,6 @@ export default class BoxCal {
     //   '00000102080000000000000100000000020000000003000000000400000000050000000006000000000700001a69',
     //   'hex'
     // )
-
-    logger.debug('读校准返回', resultBuf.toString('hex'))
 
     const readModel = new BufModel({
       model: CAL_READ_MODEL,
@@ -346,7 +339,7 @@ export default class BoxCal {
       await this.setCalRunStop()
       await communi.tpcRequest.calToolClose()
     } catch (err) {
-      logger.error('关闭工装失败')
+      logger.error('关闭工装失败', err)
     }
     return {
       isCalRun: this.isCalRun

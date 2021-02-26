@@ -42,14 +42,14 @@ export default class BoxMasterInfo {
         })
         writeModel.writer('version', VERSERION)
         writeModel.writer('masterId', masterId)
-        logger.debug('读主控信息发送', writeModel.buf.toString('hex'))
+
         const resultBuf = await communi.post({
           control: CONTROL_CODE.masterInfoRead,
           data: writeModel.buf,
           masterId,
           requestType: 'Tcp'
         })
-        logger.debug('读主控信息返回', resultBuf.toString('hex'))
+
         const readModel = new BufModel({
           model: MASERT_INFO,
           readBuf: resultBuf
@@ -69,7 +69,7 @@ export default class BoxMasterInfo {
           })
         })
       } catch (err) {
-        logger.error(err)
+        logger.error('Get_MasterInfo_Err', err)
         info.status = 4
         info.errMsg = err.message
       }
@@ -144,14 +144,14 @@ export default class BoxMasterInfo {
     writeModel.writerIp('ip', ip)
     writeModel.writerIp('mask', opts.mask)
     writeModel.writerIp('gateway', opts.gateway)
-    logger.debug('编辑主控信息发送', writeModel.buf.toString('hex'))
-    const resultBuf = await communi.post({
+
+    await communi.post({
       control: CONTROL_CODE.masterInfoSet,
       data: writeModel.buf,
       masterId: opts.masterId,
       requestType: 'Tcp'
     })
-    logger.debug('编辑主控信息返回', resultBuf.toString('hex'))
+
     let status = 2
     if (changeIp) {
       const { list, index } = this.findIpItem(opts.masterId, opts.ipOld)

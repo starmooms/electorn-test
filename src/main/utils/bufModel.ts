@@ -300,24 +300,34 @@ export class BufWriteModel {
     }
   }
 
-  showAll(result: any[] = [], log = true) {
+  showAll(result: any[] = [], obj: any = {}, log = true) {
     try {
       Object.keys(this.bufModel.modelTarget).forEach(item => {
         // logger.info(this.getTarget(item))
         const data = this.getTarget(item)
         if (data.type === 'list') {
+          const objArr: any[] = []
+          obj[item] = []
+
           const listObj: any[] = [`listName: ${item}`]
           result.push(listObj)
+
           this.ecahList(item, listModel => {
+            const subObj = {}
+            objArr.push(subObj)
+
             const subItem: any = []
             listObj.push(subItem)
-            listModel.showAll(subItem, false)
+
+            listModel.showAll(subItem, subObj, false)
           })
         } else {
+          obj[item] = this.readHex(item)
           result.push(`${item} : ${this.readHex(item)}`)
           // logger.info(item, this.readHex(item))
         }
       })
+      return obj
     } catch (err) {
       console.error('SHOW ALL ERROR', err)
       throw err

@@ -149,6 +149,12 @@ export class Communi {
       })
 
       timer = setTimeout(() => {
+        // this.onEmit(
+        //   Buffer.from(
+        //     `680101cc00688a00${sId}000bcc0004020100000000001fe0a4edededed`,
+        //     'hex'
+        //   )
+        // )
         setError(new Error(`${requestType} Time Out`))
       }, timeout || 5000)
 

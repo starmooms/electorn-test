@@ -30,7 +30,7 @@ export default class SerialPortRequest {
     logger.debug('创建串口', path)
 
     const port = new SerialPort(path, {
-      baudRate: is.dev() ? 115200 : 921600
+      baudRate: 115200 // is.dev() ? 115200 : 921600
     })
 
     const parser = new TransfromParser({

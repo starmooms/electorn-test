@@ -15,7 +15,6 @@ class Middleware<T extends any[], N> {
 
   async run(action: RunFun<T, N>, ...args: T) {
     let useAction = false
-    let result!: N
     let next = () => {
       useAction = true
       return action(...args)
@@ -27,7 +26,7 @@ class Middleware<T extends any[], N> {
       next = () => Promise.resolve(item(lastNext, ...args))
     }
 
-    await next()
+    const result = await next()
 
     if (!useAction) {
       throw new Error('next no use')

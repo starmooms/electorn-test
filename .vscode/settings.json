@@ -31,13 +31,19 @@
   // "vetur.format.defaultFormatter.scss": "prettier",
   // "vetur.format.defaultFormatter.css": "prettier",
 
-  // "terminal.integrated.shellArgs.windows": [
-  //   "-NoExit",
-  //   "/c",
-  //   "chcp 65001"
-  // ],
+  "terminal.integrated.shellArgs.windows": [
+    "-NoExit",
+    "/c",
+    "chcp 65001"
+  ],
   // 让prettier使用eslint的代码格式进行校验
   // "prettier.eslintIntegration": true,
   "typescript.preferences.importModuleSpecifier": "non-relative",
-  "javascript.preferences.importModuleSpecifier": "non-relative"
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "files.associations": {
+    "*.md": "markdown",
+    "list": "cpp"
+  },
+  // "terminal.integrated.shell.windows": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+  // "terminal.integrated.automationShell.windows": "D:\\coffee_gxm\\Git\\git-cmd.exe",
 }

@@ -1,16 +1,17 @@
 {
+  "typescript.tsdk": "node_modules/typescript/lib",
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 20000,
   "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.fixAll.stylelint": true
+  },
   "path-intellisense.mappings": {
     "@": "${workspaceRoot}/src"
   },
   "eslint.enable": true,
   "eslint.quiet": false, // 安静模式忽略警告
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true,
-    "source.fixAll.stylelint": true
-  },
   "eslint.validate": [
     "javascript",
     "typescript",
@@ -26,15 +27,23 @@
   //   }
   // },
   // "stylelint.syntax": [""],
-  "stylelint.autoFix": true,
+  // "stylelint.autoFix": true,
   // "vetur.format.defaultFormatter.scss": "prettier",
   // "vetur.format.defaultFormatter.css": "prettier",
 
-  // "terminal.integrated.shellArgs.windows": [
-  //   "-NoExit",
-  //   "/c",
-  //   "chcp 65001"
-  // ],
-  //  #让prettier使用eslint的代码格式进行校验
-  "prettier.eslintIntegration": true
+  "terminal.integrated.shellArgs.windows": [
+    "-NoExit",
+    "/c",
+    "chcp 65001"
+  ],
+  // 让prettier使用eslint的代码格式进行校验
+  // "prettier.eslintIntegration": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "files.associations": {
+    "*.md": "markdown",
+    "list": "cpp"
+  },
+  // "terminal.integrated.shell.windows": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+  // "terminal.integrated.automationShell.windows": "D:\\coffee_gxm\\Git\\git-cmd.exe",
 }

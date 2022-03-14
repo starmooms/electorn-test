@@ -107,7 +107,7 @@ export default class BoxSamp {
 
     let errorList: Port.ErrorListItem[] = []
 
-    logger.info('采样开始')
+    // logger.info('采样开始')
     await Promise.all(
       this.parent.connectMaster.map(async item => {
         try {
@@ -118,7 +118,7 @@ export default class BoxSamp {
         }
       })
     )
-    logger.info('采样结束')
+    // logger.info('采样结束')
 
     this.addSampQueue({ projectSamp, errorList })
   }
@@ -197,13 +197,11 @@ export default class BoxSamp {
       const a = `00000008000800000000a300000000000000000000000000000000000000000093000100000001000100000000000000000000000000000000000000000000930001000000010002a3000000000000000000000000000000000000000000930001000000010003a3000000000000000000000000000000000000000000930001000000010004a3000000000000000000000000000000000000000000930001000000010005a3000000000000000000000000000000000000000000930001000000010006a3000000000000000000000000000000000000000000930001000000010007a30000000000000000000000000000000000000000009300010000000000000000009300a300008df800000000000100010000009300a30000002800000000000100020000009300a30000932900000000000100030000009300a30000926d00000000000100040000009300a3000091bf00000000000100050000009300a30000932900000000000100060000009300a30000906f00000000000100070000009300a3000090f5000000000001` // eslint-disable-line
       resultBuf = Buffer.from(a, 'hex')
     } else {
-      logger.debug('读采样发送', this.readSampWrite.buf.toString('hex'))
       resultBuf = await communi.post({
         control: CONTROL_CODE.sampRead,
         data: this.readSampWrite.buf,
         masterId
       })
-      logger.debug('读采样返回', resultBuf.toString('hex'))
     }
     // logger.info('sampStart ==> 开始处理采样')
 
@@ -450,11 +448,9 @@ export default class BoxSamp {
 
   /** 读采样特征状态 */
   readFeatureList({ masterId, readModel, getProjectSamp, createTime }: ReadSampParams) { // eslint-disable-line
-    logger.debug('读特征列表')
     readModel.ecahList('featureList', readItem => {
       const projectId = readItem.read('projectId')
       const feature = getProjectSamp(projectId, 'featureList')
-      logger.debug(`读到特征列表`)
       feature.push({
         masterId,
         slaverId: readItem.read('slaverId'),

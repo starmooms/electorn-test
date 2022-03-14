@@ -20,32 +20,24 @@ import boxManage from './core/boxManage/BoxManage'
 import createSorting from './window/Sorting'
 import historyDbCache from './core/sqlite/HistoryDBCache'
 import createNowChannelWin from './window/NowChannel'
+import { EventEmitter } from 'events'
+import { dialogWin } from '@/main/utils'
 
-/** mainWin生成后执行 */
-declare type beforeMainWin = () => void
-
-export default class Launcher {
+export default class Launcher extends EventEmitter {
   win: BrowserWindow | null = null
   usbManager!: USBManager
-  beforeMainWin: beforeMainWin | null = null
-  updateManager = this.initUpdaterManager()
+  updateManager!: UpdateManager
 
-  constructor(beforeMainWin?: beforeMainWin) {
-    if (beforeMainWin) {
-      this.beforeMainWin = beforeMainWin
-    }
-    this.makeSingleInstance(() => {
-      this.beforeWin()
-      this.init()
-    })
+  constructor() {
+    super()
   }
 
   init() {
-    protocol.registerSchemesAsPrivileged([
-      { scheme: 'app', privileges: { secure: true, standard: true } }
-    ])
-    this.handleAppEvents()
-    this.handleUpdaterEvents()
+    this.makeSingleInstance(() => {
+      this.emit('instance')
+      this.beforeWin()
+      this.handleAppEvents()
+    })
   }
 
   /** 绑定app的回调 */
@@ -56,21 +48,24 @@ export default class Launcher {
 
   /** 程序锁定，避免开启多个程序 */
   makeSingleInstance(callback: () => void) {
+    // mac 不支持requestSingleInstanceLock
     if (is.mas()) {
       callback && callback()
       return
     }
+
     const canLock = app.requestSingleInstanceLock()
+
     if (!canLock) {
       app.quit()
     } else {
       app.on('second-instance', () => {
-        if (this.win) {
-          if (this.win.isMinimized()) {
-            this.win.restore()
-          }
-          this.win.focus()
+        const mainWin = this.win
+        if (!mainWin) return
+        if (mainWin.isMinimized()) {
+          mainWin.restore()
         }
+        mainWin.focus()
       })
 
       callback && callback()
@@ -79,16 +74,12 @@ export default class Launcher {
 
   /** 创建窗口 */
   createWindow() {
-    if (this.beforeMainWin) {
-      this.beforeMainWin()
-    }
-    winManager.init()
     this.win = winManager.createdWin({
       name: 'mainWin',
       pageUrl: '',
       setMenu: true,
       beforeClose: async next => {
-        const { response } = await dialog.showMessageBox({
+        const { response } = await dialogWin.showMessageBox({
           type: 'info',
           title: '关闭程序',
           message: '确定关闭程序',
@@ -107,13 +98,14 @@ export default class Launcher {
   /** 设置app开启相关回调并创建窗口 */
   handelAppReady() {
     app.on('ready', () => {
+      this.emit('beforeMainWin')
       this.createWindow()
       this.afterWin()
     })
 
     app.on('activate', () => {
       // mac 关闭重新打开
-      if (this.win === null) {
+      if (!this.win) {
         this.createWindow()
       }
     })
@@ -129,6 +121,10 @@ export default class Launcher {
   }
 
   async beforeWin() {
+    winManager.init()
+
+    this.initUpdaterManager()
+
     const menu = new MenuManager()
     menu.on('updateCheck', () => {
       if (this.updateManager) {
@@ -139,6 +135,7 @@ export default class Launcher {
     powerSaveBlocker.start('prevent-app-suspension')
 
     createSysLog()
+
     ipcManage.handle('/sysLog/sysLogInfo', () => {
       return {
         start: sysLognow,
@@ -174,7 +171,7 @@ export default class Launcher {
 
   async beforeWinRender() {
     try {
-      const mainDbFilePath = (await mainDb.connect()) as string
+      const mainDbFilePath = await mainDb.connect()
       await boxManage.create()
       this.usbManager = new USBManager()
       return mainDbFilePath
@@ -199,7 +196,9 @@ export default class Launcher {
 
   async destoryWin() {
     try {
-      this.win!.hide()
+      if (this.win) {
+        this.win.hide()
+      }
       if (this.usbManager) {
         this.usbManager.destory()
       }
@@ -214,33 +213,32 @@ export default class Launcher {
   }
 
   initUpdaterManager() {
-    if (is.mas()) {
-      return
-    }
-    const updateManager = new UpdateManager({
+    if (is.mas()) return
+    this.updateManager = new UpdateManager({
       autoCheck: false,
       beforeQuit: async () => {
+        // 关闭主窗口，但不触发beforeClose中的 是否关闭的选择框
         await this.destoryWin()
         await winManager.closeWin({
           name: 'mainWin',
-          destory: false
+          destory: false // 确保由 updateManager 触发 app.quit
         })
         return
       }
     })
     this.handleUpdaterEvents()
-    return updateManager
   }
 
   handleUpdaterEvents() {
-    if (!this.updateManager) return
+    const update = this.updateManager
+    if (!update) return
 
-    this.updateManager.on('download-progress', (event: any) => {
+    update.on('download-progress', (event: any) => {
       if (!this.win) return
       this.win.setProgressBar(event.percent / 100)
     })
 
-    this.updateManager.on('update-downloaded', () => {
+    update.on('update-downloaded', () => {
       if (!this.win) return
       this.win.setProgressBar(0)
     })

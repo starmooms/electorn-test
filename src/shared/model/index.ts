@@ -384,3 +384,19 @@ export const RESTART_MASTER: Model[] = [
   { name: 'masterId', bytLen: 1 },
   { name: 'slaverId', bytLen: 4 } //
 ]
+
+export const AGREEMENT: Model[] = [
+  { name: 'start', bytLen: 1 },
+  { name: 'type', bytLen: 1 },
+  { name: 'version', bytLen: 1 },
+  { name: 'master', bytLen: 1 },
+  { name: 'slaver', bytLen: 1 },
+  { name: 'start2', bytLen: 1 },
+  { name: 'control', bytLen: 1 },
+  { name: 'error', bytLen: 1 },
+  { name: 'id', bytLen: 2 },
+  { name: 'dataLen', bytLen: 2 },
+  { name: 'data', type: 'byte', len: 'dataLen' },
+  { name: 'crc', bytLen: 2 },
+  { name: 'end', bytLen: 4 }
+]

@@ -132,7 +132,6 @@ export default class Sqlite {
   /** 关闭连接 */
   close() {
     return new Promise<null>((resolve, reject) => {
-      console.log('执行关闭？？')
       this.db.close(err => {
         if (err) {
           reject(err)

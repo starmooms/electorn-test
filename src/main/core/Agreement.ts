@@ -1,7 +1,7 @@
 import { toHex } from '../utils'
 
 export type ReadResult = ReturnType<Agreement['readData']>
-export type SetDataBack = ReturnType<Agreement['createData']>
+export type SendRestul = ReturnType<Agreement['createData']>
 export interface CreateData {
   data?: Buffer | string
   code: number

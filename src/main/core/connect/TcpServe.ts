@@ -3,6 +3,8 @@ import { BufWriteModel as BufModel } from '@/main/utils/bufModel'
 import { SAMP_MODEL } from '@/shared/model'
 import { TransfromModel } from '@/main/utils/transfromParser'
 import agreement from '../Agreement'
+import logger from '@/main/core/Logger'
+import ElectronLog from 'electron-log'
 
 let socketSend: net.Socket
 const sendSamp = (data: Buffer) => {
@@ -115,6 +117,10 @@ const sendSamp = (data: Buffer) => {
   }
 }
 
+// const sendCalSet = (data: Buffer) => {
+
+// }
+
 const onData = data => {
   sendSamp(data)
   return true
@@ -122,24 +128,43 @@ const onData = data => {
 
 const transfromModel = new TransfromModel(onData)
 
+const log: ElectronLog.LogFunctions = {} as never
+;['debug', 'info', 'wran', 'error'].forEach(level => {
+  log[level] = (...args) => {
+    logger[level](`[tcpServer]`, ...args)
+  }
+})
+
 // '192.168.0.201', 5002
 export default function tcpServe() {
   const tcpServer = net.createServer(socket => {
-    console.log('链接成功')
+    log.debug('链接成功', socket.remoteAddress)
+
     socketSend = socket
     socket.on('data', data => {
-      console.log('tcpserver 收到数据', data.toString('hex'))
+      log.debug('tcpserver 收到数据', data.toString('hex'))
       transfromModel.transform(data)
       // sendSamp(socket, data)
     })
     socket.on('error', err => {
-      console.log('错误tcpServer', err)
+      log.error('错误tcpServer', err)
     })
     socket.on('end', () => {
-      console.log('关闭tcpServer')
+      log.debug('关闭tcpServer')
     })
   })
-  tcpServer.listen(31111, '192.168.0.93')
+
+  const netServer = tcpServer.listen(31111, '192.168.0.93', () => {
+    const adr = netServer.address()
+    if (adr) {
+      const adrStr =
+        typeof adr === 'string' ? adr : `${adr.address}:${adr.port}`
+      log.debug(`start ${adrStr}`)
+    } else {
+      log.error(`start error`)
+    }
+  })
+
   tcpServer.on('error', err => {
     console.log('错误tcpServer', err)
   })

@@ -21,7 +21,7 @@
       ],
       "sourceMaps": true,
       "env": {
-        // "VUE_DEV_TOOL": "C:\\Users\\Administrator\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Extensions\\nhdogjmejiglipccpnnnanhbledajbpd\\5.3.3_0",
+        "VUE_DEV_TOOL": "C:/Users/Administrator/AppData/Local/Google/Chrome/User Data/Default/Extensions/nhdogjmejiglipccpnnnanhbledajbpd/5.3.4_0",
         // "VUE_DEV_TOOL": "/Users/gxming/Library/Application Support/Google/Chrome/Default/Extensions/nhdogjmejiglipccpnnnanhbledajbpd/5.3.3_0",
         // "DEBUG": "serialport/*"
       }

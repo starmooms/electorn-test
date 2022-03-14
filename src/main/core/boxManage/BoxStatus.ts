@@ -95,7 +95,6 @@ export default class BoxStatus {
       try {
         writerModel.writer('masterId', masterId)
         channelInfo.masterId = masterId
-        logger.info('写工步', writerModel.buf.toString('hex'))
         await communi.post({
           control: CONTROL_CODE.stepsSet,
           data: writerModel.buf,
@@ -142,7 +141,6 @@ export default class BoxStatus {
         data: writeMdoel.buf,
         masterId
       })
-      logger.info('读工步返回', resultBuf.toString('hex'))
     }
 
     const readModel = new BufModel({
@@ -221,11 +219,11 @@ export default class BoxStatus {
       slaverIds
     }
 
+    // 出现失败不中断？
     await Bluebird.mapSeries(list, async (masterId: number) => {
       try {
         writerModel.writer('masterId', masterId)
         channelInfo.masterId = masterId
-        logger.info('改变状态', writerModel.buf.toString('hex'))
         await communi.post({
           control,
           data: writerModel.buf,
@@ -233,7 +231,7 @@ export default class BoxStatus {
         })
         this.parent.channelLog(`${control.name}成功`, channelInfo)
       } catch (err) {
-        logger.warn(err)
+        logger.error(err)
         this.parent.channelLog(
           `${control.name}失败, ${err.message}`,
           channelInfo

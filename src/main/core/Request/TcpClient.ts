@@ -88,34 +88,21 @@ export default class TcpClient extends EventEmitter {
   }
 
   /** 如果未连接，连接后发送 */
-  async waitWrite(
-    buf: Buffer,
-    setError: (msg: string) => any,
-    status: RequestStatus
-  ) {
-    const onError = (msg: string) => {
-      if (status.isWait) {
-        setError(msg)
+  async waitWrite(buf: Buffer, status: RequestStatus) {
+    if (!this.isConnect) {
+      if (!this.tcpClient.connecting) {
+        await this.createTcpClient()
       }
+      await this.waitConnect()
     }
-    try {
-      if (!this.isConnect) {
-        if (!this.tcpClient.connecting) {
-          await this.createTcpClient()
-        }
-        await this.waitConnect()
-      }
 
-      if (!status.isWait) return
+    if (!status.isWait) return
+    await new Promise((resolve, reject) => {
       this.tcpClient.write(buf, err => {
-        if (err) {
-          onError(err.message)
-        }
+        if (err) reject(err)
+        resolve(true)
       })
-    } catch (err) {
-      onError(err.message || err)
-    }
-
+    })
     return
   }
 

@@ -65,6 +65,8 @@ sudo ifconfig lo0 alias 127.0.0.21 netmask 0xFFFFFFFF
 ### 中文乱码
 https://www.yht7.com/news/110534
 https://blog.csdn.net/hnlgzb/article/details/81911824
+https://www.zhihu.com/question/54724102/answer/380875686
+https://blog.csdn.net/Assassin660/article/details/108915071
 注册表查看(具体查看 HKEY_CURRENT_USER\Console )
 [HKEY_CURRENT_USER\Console\%SystemRoot%_system32_cmd.exe]
 
@@ -107,6 +109,73 @@ https://blog.csdn.net/weixin_30335575/article/details/95836259
 https://npm.taobao.org/mirrors
 https://www.jianshu.com/p/6615ff3cb0c1
 https://blog.yasking.org/a/zh-install-electron-development-2020.html
+
+**淘宝镜像**
+https://npm.taobao.org/mirrors
+
+**electron-rebuild查看需要镜像**
+```bash
+// -v 版本号
+// -b 打印日志
+// -d -d=http://npm.taobao.org/mirrors/atom-shell 设置下载地址（8.0.0的版本没有）
+npx electron-rebuild -v 8.3.4 -d=https://npm.taobao.org/mirrors/electron -b
+```
+
+**自制镜像准备**
+https://www.electronjs.org/headers/v8.3.4/node-v8.3.4-headers.tar.gz
+https://www.electronjs.org/headers/v8.3.4/SHASUMS256.txt
+https://www.electronjs.org/headers/v8.3.4/win-x86/node.lib
+https://www.electronjs.org/headers/v8.3.4/win-x64/node.lib
+https://www.electronjs.org/headers/v8.3.4/win-arm64/node.lib
+
+**electron-builder**
+electron-builder 不使用`electron-rebuild`使用[`app-builder-bin`](https://github.com/Loller79/app-builder-bin)
+
+`app-builder-bin` 中的[`app-builder.exe`](https://github.com/develar/app-builder)
+
+`app-builder` 使用 `prebuild-install` 或者直接 `rebuild`
+
+```bash
+`prebuild-install` 查看 node_modules/prebuild-install/util.js 设置镜像
+## 缓存在 C:\Users\Administrator\AppData\Roaming\npm-cache\_prebuilds
+eg:
+# usb_detection
+usb_detection_binary_host=https://hub.fastgit.org/MadLittleMods/node-usb-detection/releases/download
+# serialport
+# _serialport_bindings_binary_host=https://hub.fastgit.org/serialport/node-serialport/releases/download (错误！！前面有‘_’ npm不能识别)
+cross-env DEBUG=electron-builder npm_config__serialport_bindings_binary_host=https://hub.fastgit.org/serialport/node-serialport/releases/download yarn postinstall
+## prebuild-install 缓存文件名和下载路径有关，所有修改后需要一直保存，缓存才有效
+
+`rebuild` 中间可能使用 `node-pre-gyp` 根据包名设置镜像
+eg:
+# 包名为node-sqlite3
+node_sqlite3_binary_host_mirror=https://npm.taobao.org/mirrors
+```
+
+
+```bash
+# 打包是打开详细信息
+cross-env DEBUG=electron-builder yarn build
+# 构建原生模块也可以一样
+cross-env DEBUG=electron-builder yarn postinstall
+```
+
+
+**设置环境变量**
+
+```bash
+# .npmrc
+# electron 镜像
+ELECTRON_MIRROR=https://npm.taobao.org/mirrors/electron/
+# electron-builder 打包器镜像
+ELECTRON_BUILDER_BINARIES_MIRROR=https://npm.taobao.org/mirrors/electron-builder-binaries/
+# sqlite3 二进制文件  镜像
+node_sqlite3_binary_host_mirror=https://npm.taobao.org/mirrors
+```
+
+
+
+
 
 
 ### 子进程

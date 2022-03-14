@@ -4,27 +4,50 @@ import dayjs from 'dayjs'
 import * as path from 'path'
 import * as fs from 'fs'
 
+const styles = {
+  error: 'red',
+  wran: 'yellow',
+  info: 'cyan',
+  debug: 'green'
+}
+
 export const logPath = logger.transports.file.getFile().path
-logger.transports.file.level = is.production() ? 'silly' : 'silly' // error, warn, info, verbose, debug, silly
-logger.transports.console.level = logger.transports.file.level
+logger.transports.file.level = is.production() ? 'debug' : 'silly' // error, warn, info, verbose, debug, silly
 logger.transports.file.maxSize = 2 * 1024 * 1024
 logger.transports.file.archiveLog = (file: any) => {
   const oldPath = file.toString()
-  const inf = path.parse(oldPath)
+  const { dir, name, ext } = path.parse(oldPath)
   try {
-    const now = dayjs()
-    fs.renameSync(
-      oldPath,
-      path.join(
-        `${inf.dir}`,
-        inf.name + `${now.format('YYYY-MM-DD_HH-mm-ss')}` + '.old' + inf.ext
-      )
-    )
+    const date = dayjs().format('YYYY-MM-DD_HH-mm-ss')
+    fs.renameSync(oldPath, path.join(dir, `${name}${date}.old${ext}`))
   } catch (e) {
-    console.log('Could not rotate log', e)
+    console.error('Could not rotate log', e)
     const quarterOfMaxSize = Math.round(logger.transports.file.maxSize / 4)
     file.crop(Math.max(quarterOfMaxSize, 256 * 1024))
   }
+}
+
+logger.transports.console.level = logger.transports.file.level
+if (is.dev()) {
+  logger.transports.console.useStyles = true
+  logger.hooks.push((message, transport) => {
+    if (transport === logger.transports.console) {
+      const level = message.level
+      const color = styles[level]
+      if (color) {
+        const data = message.data
+        const colorData: string[] = []
+        data.forEach(s =>
+          typeof s === 'string'
+            ? colorData.push(`%c${s}`, `color:${color}`)
+            : colorData.push(s)
+        )
+        message.data = colorData
+      }
+      return message
+    }
+    return message
+  })
 }
 
 let sysLog = (logger as unknown) as logger.ElectronLog

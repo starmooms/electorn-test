@@ -9,14 +9,12 @@ function resolve(dir) {
   return path.join(__dirname, './', dir)
 }
 
-module.exports = {
+const conf = {
   lintOnSave: isDev,
   configureWebpack: {
-    devtool: 'source-map', // isDev ? 'source-map' : 'none',
-    plugins: [new WorkerPlugin()]
-    // optimization: {
-    //   minimize: false
-    // }
+    devtool: isDev ? 'source-map' : 'none',
+    plugins: [new WorkerPlugin()],
+    optimization: {}
   },
   css: {
     loaderOptions: {
@@ -29,13 +27,12 @@ module.exports = {
     }
   },
   chainWebpack: config => {
-    // config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
-
     // svg-sprite-loader
     config.module
       .rule('svg')
       .exclude.add(resolve('src/renderer/icons'))
       .end()
+
     config.module
       .rule('icons')
       .test(/\.svg$/)
@@ -56,13 +53,17 @@ module.exports = {
   pluginOptions: {
     electronBuilder: {
       chainWebpackMainProcess(config) {
-        config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
-        // config.plugins.delete('uglify')
+        if (isDev) {
+          config.devtool('source-map')
+          config.entry('child').add(path.join(__dirname, 'src/main/child.ts'))
+        }
       },
       nodeIntegration: true,
-      mainProcessFile: 'src/main/background.ts',
+      mainProcessFile: `src/main/${
+        isDev ? 'background.dev.ts' : 'background.ts'
+      }`,
       mainProcessWatch: ['src/main'],
-      externals: ['serialport', 'usb-detection', 'forever-monitor', 'sqlite3'],
+      externals: ['serialport', 'usb-detection', 'sqlite3'],
       // preload: 'src/main/preload.ts',
       builderOptions: {
         // productName: '中文名',
@@ -116,3 +117,25 @@ module.exports = {
     }
   }
 }
+
+// // js代码取消压缩
+// function cancelMin() {
+//   conf.configureWebpack.devtool = 'source-map'
+//   conf.configureWebpack.optimization.minimize = false
+//   const delChain = config => {
+//     config.optimization.minimize(false)
+//     config.plugins.delete('uglify')
+//   }
+//   const origin = conf.pluginOptions.electronBuilder.chainWebpackMainProcess
+//   let chain = delChain
+//   if (origin) {
+//     chain = config => {
+//       origin(config)
+//       delChain(config)
+//     }
+//   }
+//   conf.pluginOptions.electronBuilder.chainWebpackMainProcess = chain
+// }
+// cancelMin()
+
+module.exports = conf

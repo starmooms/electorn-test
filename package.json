@@ -2,19 +2,20 @@
   "name": "upper-computer",
   "author": "GXM",
   "description": "upper computer for battery detection",
-  "version": "0.2.99",
+  "version": "0.3.9",
   "private": true,
   "engines": {
     "node": ">=12.18.2"
   },
+  "env": {
+    "node_sqlite3_binary_host_mirror": "http://npm.taobao.org/mirrors"
+  },
   "scripts": {
-    "lint": "vue-cli-service lint",
+    "lint": "stylelint src/**/*.{css,scss,vue} --fix && vue-cli-service lint",
     "build": "vue-cli-service electron:build",
     "dev": "vue-cli-service electron:serve",
-    "stylelint": "stylelint src/**/*.scss --fix",
-    "lint:style": "stylelint src/**/*.{css,scss,vue} --fix",
-    "postinstall---": "electron-builder install-app-deps",
-    "postuninstall---": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "postuninstall": "electron-builder install-app-deps"
   },
   "main": "background.js",
   "dependencies": {
@@ -65,9 +66,9 @@
     "cross-env": "^7.0.2",
     "echarts": "^4.8.0",
     "electron": "8.3.4",
+    "electron-debug": "^3.2.0",
     "electron-devtools-installer": "^3.1.0",
     "electron-log": "^4.2.2",
-    "electron-rebuild": "^2.3.4",
     "eslint": "^6.7.2",
     "eslint-plugin-prettier": "^3.1.3",
     "eslint-plugin-vue": "^6.2.2",

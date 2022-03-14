@@ -1,3 +1,5 @@
+export * from './dialogWin'
+
 /**
  * @param num： 被操作数
  * @param n： 固定的总位数
